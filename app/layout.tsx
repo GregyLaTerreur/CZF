@@ -8,6 +8,8 @@ const anton = Anton({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://czf-lol.vercel.app'),
+
   title: 'Clash des Zéros de la Faille (CZF) - Ligue League of Legends',
   description:
     'Ligue communautaire League of Legends avec divisions, équipes, joueurs, classement CZF et Hall of Fame.',
@@ -16,7 +18,17 @@ export const metadata: Metadata = {
     title: 'Clash des Zéros de la Faille',
     description:
       'Ligue communautaire League of Legends avec divisions, équipes et classement CZF.',
-    images: ['/assets/czf-logo.png'],
+    url: 'https://czf-lol.vercel.app',
+    siteName: 'CZF',
+    images: [
+      {
+        url: '/assets/czf-logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'Clash des Zéros de la Faille',
+      },
+    ],
+    type: 'website',
   },
 };
 
