@@ -8,8 +8,9 @@ const anton = Anton({
 });
 
 export const metadata: Metadata = {
-  title: 'CZF - Clash des Zéros de la Faille',
-  description: 'Tournoi League of Legends amateur',
+  title: 'Clash des Zéros de la Faille (CZF) - Ligue League of Legends',
+  description:
+    'Ligue communautaire League of Legends avec divisions, équipes, joueurs, classement CZF et Hall of Fame.',
 };
 
 export default function RootLayout({
