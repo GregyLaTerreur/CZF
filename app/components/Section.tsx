@@ -1,0 +1,1 @@
+export default function Section({id,title,children}:{id:string,title:string,children:React.ReactNode}){return <section id={id} className="section"><div className="sectionTitle"><span></span><h2>{title}</h2></div>{children}</section>}
