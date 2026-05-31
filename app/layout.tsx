@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: 'CZF',
     images: [
       {
-        url: '/assets/og-image.png'
+        url: '/assets/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Clash des Zéros de la Faille',
