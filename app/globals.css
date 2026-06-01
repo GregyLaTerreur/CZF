@@ -543,7 +543,7 @@ min-height: 80px;
 .teamRow > div {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .playerRow {
