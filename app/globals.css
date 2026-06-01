@@ -159,7 +159,14 @@ a {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
+
+.fakeForm button:active {
+  transform: scale(0.97);
+}
+
 
 .heroActions a:nth-child(2) {
   background: var(--navy);
@@ -299,7 +306,6 @@ a {
 
 .fakeForm button {
   border-radius: 14px;
-  cursor: not-allowed;
 }
 
 /* Footer */
@@ -378,4 +384,287 @@ footer {
 .importBox p,
 .rulebook p {
   letter-spacing: 0.3px;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  border-radius: 14px;
+  border: 2px solid #d8c7ad;
+  padding: 14px 18px;
+}
+
+.roleBtn span {
+  color: #000;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.rolePicker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.roleBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-radius: 14px;
+  border: 2px solid #d8c7ad;
+  background: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.roleBtn img {
+  width: 20px;
+  height: 20px;
+}
+
+.roleBtn.active {
+  border-color: #f97316;
+  background: #fff4eb;
+  cursor: pointer;
+}
+
+.roleBtn {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rolesContainer {
+  display: flex;
+  gap: 60px;
+  align-items: flex-start;
+}
+
+.roleSection h4 {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  color: #111;
+}
+
+.roleBtn span {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #111;
+}
+
+.roleSection {
+  margin-top: -56px;
+}
+
+.roleBtn:hover {
+  cursor: pointer;
+}
+
+.playersTable {
+  margin-top: 20px;
+}
+
+.playersHeader,
+.playerRow {
+  display: grid;
+
+  grid-template-columns:
+    3fr
+    1fr
+    1fr
+    1fr
+    1fr
+    1fr
+    80px;
+
+  align-items: center;
+  padding: 14px 20px;
+}
+
+
+.playersHeader,
+.playerRow {
+  display: grid;
+
+  grid-template-columns:
+    3fr
+    1fr
+    1fr
+    1fr
+    1fr
+    1fr
+    80px;
+
+  align-items: center;
+}
+
+.teamsHeader{
+  display: grid;
+
+  grid-template-columns:
+    60px
+    4fr
+    1.5fr
+    1.5fr
+    1fr
+    1.5fr;
+
+min-height: 60px;
+  align-items: center;
+}
+
+.teamRow {
+  display: grid;
+
+  grid-template-columns:
+    60px
+    4fr
+    1.5fr
+    1.5fr
+    1fr
+    1.5fr;
+min-height: 80px;
+  align-items: center;
+}
+
+.teamsHeader > div,
+.teamRow > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playerRow {
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.playerRow:hover {
+  background: rgba(255,255,255,.25);
+}
+
+.roleIcon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+
+.teamArrow {
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.teamLogoSmall {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.teamDetails {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 40px;
+
+  padding: 25px;
+
+  background: rgba(255,255,255,.03);
+
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.teamInfos {
+  flex: 1;
+}
+
+.teamLogoBigContainer {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: flex-start;
+
+  height: 100%;
+}
+
+.teamLogoBig {
+  width: 450px;
+  height: 450px;
+  object-fit: contain;
+}
+
+.teamDetails {
+  display: grid;
+
+  grid-template-columns: 1fr 400px;
+
+  gap: 40px;
+
+  padding: 30px 40px;
+
+  border-top: 1px solid rgba(0,0,0,.08);
+
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.teamNameCell {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  justify-content: flex-start;
+}
+
+.teamLogoSmall {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.multiggLink {
+  display: inline-block;
+
+  margin-top: 10px;
+
+  color: #f97316;
+
+  text-decoration: underline;
+
+  font-weight: 700;
+}
+
+.joinTeamBtn {
+  margin-top: 15px;
+
+  padding: 12px 18px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: var(--orange);
+
+  color: white;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.joinTeamBtn:hover {
+  opacity: 0.9;
 }
