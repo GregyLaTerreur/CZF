@@ -12,6 +12,7 @@ export default function TeamsPage() {
   const [teams, setTeams] = useState<any[]>([]);
   const [message, setMessage] = useState('');
   const [openTeam, setOpenTeam] = useState<number | null>(null);
+  
 
   useEffect(() => {
     fetchTeams();

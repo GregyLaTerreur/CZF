@@ -12,7 +12,7 @@ export default function Home(){
       <p className="eyebrow">League of Legends Tournament</p>
       <h1>CLASH DES ZÉROS<br/>DE LA FAILLE</h1>
       <p>Une ligue communautaire structurée autour de trois divisions : Yordle, Ixtal et Targon.</p>
-      <div className="heroActions"><a href="#equipes">Voir les équipes</a><a href="#joueurs">Importer un joueur</a></div>
+      <div className="heroActions"><a href="#equipes">Voir les équipes</a><a href="#compte">Créer mon compte CZF</a></div>
     </div>
     <img className="heroLogo" src="/assets/czf-logo.png" alt="Logo CZF"/>
   </header>
@@ -65,13 +65,40 @@ export default function Home(){
   </div>
 </Section>
 
-  <Section id="joueurs" title="Joueurs & import Riot ID">
-    <div className="importBox">
-      <div><h3>Importer un joueur</h3><p>Dans la version finale, tu entres seulement le Riot ID : <b>Pseudo#TAG</b>. Le site récupère automatiquement rang, winrate, nombre de games, champions joués, peak elo et calcule la valeur CZF.</p></div>
-      <form className="fakeForm"><input placeholder="Pseudo#TAG"/><button type="button">Rechercher</button></form>
+  <Section id="compte" title="Compte CZF">
+
+  <div className="importBox">
+
+    <div>
+      <h3>Créer votre compte CZF</h3>
+
+      <p>
+        Connectez-vous avec Discord pour créer votre compte,
+        générer votre profil joueur CZF et rejoindre une équipe.
+      </p>
+
+      <p>
+        Une fois connecté, vous pourrez :
+      </p>
+
+      <ul>
+        <li>Créer votre profil joueur</li>
+        <li>Rejoindre une équipe</li>
+        <li>Participer aux compétitions CZF</li>
+        <li>Suivre votre progression</li>
+      </ul>
+
     </div>
-    {players.length === 0 ? <Empty text="Aucun joueur importé. Les fiches afficheront rôle, elo, logo de rang, most played champions, WR, peak elo et points CZF."/> : null}
-  </Section>
+
+    <div className="heroActions">
+      <a href="#">
+        Connexion Discord
+      </a>
+    </div>
+
+  </div>
+
+</Section>
 
 <Section id="calendrier" title="Prochain Match">
   <div className="card">
