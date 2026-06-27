@@ -17,6 +17,33 @@ export default function Home(){
     <img className="heroLogo" src="/assets/czf-logo.png" alt="Logo CZF"/>
   </header>
 
+  <div className="sectionTitle"
+  style={{ marginLeft: '160px' }}>
+    
+  <span></span>
+  <h2>Discord</h2>
+</div>
+
+<div className="card discordCard">
+  <h3>Rejoins la communauté CZF</h3>
+
+  <p>
+    Toutes les annonces, les inscriptions, les résultats et le suivi du
+    tournoi se font sur notre serveur Discord.
+  </p>
+
+  <br />
+
+  <a
+    href="https://discord.gg/TONLIEN"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="joinTeamBtn"
+  >
+    🚀 Rejoindre le Discord
+  </a>
+</div>
+
 <Section id="divisions" title="Divisions">
 
   <div className="grid three">
@@ -24,19 +51,19 @@ export default function Home(){
     <article className="card">
       <h3>Targon</h3>
       <p>Division Élite</p>
-      <p>250 à 349 points CZF</p>
+      <p>CZF</p>
     </article>
 
     <article className="card">
       <h3>Ixtal</h3>
       <p>Division Intermédiaire</p>
-      <p>150 à 249 points CZF</p>
+      <p>CZF</p>
     </article>
 
     <article className="card">
       <h3>Yordle</h3>
       <p>Division Développement</p>
-      <p>0 à 149 points CZF</p>
+      <p>CZF</p>
     </article>
 
   </div>
@@ -91,9 +118,12 @@ export default function Home(){
     </div>
 
     <div className="heroActions">
-      <a href="#">
-        Connexion Discord
-      </a>
+      <a
+  href="/login"
+  className="rulebookButton"
+>
+  Connexion Discord
+</a>
     </div>
 
   </div>

@@ -668,3 +668,62 @@ min-height: 80px;
 .joinTeamBtn:hover {
   opacity: 0.9;
 }
+
+.playersHeader,
+.playerRow {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1.3fr 0.9fr 0.8fr 1.4fr 0.6fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.playerRow > div,
+.playersHeader > div {
+  min-width: 0;
+}
+
+.championPool {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.championPool img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.championPool {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.championPool img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.rankCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rankIcon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.discordCard {
+    max-width: 850px;
+    margin-left: 160px;
+    margin-bottom: 60px;
+}
