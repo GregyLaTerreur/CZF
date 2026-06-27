@@ -899,3 +899,93 @@ a.joinTeamBtn:active {
   transform: translateY(2px) scale(0.98);
   filter: brightness(0.92);
 }
+
+@media (max-width: 700px) {
+  .section {
+    padding: 24px 12px;
+  }
+
+  .card {
+    width: 100%;
+    padding: 22px;
+    overflow: visible;
+  }
+
+  .fakeForm {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .fakeForm input,
+  .fakeForm textarea,
+  .fakeForm select,
+  .fakeForm button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .rolesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .roleSection {
+    margin-top: 0;
+    width: 100%;
+  }
+
+  .rolePicker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .roleBtn {
+    width: 100%;
+    min-width: 0;
+    padding: 16px 10px;
+    justify-content: center;
+  }
+
+  .playersHeader,
+  .playerRow {
+    min-width: 820px;
+  }
+
+  .teamsHeader,
+  .teamRow {
+    min-width: 820px;
+  }
+
+  .teamDetails {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .teamLogoBig {
+    width: 220px;
+    height: 220px;
+  }
+
+  .discordCard {
+    margin-left: 0 !important;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .rolePicker {
+    grid-template-columns: 1fr;
+  }
+
+  .card h3,
+  .sectionTitle h2 {
+    font-size: 30px;
+  }
+}
