@@ -727,3 +727,175 @@ min-height: 80px;
     margin-left: 160px;
     margin-bottom: 60px;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.section {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding-left: clamp(16px, 4vw, 80px);
+  padding-right: clamp(16px, 4vw, 80px);
+}
+
+.card {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.fakeForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.fakeForm input,
+.fakeForm textarea,
+.fakeForm select,
+.fakeForm button {
+  max-width: 100%;
+}
+
+.rolesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.rolePicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.playersTable {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.playersHeader,
+.playerRow,
+.teamsHeader,
+.teamRow {
+  min-width: 900px;
+}
+
+.teamDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.teamInfos {
+  flex: 1 1 420px;
+}
+
+.teamLogoBigContainer {
+  flex: 0 1 320px;
+}
+
+.teamLogoBig {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 900px) {
+  .sectionTitle {
+    margin-left: 0 !important;
+  }
+
+  .discordCard {
+    margin-left: 0 !important;
+    max-width: 100%;
+  }
+
+  .fakeForm {
+    flex-direction: column;
+  }
+
+  .fakeForm input,
+  .fakeForm textarea,
+  .fakeForm select,
+  .fakeForm button {
+    width: 100%;
+  }
+
+  .rolesContainer {
+    flex-direction: column;
+  }
+
+  .rolePicker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roleBtn {
+    width: 100%;
+  }
+
+  .teamDetails {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sectionTitle h2 {
+    font-size: 32px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .rolePicker {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+button {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+button:active {
+  transform: translateY(2px) scale(0.98);
+  filter: brightness(0.92);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+a.joinTeamBtn {
+  transition: all 0.15s ease;
+}
+
+a.joinTeamBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+a.joinTeamBtn:active {
+  transform: translateY(2px) scale(0.98);
+  filter: brightness(0.92);
+}

@@ -35,7 +35,7 @@ export default function Home(){
   <br />
 
   <a
-    href="https://discord.gg/h5uEJeQSTD"
+    href="https://discord.gg/ZWSmEGrv2s"
     target="_blank"
     rel="noopener noreferrer"
     className="joinTeamBtn"

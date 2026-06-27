@@ -4,10 +4,35 @@ import { useEffect, useState } from 'react';
 import Nav from '../components/Nav';
 import { supabase } from '@/lib/supabase';
 
+const roles = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+
+const tiers = [
+  'IRON',
+  'BRONZE',
+  'SILVER',
+  'GOLD',
+  'PLATINUM',
+  'EMERALD',
+  'DIAMOND',
+  'MASTER',
+  'GRANDMASTER',
+  'CHALLENGER',
+];
+
+const ranks = ['IV', 'III', 'II', 'I'];
+
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [player, setPlayer] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
+
+  const [editing, setEditing] = useState(false);
+  const [editMainRole, setEditMainRole] = useState('');
+  const [editSecondaryRole, setEditSecondaryRole] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPeakTier, setEditPeakTier] = useState('');
+  const [editPeakRank, setEditPeakRank] = useState('');
+  const [editPeakLp, setEditPeakLp] = useState('0');
 
   useEffect(() => {
     loadProfile();
@@ -57,54 +82,139 @@ export default function ProfilePage() {
     setTeam(captainTeam || memberTeam || null);
   }
 
+  function getRankText(player: any) {
+    if (!player?.soloq_tier) return 'Unranked';
+
+    if (
+      ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(player.soloq_tier)
+    ) {
+      return `${player.soloq_tier} ${player.soloq_lp || 0} LP`;
+    }
+
+    return `${player.soloq_tier} ${player.soloq_rank || ''} ${
+      player.soloq_lp || 0
+    } LP`;
+  }
+
+  function getPeakText(player: any) {
+    if (!player?.peak_tier) return '-';
+
+    if (
+      ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(player.peak_tier)
+    ) {
+      return `${player.peak_tier} ${player.peak_lp || 0} LP`;
+    }
+
+    return `${player.peak_tier} ${player.peak_rank || ''} ${
+      player.peak_lp || 0
+    } LP`;
+  }
+
+  function getWinrate(player: any) {
+    const wins = player?.soloq_wins || 0;
+    const losses = player?.soloq_losses || 0;
+    const total = wins + losses;
+
+    if (total === 0) return '-';
+
+    return `${Math.round((wins / total) * 100)}%`;
+  }
+
   async function toggleLft() {
-  if (!player) return;
+    if (!player) return;
 
-  const res = await fetch('/api/players', {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      player_id: player.id,
-      lft: !player.lft,
-    }),
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    setPlayer({
-      ...player,
-      lft: !player.lft,
+    const res = await fetch('/api/players', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        player_id: player.id,
+        lft: !player.lft,
+      }),
     });
-  } else {
-    alert('Erreur ❌');
+
+    const data = await res.json();
+
+    if (data.success) {
+      setPlayer({
+        ...player,
+        lft: !player.lft,
+      });
+    } else {
+      alert('Erreur ❌');
+    }
   }
-}
 
-async function refreshRiot() {
-  if (!player) return;
+  async function refreshRiot(showAlert = true) {
+    if (!player) return;
 
-  const res = await fetch('/api/players/riot-refresh', {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      player_id: player.id,
-    }),
-  });
+    const res = await fetch('/api/players/riot-refresh', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        player_id: player.id,
+      }),
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
-    alert('Données Riot actualisées ✅');
-    window.location.reload();
-  } else {
-    alert(data.message || 'Erreur Riot ❌');
+    if (data.success) {
+      if (showAlert) {
+        alert('Données Riot actualisées ✅');
+      }
+
+      window.location.reload();
+    } else {
+      alert(data.message || 'Erreur Riot ❌');
+    }
   }
-}
+
+  function startEditProfile() {
+    if (!player) return;
+
+    setEditing(true);
+    setEditMainRole(player.main_role || '');
+    setEditSecondaryRole(player.secondary_role || '');
+    setEditDescription(player.description || '');
+    setEditPeakTier(player.peak_tier || '');
+    setEditPeakRank(player.peak_rank || '');
+    setEditPeakLp(String(player.peak_lp || 0));
+  }
+
+  async function saveProfile() {
+    if (!player) return;
+
+    const res = await fetch('/api/players', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        player_id: player.id,
+        main_role: editMainRole,
+        secondary_role: editSecondaryRole || null,
+        description: editDescription || null,
+        peak_tier: editPeakTier || null,
+        peak_rank:
+          ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(editPeakTier)
+            ? null
+            : editPeakRank || null,
+        peak_lp: Number(editPeakLp) || 0,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Profil modifié ✅ Recalcul des points...');
+      await refreshRiot(false);
+    } else {
+      alert('Erreur modification profil ❌');
+    }
+  }
 
   return (
     <>
@@ -159,7 +269,7 @@ async function refreshRiot() {
               </>
             )}
 
-            {player && (
+            {player && !editing && (
               <>
                 <p>
                   <strong>Riot ID :</strong> {player.riot_id}
@@ -175,38 +285,166 @@ async function refreshRiot() {
                 </p>
 
                 <p>
+                  <strong>Peak déclaré :</strong> {getPeakText(player)}
+                </p>
+
+                <p>
+                  <strong>Rank SoloQ :</strong> {getRankText(player)}
+                </p>
+
+                <p>
+                  <strong>Winrate SoloQ :</strong> {getWinrate(player)}
+                </p>
+
+                <p>
+                  <strong>Games SoloQ :</strong>{' '}
+                  {(player.soloq_wins || 0) + (player.soloq_losses || 0)}
+                </p>
+
+                <p>
+                  <strong>Points CZF :</strong>{' '}
+                  {player.czf_points ?? '-'}
+                </p>
+
+                <p>
                   <strong>Équipe :</strong>{' '}
                   {team ? team.name : 'Aucune équipe'}
                 </p>
 
                 <p>
-  <strong>LFT :</strong>{' '}
-  {player.lft ? '🟢 Oui' : '🔴 Non'}
-</p>
-
-<button
-  className="joinTeamBtn"
-  onClick={toggleLft}
->
-  {player.lft
-    ? 'Ne plus être LFT'
-    : 'Me mettre LFT'}
-</button>
-
-                <p>
-                  <strong>Points CZF :</strong> bientôt disponible
+                  <strong>LFT :</strong>{' '}
+                  {player.lft ? '🟢 Oui' : '🔴 Non'}
                 </p>
 
-    <button
-  className="joinTeamBtn"
-  onClick={refreshRiot}
->
-  🔄 Actualiser mes données Riot
-</button>
+                <button
+                  className="joinTeamBtn"
+                  onClick={startEditProfile}
+                >
+                  Modifier mon profil
+                </button>
 
-                <p>
-                  <strong>Rang Riot :</strong> bientôt disponible
-                </p>
+                <button
+                  className="joinTeamBtn"
+                  onClick={() => refreshRiot(true)}
+                  style={{ marginLeft: '10px' }}
+                >
+                  🔄 Actualiser Riot
+                </button>
+
+                <button
+                  className="joinTeamBtn"
+                  onClick={toggleLft}
+                  style={{ marginLeft: '10px' }}
+                >
+                  {player.lft ? 'Ne plus être LFT' : 'Me mettre LFT'}
+                </button>
+              </>
+            )}
+
+            {player && editing && (
+              <>
+                <h3>Modifier mon profil</h3>
+
+                <label>Rôle principal</label>
+                <select
+                  value={editMainRole}
+                  onChange={(e) => setEditMainRole(e.target.value)}
+                >
+                  {roles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+
+                <br />
+                <br />
+
+                <label>Rôle secondaire</label>
+                <select
+                  value={editSecondaryRole}
+                  onChange={(e) => setEditSecondaryRole(e.target.value)}
+                >
+                  <option value="">Aucun</option>
+                  {roles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+
+                <br />
+                <br />
+
+                <label>Description</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Description"
+                />
+
+                <br />
+                <br />
+
+                <label>Peak elo déclaré</label>
+                <select
+                  value={editPeakTier}
+                  onChange={(e) => {
+                    setEditPeakTier(e.target.value);
+                    setEditPeakRank('');
+                  }}
+                >
+                  <option value="">Aucun</option>
+                  {tiers.map((tier) => (
+                    <option key={tier} value={tier}>
+                      {tier}
+                    </option>
+                  ))}
+                </select>
+
+                {editPeakTier &&
+                  !['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(
+                    editPeakTier
+                  ) && (
+                    <select
+                      value={editPeakRank}
+                      onChange={(e) => setEditPeakRank(e.target.value)}
+                    >
+                      <option value="">Division</option>
+                      {ranks.map((rank) => (
+                        <option key={rank} value={rank}>
+                          {rank}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                {editPeakTier && (
+                  <input
+                    type="number"
+                    value={editPeakLp}
+                    onChange={(e) => setEditPeakLp(e.target.value)}
+                    placeholder="LP"
+                  />
+                )}
+
+                <br />
+                <br />
+
+                <button
+                  className="joinTeamBtn"
+                  onClick={saveProfile}
+                >
+                  Enregistrer
+                </button>
+
+                <button
+                  className="joinTeamBtn"
+                  onClick={() => setEditing(false)}
+                  style={{ marginLeft: '10px' }}
+                >
+                  Annuler
+                </button>
               </>
             )}
           </div>

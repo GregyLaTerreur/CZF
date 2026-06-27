@@ -290,6 +290,33 @@ async function removeMember(teamId: number, riotId: string) {
   }
 }
 
+async function deleteTeam(teamId: number) {
+  const ok = confirm(
+    "Supprimer définitivement cette équipe ?"
+  );
+
+  if (!ok) return;
+
+  const res = await fetch("/api/teams/delete", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      team_id: teamId,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("Équipe supprimée.");
+    window.location.reload();
+  } else {
+    alert("Erreur.");
+  }
+}
+
 function getChampionIconUrl(championName: string) {
   return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${championName}.png`;
 }
@@ -596,13 +623,26 @@ function renderChampionPool(riotId: string) {
                             )}
 
                             {isCaptain && (
-                              <button
-                                className="joinTeamBtn"
-                                onClick={() => startEditingTeam(team)}
-                              >
-                                Modifier l'équipe
-                              </button>
-                            )}
+  <>
+    <button
+      className="joinTeamBtn"
+      onClick={() => startEditingTeam(team)}
+    >
+      Modifier l'équipe
+    </button>
+
+    <button
+      className="joinTeamBtn"
+      style={{
+        background: "#d32f2f",
+        marginLeft: "10px",
+      }}
+      onClick={() => deleteTeam(team.id)}
+    >
+      Supprimer l'équipe
+    </button>
+  </>
+)}
 
                             {!joinBlockReason && (
                               <button
