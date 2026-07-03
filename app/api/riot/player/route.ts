@@ -83,13 +83,13 @@ async function getTopChampions(puuid: string) {
   const allMatchIds: string[] = [];
 
   for (const queue of queues) {
-    const matchIdsRes = await fetch(
+    chIdsRes = await fetch(
       `https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${queue}&start=0&count=50`,
       {
         headers: {
           'X-Riot-Token': RIOT_API_KEY!,
         },
-      }
+      }const mat
     );
 
     if (matchIdsRes.ok) {
@@ -109,17 +109,19 @@ async function getTopChampions(puuid: string) {
 
   for (const matchId of allMatchIds.slice(0, 70)) {
     const matchRes = await fetch(
-      `https://europe.api.riotgames.com/lol/match/v5/matches/${matchId}`,
-      {
-        headers: {
-          'X-Riot-Token': RIOT_API_KEY!,
-        },
-      }
-    );
+  `https://europe.api.riotgames.com/lol/match/v5/matches/${matchId}`,
+  {
+    headers: {
+      'X-Riot-Token': RIOT_API_KEY!,
+    },
+  }
+);
 
-    if (!matchRes.ok) continue;
+await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const match = await matchRes.json();
+if (!matchRes.ok) continue;
+
+const match = await matchRes.json();
     
 
     const participant = match.info.participants.find(
