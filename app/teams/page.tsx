@@ -123,9 +123,9 @@ function getTeamPoints(teamId: number) {
 function getTeamDivision(teamId: number) {
   const points = getTeamPoints(teamId);
 
-  if (points >= 7101) return 'Targon';
-  if (points >= 3901) return 'Ixtal';
-  return 'Yordle';
+  if (points >= 7101) return "Targon";
+  if (points >= 3901) return "Ixtal";
+  return "Yordle";
 }
 
   function isTeamComplete(teamId: number) {
@@ -524,8 +524,8 @@ function renderChampionPool(riotId: string) {
               const joinBlockReason = getJoinBlockReason(team.id);
 
               return (
-                <div key={team.id}>
-                  <div className="teamRow">
+  <div key={team.id} id={`team-${team.id}`}>
+    <div className="teamRow">
                     <div
                       className="teamArrow"
                       onClick={() =>
@@ -550,9 +550,13 @@ function renderChampionPool(riotId: string) {
                     <div>{team.captain_riot_id || '-'}</div>
 
                     <div>
-  {getTeamDivision(team.id)}
-  <br />
-  <span className="muted">{getTeamPoints(team.id)} pts</span>
+  {isTeamComplete(team.id) ? (
+    <span>
+      {getTeamDivision(team.id)} — {getTeamPoints(team.id)} pts
+    </span>
+  ) : (
+    <span className="muted">Équipe incomplète</span>
+  )}
 </div>
 
                     <div>{count} / 5</div>
