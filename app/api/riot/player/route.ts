@@ -2,34 +2,48 @@ import { NextResponse } from 'next/server';
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
-const tierPoints: Record<string, number> = {
-  IRON: 0,
-  BRONZE: 100,
-  SILVER: 300,
-  GOLD: 500,
-  PLATINUM: 800,
-  EMERALD: 1100,
-  DIAMOND: 1500,
-  MASTER: 2000,
-  GRANDMASTER: 2400,
-  CHALLENGER: 2800,
-};
+function getTierBase(tier: string | null) {
+  switch (tier) {
+    case 'IRON': return 0;
+    case 'BRONZE': return 200;
+    case 'SILVER': return 400;
+    case 'GOLD': return 650;
+    case 'PLATINUM': return 950;
+    case 'EMERALD': return 1250;
+    case 'DIAMOND': return 1500;
+    case 'MASTER': return 1800;
+    case 'GRANDMASTER': return 2150;
+    case 'CHALLENGER': return 2500;
+    default: return 0;
+  }
+}
 
-const rankPoints: Record<string, number> = {
-  IV: 0,
-  III: 50,
-  II: 100,
-  I: 150,
-};
+function getRankBonus(rank: string | null) {
+  switch (rank) {
+    case 'III': return 15;
+    case 'II': return 30;
+    case 'I': return 45;
+    default: return 0;
+  }
+}
 
-function eloPoints(tier: string | null, rank: string | null, lp: number) {
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function calculateRankPoints(
+  tier: string | null,
+  rank: string | null,
+  lp: number | null
+) {
   if (!tier) return 0;
 
-  return (
-    (tierPoints[tier] || 0) +
-    (rankPoints[rank || ''] || 0) +
-    (lp || 0)
-  );
+  const rankBonus =
+    ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(tier)
+      ? 0
+      : getRankBonus(rank);
+
+  return getTierBase(tier) + rankBonus + (lp || 0);
 }
 
 function calculateCzfPoints({
@@ -45,39 +59,23 @@ function calculateCzfPoints({
   peakRank,
   peakLp,
 }: any) {
-  const soloq = eloPoints(soloqTier, soloqRank, soloqLp);
-  const flex = eloPoints(flexTier, flexRank, flexLp);
-  const peak = eloPoints(peakTier, peakRank, peakLp);
+  const soloq = calculateRankPoints(soloqTier, soloqRank, soloqLp);
+  const flex = calculateRankPoints(flexTier, flexRank, flexLp);
+  const peak = calculateRankPoints(peakTier, peakRank, peakLp);
 
   const games = (wins || 0) + (losses || 0);
-  const wr = games > 0 ? wins / games : 0.5;
-
-  const peakBonus =
-    peak > soloq ? Math.round((peak - soloq) * 0.3) : 0;
 
   let wrBonus = 0;
 
-  if (games >= 20) {
-    wrBonus = Math.round((wr - 0.5) * 1000);
-    wrBonus = Math.max(-100, Math.min(150, wrBonus));
+  if (games >= 30) {
+    const winrate = ((wins || 0) / games) * 100;
+    wrBonus = clamp((winrate - 50) * 15, -100, 150);
   }
 
-  let gamesBonus = 0;
+  const peakBonus = clamp((peak - soloq) * 0.25, 0, 150);
+  const flexBonus = clamp((flex - soloq) * 0.15, 0, 100);
 
-  if (games < 20) gamesBonus = 150;
-  else if (games < 50) gamesBonus = 75;
-
-  const flexBonus =
-    flex > soloq ? Math.round((flex - soloq) * 0.2) : 0;
-
-  const totalBonus = Math.min(
-    300,
-    peakBonus + Math.max(0, wrBonus) + gamesBonus + flexBonus
-  );
-
-  const totalMalus = Math.max(-100, Math.min(0, wrBonus));
-
-  return soloq + totalBonus + totalMalus;
+  return Math.round(soloq + wrBonus + peakBonus + flexBonus);
 }
 
 async function getTopChampions(puuid: string) {
