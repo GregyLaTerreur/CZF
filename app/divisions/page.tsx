@@ -98,7 +98,7 @@ export default function DivisionsPage() {
         <DivisionCard
           title="🟣 Targon"
           description="La division élite du CZF."
-          range="7101+ points CZF"
+          range="7101 à 9000 points CZF"
           teams={targonTeams}
         />
 
