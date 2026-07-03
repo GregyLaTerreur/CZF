@@ -433,10 +433,10 @@ function getDpmUrl(riotId: string) {
   }
 
   function getSortLabel(key: SortKey, label: string) {
-    if (sortKey !== key) return label;
+  if (sortKey !== key) return `${label} ↕`;
 
-    return `${label} ${sortDirection === 'asc' ? '↑' : '↓'}`;
-  }
+  return `${label} ${sortDirection === 'asc' ? '↑' : '↓'}`;
+}
 
   const displayedPlayers = useMemo(() => {
     let list = [...players];

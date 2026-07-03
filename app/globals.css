@@ -723,9 +723,9 @@ min-height: 80px;
 }
 
 .discordCard {
+    width: 100%;
     max-width: 850px;
-    margin-left: 160px;
-    margin-bottom: 60px;
+    margin: 0 0 60px 0;
 }
 
 * {
@@ -988,4 +988,30 @@ a.joinTeamBtn:active {
   .sectionTitle h2 {
     font-size: 30px;
   }
+}
+
+.playersHeader > div {
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 6px;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+
+.playersHeader > div:hover {
+  color: var(--orange);
+  background: rgba(242, 101, 34, 0.08);
+  transform: translateY(-1px);
+}
+
+.playersHeader > div:nth-child(6),
+.playersHeader > div:nth-child(7) {
+  cursor: default;
+}
+
+.playersHeader > div:nth-child(6):hover,
+.playersHeader > div:nth-child(7):hover {
+  color: inherit;
+  background: transparent;
+  transform: none;
 }
