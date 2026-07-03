@@ -722,11 +722,6 @@ min-height: 80px;
   object-fit: contain;
 }
 
-.discordCard {
-    width: 100%;
-    max-width: 850px;
-    margin: 0 0 60px 0;
-}
 
 * {
   box-sizing: border-box;
@@ -812,10 +807,8 @@ body {
     margin-left: 0 !important;
   }
 
-  .discordCard {
-    margin-left: 0 !important;
-    max-width: 100%;
-  }
+ 
+
 
   .fakeForm {
     flex-direction: column;
@@ -973,10 +966,6 @@ a.joinTeamBtn:active {
     height: 220px;
   }
 
-  .discordCard {
-    margin-left: 0 !important;
-    max-width: 100%;
-  }
 }
 
 @media (max-width: 420px) {

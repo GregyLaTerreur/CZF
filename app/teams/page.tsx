@@ -107,6 +107,27 @@ export default function TeamsPage() {
     return getTeamMembers(teamId).length;
   }
 
+  function getPlayerByRiotId(riotId: string) {
+  return players.find((p) => p.riot_id === riotId);
+}
+
+function getTeamPoints(teamId: number) {
+  const members = getTeamMembers(teamId);
+
+  return members.reduce((total, member) => {
+    const foundPlayer = getPlayerByRiotId(member.riot_id);
+    return total + (foundPlayer?.czf_points || 0);
+  }, 0);
+}
+
+function getTeamDivision(teamId: number) {
+  const points = getTeamPoints(teamId);
+
+  if (points >= 7101) return 'Targon';
+  if (points >= 3901) return 'Ixtal';
+  return 'Yordle';
+}
+
   function isTeamComplete(teamId: number) {
     return getTeamCount(teamId) >= 5;
   }
@@ -528,7 +549,11 @@ function renderChampionPool(riotId: string) {
 
                     <div>{team.captain_riot_id || '-'}</div>
 
-                    <div>{team.division || '-'}</div>
+                    <div>
+  {getTeamDivision(team.id)}
+  <br />
+  <span className="muted">{getTeamPoints(team.id)} pts</span>
+</div>
 
                     <div>{count} / 5</div>
 
@@ -603,6 +628,14 @@ function renderChampionPool(riotId: string) {
                               <strong>Capitaine :</strong>{' '}
                               {team.captain_riot_id || '-'}
                             </p>
+
+                            <p>
+  <strong>Division :</strong> {getTeamDivision(team.id)}
+</p>
+
+<p>
+  <strong>Total CZF :</strong> {getTeamPoints(team.id)} pts
+</p>
 
                             <p>
                               <strong>Description :</strong>{' '}
