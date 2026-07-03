@@ -57,6 +57,7 @@ const riotRes = await fetch(
         czf_points: data.czf_points,
       })
       .eq('id', player.id);
+      await new Promise(resolve => setTimeout(resolve, 1500));
   }
 
   return NextResponse.json({
