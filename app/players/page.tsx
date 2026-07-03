@@ -675,15 +675,19 @@ function getDpmUrl(riotId: string) {
             </div>
 
             {displayedPlayers.map((player) => {
-              const points = getPlayerPoints(player);
+  const points = getPlayerPoints(player);
 
-              return (
-                <div
-                  key={player.id}
-                  className="playerRow"
-                  onClick={() => setSelectedPlayer(player)}
-                  style={{ cursor: 'pointer' }}
-                >
+  return (
+    <div key={player.id}>
+      <div
+        className="playerRow"
+        onClick={() =>
+          setSelectedPlayer(
+            selectedPlayer?.id === player.id ? null : player
+          )
+        }
+        style={{ cursor: 'pointer' }}
+      >
                   <div>{player.riot_id}</div>
 
                   <div>
@@ -721,113 +725,69 @@ function getDpmUrl(riotId: string) {
                   <div>{renderChampionPool(player)}</div>
 
                   <div>{player.lft ? '🟢' : '-'}</div>
-                </div>
-              );
+                      </div>
+
+      {selectedPlayer?.id === player.id && (
+        <div className="card">
+          <h3>{player.riot_id}</h3>
+
+          {player.profile_icon_id && (
+            <img
+              src={`https://ddragon.leagueoflegends.com/cdn/14.24.1/img/profileicon/${player.profile_icon_id}.png`}
+              alt="Icone Riot"
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                objectFit: 'cover',
+              }}
+            />
+          )}
+
+          <p><strong>Rôle principal :</strong> {player.main_role || '-'}</p>
+          <p><strong>Rôle secondaire :</strong> {player.secondary_role || '-'}</p>
+
+          <div>
+            <strong>Champion pool :</strong>
+            <div style={{ marginTop: '8px' }}>
+              {renderChampionPool(player)}
+            </div>
+          </div>
+
+          <p><strong>Rank SoloQ :</strong> {getPlayerRank(player)}</p>
+          <p><strong>Peak :</strong> {getPeakRank(player)}</p>
+          <p><strong>Flex :</strong> {getFlexRank(player)}</p>
+          <p><strong>WR SoloQ :</strong> {getPlayerWR(player)}</p>
+          <p><strong>Games SoloQ :</strong> {getPlayerGames(player)}</p>
+          <p><strong>Niveau :</strong> {player.summoner_level || '-'}</p>
+          <p><strong>Points CZF :</strong> {getPlayerPoints(player) ?? '-'}</p>
+          <p><strong>Équipe :</strong> {getPlayerTeam(player)?.name || 'Aucune'}</p>
+          <p><strong>Description :</strong> {player.description || '-'}</p>
+
+          <p>
+            <a
+              href={getDpmUrl(player.riot_id)}
+              target="_blank"
+              rel="noreferrer"
+              className="multiggLink"
+            >
+              Voir le profil DPM →
+            </a>
+          </p>
+
+          <button
+            className="joinTeamBtn"
+            onClick={() => setSelectedPlayer(null)}
+          >
+            Fermer
+          </button>
+        </div>
+      )}
+    </div>
+  );
             })}
           </div>
         </div>
-
-        {selectedPlayer && (
-          <>
-            <br />
-
-            <div className="card">
-              <h3>{selectedPlayer.riot_id}</h3>
-
-              {selectedPlayer.profile_icon_id && (
-                <img
-                  src={`https://ddragon.leagueoflegends.com/cdn/14.24.1/img/profileicon/${selectedPlayer.profile_icon_id}.png`}
-                  alt="Icone Riot"
-                  style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                  }}
-                />
-              )}
-
-              <p>
-                <strong>Rôle principal :</strong>{' '}
-                {selectedPlayer.main_role || '-'}
-              </p>
-
-              <p>
-                <strong>Rôle secondaire :</strong>{' '}
-                {selectedPlayer.secondary_role || '-'}
-              </p>
-
-              <div>
-  <strong>Champion pool :</strong>
-
-  <div style={{ marginTop: '8px' }}>
-    {renderChampionPool(selectedPlayer)}
-  </div>
-</div>
-
-              <p>
-                <strong>Rank SoloQ :</strong>{' '}
-                {getPlayerRank(selectedPlayer)}
-              </p>
-
-              <p>
-                <strong>Peak :</strong> {getPeakRank(selectedPlayer)}
-              </p>
-
-              <p>
-                <strong>Flex :</strong> {getFlexRank(selectedPlayer)}
-              </p>
-
-              <p>
-                <strong>WR SoloQ :</strong>{' '}
-                {getPlayerWR(selectedPlayer)}
-              </p>
-
-              <p>
-                <strong>Games SoloQ :</strong>{' '}
-                {getPlayerGames(selectedPlayer)}
-              </p>
-
-              <p>
-                <strong>Niveau :</strong>{' '}
-                {selectedPlayer.summoner_level || '-'}
-              </p>
-
-              <p>
-                <strong>Points CZF :</strong>{' '}
-                {getPlayerPoints(selectedPlayer) ?? '-'}
-              </p>
-
-              <p>
-                <strong>Équipe :</strong>{' '}
-                {getPlayerTeam(selectedPlayer)?.name || 'Aucune'}
-              </p>
-
-              <p>
-                <strong>Description :</strong>{' '}
-                {selectedPlayer.description || '-'}
-              </p>
-
-              <p>
-                <a
-                  href={getDpmUrl(selectedPlayer.riot_id)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="multiggLink"
-                >
-                  Voir le profil DPM →
-                </a>
-              </p>
-
-              <button
-                className="joinTeamBtn"
-                onClick={() => setSelectedPlayer(null)}
-              >
-                Fermer
-              </button>
-            </div>
-          </>
-        )}
       </main>
     </>
   );
