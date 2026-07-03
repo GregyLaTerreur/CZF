@@ -309,6 +309,10 @@ function renderChampionPool(player: any) {
     return player.czf_points ?? null;
   }
 
+  function getPlayerRankValue(player: any) {
+  return player.czf_points ?? -1;
+}
+
   function getPlayerRank(player: any) {
     if (!player.soloq_tier) return '-';
 
@@ -420,8 +424,9 @@ function renderChampionPool(player: any) {
         aValue = getPlayerPoints(a) ?? -1;
         bValue = getPlayerPoints(b) ?? -1;
       } else if (sortKey === 'rank') {
-        aValue = getPlayerRank(a);
-        bValue = getPlayerRank(b);
+  aValue = getPlayerRankValue(a);
+  bValue = getPlayerRankValue(b);
+
       } else if (sortKey === 'lft') {
         aValue = a.lft ? 1 : 0;
         bValue = b.lft ? 1 : 0;
