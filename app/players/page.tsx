@@ -341,9 +341,7 @@ function renderChampionPool(player: any) {
   );
 }
 
-  function getPlayerRankValue(player: any) {
-  return player.czf_points ?? -1;
-}
+
 
   function getPlayerRank(player: any) {
     if (!player.soloq_tier) return '-';
