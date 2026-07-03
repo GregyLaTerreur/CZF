@@ -417,10 +417,9 @@ function renderChampionPool(player: any) {
     return teams.find((team) => team.id === member.team_id) || null;
   }
 
-  function getOpggUrl(riotId: string) {
-    const encoded = encodeURIComponent(riotId);
-    return `https://op.gg/lol/summoners/euw/${encoded}`;
-  }
+function getDpmUrl(riotId: string) {
+  return `https://dpm.lol/${riotId.replace('#', '-')}`;
+}
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -811,12 +810,12 @@ function renderChampionPool(player: any) {
 
               <p>
                 <a
-                  href={getOpggUrl(selectedPlayer.riot_id)}
+                  href={getDpmUrl(selectedPlayer.riot_id)}
                   target="_blank"
                   rel="noreferrer"
                   className="multiggLink"
                 >
-                  Voir le profil OP.GG →
+                  Voir le profil DPM →
                 </a>
               </p>
 
