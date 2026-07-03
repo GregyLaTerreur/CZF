@@ -262,7 +262,9 @@ const [gameName, tagLine] = riot_id
         (entry: any) => entry.queueType === 'RANKED_FLEX_SR'
       ) || null;
 
-    const top_champions = await getTopChampions(account.puuid);
+    const top_champions = body.skip_top_champions
+  ? null
+  : await getTopChampions(account.puuid);
 
     const czf_points = calculateCzfPoints({
       soloqTier: soloq?.tier || null,

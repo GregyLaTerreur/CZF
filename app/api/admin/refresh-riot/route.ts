@@ -22,11 +22,12 @@ const riotRes = await fetch(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          riot_id: String(player.riot_id).trim(),
-          peak_tier: player.peak_tier,
-          peak_rank: player.peak_rank,
-          peak_lp: player.peak_lp,
-        }),
+  riot_id: String(player.riot_id).trim(),
+  peak_tier: player.peak_tier,
+  peak_rank: player.peak_rank,
+  peak_lp: player.peak_lp,
+  skip_top_champions: true,
+}),
       }
     );
 
@@ -53,7 +54,6 @@ const riotRes = await fetch(
         peak_tier: data.peak_tier,
         peak_rank: data.peak_rank,
         peak_lp: data.peak_lp,
-        top_champions: data.top_champions,
         czf_points: data.czf_points,
       })
       .eq('id', player.id);
