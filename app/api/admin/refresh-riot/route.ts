@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-export async function PATCH() {
+export async function PATCH(request: Request) {
   const { data: players, error } = await supabase
     .from('players')
     .select('*');
@@ -14,8 +14,10 @@ export async function PATCH() {
   }
 
   for (const player of players || []) {
-    const riotRes = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/riot/player`,
+    const url = new URL(request.url);
+
+const riotRes = await fetch(
+  `${url.origin}/api/riot/player`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
