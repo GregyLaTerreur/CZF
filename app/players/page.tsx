@@ -310,6 +310,38 @@ function renderChampionPool(player: any) {
   }
 
   function getPlayerRankValue(player: any) {
+  const tierOrder: Record<string, number> = {
+    IRON: 0,
+    BRONZE: 1,
+    SILVER: 2,
+    GOLD: 3,
+    PLATINUM: 4,
+    EMERALD: 5,
+    DIAMOND: 6,
+    MASTER: 7,
+    GRANDMASTER: 8,
+    CHALLENGER: 9,
+  };
+
+  const rankOrder: Record<string, number> = {
+    IV: 0,
+    III: 1,
+    II: 2,
+    I: 3,
+  };
+
+  const tier = player.soloq_tier;
+  const rank = player.soloq_rank;
+  const lp = player.soloq_lp || 0;
+
+  return (
+    (tierOrder[tier] ?? -1) * 10000 +
+    (rankOrder[rank] ?? 0) * 1000 +
+    lp
+  );
+}
+
+  function getPlayerRankValue(player: any) {
   return player.czf_points ?? -1;
 }
 
