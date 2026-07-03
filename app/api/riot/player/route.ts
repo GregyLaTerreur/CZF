@@ -120,7 +120,7 @@ async function getTopChampions(puuid: string) {
     if (!matchRes.ok) continue;
 
     const match = await matchRes.json();
-    await new Promise(resolve => setTimeout(resolve, 120));
+    
 
     const participant = match.info.participants.find(
       (p: any) => p.puuid === puuid
@@ -139,6 +139,7 @@ async function getTopChampions(puuid: string) {
     }
 
     championCounts[key].games += 1;
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   return Object.values(championCounts)
