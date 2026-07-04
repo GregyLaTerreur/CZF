@@ -88,13 +88,15 @@ export default function PlayersPage() {
   }
 
   async function fetchPlayers() {
-    const res = await fetch('/api/players');
-    const data = await res.json();
+  const res = await fetch('/api/players');
+  const data = await res.json();
 
-    if (data.success) {
-      setPlayers(data.data);
-    }
+  console.log(data.data);
+
+  if (data.success) {
+    setPlayers(data.data);
   }
+}
 
   async function fetchTeams() {
     const res = await fetch('/api/teams');
