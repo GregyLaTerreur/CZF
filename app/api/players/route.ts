@@ -5,11 +5,11 @@ export async function GET() {
   const { data, error } = await supabase
     .from('players')
     .select(`
-  *,
-  profiles (
-    discord_name
-  )
-`)
+      *,
+      profiles (
+        discord_name
+      )
+    `)
     .order('id', { ascending: true });
 
   if (error) {
