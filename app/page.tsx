@@ -26,7 +26,7 @@ export default function Home() {
 
           <div className="heroActions">
             <a href="#equipes">Voir les équipes</a>
-            <a href="#compte">Créer mon compte CZF</a>
+            <a href="#compte">Créer mon profil CZF</a>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export default function Home() {
 
           <div className="heroActions">
             <a href="/login" className="rulebookButton">
-              Connexion Discord
+              Créer mon profil CZF
             </a>
           </div>
         </div>

@@ -734,6 +734,11 @@ function getDpmUrl(riotId: string) {
         <div className="card">
           <h3>{player.riot_id}</h3>
 
+          <p><strong>Nom Discord :</strong> {player.profiles?.[0]?.discord_name || '-'}</p>
+          <p style={{ color: '#5865F2', fontWeight: 'bold' }}>
+  💬 {player.profiles?.discord_name || 'Non lié'}
+</p>
+
           {player.profile_icon_id && (
             <img
               src={`https://ddragon.leagueoflegends.com/cdn/14.24.1/img/profileicon/${player.profile_icon_id}.png`}
