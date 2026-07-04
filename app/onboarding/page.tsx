@@ -48,7 +48,7 @@ export default function OnboardingPage() {
 
           <div
             style={{
-              background: '#1f2937',
+              background: '#f1e2c0',
               padding: 20,
               borderRadius: 12,
             }}

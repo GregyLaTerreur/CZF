@@ -2,26 +2,37 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 export async function GET() {
-  const { data, error } = await supabase
+  const { data: players, error: playersError } = await supabase
     .from('players')
-    .select(`
-      *,
-      profiles (
-        discord_name
-      )
-    `)
+    .select('*')
     .order('id', { ascending: true });
 
-  if (error) {
+  if (playersError) {
     return NextResponse.json(
-      { success: false, error },
+      { success: false, error: playersError },
       { status: 500 }
     );
   }
 
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, discord_name');
+
+  if (profilesError) {
+    return NextResponse.json(
+      { success: false, error: profilesError },
+      { status: 500 }
+    );
+  }
+
+  const playersWithProfiles = players.map((player) => ({
+    ...player,
+    profiles: profiles.find((profile) => profile.id === player.profile_id) || null,
+  }));
+
   return NextResponse.json({
     success: true,
-    data,
+    data: playersWithProfiles,
   });
 }
 
