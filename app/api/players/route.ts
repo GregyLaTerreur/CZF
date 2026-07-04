@@ -4,12 +4,7 @@ import { supabase } from '@/lib/supabase';
 export async function GET() {
   const { data, error } = await supabase
     .from('players')
-    .select(`
-  *,
-  profiles (
-    discord_name
-  )
-`)
+    .select('*')
     .order('id', { ascending: true });
 
   if (error) {
