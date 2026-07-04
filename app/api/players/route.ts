@@ -25,11 +25,13 @@ export async function GET() {
     );
   }
 
-  const playersWithProfiles = players.map((player) => ({
-    ...player,
-    profiles: profiles.find((profile) => profile.id === player.profile_id) || null,
-  }));
-
+const playersWithProfiles = players.map((player) => ({
+  ...player,
+  profiles:
+    profiles.find(
+      (profile) => String(profile.id) === String(player.profile_id)
+    ) || null,
+}));
   return NextResponse.json({
     success: true,
     data: playersWithProfiles,
