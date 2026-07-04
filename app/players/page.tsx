@@ -115,28 +115,27 @@ export default function PlayersPage() {
   }
 
   async function fetchRiotData() {
-    const res = await fetch('/api/riot/player', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        riot_id: riotId,
-        peak_tier: peakTier || null,
-        peak_rank:
-          peakTier === 'MASTER' ? null : peakRank || null,
-        peak_lp: Number(peakLp) || 0,
-      }),
-    });
+  const res = await fetch('/api/riot/player', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      riot_id: riotId,
+      peak_tier: peakTier || null,
+      peak_rank: peakTier === 'MASTER' ? null : peakRank || null,
+      peak_lp: Number(peakLp) || 0,
+    }),
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (!data.success) {
-      throw new Error(data.message || 'Erreur Riot API');
-    }
-
-    return data.data;
+  if (!data.success) {
+    throw new Error(data.message || 'Erreur Riot API');
   }
+
+  return data.data;
+}
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -162,17 +161,21 @@ export default function PlayersPage() {
     try {
       const riotData = await fetchRiotData();
 
-      const res = await fetch('/api/players', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+const res = await fetch('/api/players', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${session?.access_token}`,
+  },
         body: JSON.stringify({
           riot_id: riotId,
           main_role: mainRole,
           secondary_role: secondaryRole || null,
           description: description || null,
-          profile_id: user.id,
 
           puuid: riotData.puuid,
           summoner_level: riotData.summoner_level,
