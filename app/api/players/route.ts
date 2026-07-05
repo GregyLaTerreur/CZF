@@ -69,6 +69,31 @@ export async function POST(request: Request) {
 
   const profile_id = user.id;
 
+  const { error: profileUpsertError } = await supabase
+  .from('profiles')
+  .upsert(
+    {
+      id: user.id,
+      discord_name:
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.user_metadata?.preferred_username ||
+        'Joueur',
+      is_admin: false,
+    },
+    { onConflict: 'id' }
+  );
+
+if (profileUpsertError) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: `Impossible de créer le profil Discord : ${profileUpsertError.message}`,
+    },
+    { status: 500 }
+  );
+}
+
 const discordUserId =
   user.user_metadata?.provider_id ||
   user.identities?.[0]?.identity_data?.provider_id;
