@@ -17,7 +17,24 @@ export default function OnboardingPage() {
         window.location.href = '/login';
         return;
       }
+const { data: existingProfile } = await supabase
+  .from('profiles')
+  .select('id')
+  .eq('id', user.id)
+  .maybeSingle();
 
+if (!existingProfile) {
+  await supabase.from('profiles').insert([
+    {
+      id: user.id,
+      discord_name:
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.user_metadata?.preferred_username ||
+        'Joueur',
+    },
+  ]);
+}
       setDiscordName(
         user.user_metadata?.full_name ||
           user.user_metadata?.name ||
