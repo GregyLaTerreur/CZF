@@ -87,10 +87,13 @@ export async function POST(request: Request) {
   );
 
 if (profileUpsertError) {
+  console.log('PROFILE UPSERT ERROR:', profileUpsertError);
+
   return NextResponse.json(
     {
       success: false,
       message: `Impossible de créer le profil Discord : ${profileUpsertError.message}`,
+      debug: profileUpsertError,
     },
     { status: 500 }
   );
