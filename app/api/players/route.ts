@@ -69,6 +69,7 @@ export async function POST(request: Request) {
   }
 
   const profile_id = user.id;
+  console.log('SERVICE ROLE EXISTS:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const { error: profileUpsertError } = await supabaseAdmin
   .from('profiles')
