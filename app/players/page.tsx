@@ -203,7 +203,7 @@ const res = await fetch('/api/players', {
       });
 
       const data = await res.json();
-
+console.log('Réponse création profil :', data);
       if (data.success) {
         setMessage('Profil créé avec succès ✅');
         setRiotId('');
