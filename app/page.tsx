@@ -1,6 +1,6 @@
 import Nav from './components/Nav';
 import Section from './components/Section';
-import { results } from './lib/data';
+import { results } from '@/lib/data';
 
 function Empty({ text }: { text: string }) {
   return <div className="empty">{text}</div>;
