@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET() {
   const { data: players, error: playersError } = await supabase
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
 
   const profile_id = user.id;
 
-  const { error: profileUpsertError } = await supabase
+  const { error: profileUpsertError } = await supabaseAdmin
   .from('profiles')
   .upsert(
     {
@@ -157,8 +158,7 @@ if (!memberRes.ok) {
     top_champions,
   } = body;
 
-  const { data: existingPlayer, error: existingError } = await supabase
-    .from('players')
+const { data: existingPlayer, error: existingError } = await supabaseAdmin    .from('players')
     .select('*')
     .eq('profile_id', profile_id)
     .maybeSingle();
@@ -180,9 +180,9 @@ if (!memberRes.ok) {
     );
   }
 
-  const { data, error } = await supabase
-    .from('players')
-    .insert([
+const { data, error } = await supabaseAdmin
+  .from('players')
+  .insert([
       {
         riot_id,
         main_role,
