@@ -217,11 +217,18 @@ console.log('Réponse création profil :', data);
         await fetchPlayers();
         await loadUser();
       } else {
-        setMessage(data.message || 'Erreur création profil ❌');
-      }
+  const errorMessage =
+    data.message ||
+    data.error?.message ||
+    data.error?.details ||
+    JSON.stringify(data.error) ||
+    'Erreur inconnue.';
+
+  setMessage(`Erreur création profil ❌ ${errorMessage}`);
+}
     } catch (error: any) {
-      setMessage(error.message || 'Erreur Riot ❌');
-    }
+  setMessage(`Erreur création profil ❌ ${error.message || 'Erreur inconnue'}`);
+}
 
     setLoadingRiot(false);
   }
@@ -736,7 +743,7 @@ function getDpmUrl(riotId: string) {
         <div className="card">
           <h3>{player.riot_id}</h3>
 
-          <p><strong>Nom Discord :</strong> {player.profiles?.[0]?.discord_name || '-'}</p>
+          <p><strong>Nom Discord :</strong> {player.profiles?.discord_name || '-'}</p>
           <p style={{ color: '#5865F2', fontWeight: 'bold' }}>
   💬 {player.profiles?.discord_name || 'Non lié'}
 </p>
