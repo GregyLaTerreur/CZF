@@ -303,9 +303,9 @@ if (!existingProfile) {
                   {player.secondary_role || '-'}
                 </p>
 
-                <p>
-                  <strong>Peak déclaré :</strong> {getPeakText(player)}
-                </p>
+               <p>
+  <strong>Peak SoloQ :</strong> {player.peak_tier} {player.peak_rank} {player.peak_lp} LP
+</p>
 
                 <p>
                   <strong>Rank SoloQ :</strong> {getRankText(player)}

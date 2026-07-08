@@ -41,10 +41,7 @@ export default function PlayersPage() {
   const [mainRole, setMainRole] = useState('');
   const [secondaryRole, setSecondaryRole] = useState('');
   const [description, setDescription] = useState('');
-
-  const [peakTier, setPeakTier] = useState('');
-  const [peakRank, setPeakRank] = useState('');
-  const [peakLp, setPeakLp] = useState('0');
+;
 
   const [message, setMessage] = useState('');
   const [loadingRiot, setLoadingRiot] = useState(false);
@@ -124,9 +121,6 @@ export default function PlayersPage() {
     },
     body: JSON.stringify({
       riot_id: riotId,
-      peak_tier: peakTier || null,
-      peak_rank: peakTier === 'MASTER' ? null : peakRank || null,
-      peak_lp: Number(peakLp) || 0,
     }),
   });
 
@@ -210,9 +204,6 @@ console.log('Réponse création profil :', data);
         setMainRole('');
         setSecondaryRole('');
         setDescription('');
-        setPeakTier('');
-        setPeakRank('');
-        setPeakLp('0');
 
         await fetchPlayers();
         await loadUser();
@@ -577,49 +568,6 @@ function getDpmUrl(riotId: string) {
                 </div>
               </div>
 
-              <h4>Peak elo déclaré</h4>
-
-              <select
-                value={peakTier}
-                onChange={(e) => {
-                  setPeakTier(e.target.value);
-                  if (e.target.value === 'MASTER') {
-                    setPeakRank('');
-                  }
-                }}
-              >
-                <option value="">Peak = elo actuel</option>
-
-                {tiers.map((tier) => (
-                  <option key={tier} value={tier}>
-                    {tier}
-                  </option>
-                ))}
-              </select>
-
-              {peakTier && peakTier !== 'MASTER' && (
-                <select
-                  value={peakRank}
-                  onChange={(e) => setPeakRank(e.target.value)}
-                >
-                  <option value="">Division</option>
-
-                  {ranks.map((rank) => (
-                    <option key={rank} value={rank}>
-                      {rank}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              {peakTier && (
-                <input
-                  type="number"
-                  placeholder="LP peak"
-                  value={peakLp}
-                  onChange={(e) => setPeakLp(e.target.value)}
-                />
-              )}
 
               <textarea
                 placeholder="Description (optionnel)"
