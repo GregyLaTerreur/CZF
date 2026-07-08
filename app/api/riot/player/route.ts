@@ -78,6 +78,22 @@ function calculateCzfPoints({
   return Math.round(soloq + wrBonus + peakBonus + flexBonus);
 }
 
+async function getChampionIdToNameMap() {
+  const res = await fetch(
+    'https://ddragon.leagueoflegends.com/cdn/14.24.1/data/en_US/champion.json'
+  );
+
+  const data = await res.json();
+
+  const map: Record<number, string> = {};
+
+  Object.values(data.data).forEach((champion: any) => {
+    map[Number(champion.key)] = champion.id;
+  });
+
+  return map;
+}
+
 async function getTopChampions(puuid: string) {
   const masteryRes = await fetch(
     `https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}`,
@@ -91,10 +107,11 @@ async function getTopChampions(puuid: string) {
   if (!masteryRes.ok) return [];
 
   const masteries = await masteryRes.json();
+  const championMap = await getChampionIdToNameMap();
 
   return masteries.slice(0, 5).map((champ: any) => ({
     champion_id: champ.championId,
-    champion_name: String(champ.championId),
+    champion_name: championMap[champ.championId] || String(champ.championId),
     champion_points: champ.championPoints,
   }));
 }
