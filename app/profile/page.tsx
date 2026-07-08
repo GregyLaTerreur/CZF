@@ -373,8 +373,12 @@ if (!existingProfile) {
                   🔄 Actualiser Riot
                 </button>
 
-                <button onClick={refreshChampionPool}>
-  🏆 Actualiser champion pool
+                <button
+  className="joinTeamBtn"
+  onClick={refreshChampionPool}
+  style={{ marginLeft: '10px' }}
+>
+  ⭐ Actualiser champions
 </button>
 
                 <button
