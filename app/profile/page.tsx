@@ -191,6 +191,29 @@ if (!existingProfile) {
     }
   }
 
+  async function refreshChampionPool() {
+  if (!player) return;
+
+  const res = await fetch('/api/players/champions-refresh', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      player_id: player.id,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert('Champion pool actualisé ✅');
+    window.location.reload();
+  } else {
+    alert(data.message || 'Erreur actualisation champion pool ❌');
+  }
+}
+
   function startEditProfile() {
     if (!player) return;
 
@@ -349,6 +372,10 @@ if (!existingProfile) {
                 >
                   🔄 Actualiser Riot
                 </button>
+
+                <button onClick={refreshChampionPool}>
+  🏆 Actualiser champion pool
+</button>
 
                 <button
                   className="joinTeamBtn"

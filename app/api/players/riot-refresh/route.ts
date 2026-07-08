@@ -29,12 +29,13 @@ export async function PATCH(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        riot_id: String(player.riot_id).trim(),
-        peak_tier: player.peak_tier,
-        peak_rank: player.peak_rank,
-        peak_lp: player.peak_lp,
-      }),
+     body: JSON.stringify({
+  riot_id: String(player.riot_id).trim(),
+  peak_tier: player.peak_tier,
+  peak_rank: player.peak_rank,
+  peak_lp: player.peak_lp,
+  skip_top_champions: true,
+}),
     }
   );
 
@@ -73,7 +74,7 @@ export async function PATCH(request: Request) {
       peak_rank: data.peak_rank,
       peak_lp: data.peak_lp,
 
-      top_champions: data.top_champions,
+top_champions: data.top_champions ?? player.top_champions,
       czf_points: data.czf_points,
     })
     .eq('id', player_id);
