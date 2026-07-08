@@ -163,6 +163,8 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
+    console.log('BODY RIOT:', body);
+
     const peak_tier = body.peak_tier;
 const peak_rank = body.peak_rank;
 const peak_lp = body.peak_lp;
@@ -182,6 +184,8 @@ const riot_id = String(body.riot_id).trim();
 const [gameName, tagLine] = riot_id
   .split('#')
   .map((part) => part.trim());    
+
+  console.log('RIOT SPLIT:', { riot_id, gameName, tagLine });
     
 
     const accountRes = await fetch(
