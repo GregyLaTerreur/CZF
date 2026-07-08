@@ -79,74 +79,24 @@ function calculateCzfPoints({
 }
 
 async function getTopChampions(puuid: string) {
-  const queues = [420, 440];
-  const allMatchIds: string[] = [];
-
-  for (const queue of queues) {
-    const matchIdsRes = await fetch(
-      `https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${queue}&start=0&count=50`,
-      {
-        headers: {
-          'X-Riot-Token': RIOT_API_KEY!,
-        },
-      }
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (matchIdsRes.ok) {
-      const ids = await matchIdsRes.json();
-      allMatchIds.push(...ids);
-    }
-  }
-
-  const championCounts: Record<
-    string,
+  const masteryRes = await fetch(
+    `https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}`,
     {
-      champion_id: number;
-      champion_name: string;
-      games: number;
+      headers: {
+        'X-Riot-Token': RIOT_API_KEY!,
+      },
     }
-  > = {};
+  );
 
-  for (const matchId of allMatchIds.slice(0, 70)) {
-    const matchRes = await fetch(
-      `https://europe.api.riotgames.com/lol/match/v5/matches/${matchId}`,
-      {
-        headers: {
-          'X-Riot-Token': RIOT_API_KEY!,
-        },
-      }
-    );
+  if (!masteryRes.ok) return [];
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  const masteries = await masteryRes.json();
 
-    if (!matchRes.ok) continue;
-
-    const match = await matchRes.json();
-
-    const participant = match.info.participants.find(
-      (p: any) => p.puuid === puuid
-    );
-
-    if (!participant) continue;
-
-    const key = participant.championName;
-
-    if (!championCounts[key]) {
-      championCounts[key] = {
-        champion_id: participant.championId,
-        champion_name: participant.championName,
-        games: 0,
-      };
-    }
-
-    championCounts[key].games += 1;
-  }
-
-  return Object.values(championCounts)
-    .sort((a, b) => b.games - a.games)
-    .slice(0, 5);
+  return masteries.slice(0, 5).map((champ: any) => ({
+    champion_id: champ.championId,
+    champion_name: String(champ.championId),
+    champion_points: champ.championPoints,
+  }));
 }
 
 export async function POST(request: Request) {
