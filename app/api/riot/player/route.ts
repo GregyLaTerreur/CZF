@@ -266,6 +266,28 @@ const [gameName, tagLine] = riot_id
   ? null
   : await getTopChampions(account.puuid);
 
+  const currentSoloqPoints = calculateRankPoints(
+  soloq?.tier || null,
+  soloq?.rank || null,
+  soloq?.leaguePoints || 0
+);
+
+const oldPeakPoints = calculateRankPoints(
+  peak_tier || null,
+  peak_rank || null,
+  peak_lp || 0
+);
+
+let finalPeakTier = peak_tier || soloq?.tier || null;
+let finalPeakRank = peak_rank || soloq?.rank || null;
+let finalPeakLp = peak_lp || soloq?.leaguePoints || 0;
+
+if (currentSoloqPoints > oldPeakPoints) {
+  finalPeakTier = soloq?.tier || null;
+  finalPeakRank = soloq?.rank || null;
+  finalPeakLp = soloq?.leaguePoints || 0;
+}
+
     const czf_points = calculateCzfPoints({
       soloqTier: soloq?.tier || null,
       soloqRank: soloq?.rank || null,
@@ -275,9 +297,9 @@ const [gameName, tagLine] = riot_id
       flexTier: flex?.tier || null,
       flexRank: flex?.rank || null,
       flexLp: flex?.leaguePoints || 0,
-      peakTier: peak_tier || soloq?.tier || null,
-      peakRank: peak_rank || soloq?.rank || null,
-      peakLp: peak_lp || 0,
+      peakTier: finalPeakTier,  
+peakRank: finalPeakRank,
+peakLp: finalPeakLp,
     });
 
     return NextResponse.json({
@@ -298,9 +320,9 @@ const [gameName, tagLine] = riot_id
         flex_rank: flex?.rank || null,
         flex_lp: flex?.leaguePoints || 0,
 
-        peak_tier: peak_tier || soloq?.tier || null,
-        peak_rank: peak_rank || soloq?.rank || null,
-        peak_lp: peak_lp || 0,
+        peak_tier: finalPeakTier,
+        peak_rank: finalPeakRank,
+        peak_lp: finalPeakLp,
 
         top_champions,
         czf_points,
