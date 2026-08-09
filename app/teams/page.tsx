@@ -123,7 +123,7 @@ function getTeamPoints(teamId: number) {
 function getTeamDivision(teamId: number) {
   const points = getTeamPoints(teamId);
 
-  if (points >= 6101) return "Targon";
+  if (points >= 7101) return "Targon";
   if (points >= 3901) return "Ixtal";
   return "Yordle";
 }
