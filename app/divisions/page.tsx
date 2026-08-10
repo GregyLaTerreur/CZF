@@ -107,7 +107,7 @@ export default function DivisionsPage() {
         <DivisionCard
           title="🔵 Ixtal"
           description="La division intermédiaire du CZF."
-          range="3901 à 7100 points CZF"
+          range="3901 à 6100 points CZF"
           teams={ixtalTeams}
         />
 

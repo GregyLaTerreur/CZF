@@ -65,13 +65,13 @@ export default function Home() {
     <article className="card">
       <h3>Targon</h3>
       <p>Division Élite</p>
-      <p>7101 à 9000 points CZF</p>
+      <p>6101 à 8000 points CZF</p>
     </article>
 
     <article className="card">
       <h3>Ixtal</h3>
       <p>Division Intermédiaire</p>
-      <p>3901 à 7100 points CZF</p>
+      <p>3901 à 6100 points CZF</p>
     </article>
 
     <article className="card">
