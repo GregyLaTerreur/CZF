@@ -53,6 +53,7 @@ export default function DivisionsPage() {
             teams.slice(0, 8).map((team) => (
               <a
                 key={team.id}
+                id={`team-${team.id}`}
                 href={`/teams#team-${team.id}`}
                 className="divisionTeamButton"
               >
