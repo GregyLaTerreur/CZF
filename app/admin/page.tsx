@@ -46,9 +46,17 @@ export default function AdminPage() {
     const teamsData = await teamsRes.json();
     const membersData = await membersRes.json();
 
-    if (playersData.success) setPlayers(playersData.data);
-    if (teamsData.success) setTeams(teamsData.data);
-    if (membersData.success) setTeamMembers(membersData.data);
+    if (playersData.success) {
+      setPlayers(playersData.data);
+    }
+
+    if (teamsData.success) {
+      setTeams(teamsData.data);
+    }
+
+    if (membersData.success) {
+      setTeamMembers(membersData.data);
+    }
   }
 
   async function refreshAllRiot() {
@@ -68,32 +76,10 @@ export default function AdminPage() {
     }
   }
 
-  async function validateTeam(teamId: number, validated: boolean) {
-    const res = await fetch('/api/admin/validate-team', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        team_id: teamId,
-        validated,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      setMessage(
-        validated
-          ? 'Équipe validée ✅'
-          : 'Équipe dévalidée ✅'
-      );
-      await loadData();
-    } else {
-      setMessage('Erreur validation ❌');
-    }
-  }
-
   function getTeamMembers(teamId: number) {
-    return teamMembers.filter((m) => m.team_id === teamId);
+    return teamMembers.filter(
+      (member) => member.team_id === teamId
+    );
   }
 
   function getTeamPoints(teamId: number) {
@@ -108,12 +94,66 @@ export default function AdminPage() {
     }, 0);
   }
 
+  function getDivisionFromPoints(points: number) {
+    if (points >= 6101) {
+      return 'Targon';
+    }
+
+    if (points >= 3901) {
+      return 'Ixtal';
+    }
+
+    return 'Yordle';
+  }
+
+  async function validateTeam(
+    teamId: number,
+    validated: boolean
+  ) {
+    const points = getTeamPoints(teamId);
+    const division = getDivisionFromPoints(points);
+
+    const res = await fetch('/api/admin/validate-team', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        team_id: teamId,
+        validated,
+
+        // Valeurs à figer au moment de la validation
+        validated_points: validated ? points : null,
+        division: validated ? division : null,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      setMessage(
+        validated
+          ? `Équipe validée ✅ ${points} points — ${division}`
+          : 'Équipe dévalidée ✅'
+      );
+
+      await loadData();
+    } else {
+      setMessage(
+        data.message || 'Erreur validation ❌'
+      );
+    }
+  }
+
   if (loading) {
     return (
       <>
         <Nav />
+
         <main className="section">
-          <div className="card">Chargement...</div>
+          <div className="card">
+            Chargement...
+          </div>
         </main>
       </>
     );
@@ -123,10 +163,14 @@ export default function AdminPage() {
     return (
       <>
         <Nav />
+
         <main className="section">
           <div className="card">
             <h2>Accès refusé</h2>
-            <p>Tu n’as pas les droits admin.</p>
+
+            <p>
+              Tu n’as pas les droits admin.
+            </p>
           </div>
         </main>
       </>
@@ -140,6 +184,7 @@ export default function AdminPage() {
       <main className="section">
         <div className="sectionTitle">
           <span></span>
+
           <h2>Admin CZF</h2>
         </div>
 
@@ -153,16 +198,27 @@ export default function AdminPage() {
             🔄 Actualiser tous les joueurs Riot
           </button>
 
-          {message && <p>{message}</p>}
+          {message && (
+            <p>{message}</p>
+          )}
         </div>
 
         <br />
 
         <div className="card">
           <h3>Statistiques</h3>
-          <p>Joueurs : {players.length}</p>
-          <p>Équipes : {teams.length}</p>
-          <p>LFT : {players.filter((p) => p.lft).length}</p>
+
+          <p>
+            Joueurs : {players.length}
+          </p>
+
+          <p>
+            Équipes : {teams.length}
+          </p>
+
+          <p>
+            LFT : {players.filter((p) => p.lft).length}
+          </p>
         </div>
 
         <br />
@@ -172,18 +228,25 @@ export default function AdminPage() {
 
           {teams.map((team) => {
             const members = getTeamMembers(team.id);
-            const points = getTeamPoints(team.id);
+
+            const currentPoints = getTeamPoints(team.id);
+
+            const currentDivision =
+              getDivisionFromPoints(currentPoints);
 
             return (
               <div
                 key={team.id}
                 style={{
-                  borderBottom: '1px solid rgba(0,0,0,.15)',
+                  borderBottom:
+                    '1px solid rgba(0,0,0,.15)',
                   paddingBottom: '20px',
                   marginBottom: '20px',
                 }}
               >
-                <h4>{team.name}</h4>
+                <h4>
+                  {team.name}
+                </h4>
 
                 <p>
                   <strong>Capitaine :</strong>{' '}
@@ -196,12 +259,43 @@ export default function AdminPage() {
                 </p>
 
                 <p>
-                  <strong>Points équipe :</strong>{' '}
-                  {points}
+                  <strong>
+                    Points actuels :
+                  </strong>{' '}
+                  {currentPoints}
                 </p>
+
+                {!team.validated_by_admin && (
+                  <p>
+                    <strong>
+                      Division actuelle :
+                    </strong>{' '}
+                    {currentDivision}
+                  </p>
+                )}
+
+                {team.validated_by_admin && (
+                  <>
+                    <p>
+                      <strong>
+                        Points CZF figés :
+                      </strong>{' '}
+                      {team.validated_points ??
+                        currentPoints}
+                    </p>
+
+                    <p>
+                      <strong>
+                        Division officielle :
+                      </strong>{' '}
+                      {team.division || currentDivision}
+                    </p>
+                  </>
+                )}
 
                 <p>
                   <strong>Statut :</strong>{' '}
+
                   {team.validated_by_admin
                     ? '🟢 Validée'
                     : '🔴 Non validée'}
@@ -221,17 +315,24 @@ export default function AdminPage() {
                     : 'Valider'}
                 </button>
 
-                <div style={{ marginTop: '12px' }}>
+                <div
+                  style={{
+                    marginTop: '12px',
+                  }}
+                >
                   {members.map((member) => {
                     const player = players.find(
                       (p) =>
-                        p.riot_id === member.riot_id
+                        p.riot_id ===
+                        member.riot_id
                     );
 
                     return (
                       <p key={member.id}>
-                        {member.role} - {member.riot_id} -{' '}
-                        {player?.czf_points || 0} pts
+                        {member.role} -{' '}
+                        {member.riot_id} -{' '}
+                        {player?.czf_points || 0}{' '}
+                        pts
                       </p>
                     );
                   })}

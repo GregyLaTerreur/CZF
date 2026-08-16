@@ -11,19 +11,31 @@ export default function DivisionsPage() {
       const res = await fetch('/api/teams');
       const data = await res.json();
 
-      if (data.teams) {
-        setTeams(data.teams);
+      if (data.success && data.data) {
+        setTeams(data.data);
       }
     }
 
     fetchTeams();
   }, []);
 
-  const validatedTeams = teams.filter((team) => team.is_validated === true);
+  // On garde uniquement les équipes validées par les admins
+  const validatedTeams = teams.filter(
+    (team) => team.validated_by_admin === true
+  );
 
-  const targonTeams = validatedTeams.filter((team) => team.division === 'Targon');
-  const ixtalTeams = validatedTeams.filter((team) => team.division === 'Ixtal');
-  const yordleTeams = validatedTeams.filter((team) => team.division === 'Yordle');
+  // Répartition selon la division figée au moment de la validation
+  const targonTeams = validatedTeams.filter(
+    (team) => team.division === 'Targon'
+  );
+
+  const ixtalTeams = validatedTeams.filter(
+    (team) => team.division === 'Ixtal'
+  );
+
+  const yordleTeams = validatedTeams.filter(
+    (team) => team.division === 'Yordle'
+  );
 
   function DivisionCard({
     title,
@@ -49,19 +61,39 @@ export default function DivisionsPage() {
         </p>
 
         <div className="divisionTeamsGrid">
-          {teams.slice(0, 8).length > 0 ? (
+          {teams.length > 0 ? (
             teams.slice(0, 8).map((team) => (
               <a
                 key={team.id}
-                id={`team-${team.id}`}
                 href={`/teams#team-${team.id}`}
                 className="divisionTeamButton"
               >
-                {team.name}
+                {team.logo_url && (
+                  <img
+                    src={team.logo_url}
+                    alt={`Logo ${team.name}`}
+                    className="divisionTeamLogo"
+                  />
+                )}
+
+                <div>
+                  <span className="divisionTeamName">
+                    {team.name}
+                  </span>
+
+                  {team.validated_points !== null &&
+                    team.validated_points !== undefined && (
+                      <div className="divisionTeamPoints">
+                        {team.validated_points} pts
+                      </div>
+                    )}
+                </div>
               </a>
             ))
           ) : (
-            <p className="muted">Aucune équipe validée pour le moment.</p>
+            <p className="muted">
+              Aucune équipe validée pour le moment.
+            </p>
           )}
         </div>
       </div>
@@ -82,15 +114,16 @@ export default function DivisionsPage() {
           <h3>Fonctionnement des divisions</h3>
 
           <p>
-            Les divisions CZF sont attribuées aux équipes validées par les admins.
-            Chaque équipe est placée en Yordle, Ixtal ou Targon selon son total
-            de points CZF.
+            Les divisions CZF sont attribuées aux équipes validées
+            par les admins. Chaque équipe est placée en Yordle,
+            Ixtal ou Targon selon son total de points CZF au moment
+            de sa validation.
           </p>
 
           <p>
-            Une fois validée, l'équipe apparaît dans sa division. En cliquant sur
-            son bouton, vous êtes redirigé directement vers sa fiche dans l'onglet
-            Équipes.
+            Une fois validée, l&apos;équipe apparaît dans sa division.
+            En cliquant dessus, vous êtes redirigé directement vers
+            sa fiche dans l&apos;onglet Équipes.
           </p>
         </div>
 
