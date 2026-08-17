@@ -62,7 +62,7 @@ export default function DivisionsPage() {
 
         <div className="divisionTeamsGrid">
           {teams.length > 0 ? (
-            teams.slice(0, 8).map((team) => (
+            teams.slice(0, 12).map((team) => (
               <a
                 key={team.id}
                 href={`/teams#team-${team.id}`}
