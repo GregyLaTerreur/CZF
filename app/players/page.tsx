@@ -695,8 +695,7 @@ if (participantsOnly) {
     whiteSpace: 'nowrap',
   }}
 >
-  👥 Participants uniquement
-👥 Participants uniquement
+ 👥 Participants uniquement
 </button>
 
 </div>

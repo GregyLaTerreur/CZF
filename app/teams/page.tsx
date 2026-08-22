@@ -15,6 +15,10 @@ export default function TeamsPage() {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const [teamSearch, setTeamSearch] = useState('');
+  const [validatedOnly, setValidatedOnly] = useState(false);
+  const [divisionFilter, setDivisionFilter] = useState('Toutes');
+  const [statusFilter, setStatusFilter] = useState('Toutes');
 
   const [message, setMessage] = useState('');
   const [openTeam, setOpenTeam] = useState<number | null>(null);
@@ -38,6 +42,7 @@ export default function TeamsPage() {
   const data = await res.json();
 
   if (data.success) {
+    console.log('PLAYERS TEAMS PAGE :', data.data);
     setPlayers(data.data);
   }
 }
@@ -450,6 +455,34 @@ function renderChampionPool(riotId: string) {
       setMessage('Erreur lors de la création ❌');
     }
   }
+  const displayedTeams = teams.filter((team) => {
+  const matchesSearch = team.name
+    ?.toLowerCase()
+    .includes(teamSearch.toLowerCase());
+
+  const matchesValidated =
+    !validatedOnly || team.is_validated === true;
+
+  const division = isTeamComplete(team.id)
+    ? getTeamDivision(team.id)
+    : null;
+
+  const matchesDivision =
+    divisionFilter === 'Toutes' ||
+    division === divisionFilter;
+
+  const matchesStatus =
+    statusFilter === 'Toutes' ||
+    (statusFilter === 'Complètes' && isTeamComplete(team.id)) ||
+    (statusFilter === 'Incomplètes' && !isTeamComplete(team.id));
+
+  return (
+    matchesSearch &&
+    matchesValidated &&
+    matchesDivision &&
+    matchesStatus
+  );
+});
 
   return (
     <>
@@ -500,6 +533,124 @@ function renderChampionPool(riotId: string) {
 
         <div className="card">
           <h3>Liste des équipes</h3>
+<div
+  style={{
+    display: 'flex',
+    gap: '14px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    marginBottom: '20px',
+  }}
+>
+  {/* RECHERCHE ÉQUIPE */}
+  <div
+    style={{
+      flex: '1',
+      minWidth: '260px',
+      maxWidth: '650px',
+      position: 'relative',
+    }}
+  >
+    <span
+      style={{
+        position: 'absolute',
+        left: '18px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        fontSize: '20px',
+        color: '#0b1f4d',
+        pointerEvents: 'none',
+      }}
+    >
+      🔎
+    </span>
+
+    <input
+      type="text"
+      placeholder="Rechercher une équipe..."
+      value={teamSearch}
+      onChange={(e) => setTeamSearch(e.target.value)}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        padding: '14px 18px 14px 52px',
+        borderRadius: '10px',
+        border: '2px solid #0b1f4d',
+        background: 'rgba(255,255,255,0.15)',
+        color: '#0b1f4d',
+        fontSize: '16px',
+        fontWeight: '600',
+        outline: 'none',
+        fontFamily: 'inherit',
+      }}
+    />
+  </div>
+
+  {/* PARTICIPANTS UNIQUEMENT */}
+  <button
+    type="button"
+    onClick={() => setValidatedOnly(!validatedOnly)}
+    style={{
+      padding: '14px 18px',
+      borderRadius: '10px',
+      border: '2px solid #0b1f4d',
+      background: validatedOnly ? '#0b1f4d' : 'transparent',
+      color: validatedOnly ? 'white' : '#0b1f4d',
+      fontWeight: '700',
+      fontSize: '15px',
+      cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      fontFamily: 'inherit',
+    }}
+  >
+    👥 Participants uniquement
+  </button>
+
+  {/* FILTRE DIVISION */}
+  <select
+    value={divisionFilter}
+    onChange={(e) => setDivisionFilter(e.target.value)}
+    style={{
+      padding: '14px 18px',
+      borderRadius: '10px',
+      border: '2px solid #0b1f4d',
+      background: 'transparent',
+      color: '#0b1f4d',
+      fontWeight: '700',
+      fontSize: '15px',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+    }}
+  >
+    <option value="Toutes">Toutes les divisions</option>
+    <option value="Yordle">Yordle</option>
+    <option value="Ixtal">Ixtal</option>
+    <option value="Targon">Targon</option>
+  </select>
+
+  {/* FILTRE STATUT */}
+  <select
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+    style={{
+      padding: '14px 18px',
+      borderRadius: '10px',
+      border: '2px solid #0b1f4d',
+      background: 'transparent',
+      color: '#0b1f4d',
+      fontWeight: '700',
+      fontSize: '15px',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+    }}
+  >
+    <option value="Toutes">Tous les statuts</option>
+    <option value="Complètes">Complètes</option>
+    <option value="Incomplètes">Incomplètes</option>
+  </select>
+</div>
+  
 
           <div className="playersTable">
             <div className="teamsHeader">
@@ -511,7 +662,7 @@ function renderChampionPool(riotId: string) {
               <div>Statut</div>
             </div>
 
-            {teams.map((team) => {
+        {displayedTeams.map((team) => {
               const isCaptain = team.captain_profile_id === profile?.id;
 
               const teamRequests = joinRequests.filter(
@@ -758,6 +909,10 @@ function renderChampionPool(riotId: string) {
       m.role === role
   );
 
+  const memberPlayer = member
+  ? players.find((p) => p.riot_id === member.riot_id)
+  : null;
+
   return (
     <div key={role} style={{ marginBottom: '18px' }}>
       <strong>{role} :</strong>{' '}
@@ -774,7 +929,22 @@ function renderChampionPool(riotId: string) {
   />
 )}
 
-{member?.riot_id || '-'}
+<span>
+  {member?.riot_id || '-'}
+</span>
+
+{memberPlayer?.profiles?.discord_name && (
+  <span
+    style={{
+      marginLeft: '10px',
+      color: '#5865F2',
+      fontWeight: '700',
+      fontSize: '14px',
+    }}
+  >
+    💬 {memberPlayer.profiles.discord_name}
+  </span>
+)}
 
 {member && renderChampionPool(member.riot_id)}
 
