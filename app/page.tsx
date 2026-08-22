@@ -31,10 +31,10 @@ export default function Home() {
         </div>
 
         <img
-          className="heroLogo"
-          src="/assets/czf-logo.png"
-          alt="Logo CZF"
-        />
+  src="/assets/PNG CZF.png"
+  alt="CZF"
+  className="heroLogo"
+/>
       </header>
 
       <Section id="discord" title="Discord">
