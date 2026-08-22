@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Nav from '../components/Nav';
 import { supabase } from '@/lib/supabase';
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
 export default function TeamsPage() {
-  const searchParams = useSearchParams();
+
   const [teamName, setTeamName] = useState('');
   const [description, setDescription] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
@@ -40,7 +39,10 @@ export default function TeamsPage() {
   }, []);
 
   useEffect(() => {
-  const teamId = searchParams.get('team');
+  if (typeof window === 'undefined') return;
+
+  const params = new URLSearchParams(window.location.search);
+  const teamId = params.get('team');
 
   if (!teamId) return;
 
@@ -60,7 +62,7 @@ export default function TeamsPage() {
       });
     }
   }, 500);
-}, [searchParams, teams]);
+}, [teams]);
   
   async function fetchPlayers() {
   const res = await fetch('/api/players');
