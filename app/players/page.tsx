@@ -456,7 +456,11 @@ function getDpmUrl(riotId: string) {
 }
 
 if (participantsOnly) {
-  list = list.filter((player) => getPlayerTeam(player) !== null);
+  list = list.filter((player) => {
+    const team = getPlayerTeam(player);
+
+    return team?.is_validated === true;
+  });
 }
 
     if (showLftOnly) {
@@ -662,24 +666,37 @@ if (participantsOnly) {
 
   {/* BOUTON PARTICIPANTS */}
   <button
-    type="button"
-    onClick={() => setParticipantsOnly(!participantsOnly)}
-    style={{
-      padding: '14px 20px',
-      borderRadius: '10px',
-      border: '2px solid #0b1f4d',
-      background: participantsOnly ? '#0b1f4d' : 'transparent',
-      color: participantsOnly ? 'white' : '#0b1f4d',
-      fontWeight: '700',
-      fontSize: '15px',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      whiteSpace: 'nowrap',
-    }}
-  >
-    👥 Participants uniquement
-  </button>
-</div>
+  type="button"
+  onClick={() => setParticipantsOnly(!participantsOnly)}
+  onMouseEnter={(e) => {
+    if (!participantsOnly) {
+      e.currentTarget.style.background = '#0b1f4d';
+      e.currentTarget.style.color = 'white';
+      e.currentTarget.style.transform = 'translateY(-1px)';
+    }
+  }}
+  onMouseLeave={(e) => {
+    if (!participantsOnly) {
+      e.currentTarget.style.background = 'transparent';
+      e.currentTarget.style.color = '#0b1f4d';
+      e.currentTarget.style.transform = 'translateY(0)';
+    }
+  }}
+  style={{
+    padding: '14px 20px',
+    borderRadius: '10px',
+    border: '2px solid #0b1f4d',
+    background: participantsOnly ? '#0b1f4d' : 'transparent',
+    color: participantsOnly ? 'white' : '#0b1f4d',
+    fontWeight: '700',
+    fontSize: '15px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap',
+  }}
+>
+  👥 Participants uniquement
+</button>
 
           <button
             type="button"
