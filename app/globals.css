@@ -46,15 +46,22 @@ body {
 
 /* Typo esport / interface */
 .nav a,
-button,
-.joinTeamBtn,
-.rulebookButton,
 .playersHeader,
 .teamsHeader,
 .divisionTeamName,
 .eyebrow {
   font-family: var(--font-tech);
   font-weight: 800;
+}
+
+button,
+.joinTeamBtn,
+.rulebookButton,
+.heroActions a,
+.fakeForm button {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 /* Texte lisible */
@@ -440,7 +447,7 @@ footer {
   border-radius: 12px;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.03em;
 }
 
 .rulebookButton:hover {
