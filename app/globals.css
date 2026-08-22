@@ -1,82 +1,48 @@
-:root {
-  --navy: #092a3f;
-  --orange: #f26522;
-  --cream: #ead0ad;
-  --cream2: #f5dfc1;
-  --ink: #07131d;
-  --muted: #7a6854;
-  --card: rgba(255, 245, 226, 0.78);
-  --gold: #c79b54;
-}
+/* =========================================================
+   CZF — GLOBAL CSS
+   Clash des Zéros de la Faille
+========================================================= */
+
+
+/* =========================================================
+   1. VARIABLES
+========================================================= */
 
 :root {
   --navy: #092a3f;
   --orange: #f26522;
+
   --cream: #ead0ad;
   --cream2: #f5dfc1;
+
   --ink: #07131d;
   --muted: #7a6854;
+
   --card: rgba(255, 245, 226, 0.78);
+
   --gold: #c79b54;
+
+  --font-display:
+    Impact,
+    Haettenschweiler,
+    'Arial Narrow Bold',
+    sans-serif;
+
+  --font-tech:
+    'Arial Narrow',
+    Arial,
+    sans-serif;
+
+  --font-body:
+    Inter,
+    Arial,
+    sans-serif;
 }
 
-/* =========================
-   TYPOGRAPHIE CZF
-========================= */
 
-:root {
-  --font-display: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  --font-tech: 'Arial Narrow', Arial, sans-serif;
-  --font-body: Inter, Arial, sans-serif;
-}
-
-body {
-  font-family: var(--font-body);
-}
-
-/* Gros titres CZF */
-.hero h1,
-.sectionTitle h2,
-.card h3,
-.importBox h3,
-.rulebook h3 {
-  font-family: var(--font-display);
-  letter-spacing: 0.02em;
-}
-
-/* Typo esport / interface */
-.nav a,
-.playersHeader,
-.teamsHeader,
-.divisionTeamName,
-.eyebrow {
-  font-family: var(--font-tech);
-  font-weight: 800;
-}
-
-button,
-.joinTeamBtn,
-.rulebookButton,
-.heroActions a,
-.fakeForm button {
-  font-family: Inter, Arial, sans-serif;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-/* Texte lisible */
-p,
-input,
-select,
-textarea,
-.playerRow,
-.teamRow,
-.teamDetails {
-  font-family: var(--font-body);
-}
-
-/* Reset */
+/* =========================================================
+   2. RESET
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -86,27 +52,17 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
+
   color: var(--ink);
-  font-family: Inter, Arial, sans-serif;
 
-  body,
-input,
-select,
-textarea,
-button {
-  font-family: Inter, Arial, sans-serif;
-}
-
-h1,
-h2,
-h3,
-h4,
-.sectionTitle h2,
-.card h3 {
-  font-family: inherit;
-}
+  font-family: var(--font-body);
 
   background: var(--cream);
 
@@ -122,65 +78,152 @@ h4,
   background-attachment: fixed;
 }
 
-/* Links */
+
+/* =========================================================
+   3. TYPOGRAPHIE CZF
+========================================================= */
+
+/* Gros titres */
+
+.hero h1,
+.sectionTitle h2,
+.card h3,
+.importBox h3,
+.rulebook h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+
+/* Interface esport */
+
+.nav a,
+.playersHeader,
+.teamsHeader,
+.divisionTeamName,
+.eyebrow {
+  font-family: var(--font-tech);
+  font-weight: 800;
+}
+
+
+/* Boutons */
+
+button,
+.joinTeamBtn,
+.rulebookButton,
+.heroActions a,
+.fakeForm button {
+  font-family: var(--font-body);
+
+  font-weight: 800;
+
+  letter-spacing: 0.03em;
+
+  text-transform: uppercase;
+}
+
+
+/* Texte courant */
+
+p,
+input,
+select,
+textarea,
+.playerRow,
+.teamRow,
+.teamDetails {
+  font-family: var(--font-body);
+}
+
+
+/* =========================================================
+   4. LIENS
+========================================================= */
 
 a {
   color: inherit;
   text-decoration: none;
 }
 
-/* Navigation */
+
+/* =========================================================
+   5. NAVIGATION
+========================================================= */
 
 .nav {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
 
   display: flex;
   align-items: center;
+
   gap: 24px;
 
   padding: 14px 6vw;
 
   background: rgba(8, 24, 36, 0.88);
+
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   color: white;
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav img {
   width: 52px;
   height: 52px;
+
   object-fit: contain;
 }
 
 .nav div {
   display: flex;
+
   gap: 18px;
+
   flex-wrap: wrap;
 }
 
 .nav a {
+  position: relative;
+
   font-size: 14px;
+
   text-transform: uppercase;
+
   letter-spacing: 0.06em;
+
   opacity: 0.86;
-  transition: 0.2s;
+
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .nav a:hover {
   color: var(--orange);
+  opacity: 1;
 }
 
-/* Hero */
+
+/* =========================================================
+   6. HERO
+========================================================= */
 
 .hero {
   min-height: 78vh;
 
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+
+  grid-template-columns:
+    1.2fr
+    0.8fr;
+
   align-items: center;
 
   gap: 30px;
@@ -189,55 +232,50 @@ a {
 }
 
 .eyebrow {
+  margin-bottom: 16px;
+
   color: var(--orange);
 
   font-weight: 900;
+
   text-transform: uppercase;
+
   letter-spacing: 0.18em;
 }
 
 .hero h1 {
-  font-size: clamp(64px, 9vw, 130px);
-
-  line-height: 1;
-  letter-spacing: 2px;
-
   margin: 0 0 24px;
 
+  font-size:
+    clamp(64px, 9vw, 130px);
+
+  line-height: 1;
+
+  letter-spacing: 2px;
+
   text-transform: uppercase;
+
   font-weight: 900;
 }
+
 .hero p {
   max-width: 680px;
+
   font-size: 20px;
+
+  letter-spacing: 0.3px;
 }
 
-.heroLogo {
-  width: min(430px, 72vw);
-  max-height: 500px;
 
-  justify-self: center;
-  object-fit: contain;
+/* =========================================================
+   7. HERO ACTIONS
+========================================================= */
 
-  filter:
-    drop-shadow(0 18px 20px rgba(7, 19, 29, 0.12))
-    drop-shadow(0 0 25px rgba(242, 101, 34, 0.08));
-
-  transition:
-    transform 0.3s ease,
-    filter 0.3s ease;
-}
-
-.heroLogo:hover {
-  transform: translateY(-5px) scale(1.02);
-
-  filter:
-    drop-shadow(0 22px 25px rgba(7, 19, 29, 0.16))
-    drop-shadow(0 0 30px rgba(242, 101, 34, 0.12));
-}
 .heroActions {
   display: flex;
+
   flex-wrap: wrap;
+
   gap: 14px;
 
   margin-top: 28px;
@@ -245,51 +283,61 @@ a {
 
 .heroActions a,
 .fakeForm button {
-  background: var(--orange);
-  color: white;
-
   padding: 13px 18px;
 
   border: 0;
+
   border-radius: 999px;
 
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  background: var(--orange);
+
+  color: white;
+
   cursor: pointer;
+
   transition: all 0.15s ease;
 }
-
-.fakeForm button:active {
-  transform: scale(0.97);
-}
-
 
 .heroActions a:nth-child(2) {
   background: var(--navy);
 }
 
-/* Sections */
+
+/* =========================================================
+   8. SECTIONS
+========================================================= */
 
 .section {
-  padding: 58px 8vw;
+  width: 100%;
+
+  max-width: 1600px;
+
+  margin: 0 auto;
+
+  padding:
+    58px
+    clamp(16px, 4vw, 80px);
 }
 
 .sectionTitle {
   display: flex;
+
   align-items: center;
+
   gap: 15px;
 
   margin-bottom: 22px;
 }
 
 .sectionTitle span {
+  display: block;
+
   width: 46px;
   height: 6px;
 
-  background: var(--orange);
+  flex-shrink: 0;
 
-  display: block;
+  background: var(--orange);
 }
 
 .sectionTitle h2 {
@@ -304,36 +352,55 @@ a {
   font-weight: 700;
 }
 
-/* Grids */
+
+/* =========================================================
+   9. GRILLES
+========================================================= */
 
 .grid {
   display: grid;
+
   gap: 18px;
 }
 
 .grid.three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
 }
 
 .grid.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 }
 
-/* Cards */
+
+/* =========================================================
+   10. CARTES
+========================================================= */
 
 .card,
 .empty,
 .importBox,
 .rulebook {
+  max-width: 100%;
+
   padding: 24px;
 
   border-radius: 24px;
 
   background: var(--card);
 
-border: 1.5px solid rgba(9, 42, 63, 0.72);
-box-shadow:
-  0 14px 35px rgba(8, 24, 36, 0.07);
+  border:
+    1.5px solid
+    rgba(9, 42, 63, 0.72);
+
+  box-shadow:
+    0 14px 35px
+    rgba(8, 24, 36, 0.07);
+}
+
+.card {
+  overflow: hidden;
 }
 
 .card h3,
@@ -342,39 +409,63 @@ box-shadow:
   margin: 0 0 8px;
 
   font-size: 26px;
+
   text-transform: uppercase;
 }
 
+
+/* =========================================================
+   11. TEXTES SECONDAIRES
+========================================================= */
+
 .muted {
   color: var(--muted);
+
   font-weight: 800;
-}
 
-.pill {
-  display: inline-block;
-
-  margin-top: 18px;
-  padding: 8px 12px;
-
-  border-radius: 999px;
-  border: 1px solid rgba(8, 24, 36, 0.18);
-
-  color: var(--muted);
-  font-weight: 800;
+  letter-spacing: 0.3px;
 }
 
 .empty {
   border-style: dashed;
 
   color: var(--muted);
+
+  font-weight: 800;
+
+  letter-spacing: 0.3px;
+}
+
+.pill {
+  display: inline-block;
+
+  margin-top: 18px;
+
+  padding: 8px 12px;
+
+  border-radius: 999px;
+
+  border:
+    1px solid
+    rgba(8, 24, 36, 0.18);
+
+  color: var(--muted);
+
   font-weight: 800;
 }
 
-/* Import */
+
+/* =========================================================
+   12. IMPORT / FORMULAIRES
+========================================================= */
 
 .importBox {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+
+  grid-template-columns:
+    1.2fr
+    0.8fr;
+
   align-items: center;
 
   gap: 24px;
@@ -382,9 +473,39 @@ box-shadow:
   margin-bottom: 18px;
 }
 
+.importBox p,
+.rulebook p {
+  letter-spacing: 0.3px;
+}
+
 .fakeForm {
   display: flex;
-  gap: 10px;
+
+  flex-wrap: wrap;
+
+  align-items: stretch;
+
+  gap: 18px;
+}
+
+.fakeForm input,
+.fakeForm textarea,
+.fakeForm select,
+.fakeForm button {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+
+  padding: 14px 18px;
+
+  border-radius: 14px;
+
+  border:
+    2px solid #d8c7ad;
 }
 
 .fakeForm input {
@@ -394,8 +515,9 @@ box-shadow:
 
   background: #fff7ea;
 
-  border-radius: 14px;
-  border: 1px solid rgba(8, 24, 36, 0.2);
+  border:
+    1px solid
+    rgba(8, 24, 36, 0.2);
 
   font-size: 16px;
 }
@@ -404,39 +526,748 @@ box-shadow:
   border-radius: 14px;
 }
 
-/* Footer */
+
+/* =========================================================
+   13. BOUTONS
+========================================================= */
+
+button {
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.05);
+}
+
+button:active {
+  transform:
+    translateY(2px)
+    scale(0.98);
+
+  filter: brightness(0.92);
+}
+
+button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.6;
+}
+
+.joinTeamBtn {
+  display: inline-block;
+
+  margin-top: 15px;
+
+  padding: 12px 18px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: var(--orange);
+
+  color: white;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+.joinTeamBtn:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.05);
+}
+
+.joinTeamBtn:active {
+  transform:
+    translateY(2px)
+    scale(0.98);
+
+  filter: brightness(0.92);
+}
+
+.rulebookButton {
+  display: inline-block;
+
+  padding: 14px 24px;
+
+  border-radius: 12px;
+
+  background: var(--orange);
+
+  color: white;
+
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.03em;
+
+  transition: all 0.15s ease;
+}
+
+.rulebookButton:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.05);
+}
+
+
+/* =========================================================
+   14. ROLES
+========================================================= */
+
+.rolesContainer {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 24px;
+
+  align-items: flex-start;
+}
+
+.roleSection {
+  margin-top: -56px;
+}
+
+.roleSection h4 {
+  margin-bottom: 10px;
+
+  font-family: var(--font-body);
+
+  font-size: 1rem;
+
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+
+  color: #111;
+}
+
+.rolePicker {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin: 10px 0;
+}
+
+.roleBtn {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 8px 24px;
+
+  border-radius: 14px;
+
+  border:
+    2px solid #d8c7ad;
+
+  background: white;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.roleBtn img {
+  width: 20px;
+  height: 20px;
+}
+
+.roleBtn span {
+  font-family: var(--font-body);
+
+  font-size: 0.95rem;
+
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+
+  color: #111;
+}
+
+.roleBtn.active {
+  border-color: var(--orange);
+
+  background: #fff4eb;
+}
+
+
+/* =========================================================
+   15. TABLE JOUEURS
+========================================================= */
+
+.playersTable {
+  width: 100%;
+
+  margin-top: 20px;
+
+  overflow-x: auto;
+}
+
+.playersHeader,
+.playerRow {
+  display: grid;
+
+  grid-template-columns:
+    2.2fr
+    1fr
+    1fr
+    1.3fr
+    0.9fr
+    0.8fr
+    1.4fr
+    0.6fr;
+
+  align-items: center;
+
+  gap: 18px;
+
+  min-width: 900px;
+
+  padding: 14px 20px;
+}
+
+.playerRow {
+  border-bottom:
+    1px solid
+    rgba(0, 0, 0, 0.08);
+}
+
+.playerRow:hover {
+  background:
+    rgba(255, 255, 255, 0.25);
+}
+
+.playerRow > div,
+.playersHeader > div {
+  min-width: 0;
+}
+
+.playersHeader > div {
+  padding: 10px 6px;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  user-select: none;
+
+  transition: all 0.15s ease;
+}
+
+.playersHeader > div:hover {
+  color: var(--orange);
+
+  background:
+    rgba(242, 101, 34, 0.08);
+
+  transform: translateY(-1px);
+}
+
+.playersHeader > div:nth-child(6),
+.playersHeader > div:nth-child(7) {
+  cursor: default;
+}
+
+.playersHeader > div:nth-child(6):hover,
+.playersHeader > div:nth-child(7):hover {
+  color: inherit;
+
+  background: transparent;
+
+  transform: none;
+}
+
+
+/* =========================================================
+   16. CHAMPIONS / RANKS
+========================================================= */
+
+.championPool {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 6px;
+
+  margin-top: 6px;
+}
+
+.championPool img {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+}
+
+.rankCell {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+.rankIcon {
+  width: 28px;
+  height: 28px;
+
+  object-fit: contain;
+}
+
+.roleIcon {
+  width: 24px;
+  height: 24px;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   17. TABLE ÉQUIPES
+========================================================= */
+
+.teamsHeader,
+.teamRow {
+  display: grid;
+
+  grid-template-columns:
+    60px
+    4fr
+    1.5fr
+    1.5fr
+    1fr
+    1.5fr;
+
+  align-items: center;
+
+  min-width: 900px;
+}
+
+.teamsHeader {
+  min-height: 60px;
+}
+
+.teamRow {
+  min-height: 80px;
+}
+
+.teamsHeader > div,
+.teamRow > div {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+}
+
+.teamArrow {
+  cursor: pointer;
+
+  font-size: 1.2rem;
+}
+
+.teamNameCell {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 15px;
+}
+
+.teamLogoSmall {
+  width: 45px;
+  height: 45px;
+
+  object-fit: cover;
+
+  border-radius: 8px;
+}
+
+
+/* =========================================================
+   18. DÉTAILS ÉQUIPE
+========================================================= */
+
+.teamDetails {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 24px;
+
+  padding: 30px 40px;
+
+  border-top:
+    1px solid
+    rgba(0, 0, 0, 0.08);
+
+  border-bottom:
+    1px solid
+    rgba(0, 0, 0, 0.08);
+
+  background:
+    rgba(255, 255, 255, 0.03);
+}
+
+.teamInfos {
+  flex: 1 1 420px;
+}
+
+.teamLogoBigContainer {
+  flex: 0 1 320px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: flex-start;
+}
+
+.teamLogoBig {
+  width: 450px;
+  height: auto;
+
+  max-width: 100%;
+
+  object-fit: contain;
+}
+
+.multiggLink {
+  display: inline-block;
+
+  margin-top: 10px;
+
+  color: var(--orange);
+
+  text-decoration: underline;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   19. DIVISIONS
+========================================================= */
+
+.divisionTeamsGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 14px;
+
+  margin-top: 24px;
+}
+
+.divisionTeamButton {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  min-width: 0;
+
+  min-height: 68px;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
+
+  border:
+    2px solid
+    rgba(8, 24, 36, 0.12);
+
+  background:
+    rgba(255, 255, 255, 0.45);
+
+  color: var(--ink);
+
+  font-weight: 800;
+
+  box-shadow:
+    0 5px 15px
+    rgba(8, 24, 36, 0.05);
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.divisionTeamButton:hover {
+  transform: translateY(-3px);
+
+  border-color: var(--orange);
+
+  background:
+    rgba(255, 255, 255, 0.75);
+
+  box-shadow:
+    0 10px 22px
+    rgba(8, 24, 36, 0.12);
+}
+
+.divisionTeamLogo {
+  width: 46px;
+  height: 46px;
+
+  flex-shrink: 0;
+
+  object-fit: cover;
+
+  border-radius: 10px;
+
+  background:
+    rgba(255, 255, 255, 0.5);
+}
+
+.divisionTeamName {
+  min-width: 0;
+
+  font-size: 15px;
+
+  font-weight: 900;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   20. ACCUEIL — LAYOUT CZF
+========================================================= */
+
+.czfPageLayout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    360px;
+
+  gap: 30px;
+
+  max-width: 1800px;
+
+  margin: 0 auto;
+
+  align-items: start;
+}
+
+.czfPageContent {
+  min-width: 0;
+}
+
+
+/* Le hero n'a plus de logo dans sa grille */
+
+.homeHero {
+  display: flex;
+
+  align-items: center;
+
+  min-height: 78vh;
+
+  padding: 70px 4vw;
+}
+
+.homeHero .heroText {
+  width: 100%;
+}
+
+
+/* =========================================================
+   21. LOGO CZF STICKY
+========================================================= */
+
+.czfPageBrand {
+  position: sticky;
+
+  top: 110px;
+
+  height:
+    calc(100vh - 110px);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 30px;
+}
+
+.czfPageBrand img {
+  width: 100%;
+
+  max-width: 330px;
+
+  height: auto;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 20px 30px
+      rgba(7, 19, 29, 0.15)
+    )
+    drop-shadow(
+      0 0 30px
+      rgba(242, 101, 34, 0.08)
+    );
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.czfPageBrand img:hover {
+  transform:
+    translateY(-5px)
+    scale(1.02);
+
+  filter:
+    drop-shadow(
+      0 24px 35px
+      rgba(7, 19, 29, 0.18)
+    )
+    drop-shadow(
+      0 0 35px
+      rgba(242, 101, 34, 0.12)
+    );
+}
+
+
+/* =========================================================
+   22. FOOTER
+========================================================= */
 
 footer {
   margin-top: 50px;
+
   padding: 40px;
 
   text-align: center;
 
   background: var(--navy);
+
   color: white;
 }
 
-/* Responsive */
 
-@media (max-width: 850px) {
-  .hero {
-    grid-template-columns: 1fr;
-    text-align: center;
+/* =========================================================
+   23. RESPONSIVE — TABLETTE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .czfPageLayout {
+    display: block;
   }
 
-  .heroLogo {
-    order: -1;
-    width: 240px;
+  .czfPageBrand {
+    display: none;
   }
 
-  .heroActions {
-    justify-content: center;
+  .homeHero {
+    min-height: auto;
+  }
+}
+
+
+@media (max-width: 900px) {
+  .sectionTitle {
+    margin-left: 0 !important;
   }
 
   .grid.three,
   .grid.two,
   .importBox {
     grid-template-columns: 1fr;
+  }
+
+  .fakeForm {
+    flex-direction: column;
+  }
+
+  .fakeForm input,
+  .fakeForm textarea,
+  .fakeForm select,
+  .fakeForm button {
+    width: 100%;
+  }
+
+  .rolesContainer {
+    flex-direction: column;
+  }
+
+  .rolePicker {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .roleBtn {
+    width: 100%;
+  }
+
+  .roleSection {
+    margin-top: 0;
+  }
+
+  .teamDetails {
+    flex-direction: column;
+  }
+
+  .divisionTeamsGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================================================
+   24. RESPONSIVE — NAV / HERO
+========================================================= */
+
+@media (max-width: 850px) {
+  .hero {
+    grid-template-columns: 1fr;
+
+    text-align: center;
+  }
+
+  .heroActions {
+    justify-content: center;
   }
 
   .nav {
@@ -452,558 +1283,36 @@ footer {
   }
 }
 
-  .rulebookButton {
-  display: inline-block;
-  background: var(--orange);
-  color: white;
-  padding: 14px 24px;
-  border-radius: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
 
-.rulebookButton:hover {
-  transform: translateY(-2px);
-  opacity: 0.9;
-}
-
-.empty {
-  letter-spacing: 0.3px;
-}
-
-.muted {
-  letter-spacing: 0.3px;
-}
-
-.hero p,
-.importBox p,
-.rulebook p {
-  letter-spacing: 0.3px;
-}
-
-input,
-select,
-textarea {
-  font-family: inherit;
-}
-
-input,
-select,
-textarea {
-  border-radius: 14px;
-  border: 2px solid #d8c7ad;
-  padding: 14px 18px;
-}
-
-.roleBtn span {
-  color: #000;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.rolePicker {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 10px 0;
-}
-
-.roleBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 24px;
-  border-radius: 14px;
-  border: 2px solid #d8c7ad;
-  background: white;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.roleBtn img {
-  width: 20px;
-  height: 20px;
-}
-
-.roleBtn.active {
-  border-color: #f97316;
-  background: #fff4eb;
-  cursor: pointer;
-}
-
-.roleBtn {
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.rolesContainer {
-  display: flex;
-  gap: 60px;
-  align-items: flex-start;
-}
-
-.roleSection h4 {
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-  color: #111;
-}
-
-.roleBtn span {
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: #111;
-}
-
-.roleSection {
-  margin-top: -56px;
-}
-
-.roleBtn:hover {
-  cursor: pointer;
-}
-
-.playersTable {
-  margin-top: 20px;
-}
-
-.playersHeader,
-.playerRow {
-  display: grid;
-
-  grid-template-columns:
-    3fr
-    1fr
-    1fr
-    1fr
-    1fr
-    1fr
-    80px;
-
-  align-items: center;
-  padding: 14px 20px;
-}
-
-
-.playersHeader,
-.playerRow {
-  display: grid;
-
-  grid-template-columns:
-    3fr
-    1fr
-    1fr
-    1fr
-    1fr
-    1fr
-    80px;
-
-  align-items: center;
-}
-
-.teamsHeader{
-  display: grid;
-
-  grid-template-columns:
-    60px
-    4fr
-    1.5fr
-    1.5fr
-    1fr
-    1.5fr;
-
-min-height: 60px;
-  align-items: center;
-}
-
-.teamRow {
-  display: grid;
-
-  grid-template-columns:
-    60px
-    4fr
-    1.5fr
-    1.5fr
-    1fr
-    1.5fr;
-min-height: 80px;
-  align-items: center;
-}
-
-.teamsHeader > div,
-.teamRow > div {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.playerRow {
-  border-bottom: 1px solid rgba(0,0,0,.08);
-}
-
-.playerRow:hover {
-  background: rgba(255,255,255,.25);
-}
-
-.roleIcon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-
-.teamArrow {
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.teamLogoSmall {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
-.teamDetails {
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 40px;
-
-  padding: 25px;
-
-  background: rgba(255,255,255,.03);
-
-  border-bottom: 1px solid rgba(0,0,0,.08);
-}
-
-.teamInfos {
-  flex: 1;
-}
-
-.teamLogoBigContainer {
-  display: flex;
-
-  justify-content: center;
-
-  align-items: flex-start;
-
-  height: 100%;
-}
-
-.teamLogoBig {
-  width: 450px;
-  height: 450px;
-  object-fit: contain;
-}
-
-.teamDetails {
-  display: grid;
-
-  grid-template-columns: 1fr 400px;
-
-  gap: 40px;
-
-  padding: 30px 40px;
-
-  border-top: 1px solid rgba(0,0,0,.08);
-
-  border-bottom: 1px solid rgba(0,0,0,.08);
-}
-
-.teamNameCell {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-
-  justify-content: flex-start;
-}
-
-.teamLogoSmall {
-  width: 45px;
-  height: 45px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.multiggLink {
-  display: inline-block;
-
-  margin-top: 10px;
-
-  color: #f97316;
-
-  text-decoration: underline;
-
-  font-weight: 700;
-}
-
-.joinTeamBtn {
-  margin-top: 15px;
-
-  padding: 12px 18px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  background: var(--orange);
-
-  color: white;
-
-  font-weight: 700;
-
-  cursor: pointer;
-}
-
-.joinTeamBtn:hover {
-  opacity: 0.9;
-}
-
-.playersHeader,
-.playerRow {
-  display: grid;
-  grid-template-columns: 2.2fr 1fr 1fr 1.3fr 0.9fr 0.8fr 1.4fr 0.6fr;
-  align-items: center;
-  gap: 18px;
-}
-
-.playerRow > div,
-.playersHeader > div {
-  min-width: 0;
-}
-
-.championPool {
-  display: flex;
-  gap: 6px;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.championPool img {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.championPool {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 6px;
-}
-
-.championPool img {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.rankCell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rankIcon {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  overflow-x: hidden;
-}
-
-.section {
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding-left: clamp(16px, 4vw, 80px);
-  padding-right: clamp(16px, 4vw, 80px);
-}
-
-.card {
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.fakeForm {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  align-items: stretch;
-}
-
-.fakeForm input,
-.fakeForm textarea,
-.fakeForm select,
-.fakeForm button {
-  max-width: 100%;
-}
-
-.rolesContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-}
-
-.rolePicker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.playersTable {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.playersHeader,
-.playerRow,
-.teamsHeader,
-.teamRow {
-  min-width: 900px;
-}
-
-.teamDetails {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-}
-
-.teamInfos {
-  flex: 1 1 420px;
-}
-
-.teamLogoBigContainer {
-  flex: 0 1 320px;
-}
-
-.teamLogoBig {
-  max-width: 100%;
-  height: auto;
-}
-
-@media (max-width: 900px) {
-  .sectionTitle {
-    margin-left: 0 !important;
-  }
-
- 
-
-
-  .fakeForm {
-    flex-direction: column;
-  }
-
-  .fakeForm input,
-  .fakeForm textarea,
-  .fakeForm select,
-  .fakeForm button {
-    width: 100%;
-  }
-
-  .rolesContainer {
-    flex-direction: column;
-  }
-
-  .rolePicker {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .roleBtn {
-    width: 100%;
-  }
-
-  .teamDetails {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 600px) {
-  .section {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  .sectionTitle h2 {
-    font-size: 32px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  .rolePicker {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-button {
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-
-button:active {
-  transform: translateY(2px) scale(0.98);
-  filter: brightness(0.92);
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-a.joinTeamBtn {
-  transition: all 0.15s ease;
-}
-
-a.joinTeamBtn:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-
-a.joinTeamBtn:active {
-  transform: translateY(2px) scale(0.98);
-  filter: brightness(0.92);
-}
+/* =========================================================
+   25. RESPONSIVE — MOBILE
+========================================================= */
 
 @media (max-width: 700px) {
   .section {
     padding: 24px 12px;
   }
 
-  .card {
+  .card,
+  .empty,
+  .importBox,
+  .rulebook {
     width: 100%;
+
     padding: 22px;
+  }
+
+  .card {
     overflow: visible;
   }
 
   .fakeForm {
     display: flex;
+
     flex-direction: column;
+
     gap: 18px;
+
     width: 100%;
   }
 
@@ -1012,32 +1321,44 @@ a.joinTeamBtn:active {
   .fakeForm select,
   .fakeForm button {
     width: 100%;
+
     min-width: 0;
   }
 
   .rolesContainer {
     display: flex;
+
     flex-direction: column;
+
     gap: 24px;
+
     width: 100%;
   }
 
   .roleSection {
-    margin-top: 0;
     width: 100%;
+
+    margin-top: 0;
   }
 
   .rolePicker {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+
+    grid-template-columns:
+      1fr 1fr;
+
     gap: 12px;
+
     width: 100%;
   }
 
   .roleBtn {
     width: 100%;
+
     min-width: 0;
+
     padding: 16px 10px;
+
     justify-content: center;
   }
 
@@ -1053,137 +1374,32 @@ a.joinTeamBtn:active {
 
   .teamDetails {
     display: flex;
+
     flex-direction: column;
+
     padding: 20px;
   }
 
   .teamLogoBig {
     width: 220px;
-    height: 220px;
   }
-
 }
 
-@media (max-width: 420px) {
-  .rolePicker {
-    grid-template-columns: 1fr;
-  }
 
-  .card h3,
+/* =========================================================
+   26. RESPONSIVE — PETIT MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
   .sectionTitle h2 {
-    font-size: 30px;
+    font-size: 32px;
+  }
+
+  .card {
+    padding: 18px;
   }
 }
 
-.playersHeader > div {
-  cursor: pointer;
-  user-select: none;
-  padding: 10px 6px;
-  border-radius: 10px;
-  transition: all 0.15s ease;
-}
-
-.playersHeader > div:hover {
-  color: var(--orange);
-  background: rgba(242, 101, 34, 0.08);
-  transform: translateY(-1px);
-}
-
-.playersHeader > div:nth-child(6),
-.playersHeader > div:nth-child(7) {
-  cursor: default;
-}
-
-.playersHeader > div:nth-child(6):hover,
-.playersHeader > div:nth-child(7):hover {
-  color: inherit;
-  background: transparent;
-  transform: none;
-}
-
-/* =========================
-   DIVISIONS
-========================= */
-
-.divisionTeamsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 24px;
-}
-
-.divisionTeamButton {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-
-  min-width: 0;
-  min-height: 68px;
-  padding: 12px 14px;
-
-  border-radius: 14px;
-
-  border: 2px solid rgba(8, 24, 36, 0.12);
-
-  background: rgba(255, 255, 255, 0.45);
-
-  color: var(--ink);
-  font-weight: 800;
-  text-decoration: none;
-
-  box-shadow: 0 5px 15px rgba(8, 24, 36, 0.05);
-
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.divisionTeamButton:hover {
-  transform: translateY(-3px);
-
-  border-color: var(--orange);
-
-  background: rgba(255, 255, 255, 0.75);
-
-  box-shadow: 0 10px 22px rgba(8, 24, 36, 0.12);
-}
-
-.divisionTeamLogo {
-  width: 46px;
-  height: 46px;
-
-  flex-shrink: 0;
-
-  object-fit: cover;
-
-  border-radius: 10px;
-
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.divisionTeamName {
-  min-width: 0;
-
-  font-size: 15px;
-  font-weight: 900;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Tablette */
-
-@media (max-width: 900px) {
-  .divisionTeamsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* Téléphone */
 
 @media (max-width: 500px) {
   .divisionTeamsGrid {
@@ -1195,48 +1411,14 @@ a.joinTeamBtn:active {
   }
 }
 
-/* =========================
-   CZF PAGE LAYOUT
-========================= */
 
-.czfPageLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 56px;
-  align-items: start;
-}
-
-.czfPageContent {
-  min-width: 0;
-}
-
-.czfPageBrand {
-  position: sticky;
-  top: 130px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  min-height: 520px;
-}
-
-.czfPageBrand img {
-  width: min(330px, 100%);
-  height: auto;
-  object-fit: contain;
-
-  filter:
-    drop-shadow(0 20px 25px rgba(7, 19, 29, 0.14))
-    drop-shadow(0 0 25px rgba(242, 101, 34, 0.08));
-}
-
-@media (max-width: 1100px) {
-  .czfPageLayout {
+@media (max-width: 420px) {
+  .rolePicker {
     grid-template-columns: 1fr;
   }
 
-  .czfPageBrand {
-    display: none;
+  .card h3,
+  .sectionTitle h2 {
+    font-size: 30px;
   }
 }
