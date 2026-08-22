@@ -460,16 +460,13 @@ function renderChampionPool(riotId: string) {
     ?.toLowerCase()
     .includes(teamSearch.toLowerCase());
 
-  const matchesValidated =
-    !validatedOnly || team.is_validated === true;
+const matchesValidated =
+    !validatedOnly || team.validated_by_admin === true;
 
-  const division = isTeamComplete(team.id)
-    ? getTeamDivision(team.id)
-    : null;
-
-  const matchesDivision =
-    divisionFilter === 'Toutes' ||
-    division === divisionFilter;
+const matchesDivision =
+  statusFilter === 'Incomplètes' ||
+  divisionFilter === 'Toutes' ||
+  team.division === divisionFilter;
 
   const matchesStatus =
     statusFilter === 'Toutes' ||
@@ -609,25 +606,36 @@ function renderChampionPool(riotId: string) {
 
   {/* FILTRE DIVISION */}
   <select
-    value={divisionFilter}
-    onChange={(e) => setDivisionFilter(e.target.value)}
-    style={{
-      padding: '14px 18px',
-      borderRadius: '10px',
-      border: '2px solid #0b1f4d',
-      background: 'transparent',
-      color: '#0b1f4d',
-      fontWeight: '700',
-      fontSize: '15px',
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-    }}
-  >
-    <option value="Toutes">Toutes les divisions</option>
-    <option value="Yordle">Yordle</option>
-    <option value="Ixtal">Ixtal</option>
-    <option value="Targon">Targon</option>
-  </select>
+  value={divisionFilter}
+  onChange={(e) => setDivisionFilter(e.target.value)}
+  disabled={statusFilter === 'Incomplètes'}
+  style={{
+    padding: '14px 18px',
+    borderRadius: '10px',
+    border: '2px solid #0b1f4d',
+    background:
+      statusFilter === 'Incomplètes'
+        ? 'rgba(11, 31, 77, 0.08)'
+        : 'transparent',
+    color:
+      statusFilter === 'Incomplètes'
+        ? 'rgba(11, 31, 77, 0.45)'
+        : '#0b1f4d',
+    fontWeight: '700',
+    fontSize: '15px',
+    cursor:
+      statusFilter === 'Incomplètes'
+        ? 'not-allowed'
+        : 'pointer',
+    fontFamily: 'inherit',
+  }}
+>
+  <option value="Toutes">Toutes les divisions</option>
+  <option value="Yordle">Yordle</option>
+  <option value="Ixtal">Ixtal</option>
+  <option value="Targon">Targon</option>
+</select>
+
 
   {/* FILTRE STATUT */}
   <select
