@@ -5,58 +5,48 @@ import Nav from '../components/Nav';
 
 type Division = 'Yordle' | 'Ixtal' | 'Targon';
 
+type ResultPlayer = {
+  id: number | string | null;
+  riotId: string;
+  discordName: string | null;
+  role: string | null;
+  avatar: string | null;
+};
+
 type Team = {
-  id?: number | string;
-  name?: string;
-  team_name?: string;
-
-  short_name?: string;
-  tag?: string;
-
-  logo?: string;
-  logo_url?: string;
-  logoUrl?: string;
-  image?: string;
-
-  division?: string;
-
-  is_validated?: boolean;
-
-  wins?: number;
-  losses?: number;
+  id: number | string;
+  name: string;
+  shortName: string;
+  logo: string | null;
+  division: Division | null;
+  wins: number;
+  losses: number;
+  roster: ResultPlayer[];
 };
 
-type TeamMember = {
-  id?: number | string;
-
-  team_id?: number | string;
-  teamId?: number | string;
-
-  riot_id?: string;
-  riotId?: string;
-
-  role?: string;
-};
-
-type Player = {
-  id?: number | string;
-
-  riot_id?: string;
-  riotId?: string;
-
-  discord_name?: string;
-  discord_username?: string;
-
-  role?: string;
-
-  avatar?: string;
-  avatar_url?: string;
+type Champion = {
+  id: string;
+  key: string;
+  name: string;
+  image: string;
 };
 
 type DivisionConfig = {
   name: Division;
   color: string;
   soft: string;
+};
+
+type ResultsApiData = {
+  success: boolean;
+
+  divisions: {
+    Yordle: Team[];
+    Ixtal: Team[];
+    Targon: Team[];
+  };
+
+  champions: Champion[];
 };
 
 const DIVISIONS: DivisionConfig[] = [
@@ -77,89 +67,56 @@ const DIVISIONS: DivisionConfig[] = [
   },
 ];
 
-const ROLE_ORDER = [
-  'Top',
-  'Jungle',
-  'Mid',
-  'ADC',
-  'Support',
-];
-
 export default function ResultsPage() {
   const [division, setDivision] =
     useState<Division>('Yordle');
 
-  const [teams, setTeams] =
-    useState<Team[]>([]);
+  const [resultsData, setResultsData] =
+    useState<ResultsApiData | null>(null);
 
-  const [teamMembers, setTeamMembers] =
-    useState<TeamMember[]>([]);
-
-  const [players, setPlayers] =
-    useState<Player[]>([]);
+  const [champions, setChampions] =
+    useState<Champion[]>([]);
 
   const [loading, setLoading] =
     useState(true);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadResults() {
       try {
         setLoading(true);
 
-        const [
-          teamsRes,
-          membersRes,
-          playersRes,
-        ] = await Promise.all([
-          fetch('/api/teams'),
-          fetch('/api/team-members'),
-          fetch('/api/players'),
-        ]);
+        const res = await fetch('/api/results', {
+          cache: 'no-store',
+        });
 
-        const [
-          teamsData,
-          membersData,
-          playersData,
-        ] = await Promise.all([
-          teamsRes.json(),
-          membersRes.json(),
-          playersRes.json(),
-        ]);
+        const data: ResultsApiData =
+          await res.json();
 
-        setTeams(
-          Array.isArray(teamsData)
-            ? teamsData
-            : teamsData?.teams || []
-        );
+        if (!res.ok || !data.success) {
+          throw new Error(
+            'Impossible de récupérer les résultats'
+          );
+        }
 
-        setTeamMembers(
-          Array.isArray(membersData)
-            ? membersData
-            : membersData?.members ||
-                membersData?.teamMembers ||
-                []
-        );
+        setResultsData(data);
 
-        setPlayers(
-          Array.isArray(playersData)
-            ? playersData
-            : playersData?.players || []
+        setChampions(
+          data.champions || []
         );
       } catch (error) {
         console.error(
-          'Erreur chargement page résultats :',
+          'Erreur chargement résultats :',
           error
         );
 
-        setTeams([]);
-        setTeamMembers([]);
-        setPlayers([]);
+        setResultsData(null);
+        setChampions([]);
       } finally {
         setLoading(false);
       }
     }
 
-    loadData();
+    loadResults();
   }, []);
 
   const divisionConfig =
@@ -170,81 +127,19 @@ export default function ResultsPage() {
 
   const divisionTeams =
     useMemo(() => {
-      return teams
-        .filter((team) =>
-          isValidatedTeam(team)
-        )
-        .filter(
-          (team) =>
-            normalizeDivision(
-              team.division
-            ) === division
-        )
-        .slice(0, 10);
-    }, [teams, division]);
+      if (!resultsData) {
+        return [];
+      }
 
-  function getRoster(
-    teamId?: number | string
-  ) {
-    if (
-      teamId === undefined ||
-      teamId === null
-    ) {
-      return [];
-    }
-
-    const members =
-      teamMembers.filter(
-        (member) =>
-          String(
-            member.team_id ??
-              member.teamId
-          ) === String(teamId)
-      );
-
-    return members
-      .map((member) => {
-        const riotId =
-          member.riot_id ??
-          member.riotId ??
-          '';
-
-        const player =
-          players.find(
-            (p) =>
-              normalizeRiotId(
-                p.riot_id ??
-                  p.riotId
-              ) ===
-              normalizeRiotId(
-                riotId
-              )
-          );
-
-        return {
-          ...member,
-
-          player,
-
-          role:
-            normalizeRole(
-              member.role ??
-                player?.role
-            ) || 'Unknown',
-
-          riotId:
-            riotId ||
-            player?.riot_id ||
-            player?.riotId ||
-            'Joueur',
-        };
-      })
-      .sort(
-        (a, b) =>
-          rolePosition(a.role) -
-          rolePosition(b.role)
-      );
-  }
+      return (
+        resultsData.divisions[
+          division
+        ] || []
+      ).slice(0, 10);
+    }, [
+      resultsData,
+      division,
+    ]);
 
   return (
     <>
@@ -365,9 +260,7 @@ export default function ResultsPage() {
                       rank <= 8;
 
                     const roster =
-                      getRoster(
-                        team.id
-                      );
+                      team.roster || [];
 
                     return (
                       <div
@@ -381,14 +274,13 @@ export default function ResultsPage() {
                             : 'standingEliminated'
                         }`}
                         title={
-                          roster.length >
-                          0
+                          roster.length > 0
                             ? roster
                                 .map(
                                   (
                                     player
                                   ) =>
-                                    `${player.role} : ${player.riotId}`
+                                    `${player.role ?? 'Rôle'} : ${player.riotId}`
                                 )
                                 .join(
                                   '\n'
@@ -408,16 +300,13 @@ export default function ResultsPage() {
                           />
 
                           <span>
-                            {getTeamShortName(
-                              team
-                            )}
+                            {team.shortName}
                           </span>
                         </div>
 
                         <div className="standingScore">
                           <strong>
-                            {team.wins ??
-                              0}
+                            {team.wins}
                           </strong>
 
                           <span>
@@ -425,8 +314,7 @@ export default function ResultsPage() {
                           </span>
 
                           <strong>
-                            {team.losses ??
-                              0}
+                            {team.losses}
                           </strong>
                         </div>
                       </div>
@@ -475,9 +363,11 @@ export default function ResultsPage() {
                           <strong>
                             0
                           </strong>
+
                           <span>
                             -
                           </span>
+
                           <strong>
                             0
                           </strong>
@@ -532,8 +422,6 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="winnerBracket">
-                  {/* QUARTS */}
-
                   <div className="bracketColumn quarterColumn">
                     <ColumnTitle>
                       Quarts
@@ -586,8 +474,6 @@ export default function ResultsPage() {
 
                   <Arrow />
 
-                  {/* DEMIES */}
-
                   <div className="bracketColumn semiColumn">
                     <ColumnTitle>
                       Demi-finales
@@ -606,8 +492,6 @@ export default function ResultsPage() {
 
                   <Arrow />
 
-                  {/* WINNER FINAL */}
-
                   <div className="bracketColumn centerColumn">
                     <ColumnTitle>
                       Finale Winner
@@ -621,8 +505,6 @@ export default function ResultsPage() {
                   </div>
 
                   <Arrow />
-
-                  {/* GRANDE FINALE */}
 
                   <div className="bracketColumn centerColumn">
                     <ColumnTitle>
@@ -1541,126 +1423,22 @@ export default function ResultsPage() {
   );
 }
 
-/* =========================
-   HELPERS
-========================= */
-
-function isValidatedTeam(
-  team: Team
-) {
-  return (
-    team.is_validated === true ||
-    String(
-      team.is_validated
-    ) === 'true'
-  );
-}
-
-function normalizeDivision(
-  value?: string
-): Division | null {
-  if (!value) {
-    return null;
-  }
-
-  const division =
-    value
-      .trim()
-      .toLowerCase();
-
-  if (division === 'yordle') {
-    return 'Yordle';
-  }
-
-  if (division === 'ixtal') {
-    return 'Ixtal';
-  }
-
-  if (division === 'targon') {
-    return 'Targon';
-  }
-
-  return null;
-}
-
-function getTeamName(
-  team: Team
-) {
-  return (
-    team.name ??
-    team.team_name ??
-    'Équipe'
-  );
-}
-
-function getTeamShortName(
-  team: Team
-) {
-  if (team.short_name) {
-    return team.short_name;
-  }
-
-  if (team.tag) {
-    return team.tag;
-  }
-
-  const name =
-    getTeamName(team);
-
-  const words =
-    name
-      .trim()
-      .split(/\s+/);
-
-  if (words.length > 1) {
-    return words
-      .map(
-        (word) =>
-          word.charAt(0)
-      )
-      .join('')
-      .slice(0, 4)
-      .toUpperCase();
-  }
-
-  return name
-    .slice(0, 4)
-    .toUpperCase();
-}
-
-function getTeamLogo(
-  team: Team
-) {
-  return (
-    team.logo ??
-    team.logo_url ??
-    team.logoUrl ??
-    team.image ??
-    ''
-  );
-}
-
 function TeamLogo({
   team,
 }: {
   team: Team;
 }) {
-  const logo =
-    getTeamLogo(team);
-
   return (
     <div className="resultTeamLogo">
-      {logo ? (
+      {team.logo ? (
         <img
-          src={logo}
-          alt={getTeamName(
-            team
-          )}
+          src={team.logo}
+          alt={team.name}
         />
       ) : (
-        getTeamShortName(
-          team
-        ).slice(0, 2)
+        <span>
+          {team.shortName.slice(0, 2)}
+        </span>
       )}
     </div>
   );
@@ -1677,87 +1455,8 @@ function getSeedTeam(
     return `#${seed} TBD`;
   }
 
-  return `#${seed} ${getTeamShortName(
-    team
-  )}`;
+  return `#${seed} ${team.shortName}`;
 }
-
-function normalizeRiotId(
-  riotId?: string
-) {
-  return (
-    riotId
-      ?.trim()
-      .toLowerCase() || ''
-  );
-}
-
-function normalizeRole(
-  role?: string
-) {
-  if (!role) {
-    return null;
-  }
-
-  const r =
-    role
-      .trim()
-      .toLowerCase();
-
-  if (
-    r === 'top' ||
-    r === 'toplane'
-  ) {
-    return 'Top';
-  }
-
-  if (
-    r === 'jungle' ||
-    r === 'jgl' ||
-    r === 'jg'
-  ) {
-    return 'Jungle';
-  }
-
-  if (
-    r === 'mid' ||
-    r === 'middle'
-  ) {
-    return 'Mid';
-  }
-
-  if (
-    r === 'adc' ||
-    r === 'bot' ||
-    r === 'bottom'
-  ) {
-    return 'ADC';
-  }
-
-  if (
-    r === 'support' ||
-    r === 'sup'
-  ) {
-    return 'Support';
-  }
-
-  return role;
-}
-
-function rolePosition(
-  role: string
-) {
-  const index =
-    ROLE_ORDER.indexOf(role);
-
-  return index === -1
-    ? 99
-    : index;
-}
-
-/* =========================
-   BRACKET COMPONENTS
-========================= */
 
 function ColumnTitle({
   children,
