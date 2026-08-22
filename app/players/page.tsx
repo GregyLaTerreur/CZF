@@ -493,15 +493,12 @@ export default function PlayersPage() {
     }
 
     if (participantsOnly) {
-      list = list.filter((player) => {
-        const team =
-          getPlayerTeam(player);
+  list = list.filter((player) => {
+    const team = getPlayerTeam(player);
 
-        return (
-          team?.is_validated === true
-        );
-      });
-    }
+    return team?.validated_by_admin === true;
+  });
+}
 
     if (showLftOnly) {
       list = list.filter(
