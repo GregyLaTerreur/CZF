@@ -1,36 +1,28 @@
 /* =========================================================
    CZF — GLOBAL CSS
-   Clash des Zéros de la Faille
-========================================================= */
-
-
-/* =========================================================
-   1. VARIABLES
+   DA ÉLECTRIQUE / CHAOS MAÎTRISÉ
 ========================================================= */
 
 :root {
-  --navy: #092a3f;
+  --navy: #071d2d;
+  --navy-2: #0a2b42;
+  --navy-3: #0d3651;
+
   --orange: #f26522;
+  --orange-light: #ff7931;
 
   --cream: #ead0ad;
-  --cream2: #f5dfc1;
+  --cream-light: #fff4e1;
 
   --ink: #07131d;
-  --muted: #7a6854;
+  --muted: #756551;
 
-  --card: rgba(255, 245, 226, 0.78);
-
-  --gold: #c79b54;
+  --card: rgba(255, 246, 229, 0.82);
 
   --font-display:
     Impact,
     Haettenschweiler,
     'Arial Narrow Bold',
-    sans-serif;
-
-  --font-tech:
-    'Arial Narrow',
-    Arial,
     sans-serif;
 
   --font-body:
@@ -41,7 +33,7 @@
 
 
 /* =========================================================
-   2. RESET
+   RESET
 ========================================================= */
 
 * {
@@ -64,12 +56,12 @@ body {
 
   font-family: var(--font-body);
 
-  background: var(--cream);
+  background-color: var(--cream);
 
   background-image:
     linear-gradient(
-      rgba(234, 208, 173, 0.82),
-      rgba(234, 208, 173, 0.9)
+      rgba(234, 208, 173, 0.76),
+      rgba(234, 208, 173, 0.84)
     ),
     url('/assets/czf-bg-wide.png');
 
@@ -78,12 +70,15 @@ body {
   background-attachment: fixed;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 
 /* =========================================================
-   3. TYPOGRAPHIE CZF
+   TYPOGRAPHIE
 ========================================================= */
-
-/* Gros titres */
 
 .hero h1,
 .sectionTitle h2,
@@ -91,23 +86,32 @@ body {
 .importBox h3,
 .rulebook h3 {
   font-family: var(--font-display);
+
+  text-transform: uppercase;
+
   letter-spacing: 0.02em;
 }
 
-
-/* Interface esport */
+p,
+li,
+input,
+select,
+textarea,
+.playerRow,
+.teamRow,
+.teamDetails {
+  font-family: var(--font-body);
+}
 
 .nav a,
 .playersHeader,
 .teamsHeader,
 .divisionTeamName,
 .eyebrow {
-  font-family: var(--font-tech);
+  font-family: var(--font-body);
+
   font-weight: 800;
 }
-
-
-/* Boutons */
 
 button,
 .joinTeamBtn,
@@ -118,91 +122,142 @@ button,
 
   font-weight: 800;
 
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 
   text-transform: uppercase;
 }
 
 
-/* Texte courant */
-
-p,
-input,
-select,
-textarea,
-.playerRow,
-.teamRow,
-.teamDetails {
-  font-family: var(--font-body);
-}
-
-
 /* =========================================================
-   4. LIENS
-========================================================= */
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-
-/* =========================================================
-   5. NAVIGATION
+   NAVBAR
 ========================================================= */
 
 .nav {
   position: sticky;
   top: 0;
+
   z-index: 100;
+
+  min-height: 78px;
 
   display: flex;
   align-items: center;
 
-  gap: 24px;
+  gap: 30px;
 
-  padding: 14px 6vw;
-
-  background: rgba(8, 24, 36, 0.88);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 5vw;
 
   color: white;
 
+  background:
+    linear-gradient(
+      90deg,
+      #061927 0%,
+      #08263b 48%,
+      #061927 100%
+    );
+
   border-bottom:
-    1px solid rgba(255, 255, 255, 0.1);
+    1px solid rgba(242, 101, 34, 0.45);
+
+  box-shadow:
+    0 9px 30px rgba(3, 14, 23, 0.25);
+
+  overflow: hidden;
+}
+
+.nav::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 0;
+
+  width: 260px;
+  height: 150px;
+
+  right: 8%;
+  top: -40px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_09.png')
+    center / contain
+    no-repeat;
+
+  opacity: 0.18;
+
+  transform: rotate(-5deg);
+
+  pointer-events: none;
+}
+
+.nav::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 0;
+
+  width: 140px;
+  height: 120px;
+
+  left: 12%;
+  bottom: -52px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_04.png')
+    center / contain
+    no-repeat;
+
+  opacity: 0.16;
+
+  transform: rotate(16deg);
+
+  pointer-events: none;
+}
+
+.nav > * {
+  position: relative;
+  z-index: 2;
 }
 
 .nav img {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
 
   object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 0 12px rgba(242, 101, 34, 0.2)
+    );
 }
 
 .nav div {
   display: flex;
-
-  gap: 18px;
+  align-items: center;
 
   flex-wrap: wrap;
+
+  gap: 22px;
 }
 
 .nav a {
   position: relative;
 
-  font-size: 14px;
+  padding: 9px 0;
+
+  font-size: 13px;
 
   text-transform: uppercase;
 
-  letter-spacing: 0.06em;
+  letter-spacing: 0.035em;
 
-  opacity: 0.86;
+  opacity: 0.88;
 
   transition:
-    color 0.2s ease,
-    opacity 0.2s ease;
+    color 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .nav a:hover {
@@ -210,65 +265,290 @@ a {
   opacity: 1;
 }
 
+.nav div a::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  bottom: 1px;
+
+  width: 0;
+  height: 2px;
+
+  background: var(--orange);
+
+  transition: width 0.2s ease;
+}
+
+.nav div a:hover::after {
+  width: 100%;
+}
+
 
 /* =========================================================
-   6. HERO
+   ACCUEIL — STRUCTURE
+========================================================= */
+
+.czfPageLayout {
+  display: grid;
+
+  /*
+    Plus de place pour le GROS logo.
+  */
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    560px;
+
+  gap: 0;
+
+  width: 100%;
+
+  max-width: 2000px;
+
+  margin: 0 auto;
+
+  align-items: start;
+}
+
+.czfPageContent {
+  min-width: 0;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* =========================================================
+   HERO
 ========================================================= */
 
 .hero {
   min-height: 78vh;
 
-  display: grid;
-
-  grid-template-columns:
-    1.2fr
-    0.8fr;
-
+  display: flex;
   align-items: center;
 
-  gap: 30px;
+  position: relative;
 
-  padding: 70px 8vw;
+  padding:
+    70px
+    clamp(30px, 5vw, 100px);
 }
 
+.homeHero {
+  overflow: visible;
+}
+
+.heroText {
+  position: relative;
+
+  z-index: 5;
+
+  width: 100%;
+
+  max-width: 900px;
+}
+
+
+/* Éclair vertical gauche */
+
+.homeHero::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 3;
+
+  width: 245px;
+  height: 430px;
+
+  left: -88px;
+  top: 80px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_02.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-5deg);
+
+  pointer-events: none;
+}
+
+
+/* Petit éclair secondaire */
+
+.homeHero::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 3;
+
+  width: 145px;
+  height: 210px;
+
+  right: -20px;
+  bottom: 55px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_07.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(15deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   HERO — TEXTE
+========================================================= */
+
 .eyebrow {
-  margin-bottom: 16px;
+  margin-bottom: 15px;
 
   color: var(--orange);
+
+  font-size: 15px;
 
   font-weight: 900;
 
   text-transform: uppercase;
 
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
 }
 
 .hero h1 {
   margin: 0 0 24px;
 
+  max-width: 850px;
+
   font-size:
-    clamp(64px, 9vw, 130px);
+    clamp(58px, 7vw, 112px);
 
-  line-height: 1;
+  line-height: 0.94;
 
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
 
-  text-transform: uppercase;
+  color: var(--navy);
 
-  font-weight: 900;
+  /*
+    Plus incliné qu'avant,
+    mais toujours subtil.
+  */
+
+  transform: skewX(-3deg);
+
+  transform-origin: left center;
 }
 
-.hero p {
-  max-width: 680px;
+.hero h1::after {
+  content: '';
 
-  font-size: 20px;
+  display: block;
 
-  letter-spacing: 0.3px;
+  width: 85px;
+  height: 4px;
+
+  margin-top: 22px;
+
+  background: var(--orange);
+}
+
+.heroText > p:not(.eyebrow) {
+  max-width: 620px;
+
+  font-size: 18px;
+
+  line-height: 1.55;
+
+  font-weight: 500;
 }
 
 
 /* =========================================================
-   7. HERO ACTIONS
+   ÉNORME LOGO CZF STICKY
+========================================================= */
+
+.czfPageBrand {
+  position: fixed;
+
+  top: 78px;
+  right: 20px;
+
+  width: 520px;
+  height: calc(100vh - 78px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: visible;
+
+  padding: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+}
+
+.czfPageBrand img {
+  /*
+    Beaucoup plus gros.
+  */
+
+  width: 620px;
+
+  max-width: none;
+
+  height: auto;
+
+  object-fit: contain;
+
+  pointer-events: auto;
+
+  transform:
+    translateX(-25px)
+    scale(1.12);
+
+  filter:
+    drop-shadow(
+      0 28px 36px rgba(7, 19, 29, 0.18)
+    )
+    drop-shadow(
+      0 0 45px rgba(242, 101, 34, 0.12)
+    );
+
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.czfPageBrand img:hover {
+  transform:
+    translateX(-25px)
+    translateY(-5px)
+    scale(1.16);
+
+  filter:
+    drop-shadow(
+      0 34px 42px rgba(7, 19, 29, 0.22)
+    )
+    drop-shadow(
+      0 0 55px rgba(242, 101, 34, 0.18)
+    );
+}
+
+
+/* =========================================================
+   HERO BUTTONS
 ========================================================= */
 
 .heroActions {
@@ -281,21 +561,32 @@ a {
   margin-top: 28px;
 }
 
-.heroActions a,
-.fakeForm button {
-  padding: 13px 18px;
+.heroActions a {
+  display: inline-flex;
 
-  border: 0;
+  align-items: center;
+  justify-content: center;
 
-  border-radius: 999px;
+  min-height: 48px;
+
+  padding: 13px 22px;
+
+  border-radius: 7px;
 
   background: var(--orange);
 
   color: white;
 
-  cursor: pointer;
+  box-shadow:
+    0 7px 20px rgba(242, 101, 34, 0.12);
 
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
+}
+
+.heroActions a:hover {
+  transform: translateY(-2px);
+
+  background: var(--orange-light);
 }
 
 .heroActions a:nth-child(2) {
@@ -304,19 +595,26 @@ a {
 
 
 /* =========================================================
-   8. SECTIONS
+   SECTIONS
 ========================================================= */
 
 .section {
   width: 100%;
 
-  max-width: 1600px;
-
-  margin: 0 auto;
+  margin: 0;
 
   padding:
-    58px
-    clamp(16px, 4vw, 80px);
+    54px
+    clamp(30px, 5vw, 100px);
+
+  position: relative;
+
+  /*
+    IMPORTANT :
+    éclairs peuvent dépasser.
+  */
+
+  overflow: visible;
 }
 
 .sectionTitle {
@@ -324,16 +622,20 @@ a {
 
   align-items: center;
 
-  gap: 15px;
+  gap: 14px;
 
   margin-bottom: 22px;
+
+  position: relative;
+
+  z-index: 5;
 }
 
 .sectionTitle span {
   display: block;
 
-  width: 46px;
-  height: 6px;
+  width: 42px;
+  height: 4px;
 
   flex-shrink: 0;
 
@@ -343,120 +645,739 @@ a {
 .sectionTitle h2 {
   margin: 0;
 
-  font-size: 34px;
+  font-size:
+    clamp(30px, 3vw, 42px);
 
-  text-transform: uppercase;
+  color: var(--navy);
 
-  letter-spacing: 2px;
-
-  font-weight: 700;
+  letter-spacing: 0.025em;
 }
 
 
 /* =========================================================
-   9. GRILLES
-========================================================= */
-
-.grid {
-  display: grid;
-
-  gap: 18px;
-}
-
-.grid.three {
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
-}
-
-.grid.two {
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-}
-
-
-/* =========================================================
-   10. CARTES
+   CARTES
 ========================================================= */
 
 .card,
 .empty,
 .importBox,
 .rulebook {
+  position: relative;
+
+  z-index: 4;
+
+  width: 100%;
+
   max-width: 100%;
 
-  padding: 24px;
+  padding: 26px;
 
-  border-radius: 24px;
+  border-radius: 14px;
 
-  background: var(--card);
+  background:
+    rgba(255, 246, 229, 0.83);
 
   border:
-    1.5px solid
+    1.3px solid
     rgba(9, 42, 63, 0.72);
 
   box-shadow:
-    0 14px 35px
-    rgba(8, 24, 36, 0.07);
-}
+    0 10px 30px
+    rgba(8, 24, 36, 0.05);
 
-.card {
-  overflow: hidden;
+  /*
+    On laisse les éclairs dépasser des cadres.
+  */
+
+  overflow: visible;
 }
 
 .card h3,
 .importBox h3,
 .rulebook h3 {
-  margin: 0 0 8px;
+  margin:
+    0
+    0
+    10px;
 
   font-size: 26px;
 
-  text-transform: uppercase;
+  color: var(--navy);
 }
 
 
 /* =========================================================
-   11. TEXTES SECONDAIRES
+   DISCORD — MARINE + CHAOS MAÎTRISÉ
 ========================================================= */
 
-.muted {
-  color: var(--muted);
+#discord {
+  position: relative;
 
-  font-weight: 800;
-
-  letter-spacing: 0.3px;
+  z-index: 3;
 }
 
-.empty {
-  border-style: dashed;
+.discordCard {
+  position: relative;
 
-  color: var(--muted);
+  z-index: 3;
 
-  font-weight: 800;
+  padding:
+    38px
+    clamp(28px, 4vw, 60px);
 
-  letter-spacing: 0.3px;
-}
+  color: white;
 
-.pill {
-  display: inline-block;
-
-  margin-top: 18px;
-
-  padding: 8px 12px;
-
-  border-radius: 999px;
+  background:
+    linear-gradient(
+      115deg,
+      #061a29,
+      #082a42 70%,
+      #061a29
+    );
 
   border:
     1px solid
-    rgba(8, 24, 36, 0.18);
+    rgba(242, 101, 34, 0.5);
 
-  color: var(--muted);
+  box-shadow:
+    0 18px 40px
+    rgba(4, 18, 28, 0.18);
+}
 
-  font-weight: 800;
+
+/*
+   Éclair haut-droite
+*/
+
+.discordCard::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 270px;
+  height: 230px;
+
+  right: -95px;
+  top: -85px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_03.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(12deg);
+
+  pointer-events: none;
+}
+
+
+/*
+   Éclair bas-gauche
+*/
+
+.discordCard::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 240px;
+  height: 230px;
+
+  left: -110px;
+  bottom: -105px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_05.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-7deg);
+
+  pointer-events: none;
+}
+
+.discordCard h3 {
+  color: white;
+
+  font-size: 30px;
+
+  position: relative;
+
+  z-index: 10;
+}
+
+.discordCard p,
+.discordCard a {
+  position: relative;
+
+  z-index: 10;
+}
+
+.discordCard p {
+  max-width: 760px;
+
+  line-height: 1.65;
+
+  color:
+    rgba(255, 255, 255, 0.88);
 }
 
 
 /* =========================================================
-   12. IMPORT / FORMULAIRES
+   GRILLES
+========================================================= */
+
+.grid {
+  display: grid;
+
+  gap: 18px;
+
+  position: relative;
+
+  z-index: 4;
+}
+
+.grid.three {
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+}
+
+.grid.two {
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+}
+
+
+/* =========================================================
+   DIVISIONS
+========================================================= */
+
+#divisions {
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/*
+   Gros slash en haut à droite de la section
+*/
+
+#divisions::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 6;
+
+  width: 250px;
+  height: 190px;
+
+  right: -80px;
+  top: 15px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_09.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-6deg);
+
+  pointer-events: none;
+}
+
+
+/*
+   Petit éclair sous les cartes
+*/
+
+#divisions::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 150px;
+  height: 160px;
+
+  left: 12px;
+  bottom: -50px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_08.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(10deg);
+
+  pointer-events: none;
+}
+
+#divisions .grid.three .card {
+  min-height: 175px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+#divisions .grid.three .card:hover {
+  transform: translateY(-4px);
+
+  background:
+    rgba(255, 249, 238, 0.95);
+
+  box-shadow:
+    0 16px 32px
+    rgba(8, 24, 36, 0.1);
+}
+
+#divisions .grid.three .card:nth-child(1) {
+  border-bottom:
+    4px solid #8f6bc7;
+}
+
+#divisions .grid.three .card:nth-child(2) {
+  border-bottom:
+    4px solid #4387d8;
+}
+
+#divisions .grid.three .card:nth-child(3) {
+  border-bottom:
+    4px solid #51a677;
+}
+
+
+/* =========================================================
+   TOP ÉQUIPES
+========================================================= */
+
+#equipes {
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/*
+   GROS éclair bord gauche
+*/
+
+#equipes::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 330px;
+  height: 310px;
+
+  left: -165px;
+  bottom: -65px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_01.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-8deg);
+
+  pointer-events: none;
+}
+
+
+/*
+   Petit éclair coin haut droit
+*/
+
+#equipes::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 120px;
+  height: 145px;
+
+  right: 0;
+  top: 20px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_06.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(15deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   COMPTE CZF
+========================================================= */
+
+#compte {
+  position: relative;
+}
+
+#compte .importBox {
+  color: white;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29,
+      #082a42 70%,
+      #061a29
+    );
+
+  border:
+    1px solid
+    rgba(242, 101, 34, 0.5);
+}
+
+
+/*
+   Éclair droit
+*/
+
+#compte .importBox::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 310px;
+  height: 285px;
+
+  right: -120px;
+  bottom: -100px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_02.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(7deg);
+
+  pointer-events: none;
+}
+
+
+/*
+   Petit éclair gauche
+*/
+
+#compte .importBox::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 125px;
+  height: 160px;
+
+  left: -60px;
+  top: -45px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_07.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-13deg);
+
+  pointer-events: none;
+}
+
+#compte .importBox > * {
+  position: relative;
+
+  z-index: 10;
+}
+
+#compte .importBox h3 {
+  color: white;
+}
+
+#compte .importBox p,
+#compte .importBox li {
+  color:
+    rgba(255, 255, 255, 0.88);
+}
+
+
+/* =========================================================
+   RÉSULTATS
+========================================================= */
+
+#resultats {
+  position: relative;
+}
+
+#resultats::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 140px;
+  height: 150px;
+
+  right: 15px;
+  bottom: -40px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_04.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-18deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   HALL OF FAME
+========================================================= */
+
+#hall-of-fame {
+  position: relative;
+}
+
+#hall-of-fame::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 230px;
+  height: 250px;
+
+  left: -95px;
+  top: 15px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_03.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-15deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   RULEBOOK
+========================================================= */
+
+#rulebook {
+  position: relative;
+}
+
+#rulebook .rulebook {
+  color: white;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29,
+      #082a42 70%,
+      #061a29
+    );
+
+  border:
+    1px solid
+    rgba(242, 101, 34, 0.5);
+}
+
+
+/*
+   TON ASSET EN FORME D'ANGLE :
+   placé EN BAS À DROITE du cadre
+   pour que sa géométrie soit cohérente.
+*/
+
+#rulebook .rulebook::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 9;
+
+  width: 310px;
+  height: 230px;
+
+  right: -52px;
+  bottom: -55px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_10.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(0deg);
+
+  pointer-events: none;
+}
+
+
+/*
+   Petit slash haut gauche
+*/
+
+#rulebook .rulebook::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 150px;
+  height: 140px;
+
+  left: -55px;
+  top: -48px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_06.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-12deg);
+
+  pointer-events: none;
+}
+
+#rulebook .rulebook > * {
+  position: relative;
+
+  z-index: 10;
+}
+
+#rulebook .rulebook h3 {
+  color: white;
+}
+
+#rulebook .rulebook p {
+  max-width: 720px;
+
+  color:
+    rgba(255, 255, 255, 0.88);
+}
+
+
+/* =========================================================
+   BOUTONS
+========================================================= */
+
+button {
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.04);
+}
+
+button:active {
+  transform:
+    translateY(1px)
+    scale(0.98);
+}
+
+button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.55;
+}
+
+.joinTeamBtn,
+.rulebookButton {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 13px 20px;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: var(--orange);
+
+  color: white;
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: all 0.16s ease;
+}
+
+.joinTeamBtn {
+  margin-top: 15px;
+}
+
+.joinTeamBtn:hover,
+.rulebookButton:hover {
+  transform: translateY(-2px);
+
+  background: var(--orange-light);
+
+  box-shadow:
+    0 8px 20px
+    rgba(242, 101, 34, 0.15);
+}
+
+
+/* =========================================================
+   FORMULAIRES
 ========================================================= */
 
 .importBox {
@@ -471,11 +1392,6 @@ a {
   gap: 24px;
 
   margin-bottom: 18px;
-}
-
-.importBox p,
-.rulebook p {
-  letter-spacing: 0.3px;
 }
 
 .fakeForm {
@@ -498,217 +1414,63 @@ a {
 input,
 select,
 textarea {
-  font-family: var(--font-body);
-
-  padding: 14px 18px;
-
-  border-radius: 14px;
-
-  border:
-    2px solid #d8c7ad;
-}
-
-.fakeForm input {
-  flex: 1;
-
-  padding: 14px 16px;
-
-  background: #fff7ea;
-
-  border:
-    1px solid
-    rgba(8, 24, 36, 0.2);
-
-  font-size: 16px;
-}
-
-.fakeForm button {
-  border-radius: 14px;
-}
-
-
-/* =========================================================
-   13. BOUTONS
-========================================================= */
-
-button {
-  cursor: pointer;
-
-  transition: all 0.15s ease;
-}
-
-button:hover {
-  transform: translateY(-2px);
-
-  filter: brightness(1.05);
-}
-
-button:active {
-  transform:
-    translateY(2px)
-    scale(0.98);
-
-  filter: brightness(0.92);
-}
-
-button:disabled {
-  cursor: not-allowed;
-
-  opacity: 0.6;
-}
-
-.joinTeamBtn {
-  display: inline-block;
-
-  margin-top: 15px;
-
-  padding: 12px 18px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  background: var(--orange);
-
-  color: white;
-
-  font-weight: 800;
-
-  cursor: pointer;
-
-  transition: all 0.15s ease;
-}
-
-.joinTeamBtn:hover {
-  transform: translateY(-2px);
-
-  filter: brightness(1.05);
-}
-
-.joinTeamBtn:active {
-  transform:
-    translateY(2px)
-    scale(0.98);
-
-  filter: brightness(0.92);
-}
-
-.rulebookButton {
-  display: inline-block;
-
-  padding: 14px 24px;
-
-  border-radius: 12px;
-
-  background: var(--orange);
-
-  color: white;
-
-  font-weight: 800;
-
-  text-transform: uppercase;
-
-  letter-spacing: 0.03em;
-
-  transition: all 0.15s ease;
-}
-
-.rulebookButton:hover {
-  transform: translateY(-2px);
-
-  filter: brightness(1.05);
-}
-
-
-/* =========================================================
-   14. ROLES
-========================================================= */
-
-.rolesContainer {
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 24px;
-
-  align-items: flex-start;
-}
-
-.roleSection {
-  margin-top: -56px;
-}
-
-.roleSection h4 {
-  margin-bottom: 10px;
+  min-height: 48px;
 
   font-family: var(--font-body);
 
-  font-size: 1rem;
+  padding: 13px 16px;
 
-  font-weight: 700;
-
-  letter-spacing: 0.5px;
-
-  color: #111;
-}
-
-.rolePicker {
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 10px;
-
-  margin: 10px 0;
-}
-
-.roleBtn {
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  padding: 8px 24px;
-
-  border-radius: 14px;
+  border-radius: 8px;
 
   border:
-    2px solid #d8c7ad;
+    1.5px solid rgba(9, 42, 63, 0.32);
+
+  color: var(--ink);
+
+  background:
+    rgba(255, 249, 239, 0.84);
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--navy);
 
   background: white;
 
-  cursor: pointer;
-
-  transition: 0.2s;
-}
-
-.roleBtn img {
-  width: 20px;
-  height: 20px;
-}
-
-.roleBtn span {
-  font-family: var(--font-body);
-
-  font-size: 0.95rem;
-
-  font-weight: 700;
-
-  letter-spacing: 0.5px;
-
-  color: #111;
-}
-
-.roleBtn.active {
-  border-color: var(--orange);
-
-  background: #fff4eb;
+  box-shadow:
+    0 0 0 3px
+    rgba(9, 42, 63, 0.08);
 }
 
 
 /* =========================================================
-   15. TABLE JOUEURS
+   MUTED / EMPTY
+========================================================= */
+
+.muted {
+  color: var(--muted);
+
+  font-weight: 700;
+}
+
+.empty {
+  border-style: dashed;
+
+  color: var(--muted);
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   JOUEURS
 ========================================================= */
 
 .playersTable {
@@ -742,15 +1504,27 @@ button:disabled {
   padding: 14px 20px;
 }
 
+.playersHeader {
+  color: var(--navy);
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  border-bottom:
+    2px solid rgba(9, 42, 63, 0.15);
+}
+
 .playerRow {
   border-bottom:
-    1px solid
-    rgba(0, 0, 0, 0.08);
+    1px solid rgba(9, 42, 63, 0.08);
 }
 
 .playerRow:hover {
   background:
-    rgba(255, 255, 255, 0.25);
+    rgba(255, 255, 255, 0.32);
 }
 
 .playerRow > div,
@@ -759,51 +1533,26 @@ button:disabled {
 }
 
 .playersHeader > div {
-  padding: 10px 6px;
-
-  border-radius: 10px;
+  padding: 8px 4px;
 
   cursor: pointer;
 
   user-select: none;
-
-  transition: all 0.15s ease;
 }
 
 .playersHeader > div:hover {
   color: var(--orange);
-
-  background:
-    rgba(242, 101, 34, 0.08);
-
-  transform: translateY(-1px);
-}
-
-.playersHeader > div:nth-child(6),
-.playersHeader > div:nth-child(7) {
-  cursor: default;
-}
-
-.playersHeader > div:nth-child(6):hover,
-.playersHeader > div:nth-child(7):hover {
-  color: inherit;
-
-  background: transparent;
-
-  transform: none;
 }
 
 
 /* =========================================================
-   16. CHAMPIONS / RANKS
+   CHAMPIONS / RANKS
 ========================================================= */
 
 .championPool {
   display: flex;
 
   align-items: center;
-
-  justify-content: flex-start;
 
   gap: 6px;
 
@@ -817,6 +1566,9 @@ button:disabled {
   border-radius: 50%;
 
   object-fit: cover;
+
+  border:
+    1px solid rgba(9, 42, 63, 0.2);
 }
 
 .rankCell {
@@ -843,7 +1595,93 @@ button:disabled {
 
 
 /* =========================================================
-   17. TABLE ÉQUIPES
+   RÔLES
+========================================================= */
+
+.rolesContainer {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 24px;
+
+  align-items: flex-start;
+}
+
+.roleSection {
+  margin-top: -56px;
+}
+
+.roleSection h4 {
+  margin-bottom: 10px;
+
+  font-family: var(--font-body);
+
+  font-size: 1rem;
+
+  font-weight: 700;
+}
+
+.rolePicker {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin: 10px 0;
+}
+
+.roleBtn {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 9px 22px;
+
+  border-radius: 8px;
+
+  border:
+    1.5px solid rgba(9, 42, 63, 0.25);
+
+  background: white;
+
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+.roleBtn:hover {
+  border-color: var(--navy);
+
+  transform: translateY(-2px);
+}
+
+.roleBtn.active {
+  border-color: var(--orange);
+
+  background: #fff1e7;
+}
+
+.roleBtn img {
+  width: 20px;
+  height: 20px;
+}
+
+.roleBtn span {
+  font-family: var(--font-body);
+
+  font-size: 0.95rem;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   ÉQUIPES
 ========================================================= */
 
 .teamsHeader,
@@ -865,10 +1703,29 @@ button:disabled {
 
 .teamsHeader {
   min-height: 60px;
+
+  color: var(--navy);
+
+  font-size: 14px;
+
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  border-bottom:
+    2px solid rgba(9, 42, 63, 0.15);
 }
 
 .teamRow {
   min-height: 80px;
+
+  border-bottom:
+    1px solid rgba(9, 42, 63, 0.08);
+}
+
+.teamRow:hover {
+  background:
+    rgba(255, 255, 255, 0.28);
 }
 
 .teamsHeader > div,
@@ -883,7 +1740,7 @@ button:disabled {
 .teamArrow {
   cursor: pointer;
 
-  font-size: 1.2rem;
+  color: var(--navy);
 }
 
 .teamNameCell {
@@ -891,9 +1748,7 @@ button:disabled {
 
   align-items: center;
 
-  justify-content: flex-start;
-
-  gap: 15px;
+  gap: 14px;
 }
 
 .teamLogoSmall {
@@ -903,11 +1758,14 @@ button:disabled {
   object-fit: cover;
 
   border-radius: 8px;
+
+  border:
+    1px solid rgba(9, 42, 63, 0.12);
 }
 
 
 /* =========================================================
-   18. DÉTAILS ÉQUIPE
+   DÉTAILS ÉQUIPE
 ========================================================= */
 
 .teamDetails {
@@ -920,15 +1778,13 @@ button:disabled {
   padding: 30px 40px;
 
   border-top:
-    1px solid
-    rgba(0, 0, 0, 0.08);
+    1px solid rgba(9, 42, 63, 0.08);
 
   border-bottom:
-    1px solid
-    rgba(0, 0, 0, 0.08);
+    1px solid rgba(9, 42, 63, 0.08);
 
   background:
-    rgba(255, 255, 255, 0.03);
+    rgba(255, 255, 255, 0.18);
 }
 
 .teamInfos {
@@ -941,15 +1797,14 @@ button:disabled {
   display: flex;
 
   justify-content: center;
-
-  align-items: flex-start;
 }
 
 .teamLogoBig {
-  width: 450px;
-  height: auto;
+  width: 380px;
 
   max-width: 100%;
+
+  height: auto;
 
   object-fit: contain;
 }
@@ -968,14 +1823,17 @@ button:disabled {
 
 
 /* =========================================================
-   19. DIVISIONS
+   DIVISIONS — PAGE
 ========================================================= */
 
 .divisionTeamsGrid {
   display: grid;
 
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
 
   gap: 14px;
 
@@ -987,38 +1845,27 @@ button:disabled {
 
   align-items: center;
 
-  justify-content: flex-start;
-
   gap: 12px;
-
-  min-width: 0;
 
   min-height: 68px;
 
+  min-width: 0;
+
   padding: 12px 14px;
 
-  border-radius: 14px;
+  border-radius: 10px;
 
   border:
-    2px solid
-    rgba(8, 24, 36, 0.12);
+    1.5px solid rgba(9, 42, 63, 0.3);
 
   background:
-    rgba(255, 255, 255, 0.45);
+    rgba(255, 255, 255, 0.46);
 
   color: var(--ink);
 
   font-weight: 800;
 
-  box-shadow:
-    0 5px 15px
-    rgba(8, 24, 36, 0.05);
-
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: all 0.18s ease;
 }
 
 .divisionTeamButton:hover {
@@ -1027,11 +1874,11 @@ button:disabled {
   border-color: var(--orange);
 
   background:
-    rgba(255, 255, 255, 0.75);
+    rgba(255, 255, 255, 0.78);
 
   box-shadow:
     0 10px 22px
-    rgba(8, 24, 36, 0.12);
+    rgba(8, 24, 36, 0.09);
 }
 
 .divisionTeamLogo {
@@ -1042,10 +1889,7 @@ button:disabled {
 
   object-fit: cover;
 
-  border-radius: 10px;
-
-  background:
-    rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
 }
 
 .divisionTeamName {
@@ -1064,129 +1908,53 @@ button:disabled {
 
 
 /* =========================================================
-   20. ACCUEIL — LAYOUT CZF
-========================================================= */
-
-.czfPageLayout {
-  display: grid;
-
-  grid-template-columns:
-    minmax(0, 1fr)
-    360px;
-
-  gap: 30px;
-
-  max-width: 1800px;
-
-  margin: 0 auto;
-
-  align-items: start;
-}
-
-.czfPageContent {
-  min-width: 0;
-}
-
-
-/* Le hero n'a plus de logo dans sa grille */
-
-.homeHero {
-  display: flex;
-
-  align-items: center;
-
-  min-height: 78vh;
-
-  padding: 70px 4vw;
-}
-
-.homeHero .heroText {
-  width: 100%;
-}
-
-
-/* =========================================================
-   21. LOGO CZF STICKY
-========================================================= */
-
-.czfPageBrand {
-  position: sticky;
-
-  top: 110px;
-
-  height:
-    calc(100vh - 110px);
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 30px;
-}
-
-.czfPageBrand img {
-  width: 100%;
-
-  max-width: 330px;
-
-  height: auto;
-
-  object-fit: contain;
-
-  filter:
-    drop-shadow(
-      0 20px 30px
-      rgba(7, 19, 29, 0.15)
-    )
-    drop-shadow(
-      0 0 30px
-      rgba(242, 101, 34, 0.08)
-    );
-
-  transition:
-    transform 0.3s ease,
-    filter 0.3s ease;
-}
-
-.czfPageBrand img:hover {
-  transform:
-    translateY(-5px)
-    scale(1.02);
-
-  filter:
-    drop-shadow(
-      0 24px 35px
-      rgba(7, 19, 29, 0.18)
-    )
-    drop-shadow(
-      0 0 35px
-      rgba(242, 101, 34, 0.12)
-    );
-}
-
-
-/* =========================================================
-   22. FOOTER
+   FOOTER
 ========================================================= */
 
 footer {
-  margin-top: 50px;
+  margin-top: 30px;
 
-  padding: 40px;
+  padding: 30px;
 
   text-align: center;
 
-  background: var(--navy);
+  font-size: 13px;
 
-  color: white;
+  letter-spacing: 0.06em;
+
+  background:
+    linear-gradient(
+      90deg,
+      #061927,
+      #08263b,
+      #061927
+    );
+
+  color:
+    rgba(255, 255, 255, 0.7);
+
+  border-top:
+    1px solid rgba(242, 101, 34, 0.35);
 }
 
 
 /* =========================================================
-   23. RESPONSIVE — TABLETTE
+   RESPONSIVE
 ========================================================= */
+
+@media (max-width: 1400px) {
+  .czfPageLayout {
+    grid-template-columns:
+      minmax(0, 1fr)
+      450px;
+  padding-right: 540px;
+  }
+
+  .czfPageBrand img {
+    width: 500px;
+  }
+}
+
 
 @media (max-width: 1100px) {
   .czfPageLayout {
@@ -1197,206 +1965,147 @@ footer {
     display: none;
   }
 
-  .homeHero {
+  .hero {
     min-height: auto;
   }
 }
 
 
 @media (max-width: 900px) {
-  .sectionTitle {
-    margin-left: 0 !important;
-  }
-
   .grid.three,
   .grid.two,
   .importBox {
     grid-template-columns: 1fr;
   }
 
-  .fakeForm {
-    flex-direction: column;
-  }
-
-  .fakeForm input,
-  .fakeForm textarea,
-  .fakeForm select,
-  .fakeForm button {
-    width: 100%;
+  .divisionTeamsGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
   }
 
   .rolesContainer {
     flex-direction: column;
   }
 
+  .roleSection {
+    margin-top: 0;
+  }
+
   .rolePicker {
     display: grid;
 
     grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-
-  .roleBtn {
-    width: 100%;
-  }
-
-  .roleSection {
-    margin-top: 0;
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
   }
 
   .teamDetails {
     flex-direction: column;
   }
-
-  .divisionTeamsGrid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
 }
 
 
-/* =========================================================
-   24. RESPONSIVE — NAV / HERO
-========================================================= */
-
 @media (max-width: 850px) {
+  .nav {
+    position: relative;
+
+    padding:
+      10px
+      18px;
+  }
+
+  .nav div {
+    gap: 12px;
+  }
+
+  .nav a {
+    font-size: 11px;
+  }
+
   .hero {
-    grid-template-columns: 1fr;
+    padding:
+      55px
+      24px;
 
     text-align: center;
+  }
+
+  .hero h1 {
+    transform: skewX(-2deg);
+  }
+
+  .hero h1::after {
+    margin-left: auto;
+
+    margin-right: auto;
+  }
+
+  .heroText > p {
+    margin-left: auto;
+
+    margin-right: auto;
   }
 
   .heroActions {
     justify-content: center;
   }
 
-  .nav {
-    position: relative;
-  }
+  .section {
+    padding-left: 24px;
 
-  .nav div {
-    gap: 10px;
-  }
-
-  .nav a {
-    font-size: 12px;
+    padding-right: 24px;
   }
 }
 
 
-/* =========================================================
-   25. RESPONSIVE — MOBILE
-========================================================= */
-
 @media (max-width: 700px) {
   .section {
-    padding: 24px 12px;
+    padding:
+      32px
+      14px;
   }
 
   .card,
   .empty,
   .importBox,
   .rulebook {
-    width: 100%;
-
-    padding: 22px;
-  }
-
-  .card {
-    overflow: visible;
-  }
-
-  .fakeForm {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 18px;
-
-    width: 100%;
-  }
-
-  .fakeForm input,
-  .fakeForm textarea,
-  .fakeForm select,
-  .fakeForm button {
-    width: 100%;
-
-    min-width: 0;
-  }
-
-  .rolesContainer {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 24px;
-
-    width: 100%;
-  }
-
-  .roleSection {
-    width: 100%;
-
-    margin-top: 0;
-  }
-
-  .rolePicker {
-    display: grid;
-
-    grid-template-columns:
-      1fr 1fr;
-
-    gap: 12px;
-
-    width: 100%;
-  }
-
-  .roleBtn {
-    width: 100%;
-
-    min-width: 0;
-
-    padding: 16px 10px;
-
-    justify-content: center;
+    padding: 20px;
   }
 
   .playersHeader,
-  .playerRow {
-    min-width: 820px;
-  }
-
+  .playerRow,
   .teamsHeader,
   .teamRow {
     min-width: 820px;
   }
 
   .teamDetails {
-    display: flex;
-
-    flex-direction: column;
-
     padding: 20px;
   }
 
   .teamLogoBig {
     width: 220px;
   }
-}
 
 
-/* =========================================================
-   26. RESPONSIVE — PETIT MOBILE
-========================================================= */
+  /*
+    On réduit les éclairs sur mobile
+    pour éviter de masquer le contenu.
+  */
 
-@media (max-width: 600px) {
-  .sectionTitle h2 {
-    font-size: 32px;
-  }
-
-  .card {
-    padding: 18px;
+  #discord::before,
+  #discord::after,
+  #divisions::before,
+  #divisions::after,
+  #equipes::before,
+  #equipes::after,
+  #hall-of-fame::before {
+    transform: scale(0.65);
   }
 }
 
@@ -1406,19 +2115,1894 @@ footer {
     grid-template-columns: 1fr;
   }
 
-  .divisionTeamButton {
-    min-height: 64px;
-  }
-}
-
-
-@media (max-width: 420px) {
   .rolePicker {
     grid-template-columns: 1fr;
   }
 
-  .card h3,
   .sectionTitle h2 {
     font-size: 30px;
+  }
+}
+
+/* =========================
+   COMPTE CZF
+========================= */
+
+.accountBox {
+  display: block;
+}
+
+.accountBox > div {
+  width: 100%;
+}
+
+.accountAction {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 28px;
+}
+
+.accountAction .rulebookButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+}
+
+/* =========================================================
+   NAV — ÉCLAIRS CHAOS MAÎTRISÉ
+========================================================= */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Zone décorative */
+
+.navChaos {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Tous les éclairs */
+
+.navBolt {
+  position: absolute;
+
+  object-fit: contain;
+
+  pointer-events: none;
+  user-select: none;
+
+  filter:
+    saturate(1.15)
+    contrast(1.08);
+}
+
+
+/* GROS ÉCLAIR QUI RENTRE PAR LA GAUCHE */
+
+.navBolt1 {
+  width: 230px;
+
+  left: 6%;
+  top: -115px;
+
+  opacity: 0.28;
+
+  transform:
+    rotate(-17deg)
+    scale(1.15);
+}
+
+
+/* PETIT ÉCLAIR QUI REMONTE DU BAS */
+
+.navBolt2 {
+  width: 125px;
+
+  left: 37%;
+  bottom: -82px;
+
+  opacity: 0.20;
+
+  transform:
+    rotate(31deg);
+}
+
+
+/* ÉCLAIR PLUS LARGE VERS LA DROITE */
+
+.navBolt3 {
+  width: 260px;
+
+  right: 13%;
+  top: -145px;
+
+  opacity: 0.23;
+
+  transform:
+    rotate(157deg)
+    scaleX(1.15);
+}
+
+
+/* PETIT FRAGMENT TOUT À DROITE */
+
+.navBolt4 {
+  width: 115px;
+
+  right: -22px;
+  bottom: -60px;
+
+  opacity: 0.32;
+
+  transform:
+    rotate(-39deg);
+}
+
+
+/* Le contenu de la nav reste DEVANT les éclairs */
+
+.navLogo,
+.navLinks {
+  position: relative;
+  z-index: 3;
+}
+
+
+/* =========================================================
+   PAGE ACTIVE
+========================================================= */
+
+.navLinks a {
+  position: relative;
+}
+
+.navLinks a.active {
+  color: var(--orange);
+}
+
+/* Trait orange légèrement cassé */
+
+.navLinks a.active::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  bottom: -9px;
+
+  width: 100%;
+  height: 3px;
+
+  background: var(--orange);
+
+  transform: skewX(-24deg);
+
+  box-shadow:
+    6px 0 0 rgba(242, 101, 34, 0.32),
+    0 0 10px rgba(242, 101, 34, 0.25);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+  .navBolt2,
+  .navBolt4 {
+    display: none;
+  }
+
+  .navBolt1,
+  .navBolt3 {
+    opacity: 0.12;
+  }
+}
+
+/* =========================================================
+   PAGE PROFIL — CHAOS ÉLECTRIQUE
+========================================================= */
+
+.profilePage {
+  position: relative;
+  overflow: visible;
+}
+
+/* petit éclair décoratif près du titre */
+.profilePage::before {
+  content: '';
+
+  position: absolute;
+  z-index: 7;
+
+  width: 150px;
+  height: 190px;
+
+  left: -55px;
+  top: 80px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_06.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-14deg);
+
+  pointer-events: none;
+}
+
+
+/* gros éclair côté droit de la page */
+.profilePage::after {
+  content: '';
+
+  position: absolute;
+  z-index: 6;
+
+  width: 250px;
+  height: 280px;
+
+  right: -95px;
+  top: 260px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_03.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(11deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   CARTE PROFIL
+========================================================= */
+
+.profileCard {
+  position: relative;
+
+  overflow: visible;
+
+  min-height: 760px;
+
+  padding: 32px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 246, 229, 0.84);
+
+  border:
+    1.3px solid rgba(9, 42, 63, 0.72);
+
+  box-shadow:
+    0 14px 36px rgba(7, 29, 45, 0.08);
+}
+
+
+/* éclair qui mord sur coin haut gauche */
+
+.profileCard::before {
+  content: '';
+
+  position: absolute;
+  z-index: 8;
+
+  width: 180px;
+  height: 210px;
+
+  left: -85px;
+  top: -70px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_04.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-10deg);
+
+  pointer-events: none;
+}
+
+
+/* éclair coin bas droit */
+
+.profileCard::after {
+  content: '';
+
+  position: absolute;
+  z-index: 8;
+
+  width: 290px;
+  height: 250px;
+
+  right: -105px;
+  bottom: -85px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_10.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(2deg);
+
+  pointer-events: none;
+}
+
+
+/* Le contenu reste au-dessus */
+
+.profileCard > * {
+  position: relative;
+  z-index: 10;
+}
+
+
+/* =========================================================
+   TITRE PROFIL
+========================================================= */
+
+.profileCard h3 {
+  color: var(--navy);
+
+  font-size: 34px;
+
+  margin-bottom: 18px;
+}
+
+
+/* avatar un peu plus intégré */
+
+.profileCard img[alt="Avatar Discord"] {
+  border:
+    3px solid rgba(9, 42, 63, 0.85);
+
+  box-shadow:
+    0 8px 22px rgba(7, 29, 45, 0.16);
+}
+
+
+/* =========================================================
+   INFOS PROFIL
+========================================================= */
+
+.profileCard p {
+  max-width: 700px;
+
+  font-size: 17px;
+
+  line-height: 1.55;
+}
+
+.profileCard p strong {
+  color: var(--navy);
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   BOUTONS PROFIL
+========================================================= */
+
+.profileCard .joinTeamBtn {
+  position: relative;
+  z-index: 12;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .profilePage::after {
+    opacity: 0.45;
+    right: -130px;
+  }
+
+  .profileCard::after {
+    width: 200px;
+    right: -90px;
+  }
+}
+
+@media (max-width: 700px) {
+  .profilePage::before,
+  .profilePage::after,
+  .profileCard::before,
+  .profileCard::after {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
+
+  .profileCard {
+    min-height: auto;
+  }
+}
+
+/* =========================================================
+   PLAYERS — BLOC CRÉATION PROFIL
+========================================================= */
+
+.playersPage {
+  position: relative;
+  overflow: visible;
+}
+
+.playersCreateCard {
+  position: relative;
+
+  overflow: visible;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29 0%,
+      #082a42 68%,
+      #061a29 100%
+    );
+
+  border:
+    1px solid rgba(242, 101, 34, 0.5);
+
+  box-shadow:
+    0 18px 40px rgba(4, 18, 28, 0.16);
+
+  padding: 30px 32px;
+}
+
+/* Titre blanc */
+
+.playersCreateCard h3 {
+  color: white;
+}
+
+/* Texte légèrement crème */
+
+.playersCreateCard p {
+  position: relative;
+  z-index: 10;
+
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Gros éclair haut-gauche */
+
+.playersCreateCard::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 220px;
+  height: 240px;
+
+  left: -100px;
+  top: -95px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_03.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-14deg);
+
+  pointer-events: none;
+}
+
+/* Éclair bord droit */
+
+.playersCreateCard::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 260px;
+  height: 230px;
+
+  right: -105px;
+  bottom: -95px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_09.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(6deg);
+
+  pointer-events: none;
+}
+
+/* Formulaire au-dessus des éclairs */
+
+.playersCreateCard > * {
+  position: relative;
+  z-index: 10;
+}
+
+/* =========================================================
+   PLAYERS — DA CZF
+========================================================= */
+
+.playersPage {
+  position: relative;
+  overflow: visible;
+}
+
+
+/* =========================================================
+   CRÉATION PROFIL — MARINE
+========================================================= */
+
+.playersCreateCard {
+  position: relative;
+
+  overflow: visible;
+
+  color: white;
+
+  padding: 32px;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29 0%,
+      #082a42 70%,
+      #061a29 100%
+    );
+
+  border:
+    1px solid rgba(242, 101, 34, 0.5);
+
+  box-shadow:
+    0 18px 40px rgba(4, 18, 28, 0.16);
+}
+
+.playersCreateCard h3 {
+  color: white;
+}
+
+.playersCreateCard p {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+
+/* éclair qui rentre par le haut gauche */
+
+.playersCreateCard::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 230px;
+  height: 250px;
+
+  left: -105px;
+  top: -95px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_03.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-14deg);
+
+  pointer-events: none;
+}
+
+
+/* éclair qui mord sur le coin inférieur droit */
+
+.playersCreateCard::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 290px;
+  height: 240px;
+
+  right: -115px;
+  bottom: -100px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_10.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(2deg);
+
+  pointer-events: none;
+}
+
+.playersCreateCard > * {
+  position: relative;
+  z-index: 10;
+}
+
+
+/* =========================================================
+   CARTE LISTE DES JOUEURS
+========================================================= */
+
+.playersPage .card {
+  overflow: visible;
+}
+
+
+/* gros éclair extérieur gauche */
+
+.playersPage > .card:last-of-type::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 250px;
+  height: 280px;
+
+  left: -125px;
+  top: 150px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_01.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-10deg);
+
+  pointer-events: none;
+}
+
+
+/* petit éclair haut droit */
+
+.playersPage > .card:last-of-type::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 145px;
+  height: 160px;
+
+  right: -55px;
+  top: -65px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_07.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(17deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   FILTRES
+========================================================= */
+
+.playersFilters {
+  position: relative;
+  z-index: 10;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  flex-wrap: wrap;
+
+  margin: 8px 0 24px;
+}
+
+
+/* Recherche */
+
+.playersSearch {
+  flex: 1 1 550px;
+
+  max-width: 900px;
+}
+
+.playersSearch input {
+  width: 100%;
+
+  height: 52px;
+
+  padding: 0 18px;
+
+  border:
+    1.5px solid var(--navy);
+
+  border-radius: 8px;
+
+  background:
+    rgba(255, 249, 239, 0.7);
+
+  color: var(--navy);
+
+  font-size: 15px;
+  font-weight: 600;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.playersSearch input::placeholder {
+  color:
+    rgba(7, 29, 45, 0.5);
+}
+
+.playersSearch input:focus {
+  background: white;
+
+  border-color: var(--orange);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(242, 101, 34, 0.08);
+}
+
+
+/* =========================================================
+   CHECKBOX PARTICIPANTS
+========================================================= */
+
+.participantsCheck {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 52px;
+
+  padding: 0 18px;
+
+  border:
+    1.5px solid var(--navy);
+
+  border-radius: 8px;
+
+  color: var(--navy);
+
+  background:
+    rgba(255, 249, 239, 0.55);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+
+  user-select: none;
+
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.participantsCheck:hover {
+  transform: translateY(-1px);
+
+  background:
+    rgba(255, 255, 255, 0.8);
+}
+
+
+/* vraie checkbox cachée */
+
+.participantsCheck input {
+  position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+
+/* checkbox visuelle */
+
+.customCheck {
+  position: relative;
+
+  display: block;
+
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
+
+  border:
+    2px solid var(--navy);
+
+  border-radius: 3px;
+
+  background: transparent;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+
+/* cochée */
+
+.participantsCheck input:checked + .customCheck {
+  background: var(--orange);
+
+  border-color: var(--orange);
+}
+
+
+/* coche */
+
+.participantsCheck input:checked + .customCheck::after {
+  content: '';
+
+  position: absolute;
+
+  left: 5px;
+  top: 1px;
+
+  width: 4px;
+  height: 9px;
+
+  border:
+    solid white;
+
+  border-width:
+    0 2px 2px 0;
+
+  transform: rotate(45deg);
+}
+
+
+/* =========================================================
+   LFT
+========================================================= */
+
+.lftCell {
+  display: flex;
+
+  align-items: center;
+
+  min-height: 30px;
+}
+
+.lftDot {
+  display: block;
+
+  width: 14px;
+  height: 14px;
+
+  border-radius: 50%;
+
+  background: #111;
+
+  box-shadow: none;
+}
+
+.lftEmpty {
+  opacity: 0.45;
+}
+
+
+/* =========================================================
+   DISCORD JOUEUR — SANS EMOJI
+========================================================= */
+
+.discordPlayerName {
+  color: #5865f2;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.playersHeader {
+  position: relative;
+  z-index: 10;
+}
+
+.playerRow {
+  position: relative;
+  z-index: 9;
+}
+
+.playerRow:hover {
+  background:
+    rgba(255, 255, 255, 0.4);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 800px) {
+
+  .playersFilters {
+    align-items: stretch;
+  }
+
+  .playersSearch {
+    flex-basis: 100%;
+  }
+
+  .participantsCheck {
+    width: fit-content;
+  }
+
+  .playersCreateCard::before,
+  .playersCreateCard::after,
+  .playersPage > .card:last-of-type::before,
+  .playersPage > .card:last-of-type::after {
+    opacity: 0.35;
+  }
+}
+
+/* =========================================================
+   PLAYERS — FILTRES ALIGNÉS
+========================================================= */
+
+.playersFilterChecks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   PLAYERS — BADGES STATS
+========================================================= */
+
+.statBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  min-height: 34px;
+
+  padding: 7px 12px;
+
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--navy),
+      var(--navy-2)
+    );
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 900;
+
+  letter-spacing: 0.02em;
+
+  border:
+    1px solid rgba(242, 101, 34, 0.24);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 4px 10px rgba(7, 29, 45, 0.08);
+
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.playerRow:hover .statBadge {
+  transform: translateY(-1px);
+}
+
+
+/* WR un peu plus compact */
+
+.statBadgeWr {
+  min-width: 48px;
+}
+
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .playersFilterChecks {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   PLAYERS — OVERRIDES PROPRES
+========================================================= */
+
+.playersPage {
+  position: relative;
+  overflow: visible;
+}
+
+/* =========================================================
+   BLOC CRÉER MON PROFIL
+========================================================= */
+
+.playersCreateCard {
+  position: relative;
+  overflow: visible;
+
+  padding: 32px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29 0%,
+      #082a42 68%,
+      #061a29 100%
+    );
+
+  border: 1px solid rgba(242, 101, 34, 0.55);
+
+  box-shadow:
+    0 18px 40px rgba(4, 18, 28, 0.18);
+}
+
+.playersCreateCard h3,
+.playersCreateCard h4,
+.playersCreateCard p {
+  color: white;
+}
+
+.playersCreateCard::before {
+  content: '';
+
+  position: absolute;
+  z-index: 8;
+
+  width: 250px;
+  height: 280px;
+
+  left: -115px;
+  top: -110px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_03.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-13deg);
+
+  pointer-events: none;
+}
+
+.playersCreateCard::after {
+  content: '';
+
+  position: absolute;
+  z-index: 8;
+
+  width: 310px;
+  height: 250px;
+
+  right: -125px;
+  bottom: -105px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_10.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(2deg);
+
+  pointer-events: none;
+}
+
+.playersCreateCard > * {
+  position: relative;
+  z-index: 10;
+}
+
+/* =========================================================
+   LISTE JOUEURS
+========================================================= */
+
+.playersListCard {
+  position: relative;
+  overflow: visible;
+}
+
+.playersListCard::before {
+  content: '';
+
+  position: absolute;
+  z-index: 8;
+
+  width: 320px;
+  height: 350px;
+
+  left: -165px;
+  top: 180px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_01.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-9deg);
+
+  pointer-events: none;
+}
+
+.playersListCard::after {
+  content: '';
+
+  position: absolute;
+  z-index: 8;
+
+  width: 180px;
+  height: 210px;
+
+  right: -70px;
+  top: -85px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_07.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(17deg);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   ÉCLAIRS AUTOUR DE LA PAGE
+========================================================= */
+
+.playersPage::before {
+  content: '';
+
+  position: absolute;
+  z-index: 7;
+
+  width: 180px;
+  height: 210px;
+
+  left: -75px;
+  top: 650px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_06.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-17deg);
+
+  pointer-events: none;
+}
+
+.playersPage::after {
+  content: '';
+
+  position: absolute;
+  z-index: 7;
+
+  width: 260px;
+  height: 270px;
+
+  right: -105px;
+  top: 950px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_02.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(12deg);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   RECHERCHE
+========================================================= */
+
+.playersSearch {
+  width: min(850px, 100%);
+  max-width: 850px;
+
+  margin-top: 16px;
+}
+
+.playersSearch input {
+  width: 100%;
+}
+
+/* espace recherche -> filtres */
+
+.playersFiltersSpacer {
+  height: 18px;
+}
+
+/* =========================================================
+   CHECKBOXES
+========================================================= */
+
+.playersFilterChecks {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 34px;
+}
+
+.participantsCheck {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  min-height: 52px;
+
+  padding: 0 18px;
+
+  border:
+    1.5px solid var(--navy);
+
+  border-radius: 8px;
+
+  background:
+    rgba(255, 249, 239, 0.55);
+
+  color: var(--navy);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+}
+
+.participantsCheck input {
+  position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+.customCheck {
+  position: relative;
+
+  display: block;
+
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
+
+  border:
+    2px solid var(--navy);
+
+  border-radius: 3px;
+
+  background: transparent;
+}
+
+.participantsCheck input:checked + .customCheck {
+  background: var(--orange);
+
+  border-color: var(--orange);
+}
+
+.participantsCheck input:checked + .customCheck::after {
+  content: '';
+
+  position: absolute;
+
+  left: 5px;
+  top: 1px;
+
+  width: 4px;
+  height: 9px;
+
+  border: solid white;
+
+  border-width:
+    0 2px 2px 0;
+
+  transform: rotate(45deg);
+}
+
+/* =========================================================
+   BADGES POINTS / WR
+========================================================= */
+
+.statBadge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  min-height: 32px;
+
+  padding: 6px 11px;
+
+  border-radius: 7px;
+
+  background: var(--navy);
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 900;
+
+  letter-spacing: 0.02em;
+
+  box-shadow:
+    0 4px 12px rgba(7, 29, 45, 0.14);
+}
+
+.statBadgeWr {
+  min-width: 50px;
+}
+
+/* =========================================================
+   LFT
+========================================================= */
+
+.lftCell {
+  display: flex;
+  align-items: center;
+}
+
+.lftDot {
+  display: inline-block;
+
+  width: 15px;
+  height: 15px;
+
+  border-radius: 50%;
+
+  background: #111;
+}
+
+.lftEmpty {
+  opacity: 0.4;
+}
+
+/* =========================================================
+   RESPONSIVE PLAYERS
+========================================================= */
+
+@media (max-width: 800px) {
+  .playersFilterChecks {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .participantsCheck {
+    width: 100%;
+  }
+
+  .playersCreateCard::before,
+  .playersCreateCard::after,
+  .playersListCard::before,
+  .playersListCard::after,
+  .playersPage::before,
+  .playersPage::after {
+    opacity: 0.3;
+  }
+}
+
+/* =========================================================
+   TEAMS — DA CZF
+========================================================= */
+
+.teamsPage {
+  position: relative;
+  overflow: visible;
+}
+
+
+/* =========================
+   CRÉER ÉQUIPE MARINE
+========================= */
+
+.teamsCreateCard {
+  position: relative;
+  overflow: visible;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29 0%,
+      #082a42 70%,
+      #061a29 100%
+    );
+
+  border-color:
+    rgba(242, 101, 34, 0.55);
+
+  box-shadow:
+    0 18px 40px
+    rgba(4, 18, 28, 0.17);
+}
+
+.teamsCreateCard h3,
+.teamsCreateCard p {
+  color: white;
+}
+
+
+/* petit éclair seulement */
+
+.teamsCreateCard::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 210px;
+  height: 200px;
+
+  right: -85px;
+  bottom: -78px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_07.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(9deg);
+
+  pointer-events: none;
+}
+
+.teamsCreateCard > * {
+  position: relative;
+  z-index: 10;
+}
+
+
+/* =========================
+   LISTE ÉQUIPES
+========================= */
+
+.teamsListCard {
+  position: relative;
+  overflow: visible;
+}
+
+
+/* un seul éclair supplémentaire */
+
+.teamsListCard::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 230px;
+  height: 270px;
+
+  left: -115px;
+  top: 180px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_04.png')
+    center / contain
+    no-repeat;
+
+  transform: rotate(-11deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================
+   FILTRES
+========================= */
+
+.teamsFilters {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  width: 100%;
+
+  margin-top: 16px;
+  margin-bottom: 24px;
+
+  flex-wrap: wrap;
+}
+
+
+/* RECHERCHE */
+
+.teamsSearch {
+  flex: 1 1 420px;
+
+  min-width: 300px;
+}
+
+.teamsSearch input {
+  width: 100%;
+
+  min-height: 50px;
+
+  border:
+    1.5px solid var(--navy);
+
+  background:
+    rgba(255, 249, 239, 0.65);
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+
+/* CHECKBOX */
+
+.teamsParticipantsCheck {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  min-height: 50px;
+
+  padding: 0 15px;
+
+  border:
+    1.5px solid var(--navy);
+
+  border-radius: 8px;
+
+  color: var(--navy);
+
+  background:
+    rgba(255, 249, 239, 0.55);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.035em;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.teamsParticipantsCheck input {
+  position: absolute;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+.teamsCustomCheck {
+  position: relative;
+
+  display: block;
+
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
+
+  border:
+    2px solid var(--navy);
+
+  border-radius: 3px;
+
+  background: transparent;
+}
+
+.teamsParticipantsCheck
+input:checked +
+.teamsCustomCheck {
+  background: var(--orange);
+
+  border-color: var(--orange);
+}
+
+.teamsParticipantsCheck
+input:checked +
+.teamsCustomCheck::after {
+  content: '';
+
+  position: absolute;
+
+  left: 5px;
+  top: 1px;
+
+  width: 4px;
+  height: 9px;
+
+  border: solid white;
+
+  border-width:
+    0 2px 2px 0;
+
+  transform: rotate(45deg);
+}
+
+
+/* SELECTS */
+
+.teamsFilterSelect {
+  min-height: 50px;
+
+  padding: 0 14px;
+
+  border:
+    1.5px solid var(--navy);
+
+  border-radius: 8px;
+
+  background:
+    rgba(255, 249, 239, 0.55);
+
+  color: var(--navy);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.teamsFilterSelect:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================
+   STATUT SANS EMOJI
+========================= */
+
+.teamStatus {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  font-weight: 800;
+}
+
+.teamStatus::before {
+  content: '';
+
+  display: block;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+}
+
+.teamStatusComplete::before {
+  background: #111;
+}
+
+.teamStatusIncomplete::before {
+  background: transparent;
+
+  border:
+    2px solid #111;
+}
+
+
+/* =========================
+   FLÈCHE SANS EMOJI
+========================= */
+
+.teamArrow span {
+  display: block;
+
+  width: 9px;
+  height: 9px;
+
+  border-right:
+    2px solid var(--navy);
+
+  border-bottom:
+    2px solid var(--navy);
+
+  transform:
+    rotate(-45deg);
+
+  transition:
+    transform 0.15s ease;
+}
+
+.teamArrow.open span {
+  transform:
+    rotate(45deg);
+}
+
+
+/* =========================
+   ACTIONS
+========================= */
+
+.teamCaptainActions {
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+.teamDeleteBtn {
+  background: #9e2a2a;
+}
+
+.teamDeleteBtn:hover {
+  background: #b33131;
+}
+
+
+/* =========================
+   ROSTER
+========================= */
+
+.teamRoster {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.teamRosterRow {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  flex-wrap: wrap;
+}
+
+.teamDiscordName {
+  color: #5865f2;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.teamRemoveMemberBtn {
+  margin-left: 4px;
+
+  padding: 7px 10px;
+
+  border:
+    1px solid rgba(9,42,63,.25);
+
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: var(--navy);
+
+  font-weight: 800;
+}
+
+
+/* =========================
+   DEMANDES
+========================= */
+
+.teamRequests {
+  margin-top: 22px;
+  margin-bottom: 22px;
+}
+
+.teamRequestCard {
+  margin-bottom: 10px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 950px) {
+  .teamsSearch {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .teamsFilters {
+    align-items: stretch;
+  }
+
+  .teamsSearch,
+  .teamsParticipantsCheck,
+  .teamsFilterSelect {
+    width: 100%;
+  }
+
+  .teamsCreateCard::after,
+  .teamsListCard::before {
+    opacity: 0.3;
   }
 }

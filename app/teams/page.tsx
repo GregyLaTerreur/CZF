@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
 export default function TeamsPage() {
-
   const [teamName, setTeamName] = useState('');
   const [description, setDescription] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
@@ -16,6 +15,8 @@ export default function TeamsPage() {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
+
   const [teamSearch, setTeamSearch] = useState('');
   const [validatedOnly, setValidatedOnly] = useState(false);
   const [divisionFilter, setDivisionFilter] = useState('Toutes');
@@ -32,71 +33,81 @@ export default function TeamsPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editLogo, setEditLogo] = useState('');
   const [editMultiGG, setEditMultiGG] = useState('');
-  const [players, setPlayers] = useState<any[]>([]);
+
   useEffect(() => {
     refreshAll();
     loadProfile();
   }, []);
 
   useEffect(() => {
-  if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
-  const params = new URLSearchParams(window.location.search);
-  const teamId = params.get('team');
+    const params = new URLSearchParams(window.location.search);
+    const teamId = params.get('team');
 
-  if (!teamId) return;
+    if (!teamId) return;
 
-  const parsedTeamId = Number(teamId);
+    const parsedTeamId = Number(teamId);
 
-  if (Number.isNaN(parsedTeamId)) return;
+    if (Number.isNaN(parsedTeamId)) return;
 
-  setOpenTeam(parsedTeamId);
+    setOpenTeam(parsedTeamId);
 
-  setTimeout(() => {
-    const element = document.getElementById(`team-${parsedTeamId}`);
+    setTimeout(() => {
+      const element = document.getElementById(
+        `team-${parsedTeamId}`
+      );
 
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
-  }, 500);
-}, [teams]);
-  
-  async function fetchPlayers() {
-  const res = await fetch('/api/players');
-  const data = await res.json();
-
-  if (data.success) {
-    console.log('PLAYERS TEAMS PAGE :', data.data);
-    setPlayers(data.data);
-  }
-}
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
+    }, 500);
+  }, [teams]);
 
   async function refreshAll() {
-  await fetchTeams();
-  await fetchTeamMembers();
-  await loadJoinRequests();
-  await fetchPlayers();
-}
+    await fetchTeams();
+    await fetchTeamMembers();
+    await loadJoinRequests();
+    await fetchPlayers();
+  }
+
+  async function fetchPlayers() {
+    const res = await fetch('/api/players');
+    const data = await res.json();
+
+    if (data.success) {
+      setPlayers(data.data);
+    }
+  }
 
   async function fetchTeams() {
     const res = await fetch('/api/teams');
     const data = await res.json();
-    if (data.success) setTeams(data.data);
+
+    if (data.success) {
+      setTeams(data.data);
+    }
   }
 
   async function fetchTeamMembers() {
     const res = await fetch('/api/team-members');
     const data = await res.json();
-    if (data.success) setTeamMembers(data.data);
+
+    if (data.success) {
+      setTeamMembers(data.data);
+    }
   }
 
   async function loadJoinRequests() {
     const res = await fetch('/api/team-join-requests');
     const data = await res.json();
-    if (data.success) setJoinRequests(data.data);
+
+    if (data.success) {
+      setJoinRequests(data.data);
+    }
   }
 
   async function loadProfile() {
@@ -114,7 +125,9 @@ export default function TeamsPage() {
 
     setProfile(profile);
 
-    const result = await supabase.from('players').select('*');
+    const result = await supabase
+      .from('players')
+      .select('*');
 
     const linkedPlayer = result.data?.find(
       (p: any) => p.profile_id === user.id
@@ -124,15 +137,9 @@ export default function TeamsPage() {
   }
 
   function getTeamMembers(teamId: number) {
-    return teamMembers.filter((member) => member.team_id === teamId);
-  }
-
-  function getRolePlayer(teamId: number, role: string) {
-    const member = teamMembers.find(
-      (member) => member.team_id === teamId && member.role === role
+    return teamMembers.filter(
+      (member) => member.team_id === teamId
     );
-
-    return member?.riot_id || '-';
   }
 
   function getTeamCount(teamId: number) {
@@ -140,25 +147,31 @@ export default function TeamsPage() {
   }
 
   function getPlayerByRiotId(riotId: string) {
-  return players.find((p) => p.riot_id === riotId);
-}
+    return players.find(
+      (p) => p.riot_id === riotId
+    );
+  }
 
-function getTeamPoints(teamId: number) {
-  const members = getTeamMembers(teamId);
+  function getTeamPoints(teamId: number) {
+    const members = getTeamMembers(teamId);
 
-  return members.reduce((total, member) => {
-    const foundPlayer = getPlayerByRiotId(member.riot_id);
-    return total + (foundPlayer?.czf_points || 0);
-  }, 0);
-}
+    return members.reduce((total, member) => {
+      const foundPlayer = getPlayerByRiotId(
+        member.riot_id
+      );
 
-function getTeamDivision(teamId: number) {
-  const points = getTeamPoints(teamId);
+      return total + (foundPlayer?.czf_points || 0);
+    }, 0);
+  }
 
-  if (points >= 6101) return "Targon";
-  if (points >= 3901) return "Ixtal";
-  return "Yordle";
-}
+  function getTeamDivision(teamId: number) {
+    const points = getTeamPoints(teamId);
+
+    if (points >= 6101) return 'Targon';
+    if (points >= 3901) return 'Ixtal';
+
+    return 'Yordle';
+  }
 
   function isTeamComplete(teamId: number) {
     return getTeamCount(teamId) >= 5;
@@ -168,7 +181,8 @@ function getTeamDivision(teamId: number) {
     if (!player) return null;
 
     return teamMembers.find(
-      (member) => member.riot_id === player.riot_id
+      (member) =>
+        member.riot_id === player.riot_id
     );
   }
 
@@ -183,9 +197,14 @@ function getTeamDivision(teamId: number) {
     );
   }
 
-  function isRoleTaken(teamId: number, role: string) {
+  function isRoleTaken(
+    teamId: number,
+    role: string
+  ) {
     return teamMembers.some(
-      (member) => member.team_id === teamId && member.role === role
+      (member) =>
+        member.team_id === teamId &&
+        member.role === role
     );
   }
 
@@ -208,7 +227,12 @@ function getTeamDivision(teamId: number) {
       return "L'équipe est complète.";
     }
 
-    if (isRoleTaken(teamId, player.main_role)) {
+    if (
+      isRoleTaken(
+        teamId,
+        player.main_role
+      )
+    ) {
       return `Le poste ${player.main_role} est déjà occupé.`;
     }
 
@@ -220,34 +244,38 @@ function getTeamDivision(teamId: number) {
   }
 
   async function requestJoinTeam(teamId: number) {
-    const blockReason = getJoinBlockReason(teamId);
+    const blockReason =
+      getJoinBlockReason(teamId);
 
     if (blockReason) {
       alert(blockReason);
       return;
     }
 
-    const res = await fetch('/api/team-join-requests', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        team_id: teamId,
-        riot_id: player.riot_id,
-        role: player.main_role,
-        profile_id: profile.id,
-        player_id: player.id,
-      }),
-    });
+    const res = await fetch(
+      '/api/team-join-requests',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          team_id: teamId,
+          riot_id: player.riot_id,
+          role: player.main_role,
+          profile_id: profile.id,
+          player_id: player.id,
+        }),
+      }
+    );
 
     const data = await res.json();
 
     if (data.success) {
-      alert('Demande envoyée ✅');
+      alert('Demande envoyée.');
       await loadJoinRequests();
     } else {
-      alert(data.message || 'Erreur ❌');
+      alert(data.message || 'Erreur.');
     }
   }
 
@@ -255,29 +283,32 @@ function getTeamDivision(teamId: number) {
     requestId: number,
     action: 'accept' | 'reject'
   ) {
-    const res = await fetch('/api/team-join-requests', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        request_id: requestId,
-        action,
-      }),
-    });
+    const res = await fetch(
+      '/api/team-join-requests',
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          request_id: requestId,
+          action,
+        }),
+      }
+    );
 
     const data = await res.json();
 
     if (data.success) {
       alert(
         action === 'accept'
-          ? 'Joueur accepté ✅'
-          : 'Demande refusée ✅'
+          ? 'Joueur accepté.'
+          : 'Demande refusée.'
       );
 
       await refreshAll();
     } else {
-      alert(data.message || 'Erreur ❌');
+      alert(data.message || 'Erreur.');
     }
   }
 
@@ -307,143 +338,147 @@ function getTeamDivision(teamId: number) {
     const data = await res.json();
 
     if (data.success) {
-      alert('Équipe modifiée ✅');
+      alert('Équipe modifiée.');
       setEditingTeam(null);
       await fetchTeams();
     } else {
-      alert('Erreur ❌');
+      alert('Erreur.');
     }
   }
 
-async function removeMember(teamId: number, riotId: string) {
-  const confirmDelete = confirm(
-    `Retirer ${riotId} de l'équipe ?`
-  );
-
-  if (!confirmDelete) return;
-
-  const res = await fetch('/api/team-members', {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      team_id: teamId,
-      riot_id: riotId,
-    }),
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    alert('Joueur retiré ✅');
-    await refreshAll();
-  } else {
-    alert('Erreur ❌');
-  }
-}
-
-async function deleteTeam(teamId: number) {
-  const ok = confirm(
-    "Supprimer définitivement cette équipe ?"
-  );
-
-  if (!ok) return;
-
-  const res = await fetch("/api/teams/delete", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      team_id: teamId,
-    }),
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    alert("Équipe supprimée.");
-    window.location.reload();
-  } else {
-    alert("Erreur.");
-  }
-}
-
-function getChampionIconUrl(championName: string) {
-  return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${championName}.png`;
-}
-
-function getRankIcon(player: any) {
-  switch (player?.soloq_tier) {
-    case 'IRON':
-      return '/assets/ranks/iron.webp';
-
-    case 'BRONZE':
-      return '/assets/ranks/bronze.webp';
-
-    case 'SILVER':
-      return '/assets/ranks/silver.webp';
-
-    case 'GOLD':
-      return '/assets/ranks/gold.webp';
-
-    case 'PLATINUM':
-      return '/assets/ranks/platine.webp';
-
-    case 'EMERALD':
-      return '/assets/ranks/Emerald.webp';
-
-    case 'DIAMOND':
-      return '/assets/ranks/diamant.webp';
-
-    case 'MASTER':
-      return '/assets/ranks/master.webp';
-
-    case 'GRANDMASTER':
-      return '/assets/ranks/gm.webp';
-
-    case 'CHALLENGER':
-      return '/assets/ranks/chall.webp';
-
-    default:
-      return '/assets/ranks/iron.webp';
-  }
-}
-
-function getRankText(player: any) {
-  if (!player?.soloq_tier) return "Unranked";
-
-  if (
-    ["MASTER", "GRANDMASTER", "CHALLENGER"].includes(player.soloq_tier)
+  async function removeMember(
+    teamId: number,
+    riotId: string
   ) {
-    return `${player.soloq_tier} ${player.soloq_lp} LP`;
+    const confirmDelete = confirm(
+      `Retirer ${riotId} de l'équipe ?`
+    );
+
+    if (!confirmDelete) return;
+
+    const res = await fetch(
+      '/api/team-members',
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          team_id: teamId,
+          riot_id: riotId,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Joueur retiré.');
+      await refreshAll();
+    } else {
+      alert('Erreur.');
+    }
   }
 
-  return `${player.soloq_tier} ${player.soloq_rank} ${player.soloq_lp} LP`;
-}
+  async function deleteTeam(teamId: number) {
+    const ok = confirm(
+      'Supprimer définitivement cette équipe ?'
+    );
 
-function renderChampionPool(riotId: string) {
-  const foundPlayer = players.find(
-    (p) => p.riot_id === riotId
-  );
+    if (!ok) return;
 
-  if (!foundPlayer?.top_champions?.length) return null;
+    const res = await fetch('/api/teams/delete', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        team_id: teamId,
+      }),
+    });
 
-  return (
-    <div className="championPool">
-      {foundPlayer.top_champions.map((champion: any) => (
-        <img
-          key={champion.champion_id}
-          src={getChampionIconUrl(champion.champion_name)}
-          alt={champion.champion_name}
-        />
-      ))}
-    </div>
-  );
-}
+    const data = await res.json();
 
-  async function handleCreateTeam(e: React.FormEvent) {
+    if (data.success) {
+      alert('Équipe supprimée.');
+      window.location.reload();
+    } else {
+      alert('Erreur.');
+    }
+  }
+
+  function getChampionIconUrl(
+    championName: string
+  ) {
+    return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${championName}.png`;
+  }
+
+  function getRankIcon(player: any) {
+    switch (player?.soloq_tier) {
+      case 'IRON':
+        return '/assets/ranks/iron.webp';
+
+      case 'BRONZE':
+        return '/assets/ranks/bronze.webp';
+
+      case 'SILVER':
+        return '/assets/ranks/silver.webp';
+
+      case 'GOLD':
+        return '/assets/ranks/gold.webp';
+
+      case 'PLATINUM':
+        return '/assets/ranks/platine.webp';
+
+      case 'EMERALD':
+        return '/assets/ranks/Emerald.webp';
+
+      case 'DIAMOND':
+        return '/assets/ranks/diamant.webp';
+
+      case 'MASTER':
+        return '/assets/ranks/master.webp';
+
+      case 'GRANDMASTER':
+        return '/assets/ranks/gm.webp';
+
+      case 'CHALLENGER':
+        return '/assets/ranks/chall.webp';
+
+      default:
+        return '/assets/ranks/iron.webp';
+    }
+  }
+
+  function renderChampionPool(riotId: string) {
+    const foundPlayer = players.find(
+      (p) => p.riot_id === riotId
+    );
+
+    if (!foundPlayer?.top_champions?.length) {
+      return null;
+    }
+
+    return (
+      <div className="championPool">
+        {foundPlayer.top_champions.map(
+          (champion: any) => (
+            <img
+              key={champion.champion_id}
+              src={getChampionIconUrl(
+                champion.champion_name
+              )}
+              alt={champion.champion_name}
+            />
+          )
+        )}
+      </div>
+    );
+  }
+
+  async function handleCreateTeam(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
 
     if (!profile || !player) {
@@ -472,222 +507,253 @@ function renderChampionPool(riotId: string) {
     const data = await res.json();
 
     if (data.success) {
-      setMessage('Équipe créée avec succès ✅');
+      setMessage(
+        'Équipe créée avec succès.'
+      );
+
       setTeamName('');
       setDescription('');
       setLogoUrl('');
       setMultiggUrl('');
+
       await fetchTeams();
     } else {
-      setMessage('Erreur lors de la création ❌');
+      setMessage(
+        'Erreur lors de la création.'
+      );
     }
   }
-  const displayedTeams = teams.filter((team) => {
-  const matchesSearch = team.name
-    ?.toLowerCase()
-    .includes(teamSearch.toLowerCase());
 
-const matchesValidated =
-    !validatedOnly || team.validated_by_admin === true;
+  const displayedTeams = teams.filter(
+    (team) => {
+      const matchesSearch =
+        team.name
+          ?.toLowerCase()
+          .includes(
+            teamSearch.toLowerCase()
+          );
 
-const matchesDivision =
-  statusFilter === 'Incomplètes' ||
-  divisionFilter === 'Toutes' ||
-  team.division === divisionFilter;
+      const matchesValidated =
+        !validatedOnly ||
+        team.validated_by_admin === true;
 
-  const matchesStatus =
-    statusFilter === 'Toutes' ||
-    (statusFilter === 'Complètes' && isTeamComplete(team.id)) ||
-    (statusFilter === 'Incomplètes' && !isTeamComplete(team.id));
+      const matchesDivision =
+        statusFilter === 'Incomplètes' ||
+        divisionFilter === 'Toutes' ||
+        team.division === divisionFilter;
 
-  return (
-    matchesSearch &&
-    matchesValidated &&
-    matchesDivision &&
-    matchesStatus
+      const matchesStatus =
+        statusFilter === 'Toutes' ||
+        (statusFilter === 'Complètes' &&
+          isTeamComplete(team.id)) ||
+        (statusFilter === 'Incomplètes' &&
+          !isTeamComplete(team.id));
+
+      return (
+        matchesSearch &&
+        matchesValidated &&
+        matchesDivision &&
+        matchesStatus
+      );
+    }
   );
-});
 
   return (
     <>
       <Nav />
 
-      <main className="section">
+      <main className="section teamsPage">
+
         <div className="sectionTitle">
           <span></span>
           <h2>Équipes</h2>
         </div>
 
-        <div className="card">
+
+        {/* =========================================
+            CRÉER UNE ÉQUIPE
+        ========================================== */}
+
+        <div className="card teamsCreateCard">
+
           <h3>Créer une équipe</h3>
 
-          <form onSubmit={handleCreateTeam} className="fakeForm">
+          <form
+            onSubmit={handleCreateTeam}
+            className="fakeForm"
+          >
             <input
               placeholder="Nom de l'équipe"
               value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
+              onChange={(e) =>
+                setTeamName(e.target.value)
+              }
               required
             />
 
             <input
               placeholder="URL du logo"
               value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
+              onChange={(e) =>
+                setLogoUrl(e.target.value)
+              }
             />
 
             <input
               placeholder="Lien MultiGG"
               value={multiggUrl}
-              onChange={(e) => setMultiggUrl(e.target.value)}
+              onChange={(e) =>
+                setMultiggUrl(e.target.value)
+              }
             />
 
             <textarea
               placeholder="Description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) =>
+                setDescription(
+                  e.target.value
+                )
+              }
             />
 
-            <button type="submit">Créer l'équipe</button>
+            <button type="submit">
+              Créer l'équipe
+            </button>
           </form>
 
-          {message && <p>{message}</p>}
+          {message && (
+            <p>{message}</p>
+          )}
+
         </div>
+
 
         <br />
 
-        <div className="card">
-          <h3>Liste des équipes</h3>
-<div
-  style={{
-    display: 'flex',
-    gap: '14px',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    marginBottom: '20px',
-  }}
->
-  {/* RECHERCHE ÉQUIPE */}
-  <div
-    style={{
-      flex: '1',
-      minWidth: '260px',
-      maxWidth: '650px',
-      position: 'relative',
-    }}
-  >
-    <span
-      style={{
-        position: 'absolute',
-        left: '18px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        fontSize: '20px',
-        color: '#0b1f4d',
-        pointerEvents: 'none',
-      }}
-    >
-      🔎
-    </span>
 
-    <input
-      type="text"
-      placeholder="Rechercher une équipe..."
-      value={teamSearch}
-      onChange={(e) => setTeamSearch(e.target.value)}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        padding: '14px 18px 14px 52px',
-        borderRadius: '10px',
-        border: '2px solid #0b1f4d',
-        background: 'rgba(255,255,255,0.15)',
-        color: '#0b1f4d',
-        fontSize: '16px',
-        fontWeight: '600',
-        outline: 'none',
-        fontFamily: 'inherit',
-      }}
-    />
-  </div>
+        {/* =========================================
+            LISTE DES ÉQUIPES
+        ========================================== */}
 
-  {/* PARTICIPANTS UNIQUEMENT */}
-  <button
-    type="button"
-    onClick={() => setValidatedOnly(!validatedOnly)}
-    style={{
-      padding: '14px 18px',
-      borderRadius: '10px',
-      border: '2px solid #0b1f4d',
-      background: validatedOnly ? '#0b1f4d' : 'transparent',
-      color: validatedOnly ? 'white' : '#0b1f4d',
-      fontWeight: '700',
-      fontSize: '15px',
-      cursor: 'pointer',
-      whiteSpace: 'nowrap',
-      fontFamily: 'inherit',
-    }}
-  >
-    👥 Participants uniquement
-  </button>
+        <div className="card teamsListCard">
 
-  {/* FILTRE DIVISION */}
-  <select
-  value={divisionFilter}
-  onChange={(e) => setDivisionFilter(e.target.value)}
-  disabled={statusFilter === 'Incomplètes'}
-  style={{
-    padding: '14px 18px',
-    borderRadius: '10px',
-    border: '2px solid #0b1f4d',
-    background:
-      statusFilter === 'Incomplètes'
-        ? 'rgba(11, 31, 77, 0.08)'
-        : 'transparent',
-    color:
-      statusFilter === 'Incomplètes'
-        ? 'rgba(11, 31, 77, 0.45)'
-        : '#0b1f4d',
-    fontWeight: '700',
-    fontSize: '15px',
-    cursor:
-      statusFilter === 'Incomplètes'
-        ? 'not-allowed'
-        : 'pointer',
-    fontFamily: 'inherit',
-  }}
->
-  <option value="Toutes">Toutes les divisions</option>
-  <option value="Yordle">Yordle</option>
-  <option value="Ixtal">Ixtal</option>
-  <option value="Targon">Targon</option>
-</select>
+          <h3>
+            Liste des équipes
+          </h3>
 
 
-  {/* FILTRE STATUT */}
-  <select
-    value={statusFilter}
-    onChange={(e) => setStatusFilter(e.target.value)}
-    style={{
-      padding: '14px 18px',
-      borderRadius: '10px',
-      border: '2px solid #0b1f4d',
-      background: 'transparent',
-      color: '#0b1f4d',
-      fontWeight: '700',
-      fontSize: '15px',
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-    }}
-  >
-    <option value="Toutes">Tous les statuts</option>
-    <option value="Complètes">Complètes</option>
-    <option value="Incomplètes">Incomplètes</option>
-  </select>
-</div>
-  
+          {/* FILTRES */}
+
+          <div className="teamsFilters">
+
+            {/* RECHERCHE */}
+
+            <div className="teamsSearch">
+
+              <input
+                type="text"
+                placeholder="Rechercher une équipe..."
+                value={teamSearch}
+                onChange={(e) =>
+                  setTeamSearch(
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+
+            {/* PARTICIPANTS UNIQUEMENT */}
+
+            <label className="teamsParticipantsCheck">
+
+              <input
+                type="checkbox"
+                checked={validatedOnly}
+                onChange={(e) =>
+                  setValidatedOnly(
+                    e.target.checked
+                  )
+                }
+              />
+
+              <span className="teamsCustomCheck"></span>
+
+              <span>
+                Participants uniquement
+              </span>
+
+            </label>
+
+
+            {/* DIVISION */}
+
+            <select
+              className="teamsFilterSelect"
+              value={divisionFilter}
+              onChange={(e) =>
+                setDivisionFilter(
+                  e.target.value
+                )
+              }
+              disabled={
+                statusFilter ===
+                'Incomplètes'
+              }
+            >
+              <option value="Toutes">
+                Toutes les divisions
+              </option>
+
+              <option value="Yordle">
+                Yordle
+              </option>
+
+              <option value="Ixtal">
+                Ixtal
+              </option>
+
+              <option value="Targon">
+                Targon
+              </option>
+            </select>
+
+
+            {/* STATUT */}
+
+            <select
+              className="teamsFilterSelect"
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value
+                )
+              }
+            >
+              <option value="Toutes">
+                Tous les statuts
+              </option>
+
+              <option value="Complètes">
+                Complètes
+              </option>
+
+              <option value="Incomplètes">
+                Incomplètes
+              </option>
+            </select>
+
+          </div>
+
+
+          {/* =========================================
+              TABLE
+          ========================================== */}
 
           <div className="playersTable">
+
             <div className="teamsHeader">
               <div></div>
               <div>Équipe</div>
@@ -697,74 +763,165 @@ const matchesDivision =
               <div>Statut</div>
             </div>
 
-        {displayedTeams.map((team) => {
-              const isCaptain = team.captain_profile_id === profile?.id;
 
-              const teamRequests = joinRequests.filter(
-                (request) =>
-                  request.team_id === team.id &&
-                  request.status === 'pending'
-              );
+            {displayedTeams.map((team) => {
+              const isCaptain =
+                team.captain_profile_id ===
+                profile?.id;
 
-              const count = getTeamCount(team.id);
-              const joinBlockReason = getJoinBlockReason(team.id);
+              const teamRequests =
+                joinRequests.filter(
+                  (request) =>
+                    request.team_id ===
+                      team.id &&
+                    request.status ===
+                      'pending'
+                );
+
+              const count =
+                getTeamCount(team.id);
+
+              const joinBlockReason =
+                getJoinBlockReason(team.id);
+
+              const complete =
+                isTeamComplete(team.id);
 
               return (
-  <div key={team.id} id={`team-${team.id}`}>
-    <div className="teamRow">
+                <div
+                  key={team.id}
+                  id={`team-${team.id}`}
+                  className="teamEntry"
+                >
+
+                  <div className="teamRow">
+
+                    {/* OUVRIR */}
+
                     <div
-                      className="teamArrow"
+                      className={`teamArrow ${
+                        openTeam === team.id
+                          ? 'open'
+                          : ''
+                      }`}
                       onClick={() =>
-                        setOpenTeam(openTeam === team.id ? null : team.id)
+                        setOpenTeam(
+                          openTeam === team.id
+                            ? null
+                            : team.id
+                        )
                       }
                     >
-                      {openTeam === team.id ? '▼' : '▶'}
+                      <span></span>
                     </div>
 
+
+                    {/* NOM */}
+
                     <div className="teamNameCell">
+
                       {team.logo_url && (
                         <img
                           className="teamLogoSmall"
-                          src={team.logo_url}
+                          src={
+                            team.logo_url
+                          }
                           alt={team.name}
                         />
                       )}
 
-                      <span>{team.name}</span>
+                      <span>
+                        {team.name}
+                      </span>
+
                     </div>
 
-                    <div>{team.captain_riot_id || '-'}</div>
+
+                    {/* CAPITAINE */}
 
                     <div>
-  {isTeamComplete(team.id) ? (
-    <span>
-      {getTeamDivision(team.id)} — {getTeamPoints(team.id)} pts
-    </span>
-  ) : (
-    <span className="muted">Équipe incomplète</span>
-  )}
-</div>
-
-                    <div>{count} / 5</div>
-
-                    <div>
-                      {isTeamComplete(team.id)
-                        ? '🟢 Complète'
-                        : '🔴 Incomplète'}
+                      {team.captain_riot_id ||
+                        '-'}
                     </div>
+
+
+                    {/* DIVISION */}
+
+                    <div>
+
+                      {complete ? (
+                        <span>
+                          {getTeamDivision(
+                            team.id
+                          )}{' '}
+                          —{' '}
+                          {getTeamPoints(
+                            team.id
+                          )}{' '}
+                          pts
+                        </span>
+                      ) : (
+                        <span className="muted">
+                          Équipe incomplète
+                        </span>
+                      )}
+
+                    </div>
+
+
+                    {/* JOUEURS */}
+
+                    <div>
+                      {count} / 5
+                    </div>
+
+
+                    {/* STATUT */}
+
+                    <div>
+
+                      <span
+                        className={
+                          complete
+                            ? 'teamStatus teamStatusComplete'
+                            : 'teamStatus teamStatusIncomplete'
+                        }
+                      >
+                        {complete
+                          ? 'Complète'
+                          : 'Incomplète'}
+                      </span>
+
+                    </div>
+
                   </div>
+
+
+                  {/* =====================================
+                      DETAILS
+                  ====================================== */}
 
                   {openTeam === team.id && (
                     <div className="teamDetails">
+
                       <div className="teamInfos">
-                        {editingTeam === team.id ? (
+
+                        {editingTeam ===
+                        team.id ? (
                           <>
-                            <h3>Modifier l'équipe</h3>
+
+                            <h3>
+                              Modifier l'équipe
+                            </h3>
 
                             <input
                               placeholder="Nom de l'équipe"
                               value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
+                              onChange={(e) =>
+                                setEditName(
+                                  e.target.value
+                                )
+                              }
                             />
 
                             <br />
@@ -772,9 +929,13 @@ const matchesDivision =
 
                             <textarea
                               placeholder="Description"
-                              value={editDescription}
+                              value={
+                                editDescription
+                              }
                               onChange={(e) =>
-                                setEditDescription(e.target.value)
+                                setEditDescription(
+                                  e.target.value
+                                )
                               }
                             />
 
@@ -784,7 +945,11 @@ const matchesDivision =
                             <input
                               placeholder="URL du logo"
                               value={editLogo}
-                              onChange={(e) => setEditLogo(e.target.value)}
+                              onChange={(e) =>
+                                setEditLogo(
+                                  e.target.value
+                                )
+                              }
                             />
 
                             <br />
@@ -792,230 +957,372 @@ const matchesDivision =
 
                             <input
                               placeholder="Lien MultiGG"
-                              value={editMultiGG}
-                              onChange={(e) => setEditMultiGG(e.target.value)}
+                              value={
+                                editMultiGG
+                              }
+                              onChange={(e) =>
+                                setEditMultiGG(
+                                  e.target.value
+                                )
+                              }
                             />
 
                             <br />
                             <br />
 
-                            <button onClick={() => saveTeam(team.id)}>
+                            <button
+                              onClick={() =>
+                                saveTeam(
+                                  team.id
+                                )
+                              }
+                            >
                               Enregistrer
                             </button>
 
                             <button
-                              style={{ marginLeft: '10px' }}
-                              onClick={() => setEditingTeam(null)}
+                              style={{
+                                marginLeft:
+                                  '10px',
+                              }}
+                              onClick={() =>
+                                setEditingTeam(
+                                  null
+                                )
+                              }
                             >
                               Annuler
                             </button>
+
                           </>
                         ) : (
                           <>
-                            <h3>{team.name}</h3>
+
+                            <h3>
+                              {team.name}
+                            </h3>
+
 
                             <p>
-                              <strong>Capitaine :</strong>{' '}
-                              {team.captain_riot_id || '-'}
+                              <strong>
+                                Capitaine :
+                              </strong>{' '}
+                              {team.captain_riot_id ||
+                                '-'}
                             </p>
 
-                            <p>
-  <strong>Division :</strong> {getTeamDivision(team.id)}
-</p>
-
-<p>
-  <strong>Total CZF :</strong> {getTeamPoints(team.id)} pts
-</p>
 
                             <p>
-                              <strong>Description :</strong>{' '}
-                              {team.description || '-'}
+                              <strong>
+                                Division :
+                              </strong>{' '}
+                              {getTeamDivision(
+                                team.id
+                              )}
                             </p>
+
+
+                            <p>
+                              <strong>
+                                Total CZF :
+                              </strong>{' '}
+                              {getTeamPoints(
+                                team.id
+                              )}{' '}
+                              pts
+                            </p>
+
+
+                            <p>
+                              <strong>
+                                Description :
+                              </strong>{' '}
+                              {team.description ||
+                                '-'}
+                            </p>
+
 
                             {team.multigg_url && (
                               <p>
                                 <a
-                                  href={team.multigg_url}
+                                  href={
+                                    team.multigg_url
+                                  }
                                   target="_blank"
                                   rel="noreferrer"
                                   className="multiggLink"
                                 >
-                                  Cliquez pour ouvrir la page MultiGG →
+                                  Ouvrir la page
+                                  MultiGG →
                                 </a>
                               </p>
                             )}
 
-                            {isCaptain && (
-  <>
-    <button
-      className="joinTeamBtn"
-      onClick={() => startEditingTeam(team)}
-    >
-      Modifier l'équipe
-    </button>
 
-    <button
-      className="joinTeamBtn"
-      style={{
-        background: "#d32f2f",
-        marginLeft: "10px",
-      }}
-      onClick={() => deleteTeam(team.id)}
-    >
-      Supprimer l'équipe
-    </button>
-  </>
-)}
+                            {isCaptain && (
+                              <div className="teamCaptainActions">
+
+                                <button
+                                  className="joinTeamBtn"
+                                  onClick={() =>
+                                    startEditingTeam(
+                                      team
+                                    )
+                                  }
+                                >
+                                  Modifier
+                                  l'équipe
+                                </button>
+
+                                <button
+                                  className="joinTeamBtn teamDeleteBtn"
+                                  onClick={() =>
+                                    deleteTeam(
+                                      team.id
+                                    )
+                                  }
+                                >
+                                  Supprimer
+                                  l'équipe
+                                </button>
+
+                              </div>
+                            )}
+
 
                             {!joinBlockReason && (
                               <button
                                 className="joinTeamBtn"
-                                onClick={() => requestJoinTeam(team.id)}
-                                style={{ marginLeft: isCaptain ? '10px' : 0 }}
+                                onClick={() =>
+                                  requestJoinTeam(
+                                    team.id
+                                  )
+                                }
                               >
-                                Demander à rejoindre
+                                Demander à
+                                rejoindre
                               </button>
                             )}
 
-                            {joinBlockReason && player && (
-                              <p className="muted">{joinBlockReason}</p>
-                            )}
+
+                            {joinBlockReason &&
+                              player && (
+                                <p className="muted">
+                                  {
+                                    joinBlockReason
+                                  }
+                                </p>
+                              )}
+
+
+                            {/* DEMANDES */}
 
                             {isCaptain && (
-                              <div
-                                style={{
-                                  marginTop: '20px',
-                                  marginBottom: '20px',
-                                }}
-                              >
-                                <h4>Demandes reçues</h4>
+                              <div className="teamRequests">
 
-                                {teamRequests.length === 0 ? (
-                                  <p>Aucune demande</p>
+                                <h4>
+                                  Demandes reçues
+                                </h4>
+
+                                {teamRequests.length ===
+                                0 ? (
+                                  <p>
+                                    Aucune demande
+                                  </p>
                                 ) : (
-                                  teamRequests.map((request) => (
-                                    <div
-                                      key={request.id}
-                                      className="card"
-                                      style={{
-                                        marginBottom: '10px',
-                                      }}
-                                    >
-                                      <p>
-                                        <strong>{request.riot_id}</strong>
-                                      </p>
-
-                                      <p>Rôle : {request.role}</p>
-
-                                      <button
-                                        onClick={() =>
-                                          handleJoinRequest(
-                                            request.id,
-                                            'accept'
-                                          )
+                                  teamRequests.map(
+                                    (
+                                      request
+                                    ) => (
+                                      <div
+                                        key={
+                                          request.id
                                         }
+                                        className="card teamRequestCard"
                                       >
-                                        Accepter
-                                      </button>
 
-                                      <button
-                                        style={{ marginLeft: '10px' }}
-                                        onClick={() =>
-                                          handleJoinRequest(
-                                            request.id,
-                                            'reject'
-                                          )
-                                        }
-                                      >
-                                        Refuser
-                                      </button>
-                                    </div>
-                                  ))
+                                        <p>
+                                          <strong>
+                                            {
+                                              request.riot_id
+                                            }
+                                          </strong>
+                                        </p>
+
+                                        <p>
+                                          Rôle :{' '}
+                                          {
+                                            request.role
+                                          }
+                                        </p>
+
+                                        <button
+                                          onClick={() =>
+                                            handleJoinRequest(
+                                              request.id,
+                                              'accept'
+                                            )
+                                          }
+                                        >
+                                          Accepter
+                                        </button>
+
+                                        <button
+                                          style={{
+                                            marginLeft:
+                                              '10px',
+                                          }}
+                                          onClick={() =>
+                                            handleJoinRequest(
+                                              request.id,
+                                              'reject'
+                                            )
+                                          }
+                                        >
+                                          Refuser
+                                        </button>
+
+                                      </div>
+                                    )
+                                  )
                                 )}
+
                               </div>
                             )}
 
+
+                            {/* JOUEURS */}
+
                             <h4>Joueurs</h4>
 
-                            {ROLES.map((role) => {
-  const member = teamMembers.find(
-    (m) =>
-      m.team_id === team.id &&
-      m.role === role
-  );
+                            <div className="teamRoster">
 
-  const memberPlayer = member
-  ? players.find((p) => p.riot_id === member.riot_id)
-  : null;
+                              {ROLES.map(
+                                (role) => {
+                                  const member =
+                                    teamMembers.find(
+                                      (m) =>
+                                        m.team_id ===
+                                          team.id &&
+                                        m.role ===
+                                          role
+                                    );
 
-  return (
-    <div key={role} style={{ marginBottom: '18px' }}>
-      <strong>{role} :</strong>{' '}
+                                  const memberPlayer =
+                                    member
+                                      ? players.find(
+                                          (p) =>
+                                            p.riot_id ===
+                                            member.riot_id
+                                        )
+                                      : null;
 
-{member && (
-  <img
-    src={getRankIcon(
-      players.find(
-        (p) => p.riot_id === member.riot_id
-      )
-    )}
-    className="rankIcon"
-    alt=""
-  />
-)}
+                                  return (
+                                    <div
+                                      key={role}
+                                      className="teamRosterRow"
+                                    >
 
-<span>
-  {member?.riot_id || '-'}
-</span>
+                                      <strong>
+                                        {role} :
+                                      </strong>
 
-{memberPlayer?.profiles?.discord_name && (
-  <span
-    style={{
-      marginLeft: '10px',
-      color: '#5865F2',
-      fontWeight: '700',
-      fontSize: '14px',
-    }}
-  >
-    💬 {memberPlayer.profiles.discord_name}
-  </span>
-)}
+                                      {member && (
+                                        <img
+                                          src={getRankIcon(
+                                            players.find(
+                                              (
+                                                p
+                                              ) =>
+                                                p.riot_id ===
+                                                member.riot_id
+                                            )
+                                          )}
+                                          className="rankIcon"
+                                          alt=""
+                                        />
+                                      )}
 
-{member && renderChampionPool(member.riot_id)}
+                                      <span>
+                                        {member?.riot_id ||
+                                          '-'}
+                                      </span>
 
-      {isCaptain && member && (
-        <button
-          style={{ marginLeft: '10px' }}
-          onClick={() =>
-            removeMember(team.id, member.riot_id)
-          }
-        >
-          ❌
-        </button>
-      )}
-    </div>
-  );
-})}
+
+                                      {memberPlayer
+                                        ?.profiles
+                                        ?.discord_name && (
+                                        <span className="teamDiscordName">
+                                          {
+                                            memberPlayer
+                                              .profiles
+                                              .discord_name
+                                          }
+                                        </span>
+                                      )}
+
+
+                                      {member &&
+                                        renderChampionPool(
+                                          member.riot_id
+                                        )}
+
+
+                                      {isCaptain &&
+                                        member && (
+                                          <button
+                                            className="teamRemoveMemberBtn"
+                                            onClick={() =>
+                                              removeMember(
+                                                team.id,
+                                                member.riot_id
+                                              )
+                                            }
+                                          >
+                                            Retirer
+                                          </button>
+                                        )}
+
+                                    </div>
+                                  );
+                                }
+                              )}
+
+                            </div>
+
                           </>
                         )}
+
                       </div>
 
+
+                      {/* LOGO */}
+
                       <div className="teamLogoBigContainer">
+
                         {team.logo_url && (
                           <img
                             className="teamLogoBig"
-                            src={team.logo_url}
+                            src={
+                              team.logo_url
+                            }
                             alt={team.name}
                           />
                         )}
+
                       </div>
+
                     </div>
                   )}
+
                 </div>
               );
             })}
+
           </div>
+
         </div>
+
       </main>
     </>
   );

@@ -173,64 +173,35 @@ export default function Home() {
           {/* COMPTE */}
 
           <Section id="compte" title="Compte CZF">
-            <div className="importBox">
-              <div>
-                <h3>Créer votre compte CZF</h3>
+  <div className="importBox accountBox">
+    <div>
+      <h3>Créer votre compte CZF</h3>
 
-                <p>
-                  Connectez-vous avec Discord pour créer votre
-                  compte, générer votre profil joueur CZF et
-                  rejoindre une équipe.
-                </p>
+      <p>
+        Connectez-vous avec Discord pour créer votre compte, générer votre
+        profil joueur CZF et rejoindre une équipe.
+      </p>
 
-                <p>
-                  Une fois connecté, vous pourrez :
-                </p>
+      <p>Une fois connecté, vous pourrez :</p>
 
-                <ul>
-                  <li>Créer votre profil joueur</li>
-                  <li>Rejoindre une équipe</li>
-                  <li>
-                    Participer aux compétitions CZF
-                  </li>
-                  <li>Suivre votre progression</li>
-                </ul>
-              </div>
+      <ul>
+        <li>Créer votre profil joueur</li>
+        <li>Rejoindre une équipe</li>
+        <li>Participer aux compétitions CZF</li>
+        <li>Suivre votre progression</li>
+      </ul>
 
-              <div className="heroActions">
-                <a
-                  href="/login"
-                  className="rulebookButton"
-                >
-                  Créer mon profil CZF
-                </a>
-              </div>
-            </div>
-          </Section>
+      <div className="accountAction">
+        <a href="/login" className="rulebookButton">
+          Créer mon profil CZF
+        </a>
+      </div>
+    </div>
+  </div>
+</Section>
 
           {/* PROCHAIN MATCH */}
 
-          <Section
-            id="calendrier"
-            title="Prochain Match"
-          >
-            <div className="card">
-              <h3>À venir</h3>
-
-              <p>Équipe A vs Équipe B</p>
-              <p>Date : --/--/----</p>
-              <p>Heure : --:--</p>
-
-              <br />
-
-              <a
-                href="/calendar"
-                className="rulebookButton"
-              >
-                Calendrier complet
-              </a>
-            </div>
-          </Section>
 
           {/* RÉSULTATS */}
 

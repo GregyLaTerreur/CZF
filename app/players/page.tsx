@@ -12,19 +12,6 @@ const roles = [
   { name: 'Support', image: '/assets/roles/sup.png' },
 ];
 
-const tiers = [
-  'IRON',
-  'BRONZE',
-  'SILVER',
-  'GOLD',
-  'PLATINUM',
-  'EMERALD',
-  'DIAMOND',
-  'MASTER',
-];
-
-const ranks = ['IV', 'III', 'II', 'I'];
-
 type SortKey =
   | 'riot_id'
   | 'main_role'
@@ -41,7 +28,6 @@ export default function PlayersPage() {
   const [mainRole, setMainRole] = useState('');
   const [secondaryRole, setSecondaryRole] = useState('');
   const [description, setDescription] = useState('');
-;
 
   const [message, setMessage] = useState('');
   const [loadingRiot, setLoadingRiot] = useState(false);
@@ -53,6 +39,7 @@ export default function PlayersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [participantsOnly, setParticipantsOnly] = useState(false);
   const [showLftOnly, setShowLftOnly] = useState(false);
+
   const [sortKey, setSortKey] = useState<SortKey>('riot_id');
   const [sortDirection, setSortDirection] =
     useState<'asc' | 'desc'>('asc');
@@ -87,22 +74,19 @@ export default function PlayersPage() {
   }
 
   async function fetchPlayers() {
-  const res = await fetch('/api/players');
-  const data = await res.json();
+    const res = await fetch('/api/players');
+    const data = await res.json();
 
-  console.log(data.data);
-
-  if (data.success) {
-    setPlayers(data.data);
+    if (data.success) {
+      setPlayers(data.data);
+    }
   }
-}
 
   async function fetchTeams() {
     const res = await fetch('/api/teams');
     const data = await res.json();
 
     if (data.success) {
-      console.log('TEAMS :', data.data);
       setTeams(data.data);
     }
   }
@@ -117,24 +101,24 @@ export default function PlayersPage() {
   }
 
   async function fetchRiotData() {
-  const res = await fetch('/api/riot/player', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      riot_id: riotId,
-    }),
-  });
+    const res = await fetch('/api/riot/player', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        riot_id: riotId,
+      }),
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!data.success) {
-    throw new Error(data.message || 'Erreur Riot API');
+    if (!data.success) {
+      throw new Error(data.message || 'Erreur Riot API');
+    }
+
+    return data.data;
   }
-
-  return data.data;
-}
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -150,7 +134,9 @@ export default function PlayersPage() {
     }
 
     if (!riotId.includes('#')) {
-      setMessage('Riot ID invalide. Format attendu : Pseudo#TAG');
+      setMessage(
+        'Riot ID invalide. Format attendu : Pseudo#TAG'
+      );
       return;
     }
 
@@ -161,15 +147,15 @@ export default function PlayersPage() {
       const riotData = await fetchRiotData();
 
       const {
-  data: { session },
-} = await supabase.auth.getSession();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-const res = await fetch('/api/players', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${session?.access_token}`,
-  },
+      const res = await fetch('/api/players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({
           riot_id: riotId,
           main_role: mainRole,
@@ -200,9 +186,10 @@ const res = await fetch('/api/players', {
       });
 
       const data = await res.json();
-console.log('Réponse création profil :', data);
+
       if (data.success) {
-        setMessage('Profil créé avec succès ✅');
+        setMessage('Profil créé avec succès.');
+
         setRiotId('');
         setMainRole('');
         setSecondaryRole('');
@@ -211,18 +198,24 @@ console.log('Réponse création profil :', data);
         await fetchPlayers();
         await loadUser();
       } else {
-  const errorMessage =
-    data.message ||
-    data.error?.message ||
-    data.error?.details ||
-    JSON.stringify(data.error) ||
-    'Erreur inconnue.';
+        const errorMessage =
+          data.message ||
+          data.error?.message ||
+          data.error?.details ||
+          JSON.stringify(data.error) ||
+          'Erreur inconnue.';
 
-  setMessage(`Erreur création profil ❌ ${errorMessage}`);
-}
+        setMessage(
+          `Erreur création profil : ${errorMessage}`
+        );
+      }
     } catch (error: any) {
-  setMessage(`Erreur création profil ❌ ${error.message || 'Erreur inconnue'}`);
-}
+      setMessage(
+        `Erreur création profil : ${
+          error.message || 'Erreur inconnue'
+        }`
+      );
+    }
 
     setLoadingRiot(false);
   }
@@ -235,166 +228,184 @@ console.log('Réponse création profil :', data);
       : `/assets/roles/${role.toLowerCase()}.png`;
   }
 
-function getRankIcon(player: any) {
-  switch (player.soloq_tier) {
-    case 'IRON':
-      return '/assets/ranks/iron.webp';
+  function getRankIcon(player: any) {
+    switch (player.soloq_tier) {
+      case 'IRON':
+        return '/assets/ranks/iron.webp';
 
-    case 'BRONZE':
-      return '/assets/ranks/bronze.webp';
+      case 'BRONZE':
+        return '/assets/ranks/bronze.webp';
 
-    case 'SILVER':
-      return '/assets/ranks/silver.webp';
+      case 'SILVER':
+        return '/assets/ranks/silver.webp';
 
-    case 'GOLD':
-      return '/assets/ranks/gold.webp';
+      case 'GOLD':
+        return '/assets/ranks/gold.webp';
 
-    case 'PLATINUM':
-      return '/assets/ranks/platine.webp';
+      case 'PLATINUM':
+        return '/assets/ranks/platine.webp';
 
-    case 'EMERALD':
-      return '/assets/ranks/Emerald.webp';
+      case 'EMERALD':
+        return '/assets/ranks/Emerald.webp';
 
-    case 'DIAMOND':
-      return '/assets/ranks/diamant.webp';
+      case 'DIAMOND':
+        return '/assets/ranks/diamant.webp';
 
-    case 'MASTER':
-      return '/assets/ranks/master.webp';
+      case 'MASTER':
+        return '/assets/ranks/master.webp';
 
-    case 'GRANDMASTER':
-      return '/assets/ranks/gm.webp';
+      case 'GRANDMASTER':
+        return '/assets/ranks/gm.webp';
 
-    case 'CHALLENGER':
-      return '/assets/ranks/chall.webp';
+      case 'CHALLENGER':
+        return '/assets/ranks/chall.webp';
 
-    default:
-      return '/assets/ranks/iron.webp';
-  }
-}
-
-
-function getRankText(player: any) {
-  if (!player.soloq_tier) return 'Unranked';
-
-  if (['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(player.soloq_tier)) {
-    return `${player.soloq_tier} ${player.soloq_lp || 0} LP`;
+      default:
+        return '/assets/ranks/iron.webp';
+    }
   }
 
-  return `${player.soloq_tier} ${player.soloq_rank || ''} ${player.soloq_lp || 0} LP`;
-}
-  function getChampionIconUrl(championName: string) {
-  return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${championName}.png`;
-}
-
-function renderChampionPool(player: any) {
-  const champions = player.top_champions || [];
-
-  if (!champions.length) return <span>-</span>;
-
-  return (
-    <div style={{ display: 'flex', gap: '6px' }}>
-      {champions.map((champion: any) => (
-        <img
-          key={champion.champion_id}
-          src={getChampionIconUrl(champion.champion_name)}
-          alt={champion.champion_name}
-          title={`${champion.champion_name} - ${champion.games} games`}
-          style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-  function getPlayerPoints(player: any) {
-    return player.czf_points ?? null;
-  }
-
-  function getPlayerRankValue(player: any) {
-  const tierOrder: Record<string, number> = {
-    IRON: 0,
-    BRONZE: 1,
-    SILVER: 2,
-    GOLD: 3,
-    PLATINUM: 4,
-    EMERALD: 5,
-    DIAMOND: 6,
-    MASTER: 7,
-    GRANDMASTER: 8,
-    CHALLENGER: 9,
-  };
-
-  const rankOrder: Record<string, number> = {
-    IV: 0,
-    III: 1,
-    II: 2,
-    I: 3,
-  };
-
-  const tier = player.soloq_tier;
-  const rank = player.soloq_rank;
-  const lp = player.soloq_lp || 0;
-
-  return (
-    (tierOrder[tier] ?? -1) * 10000 +
-    (rankOrder[rank] ?? 0) * 1000 +
-    lp
-  );
-}
-
-
-
-  function getPlayerRank(player: any) {
-    if (!player.soloq_tier) return '-';
+  function getRankText(player: any) {
+    if (!player.soloq_tier) {
+      return 'Unranked';
+    }
 
     if (
       ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(
         player.soloq_tier
       )
     ) {
-      return `${player.soloq_tier} ${player.soloq_lp || 0} LP`;
+      return `${player.soloq_tier} ${
+        player.soloq_lp || 0
+      } LP`;
     }
 
-    return `${player.soloq_tier} ${player.soloq_rank || ''} ${
-      player.soloq_lp || 0
-    } LP`;
+    return `${player.soloq_tier} ${
+      player.soloq_rank || ''
+    } ${player.soloq_lp || 0} LP`;
+  }
+
+  function getChampionIconUrl(championName: string) {
+    return `https://ddragon.leagueoflegends.com/cdn/14.24.1/img/champion/${championName}.png`;
+  }
+
+  function renderChampionPool(player: any) {
+    const champions = player.top_champions || [];
+
+    if (!champions.length) {
+      return <span>-</span>;
+    }
+
+    return (
+      <div className="championPool">
+        {champions.map((champion: any) => (
+          <img
+            key={champion.champion_id}
+            src={getChampionIconUrl(
+              champion.champion_name
+            )}
+            alt={champion.champion_name}
+            title={`${champion.champion_name} - ${champion.games} games`}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  function getPlayerPoints(player: any) {
+    return player.czf_points ?? null;
+  }
+
+  function getPlayerRankValue(player: any) {
+    const tierOrder: Record<string, number> = {
+      IRON: 0,
+      BRONZE: 1,
+      SILVER: 2,
+      GOLD: 3,
+      PLATINUM: 4,
+      EMERALD: 5,
+      DIAMOND: 6,
+      MASTER: 7,
+      GRANDMASTER: 8,
+      CHALLENGER: 9,
+    };
+
+    const rankOrder: Record<string, number> = {
+      IV: 0,
+      III: 1,
+      II: 2,
+      I: 3,
+    };
+
+    const tier = player.soloq_tier;
+    const rank = player.soloq_rank;
+    const lp = player.soloq_lp || 0;
+
+    return (
+      (tierOrder[tier] ?? -1) * 10000 +
+      (rankOrder[rank] ?? 0) * 1000 +
+      lp
+    );
+  }
+
+  function getPlayerRank(player: any) {
+    if (!player.soloq_tier) {
+      return '-';
+    }
+
+    if (
+      ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(
+        player.soloq_tier
+      )
+    ) {
+      return `${player.soloq_tier} ${
+        player.soloq_lp || 0
+      } LP`;
+    }
+
+    return `${player.soloq_tier} ${
+      player.soloq_rank || ''
+    } ${player.soloq_lp || 0} LP`;
   }
 
   function getPeakRank(player: any) {
-    if (!player.peak_tier) return '-';
+    if (!player.peak_tier) {
+      return '-';
+    }
 
     if (
       ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(
         player.peak_tier
       )
     ) {
-      return `${player.peak_tier} ${player.peak_lp || 0} LP`;
+      return `${player.peak_tier} ${
+        player.peak_lp || 0
+      } LP`;
     }
 
-    return `${player.peak_tier} ${player.peak_rank || ''} ${
-      player.peak_lp || 0
-    } LP`;
+    return `${player.peak_tier} ${
+      player.peak_rank || ''
+    } ${player.peak_lp || 0} LP`;
   }
 
   function getFlexRank(player: any) {
-    if (!player.flex_tier) return '-';
+    if (!player.flex_tier) {
+      return '-';
+    }
 
     if (
       ['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(
         player.flex_tier
       )
     ) {
-      return `${player.flex_tier} ${player.flex_lp || 0} LP`;
+      return `${player.flex_tier} ${
+        player.flex_lp || 0
+      } LP`;
     }
 
-    return `${player.flex_tier} ${player.flex_rank || ''} ${
-      player.flex_lp || 0
-    } LP`;
+    return `${player.flex_tier} ${
+      player.flex_rank || ''
+    } ${player.flex_lp || 0} LP`;
   }
 
   function getPlayerWR(player: any) {
@@ -402,15 +413,18 @@ function renderChampionPool(player: any) {
     const losses = player.soloq_losses || 0;
     const total = wins + losses;
 
-    if (total === 0) return '-';
+    if (total === 0) {
+      return '-';
+    }
 
     return `${Math.round((wins / total) * 100)}%`;
   }
 
   function getPlayerGames(player: any) {
-    const wins = player.soloq_wins || 0;
-    const losses = player.soloq_losses || 0;
-    return wins + losses;
+    return (
+      (player.soloq_wins || 0) +
+      (player.soloq_losses || 0)
+    );
   }
 
   function getPlayerTeam(player: any) {
@@ -418,19 +432,30 @@ function renderChampionPool(player: any) {
       (m) => m.riot_id === player.riot_id
     );
 
-    if (!member) return null;
+    if (!member) {
+      return null;
+    }
 
-    return teams.find((team) => team.id === member.team_id) || null;
+    return (
+      teams.find(
+        (team) => team.id === member.team_id
+      ) || null
+    );
   }
 
-function getDpmUrl(riotId: string) {
-  return `https://dpm.lol/${riotId.replace('#', '-')}`;
-}
+  function getDpmUrl(riotId: string) {
+    return `https://dpm.lol/${riotId.replace(
+      '#',
+      '-'
+    )}`;
+  }
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
       setSortDirection(
-        sortDirection === 'asc' ? 'desc' : 'asc'
+        sortDirection === 'asc'
+          ? 'desc'
+          : 'asc'
       );
     } else {
       setSortKey(key);
@@ -438,33 +463,50 @@ function getDpmUrl(riotId: string) {
     }
   }
 
-  function getSortLabel(key: SortKey, label: string) {
-  if (sortKey !== key) return `${label} ↕`;
+  function getSortLabel(
+    key: SortKey,
+    label: string
+  ) {
+    if (sortKey !== key) {
+      return `${label} ↕`;
+    }
 
-  return `${label} ${sortDirection === 'asc' ? '↑' : '↓'}`;
-}
+    return `${label} ${
+      sortDirection === 'asc'
+        ? '↑'
+        : '↓'
+    }`;
+  }
 
   const displayedPlayers = useMemo(() => {
     let list = [...players];
 
     if (searchQuery.trim()) {
-  const query = searchQuery.toLowerCase();
+      const query =
+        searchQuery.toLowerCase();
 
-  list = list.filter((player) =>
-    player.riot_id?.toLowerCase().includes(query)
-  );
-}
+      list = list.filter((player) =>
+        player.riot_id
+          ?.toLowerCase()
+          .includes(query)
+      );
+    }
 
-if (participantsOnly) {
-  list = list.filter((player) => {
-    const team = getPlayerTeam(player);
+    if (participantsOnly) {
+      list = list.filter((player) => {
+        const team =
+          getPlayerTeam(player);
 
-    return team?.is_validated === true;
-  });
-}
+        return (
+          team?.is_validated === true
+        );
+      });
+    }
 
     if (showLftOnly) {
-      list = list.filter((player) => player.lft);
+      list = list.filter(
+        (player) => player.lft
+      );
     }
 
     list.sort((a, b) => {
@@ -472,13 +514,22 @@ if (participantsOnly) {
       let bValue: any;
 
       if (sortKey === 'points') {
-        aValue = getPlayerPoints(a) ?? -1;
-        bValue = getPlayerPoints(b) ?? -1;
-      } else if (sortKey === 'rank') {
-  aValue = getPlayerRankValue(a);
-  bValue = getPlayerRankValue(b);
+        aValue =
+          getPlayerPoints(a) ?? -1;
 
-      } else if (sortKey === 'lft') {
+        bValue =
+          getPlayerPoints(b) ?? -1;
+      } else if (
+        sortKey === 'rank'
+      ) {
+        aValue =
+          getPlayerRankValue(a);
+
+        bValue =
+          getPlayerRankValue(b);
+      } else if (
+        sortKey === 'lft'
+      ) {
         aValue = a.lft ? 1 : 0;
         bValue = b.lft ? 1 : 0;
       } else {
@@ -486,403 +537,805 @@ if (participantsOnly) {
         bValue = b[sortKey] || '';
       }
 
-      if (typeof aValue === 'number') {
-        return sortDirection === 'asc'
+      if (
+        typeof aValue === 'number'
+      ) {
+        return sortDirection ===
+          'asc'
           ? aValue - bValue
           : bValue - aValue;
       }
 
       return sortDirection === 'asc'
-        ? String(aValue).localeCompare(String(bValue))
-        : String(bValue).localeCompare(String(aValue));
+        ? String(aValue).localeCompare(
+            String(bValue)
+          )
+        : String(bValue).localeCompare(
+            String(aValue)
+          );
     });
 
     return list;
-}, [
-  players,
-  searchQuery,
-  participantsOnly,
-  showLftOnly,
-  sortKey,
-  sortDirection,
-  teams,
-  teamMembers,
-]);
+  }, [
+    players,
+    searchQuery,
+    participantsOnly,
+    showLftOnly,
+    sortKey,
+    sortDirection,
+    teams,
+    teamMembers,
+  ]);
 
   return (
     <>
       <Nav />
 
-      <main className="section">
+      <main className="section playersPage">
+
         <div className="sectionTitle">
           <span></span>
           <h2>Joueurs</h2>
         </div>
 
-        <div className="card">
+
+        {/* =================================================
+            CRÉATION PROFIL
+        ================================================= */}
+
+        <div className="card playersCreateCard">
+
           <h3>Créer mon profil</h3>
 
           {!user && (
             <p>
-              Tu dois te connecter avec Discord avant de créer ton profil.
+              Tu dois te connecter avec Discord avant
+              de créer ton profil.
             </p>
           )}
 
           {user && myPlayer && (
             <p>
-              Profil déjà créé : <strong>{myPlayer.riot_id}</strong>
+              Profil déjà créé :{' '}
+              <strong>
+                {myPlayer.riot_id}
+              </strong>
             </p>
           )}
 
           {user && !myPlayer && (
-            <form onSubmit={handleSubmit} className="fakeForm">
+            <form
+              onSubmit={handleSubmit}
+              className="fakeForm"
+            >
+
               <input
                 placeholder="Riot ID (Pseudo#TAG)"
                 value={riotId}
-                onChange={(e) => setRiotId(e.target.value)}
+                onChange={(e) =>
+                  setRiotId(e.target.value)
+                }
                 required
               />
 
+
               <div className="rolesContainer">
+
                 <div className="roleSection">
-                  <h4>RÔLE PRINCIPAL</h4>
+
+                  <h4>
+                    RÔLE PRINCIPAL
+                  </h4>
 
                   <div className="rolePicker">
+
                     {roles.map((role) => (
                       <button
                         key={role.name}
                         type="button"
                         className={
-                          mainRole === role.name
+                          mainRole ===
+                          role.name
                             ? 'roleBtn active'
                             : 'roleBtn'
                         }
-                        onClick={() => setMainRole(role.name)}
+                        onClick={() =>
+                          setMainRole(
+                            role.name
+                          )
+                        }
                       >
-                        <img src={role.image} alt={role.name} />
-                        <span>{role.name}</span>
+                        <img
+                          src={role.image}
+                          alt={role.name}
+                        />
+
+                        <span>
+                          {role.name}
+                        </span>
                       </button>
                     ))}
+
                   </div>
+
                 </div>
 
+
                 <div className="roleSection">
-                  <h4>RÔLE SECONDAIRE (OPTIONNEL)</h4>
+
+                  <h4>
+                    RÔLE SECONDAIRE
+                    (OPTIONNEL)
+                  </h4>
 
                   <div className="rolePicker">
+
                     {roles.map((role) => (
                       <button
                         key={`secondary-${role.name}`}
                         type="button"
                         className={
-                          secondaryRole === role.name
+                          secondaryRole ===
+                          role.name
                             ? 'roleBtn active'
                             : 'roleBtn'
                         }
-                        onClick={() => setSecondaryRole(role.name)}
+                        onClick={() =>
+                          setSecondaryRole(
+                            role.name
+                          )
+                        }
                       >
-                        <img src={role.image} alt={role.name} />
-                        <span>{role.name}</span>
+                        <img
+                          src={role.image}
+                          alt={role.name}
+                        />
+
+                        <span>
+                          {role.name}
+                        </span>
                       </button>
                     ))}
+
                   </div>
+
                 </div>
+
               </div>
 
 
               <textarea
                 placeholder="Description (optionnel)"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  setDescription(
+                    e.target.value
+                  )
+                }
               />
 
-              <button type="submit" disabled={loadingRiot}>
+
+              <button
+                type="submit"
+                disabled={loadingRiot}
+              >
                 {loadingRiot
                   ? 'Recherche Riot...'
                   : 'Créer mon profil'}
               </button>
+
             </form>
           )}
 
-          {message && <p>{message}</p>}
+          {message && (
+            <p>{message}</p>
+          )}
+
         </div>
+
 
         <br />
 
-        <div className="card">
-          <h3>Liste des joueurs</h3>
-          <div
-  style={{
-    display: 'flex',
-    gap: '20px',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    marginBottom: '18px',
-  }}
->
-  {/* BARRE DE RECHERCHE */}
-  <div
-    style={{
-      flex: '1',
-      minWidth: '260px',
-      maxWidth: '850px',
-      position: 'relative',
-    }}
-  >
-    <span
-      style={{
-        position: 'absolute',
-        left: '18px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        fontSize: '20px',
-        color: '#0b1f4d',
-        pointerEvents: 'none',
-      }}
-    >
-      🔎
-    </span>
 
-    <input
-      type="text"
-      placeholder="Rechercher un joueur..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      style={{
-        width: '100%',
-        boxSizing: 'border-box',
-        padding: '14px 18px 14px 52px',
-        borderRadius: '10px',
-        border: '2px solid #0b1f4d',
-        background: 'rgba(255,255,255,0.15)',
-        color: '#0b1f4d',
-        fontSize: '16px',
-        fontWeight: '600',
-        outline: 'none',
-      }}
-    />
-  </div>
+        {/* =================================================
+            LISTE DES JOUEURS
+        ================================================= */}
 
-  {/* BOUTON PARTICIPANTS */}
-  <button
-  type="button"
-  onClick={() => setParticipantsOnly(!participantsOnly)}
-  onMouseEnter={(e) => {
-    if (!participantsOnly) {
-      e.currentTarget.style.background = '#0b1f4d';
-      e.currentTarget.style.color = 'white';
-      e.currentTarget.style.transform = 'translateY(-1px)';
-    }
-  }}
-  onMouseLeave={(e) => {
-    if (!participantsOnly) {
-      e.currentTarget.style.background = 'transparent';
-      e.currentTarget.style.color = '#0b1f4d';
-      e.currentTarget.style.transform = 'translateY(0)';
-    }
-  }}
-  style={{
-    padding: '14px 20px',
-    borderRadius: '10px',
-    border: '2px solid #0b1f4d',
-    background: participantsOnly ? '#0b1f4d' : 'transparent',
-    color: participantsOnly ? 'white' : '#0b1f4d',
-    fontWeight: '700',
-    fontSize: '15px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    whiteSpace: 'nowrap',
-  }}
->
- 👥 Participants uniquement
-</button>
+        <div className="card playersListCard">
 
-</div>
+          <h3>
+            Liste des joueurs
+          </h3>
 
-<button
-  type="button"
-  className="joinTeamBtn"
-            onClick={() => setShowLftOnly(!showLftOnly)}
-          >
-            {showLftOnly
-              ? 'Voir tous les joueurs'
-              : 'Afficher seulement les LFT'}
-          </button>
 
-          <br />
-          <br />
+          {/* RECHERCHE */}
+
+          <div className="playersSearch">
+
+            <input
+              type="text"
+              placeholder="Rechercher un joueur..."
+              value={searchQuery}
+              onChange={(e) =>
+                setSearchQuery(
+                  e.target.value
+                )
+              }
+            />
+
+          </div>
+
+
+          {/* PETIT ESPACE ENTRE RECHERCHE ET CASES */}
+
+          <div className="playersFiltersSpacer" />
+
+
+          {/* CHECKBOXES */}
+
+          <div className="playersFilterChecks">
+
+            <label className="participantsCheck">
+
+              <input
+                type="checkbox"
+                checked={
+                  participantsOnly
+                }
+                onChange={(e) =>
+                  setParticipantsOnly(
+                    e.target.checked
+                  )
+                }
+              />
+
+              <span className="customCheck"></span>
+
+              <span>
+                Participants uniquement
+              </span>
+
+            </label>
+
+
+            <label className="participantsCheck">
+
+              <input
+                type="checkbox"
+                checked={showLftOnly}
+                onChange={(e) =>
+                  setShowLftOnly(
+                    e.target.checked
+                  )
+                }
+              />
+
+              <span className="customCheck"></span>
+
+              <span>
+                LFT uniquement
+              </span>
+
+            </label>
+
+          </div>
+
 
           <div className="playersTable">
+
             <div className="playersHeader">
-              <div onClick={() => handleSort('riot_id')}>
-                {getSortLabel('riot_id', 'Riot ID')}
+
+              <div
+                onClick={() =>
+                  handleSort(
+                    'riot_id'
+                  )
+                }
+              >
+                {getSortLabel(
+                  'riot_id',
+                  'Riot ID'
+                )}
               </div>
 
-              <div onClick={() => handleSort('main_role')}>
-                {getSortLabel('main_role', 'Rôle principal')}
+
+              <div
+                onClick={() =>
+                  handleSort(
+                    'main_role'
+                  )
+                }
+              >
+                {getSortLabel(
+                  'main_role',
+                  'Rôle principal'
+                )}
               </div>
 
-              <div onClick={() => handleSort('secondary_role')}>
-                {getSortLabel('secondary_role', 'Rôle secondaire')}
+
+              <div
+                onClick={() =>
+                  handleSort(
+                    'secondary_role'
+                  )
+                }
+              >
+                {getSortLabel(
+                  'secondary_role',
+                  'Rôle secondaire'
+                )}
               </div>
 
-              <div onClick={() => handleSort('rank')}>
-                {getSortLabel('rank', 'Rank')}
+
+              <div
+                onClick={() =>
+                  handleSort('rank')
+                }
+              >
+                {getSortLabel(
+                  'rank',
+                  'Rank'
+                )}
               </div>
 
-              <div onClick={() => handleSort('points')}>
-                {getSortLabel('points', 'Points')}
+
+              <div
+                onClick={() =>
+                  handleSort(
+                    'points'
+                  )
+                }
+              >
+                {getSortLabel(
+                  'points',
+                  'Points'
+                )}
               </div>
 
-              <div>WR</div>
-              <div>Pool</div>
 
-              <div onClick={() => handleSort('lft')}>
-                {getSortLabel('lft', 'LFT')}
+              <div>
+                WR
               </div>
+
+
+              <div>
+                Pool
+              </div>
+
+
+              <div
+                onClick={() =>
+                  handleSort('lft')
+                }
+              >
+                {getSortLabel(
+                  'lft',
+                  'LFT'
+                )}
+              </div>
+
             </div>
 
-            {displayedPlayers.map((player) => {
-  const points = getPlayerPoints(player);
 
-  return (
-    <div key={player.id}>
-      <div
-        className="playerRow"
-        onClick={() =>
-          setSelectedPlayer(
-            selectedPlayer?.id === player.id ? null : player
-          )
-        }
-        style={{ cursor: 'pointer' }}
-      >
+            {displayedPlayers.map(
+              (player) => {
+
+                const points =
+                  getPlayerPoints(
+                    player
+                  );
+
+                const playerTeam =
+                  getPlayerTeam(
+                    player
+                  );
+
+                return (
                   <div
-  style={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  }}
->
-  {getPlayerTeam(player)?.logo_url && (
-    <img
-      src={getPlayerTeam(player).logo_url}
-      alt=""
-      style={{
-        width: '28px',
-        height: '28px',
-        objectFit: 'contain',
-        borderRadius: '6px',
-      }}
-    />
-  )}
+                    key={player.id}
+                    className="playerEntry"
+                  >
 
-  <span>{player.riot_id}</span>
-</div>
+                    <div
+                      className="playerRow"
+                      onClick={() =>
+                        setSelectedPlayer(
+                          selectedPlayer?.id ===
+                            player.id
+                            ? null
+                            : player
+                        )
+                      }
+                      style={{
+                        cursor:
+                          'pointer',
+                      }}
+                    >
 
-                  <div>
-                    {player.main_role && (
-                      <img
-                        className="roleIcon"
-                        src={getRoleIcon(player.main_role) || ''}
-                        alt={player.main_role}
-                      />
-                    )}
-                  </div>
 
-                  <div>
-                    {player.secondary_role && (
-                      <img
-                        className="roleIcon"
-                        src={getRoleIcon(player.secondary_role) || ''}
-                        alt={player.secondary_role}
-                      />
-                    )}
-                  </div>
+                      {/* RIOT ID */}
 
-                  <div className="rankCell">
-  <img
-    src={getRankIcon(player)}
-    alt={getRankText(player)}
-    className="rankIcon"
-  />
-  <span>{getRankText(player)}</span>
-</div>
+                      <div
+                        style={{
+                          display:
+                            'flex',
+                          alignItems:
+                            'center',
+                          gap: '8px',
+                        }}
+                      >
 
-                  <div>{points ?? '-'}</div>
+                        {playerTeam?.logo_url && (
+                          <img
+                            src={
+                              playerTeam.logo_url
+                            }
+                            alt=""
+                            style={{
+                              width:
+                                '28px',
+                              height:
+                                '28px',
+                              objectFit:
+                                'contain',
+                              borderRadius:
+                                '6px',
+                            }}
+                          />
+                        )}
 
-                  <div>{getPlayerWR(player)}</div>
-                  <div>{renderChampionPool(player)}</div>
+                        <span>
+                          {
+                            player.riot_id
+                          }
+                        </span>
 
-                  <div>{player.lft ? '🟢' : '-'}</div>
                       </div>
 
-      {selectedPlayer?.id === player.id && (
-        <div className="card">
-          <h3>{player.riot_id}</h3>
 
-          <p><strong>Nom Discord :</strong> {player.profiles?.discord_name || '-'}</p>
-          <p style={{ color: '#5865F2', fontWeight: 'bold' }}>
-  💬 {player.profiles?.discord_name || 'Non lié'}
-</p>
+                      {/* ROLE PRINCIPAL */}
 
-          {player.profile_icon_id && (
-            <img
-              src={`https://ddragon.leagueoflegends.com/cdn/14.24.1/img/profileicon/${player.profile_icon_id}.png`}
-              alt="Icone Riot"
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                objectFit: 'cover',
-              }}
-            />
-          )}
+                      <div>
 
-          <p><strong>Rôle principal :</strong> {player.main_role || '-'}</p>
-          <p><strong>Rôle secondaire :</strong> {player.secondary_role || '-'}</p>
+                        {player.main_role && (
+                          <img
+                            className="roleIcon"
+                            src={
+                              getRoleIcon(
+                                player.main_role
+                              ) || ''
+                            }
+                            alt={
+                              player.main_role
+                            }
+                          />
+                        )}
 
-          <div>
-            <strong>Champion pool :</strong>
-            <div style={{ marginTop: '8px' }}>
-              {renderChampionPool(player)}
-            </div>
+                      </div>
+
+
+                      {/* ROLE SECONDAIRE */}
+
+                      <div>
+
+                        {player.secondary_role && (
+                          <img
+                            className="roleIcon"
+                            src={
+                              getRoleIcon(
+                                player.secondary_role
+                              ) || ''
+                            }
+                            alt={
+                              player.secondary_role
+                            }
+                          />
+                        )}
+
+                      </div>
+
+
+                      {/* RANK */}
+
+                      <div className="rankCell">
+
+                        <img
+                          src={
+                            getRankIcon(
+                              player
+                            )
+                          }
+                          alt={
+                            getRankText(
+                              player
+                            )
+                          }
+                          className="rankIcon"
+                        />
+
+                        <span>
+                          {
+                            getRankText(
+                              player
+                            )
+                          }
+                        </span>
+
+                      </div>
+
+
+                      {/* POINTS */}
+
+                      <div>
+
+                        <span className="statBadge">
+                          {points ?? '-'}
+                        </span>
+
+                      </div>
+
+
+                      {/* WR */}
+
+                      <div>
+
+                        <span className="statBadge statBadgeWr">
+                          {
+                            getPlayerWR(
+                              player
+                            )
+                          }
+                        </span>
+
+                      </div>
+
+
+                      {/* CHAMPION POOL */}
+
+                      <div>
+
+                        {renderChampionPool(
+                          player
+                        )}
+
+                      </div>
+
+
+                      {/* LFT */}
+
+                      <div className="lftCell">
+
+                        {player.lft ? (
+                          <span
+                            className="lftDot"
+                            title="LFT"
+                          ></span>
+                        ) : (
+                          <span className="lftEmpty">
+                            -
+                          </span>
+                        )}
+
+                      </div>
+
+                    </div>
+
+
+                    {/* =================================================
+                        DETAILS JOUEUR
+                    ================================================= */}
+
+                    {selectedPlayer?.id ===
+                      player.id && (
+
+                      <div className="card playerDetailsCard">
+
+                        <h3>
+                          {
+                            player.riot_id
+                          }
+                        </h3>
+
+
+                        <p>
+                          <strong>
+                            Nom Discord :
+                          </strong>{' '}
+                          {player.profiles
+                            ?.discord_name ||
+                            '-'}
+                        </p>
+
+
+                        <p className="discordPlayerName">
+                          {player.profiles
+                            ?.discord_name ||
+                            'Non lié'}
+                        </p>
+
+
+                        {player.profile_icon_id && (
+                          <img
+                            src={`https://ddragon.leagueoflegends.com/cdn/14.24.1/img/profileicon/${player.profile_icon_id}.png`}
+                            alt="Icone Riot"
+                            style={{
+                              width: 80,
+                              height: 80,
+                              borderRadius:
+                                '50%',
+                              objectFit:
+                                'cover',
+                            }}
+                          />
+                        )}
+
+
+                        <p>
+                          <strong>
+                            Rôle principal :
+                          </strong>{' '}
+                          {player.main_role ||
+                            '-'}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Rôle secondaire :
+                          </strong>{' '}
+                          {player.secondary_role ||
+                            '-'}
+                        </p>
+
+
+                        <div>
+
+                          <strong>
+                            Champion pool :
+                          </strong>
+
+                          <div
+                            style={{
+                              marginTop:
+                                '8px',
+                            }}
+                          >
+                            {renderChampionPool(
+                              player
+                            )}
+                          </div>
+
+                        </div>
+
+
+                        <p>
+                          <strong>
+                            Rank SoloQ :
+                          </strong>{' '}
+                          {getPlayerRank(
+                            player
+                          )}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Peak :
+                          </strong>{' '}
+                          {getPeakRank(
+                            player
+                          )}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Flex :
+                          </strong>{' '}
+                          {getFlexRank(
+                            player
+                          )}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            WR SoloQ :
+                          </strong>{' '}
+                          {getPlayerWR(
+                            player
+                          )}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Games SoloQ :
+                          </strong>{' '}
+                          {getPlayerGames(
+                            player
+                          )}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Niveau :
+                          </strong>{' '}
+                          {player.summoner_level ||
+                            '-'}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Points CZF :
+                          </strong>{' '}
+                          {getPlayerPoints(
+                            player
+                          ) ?? '-'}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Équipe :
+                          </strong>{' '}
+                          {playerTeam?.name ||
+                            'Aucune'}
+                        </p>
+
+
+                        <p>
+                          <strong>
+                            Description :
+                          </strong>{' '}
+                          {player.description ||
+                            '-'}
+                        </p>
+
+
+                        <p>
+
+                          <a
+                            href={
+                              getDpmUrl(
+                                player.riot_id
+                              )
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                            className="multiggLink"
+                          >
+                            Voir le profil DPM →
+                          </a>
+
+                        </p>
+
+
+                        <button
+                          className="joinTeamBtn"
+                          onClick={() =>
+                            setSelectedPlayer(
+                              null
+                            )
+                          }
+                        >
+                          Fermer
+                        </button>
+
+                      </div>
+                    )}
+
+                  </div>
+                );
+              }
+            )}
+
           </div>
 
-          <p><strong>Rank SoloQ :</strong> {getPlayerRank(player)}</p>
-          <p><strong>Peak :</strong> {getPeakRank(player)}</p>
-          <p><strong>Flex :</strong> {getFlexRank(player)}</p>
-          <p><strong>WR SoloQ :</strong> {getPlayerWR(player)}</p>
-          <p><strong>Games SoloQ :</strong> {getPlayerGames(player)}</p>
-          <p><strong>Niveau :</strong> {player.summoner_level || '-'}</p>
-          <p><strong>Points CZF :</strong> {getPlayerPoints(player) ?? '-'}</p>
-          <p><strong>Équipe :</strong> {getPlayerTeam(player)?.name || 'Aucune'}</p>
-          <p><strong>Description :</strong> {player.description || '-'}</p>
-
-          <p>
-            <a
-              href={getDpmUrl(player.riot_id)}
-              target="_blank"
-              rel="noreferrer"
-              className="multiggLink"
-            >
-              Voir le profil DPM →
-            </a>
-          </p>
-
-          <button
-            className="joinTeamBtn"
-            onClick={() => setSelectedPlayer(null)}
-          >
-            Fermer
-          </button>
         </div>
-      )}
-    </div>
-  );
-            })}
-          </div>
-        </div>
+
       </main>
     </>
   );

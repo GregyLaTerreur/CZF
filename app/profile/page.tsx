@@ -259,18 +259,19 @@ if (!existingProfile) {
   }
 
   return (
+  
     <>
       <Nav />
 
-      <main className="section">
+      <main className="section profilePage">
         <div className="sectionTitle">
           <span></span>
           <h2>Mon profil</h2>
         </div>
 
         {!user && (
-          <div className="card">
-            <h3>Non connecté</h3>
+<div className="card profileCard">
+              <h3>Non connecté</h3>
             <p>
               Connecte-toi avec Discord pour accéder à ton profil CZF.
             </p>
@@ -281,8 +282,7 @@ if (!existingProfile) {
         )}
 
         {user && (
-          <div className="card">
-            <h3>
+  <div className="card profileCard">            <h3>
               {user.user_metadata?.full_name ||
                 user.user_metadata?.name ||
                 'Profil CZF'}
@@ -354,8 +354,10 @@ if (!existingProfile) {
                 </p>
 
                 <p>
-                  <strong>LFT :</strong>{' '}
-                  {player.lft ? '🟢 Oui' : '🔴 Non'}
+                 <strong>LFT :</strong>{' '}
+<span className={player.lft ? 'statusOn' : 'statusOff'}>
+  {player.lft ? 'Oui' : 'Non'}
+</span>
                 </p>
 
                 <button
@@ -370,7 +372,7 @@ if (!existingProfile) {
                   onClick={() => refreshRiot(true)}
                   style={{ marginLeft: '10px' }}
                 >
-                  🔄 Actualiser Riot
+                  Actualiser Riot
                 </button>
 
                 <button
@@ -378,7 +380,7 @@ if (!existingProfile) {
   onClick={refreshChampionPool}
   style={{ marginLeft: '10px' }}
 >
-  ⭐ Actualiser champions
+  Actualiser champions
 </button>
 
                 <button
