@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Nav from '../components/Nav';
 
 type Division = 'Yordle' | 'Ixtal' | 'Targon';
 
 type Team = {
-  id: number;
-  name: string;
-  shortName: string;
+  id?: string | number;
+  name?: string;
+  team_name?: string;
+  short_name?: string;
+  tag?: string;
   logo?: string;
-  wins: number;
-  losses: number;
+  logo_url?: string;
+  image?: string;
+  division?: string;
+  is_validated?: boolean;
+  wins?: number;
+  losses?: number;
 };
 
 type DivisionConfig = {
@@ -24,84 +30,82 @@ const DIVISIONS: DivisionConfig[] = [
   {
     name: 'Yordle',
     color: '#51a677',
-    soft: 'rgba(81, 166, 119, 0.10)',
+    soft: 'rgba(81, 166, 119, 0.11)',
   },
   {
     name: 'Ixtal',
     color: '#4387d8',
-    soft: 'rgba(67, 135, 216, 0.10)',
+    soft: 'rgba(67, 135, 216, 0.11)',
   },
   {
     name: 'Targon',
     color: '#8f6bc7',
-    soft: 'rgba(143, 107, 199, 0.10)',
+    soft: 'rgba(143, 107, 199, 0.11)',
   },
 ];
 
-/*
-  DONNÉES TEMPORAIRES
-  -------------------
-  Elles servent seulement à voir le rendu.
-
-  Plus tard :
-  - les équipes viendront de la BDD
-  - les V / D se mettront à jour automatiquement
-  - le bracket se remplira automatiquement
-*/
-const TEAMS: Record<Division, Team[]> = {
-  Yordle: [
-    { id: 1, name: 'Team Alpha', shortName: 'ALP', wins: 8, losses: 1 },
-    { id: 2, name: 'Team Bravo', shortName: 'BRV', wins: 7, losses: 2 },
-    { id: 3, name: 'Team Cobra', shortName: 'CBR', wins: 6, losses: 3 },
-    { id: 4, name: 'Team Delta', shortName: 'DLT', wins: 6, losses: 3 },
-    { id: 5, name: 'Team Echo', shortName: 'ECH', wins: 5, losses: 4 },
-    { id: 6, name: 'Team Frost', shortName: 'FST', wins: 4, losses: 5 },
-    { id: 7, name: 'Team Ghost', shortName: 'GST', wins: 3, losses: 6 },
-    { id: 8, name: 'Team Hydra', shortName: 'HYD', wins: 3, losses: 6 },
-    { id: 9, name: 'Team Ivory', shortName: 'IVY', wins: 2, losses: 7 },
-    { id: 10, name: 'Team Jinx', shortName: 'JNX', wins: 1, losses: 8 },
-  ],
-
-  Ixtal: [
-    { id: 1, name: 'Team Jungle', shortName: 'JGL', wins: 8, losses: 1 },
-    { id: 2, name: 'Team River', shortName: 'RVR', wins: 7, losses: 2 },
-    { id: 3, name: 'Team Viper', shortName: 'VPR', wins: 7, losses: 2 },
-    { id: 4, name: 'Team Lotus', shortName: 'LTS', wins: 5, losses: 4 },
-    { id: 5, name: 'Team Storm', shortName: 'STM', wins: 5, losses: 4 },
-    { id: 6, name: 'Team Jade', shortName: 'JDE', wins: 4, losses: 5 },
-    { id: 7, name: 'Team Wild', shortName: 'WLD', wins: 3, losses: 6 },
-    { id: 8, name: 'Team Rift', shortName: 'RFT', wins: 3, losses: 6 },
-    { id: 9, name: 'Team Bloom', shortName: 'BLM', wins: 2, losses: 7 },
-    { id: 10, name: 'Team Root', shortName: 'ROT', wins: 1, losses: 8 },
-  ],
-
-  Targon: [
-    { id: 1, name: 'Team Solari', shortName: 'SOL', wins: 9, losses: 0 },
-    { id: 2, name: 'Team Lunari', shortName: 'LUN', wins: 7, losses: 2 },
-    { id: 3, name: 'Team Peak', shortName: 'PEK', wins: 6, losses: 3 },
-    { id: 4, name: 'Team Star', shortName: 'STR', wins: 6, losses: 3 },
-    { id: 5, name: 'Team Moon', shortName: 'MON', wins: 5, losses: 4 },
-    { id: 6, name: 'Team Dawn', shortName: 'DWN', wins: 4, losses: 5 },
-    { id: 7, name: 'Team Sky', shortName: 'SKY', wins: 3, losses: 6 },
-    { id: 8, name: 'Team Celestial', shortName: 'CEL', wins: 3, losses: 6 },
-    { id: 9, name: 'Team Zenith', shortName: 'ZEN', wins: 1, losses: 8 },
-    { id: 10, name: 'Team Comet', shortName: 'CMT', wins: 1, losses: 8 },
-  ],
-};
-
 export default function ResultsPage() {
-  const [division, setDivision] = useState<Division>('Yordle');
+  const [division, setDivision] =
+    useState<Division>('Yordle');
 
-  const divisionConfig =
-    DIVISIONS.find((item) => item.name === division) ?? DIVISIONS[0];
+  const [teams, setTeams] =
+    useState<Team[]>([]);
 
-  const teams = [...TEAMS[division]].sort((a, b) => {
-    if (b.wins !== a.wins) {
-      return b.wins - a.wins;
+  const [loading, setLoading] =
+    useState(true);
+
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        setLoading(true);
+
+        const res =
+          await fetch('/api/teams');
+
+        const data =
+          await res.json();
+
+        if (data?.teams) {
+          setTeams(data.teams);
+        } else {
+          setTeams([]);
+        }
+      } catch (error) {
+        console.error(
+          'Erreur récupération équipes :',
+          error
+        );
+
+        setTeams([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    return a.losses - b.losses;
-  });
+    fetchTeams();
+  }, []);
+
+  const divisionConfig =
+    DIVISIONS.find(
+      (item) =>
+        item.name === division
+    ) ?? DIVISIONS[0];
+
+  const divisionTeams =
+    useMemo(() => {
+      return teams
+        .filter(
+          (team) =>
+            team.is_validated === true
+        )
+        .filter(
+          (team) =>
+            normalizeDivision(
+              team.division
+            ) === division
+        )
+        .slice(0, 10);
+    }, [teams, division]);
 
   return (
     <>
@@ -111,12 +115,16 @@ export default function ResultsPage() {
         className="resultsPage section"
         style={
           {
-            '--division-color': divisionConfig.color,
-            '--division-soft': divisionConfig.soft,
+            '--division-color':
+              divisionConfig.color,
+
+            '--division-soft':
+              divisionConfig.soft,
           } as React.CSSProperties
         }
       >
         {/* ÉCLAIRS TRÈS LÉGERS */}
+
         <img
           className="resultBolt resultBoltOne"
           src="/assets/eclairs/eclair_czf_04.png"
@@ -136,55 +144,72 @@ export default function ResultsPage() {
         />
 
         {/* TITRE */}
+
         <div className="sectionTitle resultsTitle">
           <span />
-          <div>
-            <p className="resultsEyebrow">COMPÉTITION CZF</p>
-            <h2>Résultats</h2>
-          </div>
-        </div>
 
-        <p className="resultsIntro">
-          Classements, phases finales et statistiques de chaque division.
-        </p>
+          <h2>Résultats</h2>
+        </div>
 
         {/* DIVISIONS */}
-        <div className="divisionTabs">
-          {DIVISIONS.map((item) => {
-            const active = division === item.name;
 
-            return (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() => setDivision(item.name)}
-                className={`divisionTab ${
-                  active ? 'divisionTabActive' : ''
-                }`}
-                style={
-                  {
-                    '--tab-color': item.color,
-                    '--tab-soft': item.soft,
-                  } as React.CSSProperties
-                }
-              >
-                <span>{item.name}</span>
-              </button>
-            );
-          })}
+        <div className="divisionTabs">
+          {DIVISIONS.map(
+            (item) => {
+              const active =
+                division === item.name;
+
+              return (
+                <button
+                  key={item.name}
+                  type="button"
+                  onClick={() =>
+                    setDivision(
+                      item.name
+                    )
+                  }
+                  className={`divisionTab ${
+                    active
+                      ? 'divisionTabActive'
+                      : ''
+                  }`}
+                  style={
+                    {
+                      '--tab-color':
+                        item.color,
+
+                      '--tab-soft':
+                        item.soft,
+                    } as React.CSSProperties
+                  }
+                >
+                  {item.name}
+                </button>
+              );
+            }
+          )}
         </div>
 
-        {/* POULE + BRACKET */}
+        {/* POULE + DOUBLE ÉLIMINATION */}
+
         <div className="resultsMainGrid">
           {/* CLASSEMENT */}
+
           <section className="resultsCard standingsCard">
             <div className="resultsCardHeader">
               <div>
-                <p className="cardEyebrow">PHASE DE POULE</p>
-                <h3>Classement</h3>
+                <p className="cardEyebrow">
+                  PHASE DE POULE
+                </p>
+
+                <h3>
+                  Classement
+                </h3>
               </div>
 
-              <div className="divisionBadge">{division}</div>
+              <div className="divisionBadge">
+                {division}
+              </div>
             </div>
 
             <div className="standingHeader">
@@ -193,61 +218,175 @@ export default function ResultsPage() {
               <span>V / D</span>
             </div>
 
-            <div className="standingRows">
-              {teams.map((team, index) => {
-                const qualified = index < 8;
-                const eliminated = index >= 8;
+            {loading ? (
+              <div className="standingsMessage">
+                Chargement...
+              </div>
+            ) : divisionTeams.length ===
+              0 ? (
+              <div className="standingsMessage">
+                Aucune équipe validée
+                dans cette division.
+              </div>
+            ) : (
+              <div className="standingRows">
+                {divisionTeams.map(
+                  (team, index) => {
+                    const qualified =
+                      index < 8;
 
-                return (
-                  <div
-                    key={team.id}
-                    className={`standingRow ${
-                      qualified ? 'standingQualified' : ''
-                    } ${
-                      eliminated ? 'standingEliminated' : ''
-                    }`}
-                  >
-                    <div className="standingRank">
-                      {index + 1}
-                    </div>
+                    const eliminated =
+                      index >= 8;
 
-                    <div className="standingTeam">
-                      <TeamLogo team={team} />
+                    return (
+                      <div
+                        key={
+                          team.id ??
+                          `${getTeamName(
+                            team
+                          )}-${index}`
+                        }
+                        className={`standingRow ${
+                          qualified
+                            ? 'standingQualified'
+                            : ''
+                        } ${
+                          eliminated
+                            ? 'standingEliminated'
+                            : ''
+                        }`}
+                      >
+                        <div className="standingRank">
+                          {index + 1}
+                        </div>
 
-                      <span>{team.shortName}</span>
-                    </div>
+                        <div className="standingTeam">
+                          <TeamLogo
+                            team={
+                              team
+                            }
+                          />
 
-                    <div className="standingScore">
-                      <strong>{team.wins}</strong>
+                          <div className="standingTeamText">
+                            <strong>
+                              {getTeamShortName(
+                                team
+                              )}
+                            </strong>
 
-                      <span>-</span>
+                            <span>
+                              {getTeamName(
+                                team
+                              )}
+                            </span>
+                          </div>
+                        </div>
 
-                      <strong>{team.losses}</strong>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                        <div className="standingScore">
+                          <strong>
+                            {team.wins ??
+                              0}
+                          </strong>
+
+                          <span>
+                            -
+                          </span>
+
+                          <strong>
+                            {team.losses ??
+                              0}
+                          </strong>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+
+                {Array.from({
+                  length: Math.max(
+                    0,
+                    10 -
+                      divisionTeams.length
+                  ),
+                }).map(
+                  (_, index) => {
+                    const rank =
+                      divisionTeams.length +
+                      index +
+                      1;
+
+                    return (
+                      <div
+                        key={`empty-${rank}`}
+                        className={`standingRow standingEmpty ${
+                          rank > 8
+                            ? 'standingEliminated'
+                            : ''
+                        }`}
+                      >
+                        <div className="standingRank">
+                          {rank}
+                        </div>
+
+                        <div className="standingTeam">
+                          <div className="resultTeamLogo emptyLogo">
+                            ?
+                          </div>
+
+                          <div className="standingTeamText">
+                            <strong>
+                              TBD
+                            </strong>
+                          </div>
+                        </div>
+
+                        <div className="standingScore">
+                          <strong>
+                            0
+                          </strong>
+
+                          <span>
+                            -
+                          </span>
+
+                          <strong>
+                            0
+                          </strong>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
 
             <div className="standingsLegend">
               <div>
                 <span className="legendQualified" />
-                Top 8 qualifié
+                1er à 8e :
+                qualifiés
               </div>
 
               <div>
                 <span className="legendEliminated" />
-                Éliminé
+                9e et 10e :
+                éliminés
               </div>
             </div>
           </section>
 
-          {/* DOUBLE ELIMINATION */}
+          {/* GRAND BRACKET UNIQUE */}
+
           <section className="resultsCard bracketCard">
             <div className="resultsCardHeader">
               <div>
-                <p className="cardEyebrow">PHASE FINALE</p>
-                <h3>Double élimination</h3>
+                <p className="cardEyebrow">
+                  PHASE FINALE
+                </p>
+
+                <h3>
+                  Double élimination
+                </h3>
               </div>
 
               <div className="bracketInfo">
@@ -255,53 +394,96 @@ export default function ResultsPage() {
               </div>
             </div>
 
-            <div className="bracketScroll">
-              {/* WINNER BRACKET */}
-              <div className="bracketSection">
-                <div className="bracketSectionTitle">
-                  <span />
-                  WINNER BRACKET
+            <div className="bracketScroller">
+              <div className="fullBracket">
+                {/* TITRES COLONNES */}
+
+                <div className="bracketColumnLabels">
+                  <div>
+                    Quarts
+                  </div>
+
+                  <div />
+
+                  <div>
+                    Demi-finales
+                  </div>
+
+                  <div />
+
+                  <div>
+                    Finale Winner
+                  </div>
+
+                  <div />
+
+                  <div>
+                    Grande finale
+                  </div>
                 </div>
 
-                <div className="winnerBracket">
-                  {/* QUARTS */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Quarts de finale
-                    </BracketColumnTitle>
+                {/* WINNER BRACKET */}
 
-                    <div className="matchStack quarterStack">
-                      <BracketMatch
-                        team1="#1"
-                        team2="#8"
-                      />
-
-                      <BracketMatch
-                        team1="#4"
-                        team2="#5"
-                      />
-
-                      <BracketMatch
-                        team1="#2"
-                        team2="#7"
-                      />
-
-                      <BracketMatch
-                        team1="#3"
-                        team2="#6"
-                      />
-                    </div>
+                <div className="bracketLane winnerLane">
+                  <div className="laneLabel winnerLabel">
+                    <span />
+                    WINNER BRACKET
                   </div>
 
-                  <BracketArrowColumn />
+                  <div className="bracketGrid">
+                    {/* QUARTS */}
 
-                  {/* DEMIS */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Demi-finales
-                    </BracketColumnTitle>
+                    <div className="bracketColumn quarterColumn">
+                      <BracketMatch
+                        team1={getSeedTeam(
+                          divisionTeams,
+                          1
+                        )}
+                        team2={getSeedTeam(
+                          divisionTeams,
+                          8
+                        )}
+                      />
 
-                    <div className="matchStack semiStack">
+                      <BracketMatch
+                        team1={getSeedTeam(
+                          divisionTeams,
+                          4
+                        )}
+                        team2={getSeedTeam(
+                          divisionTeams,
+                          5
+                        )}
+                      />
+
+                      <BracketMatch
+                        team1={getSeedTeam(
+                          divisionTeams,
+                          2
+                        )}
+                        team2={getSeedTeam(
+                          divisionTeams,
+                          7
+                        )}
+                      />
+
+                      <BracketMatch
+                        team1={getSeedTeam(
+                          divisionTeams,
+                          3
+                        )}
+                        team2={getSeedTeam(
+                          divisionTeams,
+                          6
+                        )}
+                      />
+                    </div>
+
+                    <BracketConnector />
+
+                    {/* DEMI */}
+
+                    <div className="bracketColumn semiColumn">
                       <BracketMatch
                         team1="TBD"
                         team2="TBD"
@@ -312,65 +494,86 @@ export default function ResultsPage() {
                         team2="TBD"
                       />
                     </div>
-                  </div>
 
-                  <BracketArrowColumn />
+                    <BracketConnector />
 
-                  {/* WINNER FINAL */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Finale Winner
-                    </BracketColumnTitle>
+                    {/* WINNER FINAL */}
 
-                    <div className="matchStack finalStack">
+                    <div className="bracketColumn winnerFinalColumn">
                       <BracketMatch
                         team1="TBD"
                         team2="TBD"
                         highlighted
                       />
                     </div>
-                  </div>
 
-                  <BracketArrowColumn />
+                    <BracketConnector />
 
-                  {/* GRANDE FINALE */}
-                  <div className="bracketColumn grandFinalColumn">
-                    <BracketColumnTitle>
-                      Grande finale
-                    </BracketColumnTitle>
+                    {/* GRANDE FINALE */}
 
-                    <div className="matchStack finalStack">
-                      <BracketMatch
-                        team1="Winner WB"
-                        team2="Winner LB"
-                        grandFinal
-                      />
+                    <div className="bracketColumn grandFinalColumn">
+                      <div className="grandFinalBox">
+                        <span className="grandFinalTag">
+                          GRANDE FINALE
+                        </span>
+
+                        <BracketMatch
+                          team1="Winner WB"
+                          team2="Winner LB"
+                          grandFinal
+                        />
+
+                        <div className="championOutput">
+                          <span>
+                            CHAMPION
+                          </span>
+
+                          <strong>
+                            TBD
+                          </strong>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* LOSER BRACKET */}
-              <div className="bracketSection loserSection">
-                <div className="bracketSectionTitle loserTitle">
-                  <span />
-                  LOSER BRACKET
+                {/* DESCENTE VERS LOSER */}
+
+                <div className="dropZone">
+                  <div className="dropLine dropLineOne">
+                    <span>
+                      Perdants des
+                      quarts
+                    </span>
+                  </div>
+
+                  <div className="dropLine dropLineTwo">
+                    <span>
+                      Perdants des
+                      demies
+                    </span>
+                  </div>
+
+                  <div className="dropLine dropLineThree">
+                    <span>
+                      Perdant finale
+                      Winner
+                    </span>
+                  </div>
                 </div>
 
-                <p className="loserDescription">
-                  Une défaite en Winner Bracket envoie
-                  l&apos;équipe ici. Une nouvelle défaite
-                  l&apos;élimine définitivement.
-                </p>
+                {/* LOSER BRACKET */}
 
-                <div className="loserBracket">
-                  {/* ROUND 1 */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Loser Round 1
-                    </BracketColumnTitle>
+                <div className="bracketLane loserLane">
+                  <div className="laneLabel loserLabel">
+                    <span />
+                    LOSER BRACKET
+                  </div>
 
-                    <div className="matchStack loserTwoStack">
+                  <div className="bracketGrid loserGrid">
+                    {/* LOSER ROUND 1 */}
+
+                    <div className="bracketColumn loserRoundOne">
                       <BracketMatch
                         team1="Loser QF"
                         team2="Loser QF"
@@ -381,17 +584,12 @@ export default function ResultsPage() {
                         team2="Loser QF"
                       />
                     </div>
-                  </div>
 
-                  <BracketArrowColumn />
+                    <BracketConnector />
 
-                  {/* ROUND 2 */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Loser Round 2
-                    </BracketColumnTitle>
+                    {/* LOSER ROUND 2 */}
 
-                    <div className="matchStack loserTwoStack">
+                    <div className="bracketColumn loserRoundTwo">
                       <BracketMatch
                         team1="TBD"
                         team2="Loser SF"
@@ -402,53 +600,57 @@ export default function ResultsPage() {
                         team2="Loser SF"
                       />
                     </div>
-                  </div>
 
-                  <BracketArrowColumn />
+                    <BracketConnector />
 
-                  {/* ROUND 3 */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Loser Round 3
-                    </BracketColumnTitle>
+                    {/* LOSER ROUND 3 */}
 
-                    <div className="matchStack finalStack">
+                    <div className="bracketColumn loserRoundThree">
                       <BracketMatch
                         team1="TBD"
                         team2="TBD"
                       />
                     </div>
-                  </div>
 
-                  <BracketArrowColumn />
+                    <BracketConnector />
 
-                  {/* LOSER FINAL */}
-                  <div className="bracketColumn">
-                    <BracketColumnTitle>
-                      Finale Loser
-                    </BracketColumnTitle>
+                    {/* LOSER FINAL */}
 
-                    <div className="matchStack finalStack">
+                    <div className="bracketColumn loserFinalColumn">
                       <BracketMatch
                         team1="TBD"
                         team2="Loser WB"
                         highlighted
                       />
+
+                      <div className="loserToFinal">
+                        <span>
+                          Winner LB
+                        </span>
+
+                        <div className="loserToFinalLine" />
+
+                        <div className="loserToFinalArrow" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bracketFootnote">
-                Les équipes seront remplacées automatiquement
-                au fur et à mesure de l&apos;avancement du
-                tournoi.
+                <div className="bracketExplanation">
+                  Une équipe éliminée du
+                  Winner Bracket descend
+                  dans le Loser Bracket.
+                  Elle peut ensuite remonter
+                  jusqu&apos;à la Grande
+                  Finale.
+                </div>
               </div>
             </div>
           </section>
         </div>
 
         {/* HISTORIQUE */}
+
         <section className="resultsCard historyCard">
           <div className="resultsCardHeader">
             <div>
@@ -456,21 +658,27 @@ export default function ResultsPage() {
                 MATCHS TERMINÉS
               </p>
 
-              <h3>Historique des matchs</h3>
+              <h3>
+                Historique des matchs
+              </h3>
             </div>
           </div>
 
           <div className="historyEmpty">
-            <strong>Aucun match enregistré</strong>
+            <strong>
+              Aucun match enregistré
+            </strong>
 
             <span>
-              Les matchs passés de la division {division}
+              Les matchs terminés de
+              la division {division}
               apparaîtront ici.
             </span>
           </div>
         </section>
 
-        {/* STATS JOUEURS */}
+        {/* STATS */}
+
         <section className="resultsCard statsPreviewCard">
           <div className="resultsCardHeader">
             <div>
@@ -478,7 +686,9 @@ export default function ResultsPage() {
                 PERFORMANCES
               </p>
 
-              <h3>Statistiques des joueurs</h3>
+              <h3>
+                Statistiques des joueurs
+              </h3>
             </div>
           </div>
 
@@ -505,93 +715,94 @@ export default function ResultsPage() {
           </div>
 
           <p className="statsComing">
-            KDA, kills, assists, gold, DPM, CS/min et MVP
-            seront ajoutés ici dans la prochaine étape.
+            KDA, kills, assists,
+            gold, DPM, CS/min et MVP
+            seront ajoutés ici.
           </p>
         </section>
 
         <style jsx>{`
           .resultsPage {
             position: relative;
-            min-height: calc(100vh - 78px);
+            min-height: calc(
+              100vh - 78px
+            );
             overflow: visible;
           }
 
           .resultsTitle {
-            margin-bottom: 4px;
-          }
-
-          .resultsTitle > div {
-            display: flex;
-            align-items: baseline;
-            gap: 16px;
-            flex-wrap: wrap;
-          }
-
-          .resultsEyebrow {
-            margin: 0;
-            color: var(--orange);
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: 0.12em;
-          }
-
-          .resultsIntro {
             position: relative;
-            z-index: 10;
-            margin: 0 0 28px 56px;
-            color: var(--muted);
-            font-size: 15px;
-            font-weight: 600;
+            z-index: 20;
+
+            margin-bottom: 28px;
           }
 
-          /* =========================
+          /* ======================
              ÉCLAIRS
-          ========================= */
+          ====================== */
 
           .resultBolt {
             position: absolute;
+
             z-index: 8;
+
             object-fit: contain;
+
             pointer-events: none;
             user-select: none;
           }
 
           .resultBoltOne {
-            width: 150px;
-            left: -55px;
-            top: 235px;
-            opacity: 0.45;
-            transform: rotate(-13deg);
+            width: 145px;
+
+            left: -60px;
+            top: 250px;
+
+            opacity: 0.34;
+
+            transform:
+              rotate(-13deg);
           }
 
           .resultBoltTwo {
-            width: 130px;
+            width: 125px;
+
             right: -45px;
-            top: 650px;
-            opacity: 0.4;
-            transform: rotate(15deg);
+            top: 670px;
+
+            opacity: 0.28;
+
+            transform:
+              rotate(15deg);
           }
 
           .resultBoltThree {
-            width: 155px;
+            width: 150px;
+
             left: 8%;
-            bottom: 100px;
-            opacity: 0.25;
-            transform: rotate(-9deg);
+            bottom: 120px;
+
+            opacity: 0.18;
+
+            transform:
+              rotate(-9deg);
           }
 
-          /* =========================
+          /* ======================
              DIVISIONS
-          ========================= */
+          ====================== */
 
           .divisionTabs {
             position: relative;
-            z-index: 12;
+            z-index: 20;
 
             display: grid;
+
             grid-template-columns:
-              repeat(3, minmax(0, 1fr));
+              repeat(
+                3,
+                minmax(0, 1fr)
+              );
 
             gap: 14px;
 
@@ -601,34 +812,45 @@ export default function ResultsPage() {
           .divisionTab {
             position: relative;
 
-            min-height: 68px;
-
-            border:
-              1.4px solid
-              rgba(9, 42, 63, 0.52);
-
-            border-radius: 11px;
+            min-height: 66px;
 
             overflow: hidden;
 
+            border:
+              1.4px solid
+              rgba(
+                9,
+                42,
+                63,
+                0.5
+              );
+
+            border-radius: 11px;
+
             background:
-              rgba(255, 246, 229, 0.78);
+              rgba(
+                255,
+                246,
+                229,
+                0.78
+              );
 
             color: var(--navy);
 
             font-size: 15px;
             font-weight: 900;
 
-            letter-spacing: 0.07em;
+            letter-spacing:
+              0.07em;
 
             box-shadow:
               0 8px 20px
-              rgba(8, 24, 36, 0.04);
-
-            transition:
-              transform 0.17s ease,
-              background 0.17s ease,
-              box-shadow 0.17s ease;
+              rgba(
+                8,
+                24,
+                36,
+                0.04
+              );
           }
 
           .divisionTab::after {
@@ -642,47 +864,66 @@ export default function ResultsPage() {
 
             height: 5px;
 
-            background: var(--tab-color);
+            background:
+              var(--tab-color);
           }
 
           .divisionTab:hover {
             background:
-              rgba(255, 250, 240, 0.96);
-
-            box-shadow:
-              0 11px 25px
-              rgba(8, 24, 36, 0.08);
+              rgba(
+                255,
+                250,
+                240,
+                0.97
+              );
           }
 
           .divisionTabActive {
+            border-color:
+              var(--tab-color);
+
             background:
               linear-gradient(
                 135deg,
                 var(--tab-soft),
-                rgba(255, 250, 240, 0.94)
+                rgba(
+                  255,
+                  250,
+                  240,
+                  0.96
+                )
               );
 
-            border-color:
-              var(--tab-color);
-
             box-shadow:
-              0 11px 25px
-              rgba(8, 24, 36, 0.08);
+              0 10px 24px
+              rgba(
+                8,
+                24,
+                36,
+                0.08
+              );
           }
 
-          /* =========================
-             CARTES
-          ========================= */
+          /* ======================
+             LAYOUT
+          ====================== */
 
           .resultsMainGrid {
             position: relative;
-            z-index: 10;
+
+            z-index: 15;
 
             display: grid;
 
             grid-template-columns:
-              minmax(245px, 0.22fr)
-              minmax(0, 0.78fr);
+              minmax(
+                250px,
+                0.21fr
+              )
+              minmax(
+                0,
+                0.79fr
+              );
 
             gap: 18px;
 
@@ -691,30 +932,47 @@ export default function ResultsPage() {
 
           .resultsCard {
             position: relative;
-            z-index: 10;
+
+            z-index: 15;
+
+            overflow: hidden;
 
             border:
               1.3px solid
-              rgba(9, 42, 63, 0.7);
+              rgba(
+                9,
+                42,
+                63,
+                0.7
+              );
 
             border-radius: 14px;
 
             background:
-              rgba(255, 246, 229, 0.84);
+              rgba(
+                255,
+                246,
+                229,
+                0.84
+              );
 
             box-shadow:
               0 12px 30px
-              rgba(8, 24, 36, 0.055);
-
-            overflow: hidden;
+              rgba(
+                8,
+                24,
+                36,
+                0.055
+              );
           }
 
           .resultsCardHeader {
-            min-height: 83px;
+            min-height: 82px;
 
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content:
+              space-between;
 
             gap: 16px;
 
@@ -722,7 +980,12 @@ export default function ResultsPage() {
 
             border-bottom:
               1px solid
-              rgba(9, 42, 63, 0.12);
+              rgba(
+                9,
+                42,
+                63,
+                0.12
+              );
           }
 
           .resultsCardHeader h3 {
@@ -730,13 +993,16 @@ export default function ResultsPage() {
 
             color: var(--navy);
 
-            font-family: var(--font-display);
+            font-family:
+              var(--font-display);
 
             font-size: 25px;
 
-            text-transform: uppercase;
+            text-transform:
+              uppercase;
 
-            letter-spacing: 0.02em;
+            letter-spacing:
+              0.02em;
           }
 
           .cardEyebrow {
@@ -747,7 +1013,8 @@ export default function ResultsPage() {
             font-size: 9px;
             font-weight: 900;
 
-            letter-spacing: 0.14em;
+            letter-spacing:
+              0.14em;
           }
 
           .divisionBadge,
@@ -767,27 +1034,25 @@ export default function ResultsPage() {
             font-size: 9px;
             font-weight: 900;
 
-            letter-spacing: 0.08em;
+            letter-spacing:
+              0.08em;
 
-            text-transform: uppercase;
+            text-transform:
+              uppercase;
           }
 
-          /* =========================
+          /* ======================
              CLASSEMENT
-          ========================= */
-
-          .standingsCard {
-            min-width: 0;
-          }
+          ====================== */
 
           .standingHeader,
           .standingRow {
             display: grid;
 
             grid-template-columns:
-              25px
+              24px
               minmax(0, 1fr)
-              54px;
+              50px;
 
             align-items: center;
 
@@ -797,38 +1062,51 @@ export default function ResultsPage() {
           .standingHeader {
             padding:
               12px
-              15px
+              14px
               8px;
 
             color:
-              rgba(7, 29, 45, 0.48);
+              rgba(
+                7,
+                29,
+                45,
+                0.48
+              );
 
             font-size: 9px;
             font-weight: 900;
 
-            text-transform: uppercase;
-
-            letter-spacing: 0.07em;
+            text-transform:
+              uppercase;
           }
 
-          .standingHeader span:last-child {
+          .standingHeader
+            span:last-child {
             text-align: right;
           }
 
           .standingRows {
-            padding: 0 8px 10px;
+            padding:
+              0
+              8px
+              10px;
           }
 
           .standingRow {
             position: relative;
 
-            min-height: 49px;
+            min-height: 53px;
 
             padding: 0 7px;
 
             border-bottom:
               1px solid
-              rgba(9, 42, 63, 0.08);
+              rgba(
+                9,
+                42,
+                63,
+                0.08
+              );
           }
 
           .standingRow:last-child {
@@ -846,14 +1124,17 @@ export default function ResultsPage() {
 
             width: 3px;
 
-            border-radius: 0 3px 3px 0;
+            border-radius:
+              0 3px 3px 0;
 
             background:
-              var(--division-color);
+              var(
+                --division-color
+              );
           }
 
           .standingEliminated {
-            opacity: 0.47;
+            opacity: 0.48;
           }
 
           .standingEliminated::before {
@@ -867,15 +1148,20 @@ export default function ResultsPage() {
 
             width: 3px;
 
-            border-radius: 0 3px 3px 0;
+            border-radius:
+              0 3px 3px 0;
 
-            background:
-              #8d3535;
+            background: #9c3b3b;
           }
 
           .standingRank {
             color:
-              rgba(7, 29, 45, 0.55);
+              rgba(
+                7,
+                29,
+                45,
+                0.55
+              );
 
             font-size: 11px;
             font-weight: 900;
@@ -890,32 +1176,81 @@ export default function ResultsPage() {
             gap: 8px;
           }
 
-          .standingTeam span {
+          .standingTeamText {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 1px;
+          }
+
+          .standingTeamText strong {
             overflow: hidden;
 
             color: var(--navy);
 
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
 
-            text-overflow: ellipsis;
+            text-overflow:
+              ellipsis;
+
+            white-space: nowrap;
+          }
+
+          .standingTeamText span {
+            overflow: hidden;
+
+            max-width: 110px;
+
+            color: var(--muted);
+
+            font-size: 8px;
+            font-weight: 700;
+
+            text-overflow:
+              ellipsis;
 
             white-space: nowrap;
           }
 
           .standingScore {
             display: flex;
-            justify-content: flex-end;
+            justify-content:
+              flex-end;
 
             gap: 4px;
 
             color: var(--navy);
 
-            font-size: 11px;
+            font-size: 10px;
           }
 
           .standingScore span {
             opacity: 0.35;
+          }
+
+          .standingEmpty {
+            opacity: 0.45;
+          }
+
+          .standingsMessage {
+            min-height: 170px;
+
+            display: flex;
+            align-items: center;
+            justify-content:
+              center;
+
+            padding: 20px;
+
+            color: var(--muted);
+
+            font-size: 11px;
+            font-weight: 700;
+
+            text-align: center;
           }
 
           .standingsLegend {
@@ -924,11 +1259,19 @@ export default function ResultsPage() {
 
             gap: 7px;
 
-            padding: 14px 17px 17px;
+            padding:
+              14px
+              17px
+              17px;
 
             border-top:
               1px solid
-              rgba(9, 42, 63, 0.09);
+              rgba(
+                9,
+                42,
+                63,
+                0.09
+              );
 
             color: var(--muted);
 
@@ -953,20 +1296,20 @@ export default function ResultsPage() {
 
           .legendQualified {
             background:
-              var(--division-color);
+              var(
+                --division-color
+              );
           }
 
           .legendEliminated {
-            background: #8d3535;
+            background: #9c3b3b;
           }
 
-          /* =========================
-             TEAM LOGO
-          ========================= */
-
-          :global(.resultTeamLogo) {
-            width: 28px;
-            height: 28px;
+          :global(
+              .resultTeamLogo
+            ) {
+            width: 29px;
+            height: 29px;
 
             flex-shrink: 0;
 
@@ -977,12 +1320,22 @@ export default function ResultsPage() {
 
             border:
               1px solid
-              rgba(9, 42, 63, 0.18);
+              rgba(
+                9,
+                42,
+                63,
+                0.17
+              );
 
             border-radius: 6px;
 
             background:
-              rgba(255, 255, 255, 0.55);
+              rgba(
+                255,
+                255,
+                255,
+                0.62
+              );
 
             color: var(--navy);
 
@@ -990,175 +1343,258 @@ export default function ResultsPage() {
             font-weight: 900;
           }
 
-          :global(.resultTeamLogo img) {
+          :global(
+              .resultTeamLogo img
+            ) {
             width: 100%;
             height: 100%;
 
             object-fit: cover;
           }
 
-          /* =========================
-             BRACKET
-          ========================= */
-
-          .bracketCard {
-            min-width: 0;
+          .emptyLogo {
+            opacity: 0.55;
           }
 
-          .bracketScroll {
+          /* ======================
+             BRACKET GLOBAL
+          ====================== */
+
+          .bracketScroller {
             overflow-x: auto;
 
-            padding: 20px 20px 18px;
+            padding:
+              18px
+              18px
+              20px;
           }
 
-          .bracketSection {
-            min-width: 930px;
+          .fullBracket {
+            min-width: 960px;
           }
 
-          .bracketSection + .bracketSection {
-            margin-top: 29px;
-
-            padding-top: 24px;
-
-            border-top:
-              1px solid
-              rgba(9, 42, 63, 0.12);
-          }
-
-          .bracketSectionTitle {
-            display: flex;
-            align-items: center;
-
-            gap: 8px;
-
-            margin-bottom: 18px;
-
-            color: var(--navy);
-
-            font-size: 10px;
-            font-weight: 900;
-
-            letter-spacing: 0.12em;
-          }
-
-          .bracketSectionTitle span {
-            width: 26px;
-            height: 3px;
-
-            background:
-              var(--division-color);
-          }
-
-          .loserTitle span {
-            background: var(--orange);
-          }
-
-          .winnerBracket,
-          .loserBracket {
+          .bracketColumnLabels {
             display: grid;
 
             grid-template-columns:
-              minmax(150px, 1fr)
-              32px
-              minmax(150px, 1fr)
-              32px
-              minmax(150px, 1fr)
-              32px
-              minmax(150px, 1fr);
+              minmax(
+                150px,
+                1fr
+              )
+              35px
+              minmax(
+                150px,
+                1fr
+              )
+              35px
+              minmax(
+                150px,
+                1fr
+              )
+              35px
+              minmax(
+                165px,
+                1.05fr
+              );
 
-            align-items: stretch;
-
-            gap: 0;
-          }
-
-          .bracketColumn {
-            min-width: 0;
-          }
-
-          :global(.bracketColumnTitle) {
-            min-height: 20px;
-
-            margin-bottom: 12px;
+            margin:
+              0
+              0
+              12px;
 
             color:
-              rgba(7, 29, 45, 0.48);
+              rgba(
+                7,
+                29,
+                45,
+                0.47
+              );
 
             font-size: 8px;
             font-weight: 900;
 
             text-align: center;
 
-            text-transform: uppercase;
+            text-transform:
+              uppercase;
 
-            letter-spacing: 0.08em;
+            letter-spacing:
+              0.08em;
           }
 
-          .matchStack {
-            min-height: 370px;
+          .bracketLane {
+            position: relative;
+          }
+
+          .winnerLane {
+            padding-bottom: 20px;
+          }
+
+          .loserLane {
+            padding-top: 10px;
+          }
+
+          .laneLabel {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            margin-bottom: 13px;
+
+            color: var(--navy);
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing:
+              0.12em;
+          }
+
+          .laneLabel span {
+            width: 24px;
+            height: 3px;
+          }
+
+          .winnerLabel span {
+            background:
+              var(
+                --division-color
+              );
+          }
+
+          .loserLabel span {
+            background:
+              var(--orange);
+          }
+
+          .bracketGrid {
+            display: grid;
+
+            grid-template-columns:
+              minmax(
+                150px,
+                1fr
+              )
+              35px
+              minmax(
+                150px,
+                1fr
+              )
+              35px
+              minmax(
+                150px,
+                1fr
+              )
+              35px
+              minmax(
+                165px,
+                1.05fr
+              );
+
+            align-items: stretch;
+          }
+
+          .bracketColumn {
+            min-width: 0;
 
             display: flex;
             flex-direction: column;
+
+            justify-content:
+              center;
+
+            gap: 15px;
           }
 
-          .quarterStack {
-            justify-content: space-between;
+          .quarterColumn {
+            justify-content:
+              space-between;
+
+            min-height: 360px;
           }
 
-          .semiStack {
-            justify-content: space-around;
+          .semiColumn {
+            justify-content:
+              space-around;
+
+            min-height: 360px;
 
             padding:
-              44px
+              38px
               0;
           }
 
-          .finalStack {
-            justify-content: center;
+          .winnerFinalColumn,
+          .grandFinalColumn {
+            min-height: 360px;
+
+            justify-content:
+              center;
           }
 
-          .loserTwoStack {
-            justify-content: space-around;
-
-            padding:
-              44px
-              0;
-          }
-
-          :global(.bracketMatch) {
-            position: relative;
-
+          :global(
+              .bracketMatch
+            ) {
             overflow: hidden;
 
             border:
               1px solid
-              rgba(9, 42, 63, 0.27);
+              rgba(
+                9,
+                42,
+                63,
+                0.25
+              );
 
             border-radius: 7px;
 
             background:
-              rgba(255, 250, 241, 0.82);
+              rgba(
+                255,
+                250,
+                241,
+                0.84
+              );
 
             box-shadow:
               0 5px 12px
-              rgba(8, 24, 36, 0.035);
+              rgba(
+                8,
+                24,
+                36,
+                0.035
+              );
           }
 
-          :global(.bracketMatchHighlighted) {
+          :global(
+              .bracketMatchHighlighted
+            ) {
             border-color:
-              var(--division-color);
+              var(
+                --division-color
+              );
           }
 
-          :global(.bracketGrandFinal) {
+          :global(
+              .bracketGrandFinal
+            ) {
             border:
               1.5px solid
-              var(--division-color);
+              var(
+                --division-color
+              );
 
             box-shadow:
-              0 8px 20px
-              var(--division-soft);
+              0 8px 24px
+              var(
+                --division-soft
+              );
           }
 
-          :global(.bracketMatchTeam) {
+          :global(
+              .bracketMatchTeam
+            ) {
             min-height: 38px;
 
             display: flex;
@@ -1169,13 +1605,23 @@ export default function ResultsPage() {
             padding: 0 9px;
           }
 
-          :global(.bracketMatchTeam + .bracketMatchTeam) {
+          :global(
+              .bracketMatchTeam +
+                .bracketMatchTeam
+            ) {
             border-top:
               1px solid
-              rgba(9, 42, 63, 0.10);
+              rgba(
+                9,
+                42,
+                63,
+                0.1
+              );
           }
 
-          :global(.bracketMiniLogo) {
+          :global(
+              .bracketMiniLogo
+            ) {
             width: 21px;
             height: 21px;
 
@@ -1186,21 +1632,38 @@ export default function ResultsPage() {
 
             border:
               1px solid
-              rgba(9, 42, 63, 0.15);
+              rgba(
+                9,
+                42,
+                63,
+                0.15
+              );
 
             border-radius: 5px;
 
             background:
-              rgba(255, 255, 255, 0.65);
+              rgba(
+                255,
+                255,
+                255,
+                0.65
+              );
 
             color:
-              rgba(7, 29, 45, 0.4);
+              rgba(
+                7,
+                29,
+                45,
+                0.4
+              );
 
             font-size: 8px;
             font-weight: 900;
           }
 
-          :global(.bracketTeamName) {
+          :global(
+              .bracketTeamName
+            ) {
             flex: 1;
 
             min-width: 0;
@@ -1214,37 +1677,55 @@ export default function ResultsPage() {
 
             white-space: nowrap;
 
-            text-overflow: ellipsis;
+            text-overflow:
+              ellipsis;
           }
 
-          :global(.bracketScore) {
+          :global(
+              .bracketScore
+            ) {
             color:
-              rgba(7, 29, 45, 0.42);
+              rgba(
+                7,
+                29,
+                45,
+                0.42
+              );
 
             font-size: 10px;
           }
 
-          :global(.bracketArrowColumn) {
+          :global(
+              .bracketConnector
+            ) {
             position: relative;
 
             display: flex;
             align-items: center;
-            justify-content: center;
-
-            padding-top: 20px;
+            justify-content:
+              center;
           }
 
-          :global(.bracketArrow) {
+          :global(
+              .bracketConnectorLine
+            ) {
             position: relative;
 
-            width: 18px;
+            width: 20px;
             height: 1px;
 
             background:
-              rgba(9, 42, 63, 0.22);
+              rgba(
+                9,
+                42,
+                63,
+                0.22
+              );
           }
 
-          :global(.bracketArrow::after) {
+          :global(
+              .bracketConnectorLine::after
+            ) {
             content: '';
 
             position: absolute;
@@ -1257,35 +1738,302 @@ export default function ResultsPage() {
 
             border-top:
               1px solid
-              rgba(9, 42, 63, 0.35);
+              rgba(
+                9,
+                42,
+                63,
+                0.35
+              );
 
             border-right:
               1px solid
-              rgba(9, 42, 63, 0.35);
+              rgba(
+                9,
+                42,
+                63,
+                0.35
+              );
 
-            transform: rotate(45deg);
+            transform:
+              rotate(45deg);
           }
 
-          .loserDescription {
-            margin:
-              -8px
-              0
-              15px;
+          /* ======================
+             GRANDE FINALE
+          ====================== */
 
-            color: var(--muted);
+          .grandFinalBox {
+            position: relative;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 10px;
+          }
+
+          .grandFinalTag {
+            color:
+              var(
+                --division-color
+              );
+
+            font-size: 8px;
+            font-weight: 900;
+
+            letter-spacing:
+              0.1em;
+
+            text-align: center;
+          }
+
+          .championOutput {
+            display: flex;
+            align-items: center;
+            justify-content:
+              space-between;
+
+            min-height: 38px;
+
+            padding: 0 11px;
+
+            border-radius: 7px;
+
+            background:
+              var(--navy);
+
+            color: white;
+          }
+
+          .championOutput span {
+            font-size: 8px;
+            font-weight: 900;
+
+            letter-spacing:
+              0.1em;
+          }
+
+          .championOutput strong {
+            color:
+              var(
+                --division-color
+              );
 
             font-size: 10px;
-            font-weight: 600;
           }
 
-          .bracketFootnote {
-            margin-top: 20px;
+          /* ======================
+             DESCENTE LOSER
+          ====================== */
+
+          .dropZone {
+            position: relative;
+
+            min-height: 80px;
+
+            margin:
+              0
+              18px;
+
+            border-top:
+              1px dashed
+              rgba(
+                9,
+                42,
+                63,
+                0.13
+              );
+
+            border-bottom:
+              1px dashed
+              rgba(
+                9,
+                42,
+                63,
+                0.13
+              );
+          }
+
+          .dropLine {
+            position: absolute;
+
+            top: 15px;
+            bottom: 15px;
+
+            width: 1px;
+
+            background:
+              linear-gradient(
+                to bottom,
+                rgba(
+                  242,
+                  101,
+                  34,
+                  0.1
+                ),
+                rgba(
+                  242,
+                  101,
+                  34,
+                  0.55
+                ),
+                rgba(
+                  242,
+                  101,
+                  34,
+                  0.1
+                )
+              );
+          }
+
+          .dropLine span {
+            position: absolute;
+
+            left: 8px;
+            top: 50%;
+
+            width: 100px;
+
+            transform:
+              translateY(-50%);
+
+            color:
+              var(--muted);
+
+            font-size: 7px;
+            font-weight: 800;
+          }
+
+          .dropLineOne {
+            left: 15%;
+          }
+
+          .dropLineTwo {
+            left: 43%;
+          }
+
+          .dropLineThree {
+            left: 69%;
+          }
+
+          /* ======================
+             LOSER
+          ====================== */
+
+          .loserGrid {
+            position: relative;
+          }
+
+          .loserRoundOne,
+          .loserRoundTwo {
+            min-height: 260px;
+
+            justify-content:
+              space-around;
+
+            padding:
+              25px
+              0;
+          }
+
+          .loserRoundThree,
+          .loserFinalColumn {
+            min-height: 260px;
+
+            justify-content:
+              center;
+          }
+
+          .loserFinalColumn {
+            position: relative;
+          }
+
+          .loserToFinal {
+            position: absolute;
+
+            left: 50%;
+            top: 50%;
+
+            display: flex;
+            align-items: center;
+
+            width: 250px;
+
+            transform:
+              translate(
+                80px,
+                -50%
+              );
+
+            pointer-events: none;
+          }
+
+          .loserToFinal span {
+            flex-shrink: 0;
+
+            margin-right: 7px;
+
+            color:
+              var(--orange);
+
+            font-size: 7px;
+            font-weight: 900;
+
+            letter-spacing:
+              0.06em;
+          }
+
+          .loserToFinalLine {
+            flex: 1;
+
+            height: 1px;
+
+            background:
+              linear-gradient(
+                90deg,
+                var(--orange),
+                var(
+                  --division-color
+                )
+              );
+
+            opacity: 0.55;
+          }
+
+          .loserToFinalArrow {
+            width: 7px;
+            height: 7px;
+
+            margin-left: -6px;
+
+            border-top:
+              1.5px solid
+              var(
+                --division-color
+              );
+
+            border-right:
+              1.5px solid
+              var(
+                --division-color
+              );
+
+            transform:
+              rotate(45deg);
+          }
+
+          .bracketExplanation {
+            margin-top: 17px;
 
             padding-top: 13px;
 
             border-top:
               1px solid
-              rgba(9, 42, 63, 0.09);
+              rgba(
+                9,
+                42,
+                63,
+                0.09
+              );
 
             color: var(--muted);
 
@@ -1295,9 +2043,9 @@ export default function ResultsPage() {
             text-align: center;
           }
 
-          /* =========================
+          /* ======================
              HISTORIQUE
-          ========================= */
+          ====================== */
 
           .historyCard,
           .statsPreviewCard {
@@ -1305,15 +2053,16 @@ export default function ResultsPage() {
           }
 
           .historyEmpty {
+            min-height: 125px;
+
             display: flex;
             flex-direction: column;
 
             align-items: center;
-            justify-content: center;
+            justify-content:
+              center;
 
             gap: 6px;
-
-            min-height: 125px;
 
             padding: 22px;
 
@@ -1333,19 +2082,25 @@ export default function ResultsPage() {
             font-weight: 600;
           }
 
-          /* =========================
-             STATS PREVIEW
-          ========================= */
+          /* ======================
+             STATS
+          ====================== */
 
           .statsPreview {
             display: grid;
 
             grid-template-columns:
-              repeat(5, minmax(0, 1fr));
+              repeat(
+                5,
+                minmax(0, 1fr)
+              );
 
             gap: 10px;
 
-            padding: 20px 20px 10px;
+            padding:
+              20px
+              20px
+              10px;
           }
 
           .rolePreview {
@@ -1353,16 +2108,27 @@ export default function ResultsPage() {
 
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content:
+              center;
 
             border:
               1px solid
-              rgba(9, 42, 63, 0.25);
+              rgba(
+                9,
+                42,
+                63,
+                0.25
+              );
 
             border-radius: 8px;
 
             background:
-              rgba(255, 250, 241, 0.62);
+              rgba(
+                255,
+                250,
+                241,
+                0.62
+              );
 
             color: var(--navy);
 
@@ -1386,52 +2152,58 @@ export default function ResultsPage() {
             text-align: center;
           }
 
-          /* =========================
+          /* ======================
              RESPONSIVE
-          ========================= */
+          ====================== */
 
-          @media (max-width: 1100px) {
+          @media (
+            max-width: 1100px
+          ) {
             .resultsMainGrid {
-              grid-template-columns: 1fr;
-            }
-
-            .standingsCard {
-              max-width: none;
+              grid-template-columns:
+                1fr;
             }
           }
 
-          @media (max-width: 750px) {
+          @media (
+            max-width: 750px
+          ) {
             .divisionTabs {
-              grid-template-columns: 1fr;
+              grid-template-columns:
+                1fr;
             }
 
             .divisionTab {
               min-height: 57px;
             }
 
-            .resultsIntro {
-              margin-left: 0;
+            .statsPreview {
+              grid-template-columns:
+                repeat(
+                  2,
+                  minmax(0, 1fr)
+                );
+            }
+
+            .resultBolt {
+              opacity: 0.15;
+            }
+          }
+
+          @media (
+            max-width: 500px
+          ) {
+            .resultsCardHeader {
+              align-items:
+                flex-start;
+
+              flex-direction:
+                column;
             }
 
             .statsPreview {
               grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-            }
-
-            .resultBolt {
-              opacity: 0.18;
-            }
-          }
-
-          @media (max-width: 500px) {
-            .resultsCardHeader {
-              align-items: flex-start;
-
-              flex-direction: column;
-            }
-
-            .statsPreview {
-              grid-template-columns: 1fr;
+                1fr;
             }
           }
         `}</style>
@@ -1440,43 +2212,162 @@ export default function ResultsPage() {
   );
 }
 
+/* =========================================================
+   HELPERS TEAMS
+========================================================= */
+
+function normalizeDivision(
+  division?: string
+): Division | null {
+  if (!division) {
+    return null;
+  }
+
+  const normalized =
+    division
+      .trim()
+      .toLowerCase();
+
+  if (
+    normalized === 'yordle'
+  ) {
+    return 'Yordle';
+  }
+
+  if (
+    normalized === 'ixtal'
+  ) {
+    return 'Ixtal';
+  }
+
+  if (
+    normalized === 'targon'
+  ) {
+    return 'Targon';
+  }
+
+  return null;
+}
+
+function getTeamName(
+  team: Team
+) {
+  return (
+    team.name ??
+    team.team_name ??
+    'Équipe'
+  );
+}
+
+function getTeamShortName(
+  team: Team
+) {
+  if (
+    team.short_name
+  ) {
+    return team.short_name;
+  }
+
+  if (team.tag) {
+    return team.tag;
+  }
+
+  const name =
+    getTeamName(team);
+
+  const words =
+    name
+      .trim()
+      .split(/\s+/);
+
+  if (
+    words.length >= 2
+  ) {
+    return words
+      .map(
+        (word) =>
+          word[0]
+      )
+      .join('')
+      .slice(0, 4)
+      .toUpperCase();
+  }
+
+  return name
+    .slice(0, 4)
+    .toUpperCase();
+}
+
+function getTeamLogo(
+  team: Team
+) {
+  return (
+    team.logo ??
+    team.logo_url ??
+    team.image ??
+    ''
+  );
+}
+
+function getSeedTeam(
+  teams: Team[],
+  seed: number
+) {
+  const team =
+    teams[seed - 1];
+
+  if (!team) {
+    return `#${seed} TBD`;
+  }
+
+  return `#${seed} ${getTeamShortName(
+    team
+  )}`;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
 function TeamLogo({
   team,
 }: {
   team: Team;
 }) {
+  const logo =
+    getTeamLogo(team);
+
   return (
     <div className="resultTeamLogo">
-      {team.logo ? (
+      {logo ? (
         <img
-          src={team.logo}
-          alt={team.name}
+          src={logo}
+          alt={getTeamName(
+            team
+          )}
         />
       ) : (
         <span>
-          {team.shortName.slice(0, 2)}
+          {getTeamShortName(
+            team
+          ).slice(
+            0,
+            2
+          )}
         </span>
       )}
     </div>
   );
 }
 
-function BracketColumnTitle({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bracketColumnTitle">
-      {children}
-    </div>
-  );
-}
+/* =========================================================
+   BRACKET
+========================================================= */
 
-function BracketArrowColumn() {
+function BracketConnector() {
   return (
-    <div className="bracketArrowColumn">
-      <div className="bracketArrow" />
+    <div className="bracketConnector">
+      <div className="bracketConnectorLine" />
     </div>
   );
 }
@@ -1496,9 +2387,11 @@ function BracketMatch({
     <div
       className={[
         'bracketMatch',
+
         highlighted
           ? 'bracketMatchHighlighted'
           : '',
+
         grandFinal
           ? 'bracketGrandFinal'
           : '',
