@@ -708,9 +708,8 @@ function isValidated(
     getValue(
       team,
       [
-        'is_validated',
-        'isValidated',
-        'validated',
+        'validated_by_admin',
+        'validatedByAdmin',
       ]
     );
 
@@ -723,7 +722,6 @@ function isValidated(
       'true'
   );
 }
-
 /* =========================================================
    TEAM
 ========================================================= */
