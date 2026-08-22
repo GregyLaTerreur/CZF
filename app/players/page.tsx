@@ -696,11 +696,14 @@ if (participantsOnly) {
   }}
 >
   👥 Participants uniquement
+👥 Participants uniquement
 </button>
 
-          <button
-            type="button"
-            className="joinTeamBtn"
+</div>
+
+<button
+  type="button"
+  className="joinTeamBtn"
             onClick={() => setShowLftOnly(!showLftOnly)}
           >
             {showLftOnly
