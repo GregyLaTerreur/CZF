@@ -50,6 +50,8 @@ export default function PlayersPage() {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [participantsOnly, setParticipantsOnly] = useState(false);
   const [showLftOnly, setShowLftOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('riot_id');
   const [sortDirection, setSortDirection] =
@@ -100,6 +102,7 @@ export default function PlayersPage() {
     const data = await res.json();
 
     if (data.success) {
+      console.log('TEAMS :', data.data);
       setTeams(data.data);
     }
   }
@@ -444,6 +447,18 @@ function getDpmUrl(riotId: string) {
   const displayedPlayers = useMemo(() => {
     let list = [...players];
 
+    if (searchQuery.trim()) {
+  const query = searchQuery.toLowerCase();
+
+  list = list.filter((player) =>
+    player.riot_id?.toLowerCase().includes(query)
+  );
+}
+
+if (participantsOnly) {
+  list = list.filter((player) => getPlayerTeam(player) !== null);
+}
+
     if (showLftOnly) {
       list = list.filter((player) => player.lft);
     }
@@ -479,14 +494,16 @@ function getDpmUrl(riotId: string) {
     });
 
     return list;
-  }, [
-    players,
-    showLftOnly,
-    sortKey,
-    sortDirection,
-    teams,
-    teamMembers,
-  ]);
+}, [
+  players,
+  searchQuery,
+  participantsOnly,
+  showLftOnly,
+  sortKey,
+  sortDirection,
+  teams,
+  teamMembers,
+]);
 
   return (
     <>
@@ -590,6 +607,48 @@ function getDpmUrl(riotId: string) {
 
         <div className="card">
           <h3>Liste des joueurs</h3>
+          <div
+  style={{
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: '16px',
+  }}
+>
+  <input
+    type="text"
+    placeholder="Rechercher un joueur..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    style={{
+      flex: '1',
+      minWidth: '220px',
+      padding: '10px 12px',
+      borderRadius: '8px',
+      border: '1px solid rgba(255,255,255,0.15)',
+      background: 'rgba(255,255,255,0.05)',
+      color: 'white',
+    }}
+  />
+
+  <label
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      cursor: 'pointer',
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={participantsOnly}
+      onChange={(e) => setParticipantsOnly(e.target.checked)}
+    />
+
+    Participants uniquement
+  </label>
+</div>
 
           <button
             type="button"
@@ -648,7 +707,28 @@ function getDpmUrl(riotId: string) {
         }
         style={{ cursor: 'pointer' }}
       >
-                  <div>{player.riot_id}</div>
+                  <div
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  }}
+>
+  {getPlayerTeam(player)?.logo_url && (
+    <img
+      src={getPlayerTeam(player).logo_url}
+      alt=""
+      style={{
+        width: '28px',
+        height: '28px',
+        objectFit: 'contain',
+        borderRadius: '6px',
+      }}
+    />
+  )}
+
+  <span>{player.riot_id}</span>
+</div>
 
                   <div>
                     {player.main_role && (
