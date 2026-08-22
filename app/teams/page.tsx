@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Nav from '../components/Nav';
 import { supabase } from '@/lib/supabase';
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
 export default function TeamsPage() {
+  const searchParams = useSearchParams();
   const [teamName, setTeamName] = useState('');
   const [description, setDescription] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
@@ -36,6 +38,29 @@ export default function TeamsPage() {
     refreshAll();
     loadProfile();
   }, []);
+
+  useEffect(() => {
+  const teamId = searchParams.get('team');
+
+  if (!teamId) return;
+
+  const parsedTeamId = Number(teamId);
+
+  if (Number.isNaN(parsedTeamId)) return;
+
+  setOpenTeam(parsedTeamId);
+
+  setTimeout(() => {
+    const element = document.getElementById(`team-${parsedTeamId}`);
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, 500);
+}, [searchParams, teams]);
   
   async function fetchPlayers() {
   const res = await fetch('/api/players');
