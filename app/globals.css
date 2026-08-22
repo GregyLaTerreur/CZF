@@ -9,6 +9,65 @@
   --gold: #c79b54;
 }
 
+:root {
+  --navy: #092a3f;
+  --orange: #f26522;
+  --cream: #ead0ad;
+  --cream2: #f5dfc1;
+  --ink: #07131d;
+  --muted: #7a6854;
+  --card: rgba(255, 245, 226, 0.78);
+  --gold: #c79b54;
+}
+
+/* =========================
+   TYPOGRAPHIE CZF
+========================= */
+
+:root {
+  --font-display: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  --font-tech: 'Arial Narrow', Arial, sans-serif;
+  --font-body: Inter, Arial, sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+/* Gros titres CZF */
+.hero h1,
+.sectionTitle h2,
+.card h3,
+.importBox h3,
+.rulebook h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+/* Typo esport / interface */
+.nav a,
+button,
+.joinTeamBtn,
+.rulebookButton,
+.playersHeader,
+.teamsHeader,
+.divisionTeamName,
+.eyebrow {
+  font-family: var(--font-tech);
+  font-weight: 800;
+}
+
+/* Texte lisible */
+p,
+input,
+select,
+textarea,
+.playerRow,
+.teamRow,
+.teamDetails {
+  font-family: var(--font-body);
+}
+
 /* Reset */
 
 * {
@@ -23,6 +82,23 @@ body {
   margin: 0;
   color: var(--ink);
   font-family: Inter, Arial, sans-serif;
+
+  body,
+input,
+select,
+textarea,
+button {
+  font-family: Inter, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+.sectionTitle h2,
+.card h3 {
+  font-family: inherit;
+}
 
   background: var(--cream);
 

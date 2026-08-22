@@ -40,7 +40,6 @@ export default function Nav() {
         <Link href="/players">Joueurs</Link>
         <Link href="/teams">Équipes</Link>
         <Link href="/divisions">Divisions</Link>
-        <Link href="/calendar">Calendrier</Link>
         <Link href="/results">Résultats</Link>
         <Link href="/hall-of-fame">Hall of Fame</Link>
 
