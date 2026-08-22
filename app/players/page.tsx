@@ -610,44 +610,75 @@ if (participantsOnly) {
           <div
   style={{
     display: 'flex',
-    gap: '12px',
+    gap: '20px',
     alignItems: 'center',
+    justifyContent: 'space-between',
     flexWrap: 'wrap',
-    marginBottom: '16px',
+    marginBottom: '18px',
   }}
 >
-  <input
-    type="text"
-    placeholder="Rechercher un joueur..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
+  {/* BARRE DE RECHERCHE */}
+  <div
     style={{
       flex: '1',
-      minWidth: '220px',
-      padding: '10px 12px',
-      borderRadius: '8px',
-      border: '1px solid rgba(255,255,255,0.15)',
-      background: 'rgba(255,255,255,0.05)',
-      color: 'white',
-    }}
-  />
-
-  <label
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      cursor: 'pointer',
+      minWidth: '260px',
+      maxWidth: '850px',
+      position: 'relative',
     }}
   >
-    <input
-      type="checkbox"
-      checked={participantsOnly}
-      onChange={(e) => setParticipantsOnly(e.target.checked)}
-    />
+    <span
+      style={{
+        position: 'absolute',
+        left: '18px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        fontSize: '20px',
+        color: '#0b1f4d',
+        pointerEvents: 'none',
+      }}
+    >
+      🔎
+    </span>
 
-    Participants uniquement
-  </label>
+    <input
+      type="text"
+      placeholder="Rechercher un joueur..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        padding: '14px 18px 14px 52px',
+        borderRadius: '10px',
+        border: '2px solid #0b1f4d',
+        background: 'rgba(255,255,255,0.15)',
+        color: '#0b1f4d',
+        fontSize: '16px',
+        fontWeight: '600',
+        outline: 'none',
+      }}
+    />
+  </div>
+
+  {/* BOUTON PARTICIPANTS */}
+  <button
+    type="button"
+    onClick={() => setParticipantsOnly(!participantsOnly)}
+    style={{
+      padding: '14px 20px',
+      borderRadius: '10px',
+      border: '2px solid #0b1f4d',
+      background: participantsOnly ? '#0b1f4d' : 'transparent',
+      color: participantsOnly ? 'white' : '#0b1f4d',
+      fontWeight: '700',
+      fontSize: '15px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      whiteSpace: 'nowrap',
+    }}
+  >
+    👥 Participants uniquement
+  </button>
 </div>
 
           <button
