@@ -4006,3 +4006,237 @@ input:checked +
     opacity: 0.3;
   }
 }
+
+/* =========================================================
+   DIVISIONS — DA CZF
+========================================================= */
+
+.divisionsPage {
+  position: relative;
+  overflow: visible;
+}
+
+
+/* INTRO MARINE */
+
+.divisionsIntroCard {
+  position: relative;
+  overflow: visible;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      115deg,
+      #061a29 0%,
+      #082a42 70%,
+      #061a29 100%
+    );
+
+  border-color:
+    rgba(242, 101, 34, 0.55);
+
+  box-shadow:
+    0 18px 40px
+    rgba(4, 18, 28, 0.17);
+}
+
+.divisionsIntroCard h3,
+.divisionsIntroCard p {
+  color: white;
+}
+
+
+/* léger éclair coin droit */
+
+.divisionsIntroCard::after {
+  content: '';
+
+  position: absolute;
+
+  z-index: 8;
+
+  width: 210px;
+  height: 200px;
+
+  right: -80px;
+  bottom: -85px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_07.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(8deg);
+
+  pointer-events: none;
+}
+
+.divisionsIntroCard > * {
+  position: relative;
+  z-index: 10;
+}
+
+
+/* =========================================================
+   CARTES DIVISIONS
+========================================================= */
+
+.divisionCard {
+  position: relative;
+  overflow: visible;
+
+  padding-bottom: 30px;
+}
+
+
+/* petit trait de couleur sur le bord inférieur */
+
+.divisionCard::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 5px;
+
+  border-radius:
+    0 0 14px 14px;
+}
+
+
+/* TARGON */
+
+.divisionCard-targon::after {
+  background: #8f6bc7;
+}
+
+
+/* IXTAL */
+
+.divisionCard-ixtal::after {
+  background: #4387d8;
+}
+
+
+/* YORDLE */
+
+.divisionCard-yordle::after {
+  background: #51a677;
+}
+
+
+/* TITRE */
+
+.divisionCardHeader {
+  display: flex;
+  align-items: center;
+
+  margin-bottom: 8px;
+}
+
+.divisionCardHeader h3 {
+  margin: 0;
+}
+
+
+/* BARÈME */
+
+.divisionRange {
+  margin-top: 24px;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   ÉCLAIRS TRÈS LÉGERS
+========================================================= */
+
+/* seulement sur Targon */
+
+.divisionCard-targon::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 170px;
+  height: 180px;
+
+  left: -75px;
+  top: 120px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_04.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(-11deg);
+
+  pointer-events: none;
+}
+
+
+/* seulement sur Yordle */
+
+.divisionCard-yordle::before {
+  content: '';
+
+  position: absolute;
+
+  z-index: 7;
+
+  width: 180px;
+  height: 190px;
+
+  right: -85px;
+  bottom: 85px;
+
+  background:
+    url('/assets/eclairs/eclair_czf_06.png')
+    center / contain
+    no-repeat;
+
+  transform:
+    rotate(14deg);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   TEAM BUTTONS
+========================================================= */
+
+.divisionTeamText {
+  min-width: 0;
+}
+
+.divisionTeamPoints {
+  margin-top: 3px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+  .divisionCard-targon::before,
+  .divisionCard-yordle::before,
+  .divisionsIntroCard::after {
+    opacity: 0.3;
+  }
+}

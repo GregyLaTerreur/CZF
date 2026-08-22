@@ -19,12 +19,10 @@ export default function DivisionsPage() {
     fetchTeams();
   }, []);
 
-  // On garde uniquement les équipes validées par les admins
   const validatedTeams = teams.filter(
     (team) => team.validated_by_admin === true
   );
 
-  // Répartition selon la division figée au moment de la validation
   const targonTeams = validatedTeams.filter(
     (team) => team.division === 'Targon'
   );
@@ -42,23 +40,25 @@ export default function DivisionsPage() {
     description,
     range,
     teams,
+    variant,
   }: {
     title: string;
     description: string;
     range: string;
     teams: any[];
+    variant: 'targon' | 'ixtal' | 'yordle';
   }) {
     return (
-      <div className="card">
-        <h3>{title}</h3>
+      <div className={`card divisionCard divisionCard-${variant}`}>
+        <div className="divisionCardHeader">
+          <h3>{title}</h3>
+        </div>
 
         <p>{description}</p>
 
-        <br />
-
-        <p>
+        <div className="divisionRange">
           <strong>Barème équipe :</strong> {range}
-        </p>
+        </div>
 
         <div className="divisionTeamsGrid">
           {teams.length > 0 ? (
@@ -76,7 +76,7 @@ export default function DivisionsPage() {
                   />
                 )}
 
-                <div>
+                <div className="divisionTeamText">
                   <span className="divisionTeamName">
                     {team.name}
                   </span>
@@ -104,13 +104,14 @@ export default function DivisionsPage() {
     <>
       <Nav />
 
-      <main className="section">
+      <main className="section divisionsPage">
         <div className="sectionTitle">
           <span></span>
           <h2>Divisions</h2>
         </div>
 
-        <div className="card">
+        {/* FONCTIONNEMENT — MARINE */}
+        <div className="card divisionsIntroCard">
           <h3>Fonctionnement des divisions</h3>
 
           <p>
@@ -130,28 +131,31 @@ export default function DivisionsPage() {
         <br />
 
         <DivisionCard
-          title="🟣 Targon"
+          title="Targon"
           description="La division élite du CZF."
           range="6101 à 8000 points CZF"
           teams={targonTeams}
+          variant="targon"
         />
 
         <br />
 
         <DivisionCard
-          title="🔵 Ixtal"
+          title="Ixtal"
           description="La division intermédiaire du CZF."
           range="3901 à 6100 points CZF"
           teams={ixtalTeams}
+          variant="ixtal"
         />
 
         <br />
 
         <DivisionCard
-          title="🟢 Yordle"
+          title="Yordle"
           description="La division développement du CZF."
           range="0 à 3900 points CZF"
           teams={yordleTeams}
+          variant="yordle"
         />
       </main>
     </>
