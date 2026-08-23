@@ -1954,20 +1954,22 @@ export async function GET(
         },
       }
     );
-  } catch (
+} catch (error: any) {
+  console.error(
+    '[RESULTS API]',
     error
-  ) {
-    console.error(
-      '[RESULTS API]',
-      error
-    );
+  );
 
-    return NextResponse.json(
-      {
-        success: false,
+  return NextResponse.json(
+    {
+      success: false,
 
-        error:
-          'Impossible de charger les données de la page Résultats.',
+      error:
+        error?.message ||
+        'Impossible de charger les données de la page Résultats.',
+
+      details:
+        error,
 
         teams: [],
 
