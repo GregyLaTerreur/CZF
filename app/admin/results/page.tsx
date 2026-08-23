@@ -1,14 +1,16 @@
-import {
-  NextRequest,
-  NextResponse,
-} from 'next/server';
+'use client';
 
 import {
-  createClient,
-} from '@supabase/supabase-js';
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-export const dynamic =
-  'force-dynamic';
+import Nav from '../../components/Nav';
+
+import {
+  supabase,
+} from '@/lib/supabase';
 
 type Division =
   | 'Yordle'
@@ -22,8 +24,44 @@ type Role =
   | 'ADC'
   | 'Support';
 
-type PlayerStatInput = {
+type Player = {
+  id: number;
+
+  riotId: string;
+
+  discordName:
+    | string
+    | null;
+
+  role:
+    | string
+    | null;
+};
+
+type Team = {
+  id: number;
+
+  name: string;
+  shortName: string;
+
+  logo:
+    | string
+    | null;
+
+  division: Division;
+
+  roster: Player[];
+};
+
+type Champion = {
+  id: string;
+  name: string;
+  image: string;
+};
+
+type GamePlayer = {
   playerId: number;
+
   teamId: number;
 
   role: Role;
@@ -35,1204 +73,1845 @@ type PlayerStatInput = {
   assists: number;
 
   cs: number;
+
   gold: number;
+
   damage: number;
+
   visionScore: number;
 };
 
-type GameInput = {
+type GameForm = {
   gameNumber: number;
+
+  durationMinutes: number;
 
   durationSeconds: number;
 
-  winnerTeamId: number;
+  winnerTeamId:
+    | number
+    | null;
 
-  mvpPlayerId?:
+  mvpPlayerId:
     | number
     | null;
 
   players:
-    PlayerStatInput[];
+    GamePlayer[];
 };
 
-type MatchInput = {
-  division: Division;
-
-  team1Id: number;
-  team2Id: number;
-
-  winnerTeamId: number;
-
-  stage:
-    | 'pool'
-    | 'playoff';
-
-  bracket?:
-    | 'winner'
-    | 'loser'
-    | 'grand_final'
-    | null;
-
-  round?:
-    | string
-    | null;
-
-  bestOf?: number;
-
-  playedAt?: string;
-
-  games: GameInput[];
-};
+const ROLES:
+  Role[] = [
+  'Top',
+  'Jungle',
+  'Mid',
+  'ADC',
+  'Support',
+];
 
 /* =========================================================
-   SUPABASE ADMIN
+   PAGE
 ========================================================= */
 
-const supabaseUrl =
-  process.env
-    .NEXT_PUBLIC_SUPABASE_URL;
-
-const serviceRoleKey =
-  process.env
-    .SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl) {
-  throw new Error(
-    'NEXT_PUBLIC_SUPABASE_URL manquant'
-  );
-}
-
-if (!serviceRoleKey) {
-  throw new Error(
-    'SUPABASE_SERVICE_ROLE_KEY manquant'
-  );
-}
-
-const supabaseAdmin =
-  createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        autoRefreshToken:
-          false,
-
-        persistSession:
-          false,
-      },
-    }
-  );
-
-/* =========================================================
-   ADMIN
-========================================================= */
-
-async function checkAdmin(
-  request: NextRequest
-) {
-  const authorization =
-    request.headers.get(
-      'authorization'
+export default function AdminResultsPage() {
+  const [
+    division,
+    setDivision,
+  ] =
+    useState<Division>(
+      'Yordle'
     );
 
-  if (
-    !authorization ||
-    !authorization.startsWith(
-      'Bearer '
-    )
-  ) {
-    return null;
-  }
-
-  const token =
-    authorization.replace(
-      'Bearer ',
-      ''
+  const [
+    teams,
+    setTeams,
+  ] =
+    useState<Team[]>(
+      []
     );
 
-  const {
-    data: authData,
-    error: authError,
-  } =
-    await supabaseAdmin
-      .auth
-      .getUser(
-        token
-      );
+  const [
+    champions,
+    setChampions,
+  ] =
+    useState<
+      Champion[]
+    >([]);
 
-  if (
-    authError ||
-    !authData.user
-  ) {
-    return null;
-  }
+  const [
+    team1Id,
+    setTeam1Id,
+  ] =
+    useState<
+      number |
+      null
+    >(null);
 
-  const user =
-    authData.user;
+  const [
+    team2Id,
+    setTeam2Id,
+  ] =
+    useState<
+      number |
+      null
+    >(null);
 
-  const {
-    data: profile,
-    error: profileError,
-  } =
-    await supabaseAdmin
-      .from('profiles')
-      .select(
-        'is_admin'
-      )
-      .eq(
-        'id',
-        user.id
-      )
-      .single();
+  const [
+    stage,
+    setStage,
+  ] =
+    useState<
+      | 'pool'
+      | 'playoff'
+    >('pool');
 
-  if (
-    profileError ||
-    !profile ||
-    profile.is_admin !==
-      true
-  ) {
-    return null;
-  }
+  const [
+    bracket,
+    setBracket,
+  ] =
+    useState<
+      | 'winner'
+      | 'loser'
+      | 'grand_final'
+    >('winner');
 
-  return user;
-}
+  const [
+    round,
+    setRound,
+  ] =
+    useState('');
 
-/* =========================================================
-   POST
-========================================================= */
+  const [
+    bestOf,
+    setBestOf,
+  ] =
+    useState(1);
 
-export async function POST(
-  request: NextRequest
-) {
-  let createdMatchId:
-    | number
-    | null = null;
+  const [
+    games,
+    setGames,
+  ] =
+    useState<
+      GameForm[]
+    >([]);
 
-  try {
-    const admin =
-      await checkAdmin(
-        request
-      );
+  const [
+    saving,
+    setSaving,
+  ] =
+    useState(false);
 
-    if (!admin) {
-      return NextResponse.json(
-        {
-          success: false,
+  const [
+    message,
+    setMessage,
+  ] =
+    useState('');
 
-          error:
-            'Accès administrateur refusé.',
-        },
-        {
-          status: 401,
+  /* =========================================================
+     LOAD
+  ========================================================= */
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res =
+          await fetch(
+            '/api/results',
+            {
+              cache:
+                'no-store',
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (
+          !res.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+              'Impossible de charger les données.'
+          );
         }
-      );
-    }
 
-    const body =
-      (await request.json()) as
-        MatchInput;
+        const allTeams:
+          Team[] =
+          data.teams ||
+          [];
 
-    const {
-      division,
-
-      team1Id,
-      team2Id,
-
-      winnerTeamId,
-
-      stage,
-
-      bracket = null,
-
-      round = null,
-
-      bestOf = 1,
-
-      playedAt,
-
-      games,
-    } = body;
-
-    /* =====================================================
-       DIVISION
-    ===================================================== */
-
-    const allowedDivisions:
-      Division[] = [
-      'Yordle',
-      'Ixtal',
-      'Targon',
-    ];
-
-    if (
-      !allowedDivisions.includes(
-        division
-      )
-    ) {
-      throw new Error(
-        'Division invalide.'
-      );
-    }
-
-    /* =====================================================
-       TEAMS
-    ===================================================== */
-
-    if (
-      !team1Id ||
-      !team2Id
-    ) {
-      throw new Error(
-        'Deux équipes sont obligatoires.'
-      );
-    }
-
-    if (
-      Number(team1Id) ===
-      Number(team2Id)
-    ) {
-      throw new Error(
-        'Une équipe ne peut pas jouer contre elle-même.'
-      );
-    }
-
-    if (
-      Number(
-        winnerTeamId
-      ) !==
-        Number(
-          team1Id
-        ) &&
-      Number(
-        winnerTeamId
-      ) !==
-        Number(
-          team2Id
-        )
-    ) {
-      throw new Error(
-        'Le gagnant doit être une des deux équipes.'
-      );
-    }
-
-    /* =====================================================
-       PHASE
-    ===================================================== */
-
-    if (
-      stage !== 'pool' &&
-      stage !== 'playoff'
-    ) {
-      throw new Error(
-        'Phase invalide.'
-      );
-    }
-
-    if (
-      stage ===
-        'playoff' &&
-      ![
-        'winner',
-        'loser',
-        'grand_final',
-      ].includes(
-        String(
-          bracket
-        )
-      )
-    ) {
-      throw new Error(
-        'Bracket invalide.'
-      );
-    }
-
-    /* =====================================================
-       BEST OF
-    ===================================================== */
-
-    if (
-      ![
-        1,
-        3,
-        5,
-      ].includes(
-        Number(
-          bestOf
-        )
-      )
-    ) {
-      throw new Error(
-        'Format BO invalide.'
-      );
-    }
-
-    /* =====================================================
-       GAMES
-    ===================================================== */
-
-    if (
-      !Array.isArray(
-        games
-      ) ||
-      games.length ===
-        0
-    ) {
-      throw new Error(
-        'Au moins une game est obligatoire.'
-      );
-    }
-
-    /* =====================================================
-       RECUPERATION DES 2 TEAMS
-    ===================================================== */
-
-    const {
-      data: teams,
-      error: teamsError,
-    } =
-      await supabaseAdmin
-        .from('teams')
-        .select(`
-          id,
-          name,
-          division,
-          validated_by_admin
-        `)
-        .in(
-          'id',
-          [
-            team1Id,
-            team2Id,
-          ]
+        setTeams(
+          allTeams
         );
 
-    if (
-      teamsError
-    ) {
-      throw teamsError;
-    }
-
-    if (
-      !teams ||
-      teams.length !==
-        2
-    ) {
-      throw new Error(
-        'Une des équipes est introuvable.'
-      );
-    }
-
-    for (
-      const team
-      of teams
-    ) {
-      if (
-        team
-          .validated_by_admin !==
-        true
-      ) {
-        throw new Error(
-          `L'équipe ${team.name} n'est pas validée.`
+        setChampions(
+          data.champions ||
+            []
         );
-      }
-
-      if (
-        team.division !==
-        division
+      } catch (
+        error: any
       ) {
-        throw new Error(
-          `L'équipe ${team.name} n'appartient pas à ${division}.`
+        setMessage(
+          error?.message ||
+            'Erreur de chargement.'
         );
       }
     }
 
-    /* =====================================================
-       IDS JOUEURS
-    ===================================================== */
+    load();
+  }, []);
 
-    const allPlayerIds =
-      games.flatMap(
-        (game) =>
-          game.players.map(
-            (player) =>
-              Number(
-                player.playerId
-              )
-          )
-      );
+  /* =========================================================
+     TEAMS
+  ========================================================= */
 
-    const uniquePlayerIds =
+  const divisionTeams =
+    useMemo(
+      () =>
+        teams.filter(
+          (
+            team
+          ) =>
+            team.division ===
+            division
+        ),
       [
-        ...new Set(
-          allPlayerIds
-        ),
-      ];
+        teams,
+        division,
+      ]
+    );
 
-    if (
-      uniquePlayerIds.length ===
-      0
-    ) {
-      throw new Error(
-        'Aucun joueur reçu.'
-      );
-    }
-
-    /* =====================================================
-       VERIFICATION DES JOUEURS
-    ===================================================== */
-
-    const {
-      data: dbPlayers,
-      error:
-        playersError,
-    } =
-      await supabaseAdmin
-        .from('players')
-        .select(
-          'id, riot_id'
-        )
-        .in(
-          'id',
-          uniquePlayerIds
-        );
-
-    if (
-      playersError
-    ) {
-      throw playersError;
-    }
-
-    if (
+  const team1 =
+    divisionTeams.find(
       (
-        dbPlayers ??
-        []
-      ).length !==
-      uniquePlayerIds.length
-    ) {
-      throw new Error(
-        'Au moins un joueur est introuvable.'
-      );
-    }
-
-    /* =====================================================
-       ROSTERS
-    ===================================================== */
-
-    const {
-      data: teamMembers,
-      error:
-        membersError,
-    } =
-      await supabaseAdmin
-        .from(
-          'team_members'
-        )
-        .select(
-          'team_id, riot_id'
-        )
-        .in(
-          'team_id',
-          [
-            team1Id,
-            team2Id,
-          ]
-        );
-
-    if (
-      membersError
-    ) {
-      throw membersError;
-    }
-
-    const normalizeRiotId =
-      (
-        value:
-          string |
-          null |
-          undefined
+        team
       ) =>
-        String(
-          value ?? ''
-        )
-          .trim()
-          .toLowerCase()
-          .replace(
-            /\s+/g,
-            ''
-          );
+        team.id ===
+        team1Id
+    );
 
-    const playerById =
-      new Map<
+  const team2 =
+    divisionTeams.find(
+      (
+        team
+      ) =>
+        team.id ===
+        team2Id
+    );
+
+  /* =========================================================
+     CREATE GAME
+  ========================================================= */
+
+  function createGame(
+    number: number
+  ):
+    | GameForm
+    | null {
+    if (
+      !team1 ||
+      !team2
+    ) {
+      return null;
+    }
+
+    const players:
+      GamePlayer[] =
+      [
+        ...team1.roster,
+        ...team2.roster,
+      ]
+        .filter(
+          (
+            player
+          ) =>
+            ROLES.includes(
+              player.role as Role
+            )
+        )
+        .map(
+          (
+            player
+          ) => ({
+            playerId:
+              player.id,
+
+            teamId:
+              team1.roster.some(
+                (
+                  p
+                ) =>
+                  p.id ===
+                  player.id
+              )
+                ? team1.id
+                : team2.id,
+
+            role:
+              player.role as Role,
+
+            championId:
+              '',
+
+            kills:
+              0,
+
+            deaths:
+              0,
+
+            assists:
+              0,
+
+            cs:
+              0,
+
+            gold:
+              0,
+
+            damage:
+              0,
+
+            visionScore:
+              0,
+          })
+        );
+
+    return {
+      gameNumber:
         number,
-        any
-      >();
 
-    for (
-      const player
-      of dbPlayers ??
-        []
+      durationMinutes:
+        0,
+
+      durationSeconds:
+        0,
+
+      winnerTeamId:
+        null,
+
+      mvpPlayerId:
+        null,
+
+      players,
+    };
+  }
+
+  /* =========================================================
+     PREPARER LES GAMES
+  ========================================================= */
+
+  function regenerateGames() {
+    if (
+      !team1 ||
+      !team2
     ) {
-      playerById.set(
-        Number(
-          player.id
-        ),
-        player
+      setMessage(
+        'Choisis les deux équipes.'
       );
+
+      return;
     }
 
-    const memberTeamByRiotId =
-      new Map<
-        string,
-        number
-      >();
-
-    for (
-      const member
-      of teamMembers ??
-        []
+    if (
+      team1.roster.length <
+        5 ||
+      team2.roster.length <
+        5
     ) {
-      memberTeamByRiotId.set(
-        normalizeRiotId(
-          member.riot_id
-        ),
-        Number(
-          member.team_id
-        )
+      setMessage(
+        'Une des équipes ne possède pas assez de joueurs.'
       );
+
+      return;
     }
 
-    /* =====================================================
-       VALIDATION GAMES
-    ===================================================== */
+    const gameCount =
+      bestOf === 1
+        ? 1
+        : bestOf === 3
+        ? 3
+        : 5;
 
-    const allowedRoles:
-      Role[] = [
-      'Top',
-      'Jungle',
-      'Mid',
-      'ADC',
-      'Support',
-    ];
-
-    const gameNumbers =
-      new Set<number>();
+    const nextGames:
+      GameForm[] =
+      [];
 
     for (
-      const game
-      of games
+      let i = 1;
+      i <=
+      gameCount;
+      i++
     ) {
-      if (
-        !game.gameNumber ||
-        Number(
-          game.gameNumber
-        ) < 1
-      ) {
-        throw new Error(
-          'Numéro de game invalide.'
+      const game =
+        createGame(
+          i
         );
-      }
 
       if (
-        gameNumbers.has(
-          Number(
-            game.gameNumber
-          )
-        )
+        game
       ) {
-        throw new Error(
-          `La Game ${game.gameNumber} est présente deux fois.`
+        nextGames.push(
+          game
         );
       }
+    }
 
-      gameNumbers.add(
-        Number(
-          game.gameNumber
+    setGames(
+      nextGames
+    );
+
+    setMessage(
+      'Games préparées.'
+    );
+  }
+
+  /* =========================================================
+     UPDATE PLAYER
+  ========================================================= */
+
+  function updatePlayer(
+    gameIndex:
+      number,
+
+    playerIndex:
+      number,
+
+    patch:
+      Partial<GamePlayer>
+  ) {
+    setGames(
+      (
+        current
+      ) =>
+        current.map(
+          (
+            game,
+            gi
+          ) => {
+            if (
+              gi !==
+              gameIndex
+            ) {
+              return game;
+            }
+
+            return {
+              ...game,
+
+              players:
+                game.players.map(
+                  (
+                    player,
+                    pi
+                  ) =>
+                    pi ===
+                    playerIndex
+                      ? {
+                          ...player,
+                          ...patch,
+                        }
+                      : player
+                ),
+            };
+          }
         )
+    );
+  }
+
+  /* =========================================================
+     UPDATE GAME
+  ========================================================= */
+
+  function updateGame(
+    gameIndex:
+      number,
+
+    patch:
+      Partial<GameForm>
+  ) {
+    setGames(
+      (
+        current
+      ) =>
+        current.map(
+          (
+            game,
+            index
+          ) =>
+            index ===
+            gameIndex
+              ? {
+                  ...game,
+                  ...patch,
+                }
+              : game
+        )
+    );
+  }
+
+  /* =========================================================
+     SAVE MATCH
+  ========================================================= */
+
+  async function saveMatch() {
+    try {
+      setSaving(
+        true
       );
 
+      setMessage('');
+
       if (
-        Number(
-          game.durationSeconds
-        ) <= 0
+        !team1Id ||
+        !team2Id
       ) {
         throw new Error(
-          `Durée invalide pour la Game ${game.gameNumber}.`
+          'Choisis deux équipes.'
         );
       }
 
-      if (
-        Number(
-          game
-            .winnerTeamId
-        ) !==
-          Number(
-            team1Id
-          ) &&
-        Number(
-          game
-            .winnerTeamId
-        ) !==
-          Number(
-            team2Id
-          )
-      ) {
-        throw new Error(
-          `Vainqueur invalide pour la Game ${game.gameNumber}.`
-        );
-      }
-
-      if (
-        !Array.isArray(
-          game.players
-        ) ||
-        game.players
-          .length !== 10
-      ) {
-        throw new Error(
-          `La Game ${game.gameNumber} doit contenir exactement 10 joueurs.`
-        );
-      }
-
-      const gamePlayerIds =
-        game.players.map(
-          (player) =>
-            Number(
-              player.playerId
-            )
+      const playedGames =
+        games.filter(
+          (
+            game
+          ) =>
+            game.winnerTeamId !==
+            null
         );
 
       if (
-        new Set(
-          gamePlayerIds
-        ).size !== 10
+        playedGames.length ===
+        0
       ) {
         throw new Error(
-          `Un joueur est présent plusieurs fois dans la Game ${game.gameNumber}.`
+          'Aucune game terminée.'
         );
       }
 
-      const team1Players =
-        game.players.filter(
-          (player) =>
-            Number(
-              player.teamId
-            ) ===
-            Number(
-              team1Id
-            )
-        );
-
-      const team2Players =
-        game.players.filter(
-          (player) =>
-            Number(
-              player.teamId
-            ) ===
-            Number(
-              team2Id
-            )
-        );
-
-      if (
-        team1Players.length !==
-          5 ||
-        team2Players.length !==
-          5
-      ) {
-        throw new Error(
-          `La Game ${game.gameNumber} doit avoir exactement 5 joueurs de chaque équipe.`
-        );
-      }
+      /* =====================================================
+         VERIFICATION GAMES
+      ===================================================== */
 
       for (
-        const player
-        of game.players
+        const game
+        of playedGames
       ) {
-        if (
-          !allowedRoles.includes(
-            player.role
-          )
-        ) {
-          throw new Error(
-            `Rôle invalide dans la Game ${game.gameNumber}.`
-          );
-        }
+        const totalDuration =
+          game.durationMinutes *
+            60 +
+          game.durationSeconds;
 
         if (
-          !player.championId
+          totalDuration <=
+          0
         ) {
           throw new Error(
-            `Champion manquant dans la Game ${game.gameNumber}.`
+            `Durée manquante pour la Game ${game.gameNumber}.`
           );
         }
-
-        const numericStats =
-          [
-            player.kills,
-            player.deaths,
-            player.assists,
-            player.cs,
-            player.gold,
-            player.damage,
-            player.visionScore,
-          ];
-
-        if (
-          numericStats.some(
-            (value) =>
-              !Number.isFinite(
-                Number(
-                  value
-                )
-              ) ||
-              Number(
-                value
-              ) < 0
-          )
-        ) {
-          throw new Error(
-            `Stat invalide détectée dans la Game ${game.gameNumber}.`
-          );
-        }
-
-        const dbPlayer =
-          playerById.get(
-            Number(
-              player.playerId
-            )
-          );
-
-        if (
-          !dbPlayer
-        ) {
-          throw new Error(
-            `Joueur ${player.playerId} introuvable.`
-          );
-        }
-
-        const realTeamId =
-          memberTeamByRiotId.get(
-            normalizeRiotId(
-              dbPlayer.riot_id
-            )
-          );
-
-        if (
-          !realTeamId
-        ) {
-          throw new Error(
-            `${dbPlayer.riot_id} n'est dans aucun roster du match.`
-          );
-        }
-
-        if (
-          Number(
-            realTeamId
-          ) !==
-          Number(
-            player.teamId
-          )
-        ) {
-          throw new Error(
-            `${dbPlayer.riot_id} n'appartient pas à l'équipe indiquée.`
-          );
-        }
-      }
-
-      for (
-        const teamPlayers
-        of [
-          team1Players,
-          team2Players,
-        ]
-      ) {
-        const roles =
-          teamPlayers.map(
-            (player) =>
-              player.role
-          );
 
         for (
-          const requiredRole
-          of allowedRoles
+          const player
+          of game.players
         ) {
-          const count =
-            roles.filter(
-              (role) =>
-                role ===
-                requiredRole
-            ).length;
-
           if (
-            count !== 1
+            !player.championId
           ) {
             throw new Error(
-              `Chaque équipe doit avoir exactement un ${requiredRole} dans la Game ${game.gameNumber}.`
+              `Champion manquant dans la Game ${game.gameNumber}.`
             );
           }
         }
       }
 
-      if (
-        game.mvpPlayerId !==
-          null &&
-        game.mvpPlayerId !==
-          undefined
-      ) {
-        const mvpIsPlaying =
-          gamePlayerIds.includes(
-            Number(
-              game.mvpPlayerId
-            )
-          );
+      /* =====================================================
+         SCORE MATCH
+      ===================================================== */
 
-        if (
-          !mvpIsPlaying
-        ) {
-          throw new Error(
-            `Le MVP de la Game ${game.gameNumber} ne fait pas partie des 10 joueurs.`
-          );
-        }
-      }
-    }
-
-    /* =====================================================
-       SCORE MATCH
-    ===================================================== */
-
-    const winsTeam1 =
-      games.filter(
-        (game) =>
-          Number(
-            game.winnerTeamId
-          ) ===
-          Number(
+      const winsTeam1 =
+        playedGames.filter(
+          (
+            game
+          ) =>
+            game.winnerTeamId ===
             team1Id
-          )
-      ).length;
+        ).length;
 
-    const winsTeam2 =
-      games.filter(
-        (game) =>
-          Number(
-            game.winnerTeamId
-          ) ===
-          Number(
+      const winsTeam2 =
+        playedGames.filter(
+          (
+            game
+          ) =>
+            game.winnerTeamId ===
             team2Id
-          )
-      ).length;
+        ).length;
 
-    if (
-      winsTeam1 ===
-      winsTeam2
-    ) {
-      throw new Error(
-        'Le score du match est à égalité.'
-      );
-    }
+      /*
+        Pour l'instant le backend
+        utilise encore un vainqueur
+        obligatoire.
 
-    const calculatedWinner =
-      winsTeam1 >
-      winsTeam2
-        ? Number(
-            team1Id
-          )
-        : Number(
-            team2Id
-          );
-
-    if (
-      Number(
-        winnerTeamId
-      ) !==
-      calculatedWinner
-    ) {
-      throw new Error(
-        'Le vainqueur du match ne correspond pas au résultat des games.'
-      );
-    }
-
-    /* =====================================================
-       CREATION MATCH
-    ===================================================== */
-
-    const {
-      data: createdMatch,
-      error: matchError,
-    } =
-      await supabaseAdmin
-        .from(
-          'czf_matches'
-        )
-        .insert({
-          division,
-
-          team1_id:
-            Number(
-              team1Id
-            ),
-
-          team2_id:
-            Number(
-              team2Id
-            ),
-
-          winner_team_id:
-            Number(
-              winnerTeamId
-            ),
-
-          stage,
-
-          bracket:
-            stage ===
-            'playoff'
-              ? bracket
-              : null,
-
-          round:
-            stage ===
-            'playoff'
-              ? round
-              : null,
-
-          best_of:
-            Number(
-              bestOf
-            ),
-
-          status:
-            'finished',
-
-          played_at:
-            playedAt ??
-            new Date()
-              .toISOString(),
-        })
-        .select('*')
-        .single();
-
-    if (
-      matchError ||
-      !createdMatch
-    ) {
-      throw (
-        matchError ??
-        new Error(
-          'Impossible de créer le match.'
-        )
-      );
-    }
-
-    createdMatchId =
-      Number(
-        createdMatch.id
-      );
-
-    /* =====================================================
-       CREATION GAMES
-    ===================================================== */
-
-    for (
-      const game
-      of games
-    ) {
-      const {
-        data: createdGame,
-        error: gameError,
-      } =
-        await supabaseAdmin
-          .from(
-            'czf_games'
-          )
-          .insert({
-            match_id:
-              createdMatch.id,
-
-            game_number:
-              Number(
-                game.gameNumber
-              ),
-
-            duration_seconds:
-              Number(
-                game.durationSeconds
-              ),
-
-            winner_team_id:
-              Number(
-                game.winnerTeamId
-              ),
-
-            mvp_player_id:
-              game.mvpPlayerId
-                ? Number(
-                    game.mvpPlayerId
-                  )
-                : null,
-          })
-          .select('*')
-          .single();
+        Donc BO2 / 1-1 sera traité
+        plus tard lorsqu'on fera
+        le système de poule final.
+      */
 
       if (
-        gameError ||
-        !createdGame
+        winsTeam1 ===
+        winsTeam2
       ) {
-        throw (
-          gameError ??
-          new Error(
-            `Impossible de créer la Game ${game.gameNumber}.`
-          )
+        throw new Error(
+          'Impossible de déterminer le vainqueur du match.'
         );
       }
 
-      /* ===================================================
-         STATS JOUEURS
-      =================================================== */
+      const winnerTeamId =
+        winsTeam1 >
+        winsTeam2
+          ? team1Id
+          : team2Id;
 
-      const stats =
-        game.players.map(
-          (player) => ({
-            game_id:
-              Number(
-                createdGame.id
-              ),
-
-            player_id:
-              Number(
-                player.playerId
-              ),
-
-            team_id:
-              Number(
-                player.teamId
-              ),
-
-            role:
-              player.role,
-
-            champion_id:
-              player.championId,
-
-            kills:
-              Number(
-                player.kills
-              ),
-
-            deaths:
-              Number(
-                player.deaths
-              ),
-
-            assists:
-              Number(
-                player.assists
-              ),
-
-            cs:
-              Number(
-                player.cs
-              ),
-
-            gold:
-              Number(
-                player.gold
-              ),
-
-            damage:
-              Number(
-                player.damage
-              ),
-
-            vision_score:
-              Number(
-                player.visionScore
-              ) || 0,
-          })
-        );
+      /* =====================================================
+         AUTH
+      ===================================================== */
 
       const {
-        error:
-          statsError,
+        data:
+          sessionData,
       } =
-        await supabaseAdmin
-          .from(
-            'czf_game_player_stats'
-          )
-          .insert(
-            stats
-          );
+        await supabase
+          .auth
+          .getSession();
+
+      const token =
+        sessionData.session
+          ?.access_token;
 
       if (
-        statsError
+        !token
       ) {
-        throw statsError;
-      }
-    }
-
-    /* =====================================================
-       SUCCESS
-    ===================================================== */
-
-    return NextResponse.json(
-      {
-        success: true,
-
-        matchId:
-          createdMatch.id,
-
-        gamesCreated:
-          games.length,
-
-        score: {
-          team1:
-            winsTeam1,
-
-          team2:
-            winsTeam2,
-        },
-
-        message:
-          'Match CZF enregistré avec succès.',
-      },
-      {
-        status: 201,
-      }
-    );
-  } catch (
-    error: any
-  ) {
-    console.error(
-      '[CZF ADMIN RESULTS]',
-      error
-    );
-
-    if (
-      createdMatchId !==
-      null
-    ) {
-      await supabaseAdmin
-        .from(
-          'czf_matches'
-        )
-        .delete()
-        .eq(
-          'id',
-          createdMatchId
+        throw new Error(
+          'Tu dois être connecté.'
         );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-
-        error:
-          error?.message ??
-          'Erreur inconnue.',
-      },
-      {
-        status: 400,
       }
-    );
+
+      /* =====================================================
+         BODY
+      ===================================================== */
+
+      const body = {
+        division,
+
+        team1Id,
+        team2Id,
+
+        winnerTeamId,
+
+        stage,
+
+        bracket:
+          stage ===
+          'playoff'
+            ? bracket
+            : null,
+
+        round:
+          stage ===
+          'playoff'
+            ? round
+            : null,
+
+        bestOf,
+
+        games:
+          playedGames.map(
+            (
+              game
+            ) => ({
+              gameNumber:
+                game.gameNumber,
+
+              durationSeconds:
+                game.durationMinutes *
+                  60 +
+                game.durationSeconds,
+
+              winnerTeamId:
+                game.winnerTeamId,
+
+              mvpPlayerId:
+                game.mvpPlayerId,
+
+              players:
+                game.players.map(
+                  (
+                    player
+                  ) => ({
+                    playerId:
+                      player.playerId,
+
+                    teamId:
+                      player.teamId,
+
+                    role:
+                      player.role,
+
+                    championId:
+                      player.championId,
+
+                    kills:
+                      Number(
+                        player.kills
+                      ) || 0,
+
+                    deaths:
+                      Number(
+                        player.deaths
+                      ) || 0,
+
+                    assists:
+                      Number(
+                        player.assists
+                      ) || 0,
+
+                    cs:
+                      Number(
+                        player.cs
+                      ) || 0,
+
+                    gold:
+                      Number(
+                        player.gold
+                      ) || 0,
+
+                    damage:
+                      Number(
+                        player.damage
+                      ) || 0,
+
+                    visionScore:
+                      Number(
+                        player.visionScore
+                      ) || 0,
+                  })
+                ),
+            })
+          ),
+      };
+
+      /* =====================================================
+         IMPORTANT :
+         Notre route est maintenant :
+         app/api/admin/results/route.ts
+         donc URL = /api/admin/results
+      ===================================================== */
+
+      const res =
+        await fetch(
+          '/api/admin/results',
+          {
+            method:
+              'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body:
+              JSON.stringify(
+                body
+              ),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      if (
+        !res.ok ||
+        !data.success
+      ) {
+        throw new Error(
+          data.error ||
+            'Erreur lors de l’enregistrement.'
+        );
+      }
+
+      setMessage(
+        `Match enregistré ! ID ${data.matchId}`
+      );
+
+      setGames(
+        []
+      );
+    } catch (
+      error: any
+    ) {
+      console.error(
+        '[ADMIN RESULTS]',
+        error
+      );
+
+      setMessage(
+        error?.message ||
+          'Erreur inconnue'
+      );
+    } finally {
+      setSaving(
+        false
+      );
+    }
   }
+
+  /* =========================================================
+     UI
+  ========================================================= */
+
+  return (
+    <>
+      <Nav />
+
+      <main className="section adminResultsPage">
+        <div className="sectionTitle">
+          <span />
+
+          <h2>
+            Admin résultats
+          </h2>
+        </div>
+
+        {/* =================================================
+            NOUVEAU MATCH
+        ================================================= */}
+
+        <section className="card adminSetup">
+          <h3>
+            Nouveau match
+          </h3>
+
+          <div className="setupGrid">
+            {/* DIVISION */}
+
+            <label>
+              Division
+
+              <select
+                value={
+                  division
+                }
+                onChange={(
+                  e
+                ) => {
+                  setDivision(
+                    e.target
+                      .value as Division
+                  );
+
+                  setTeam1Id(
+                    null
+                  );
+
+                  setTeam2Id(
+                    null
+                  );
+
+                  setGames(
+                    []
+                  );
+                }}
+              >
+                <option value="Yordle">
+                  Yordle
+                </option>
+
+                <option value="Ixtal">
+                  Ixtal
+                </option>
+
+                <option value="Targon">
+                  Targon
+                </option>
+              </select>
+            </label>
+
+            {/* TEAM 1 */}
+
+            <label>
+              Équipe 1
+
+              <select
+                value={
+                  team1Id ??
+                  ''
+                }
+                onChange={(
+                  e
+                ) => {
+                  const value =
+                    e.target
+                      .value;
+
+                  setTeam1Id(
+                    value
+                      ? Number(
+                          value
+                        )
+                      : null
+                  );
+
+                  setGames(
+                    []
+                  );
+                }}
+              >
+                <option value="">
+                  Choisir
+                </option>
+
+                {divisionTeams.map(
+                  (
+                    team
+                  ) => (
+                    <option
+                      key={
+                        team.id
+                      }
+                      value={
+                        team.id
+                      }
+                      disabled={
+                        team.id ===
+                        team2Id
+                      }
+                    >
+                      {
+                        team.name
+                      }
+                    </option>
+                  )
+                )}
+              </select>
+            </label>
+
+            {/* TEAM 2 */}
+
+            <label>
+              Équipe 2
+
+              <select
+                value={
+                  team2Id ??
+                  ''
+                }
+                onChange={(
+                  e
+                ) => {
+                  const value =
+                    e.target
+                      .value;
+
+                  setTeam2Id(
+                    value
+                      ? Number(
+                          value
+                        )
+                      : null
+                  );
+
+                  setGames(
+                    []
+                  );
+                }}
+              >
+                <option value="">
+                  Choisir
+                </option>
+
+                {divisionTeams.map(
+                  (
+                    team
+                  ) => (
+                    <option
+                      key={
+                        team.id
+                      }
+                      value={
+                        team.id
+                      }
+                      disabled={
+                        team.id ===
+                        team1Id
+                      }
+                    >
+                      {
+                        team.name
+                      }
+                    </option>
+                  )
+                )}
+              </select>
+            </label>
+
+            {/* PHASE */}
+
+            <label>
+              Phase
+
+              <select
+                value={
+                  stage
+                }
+                onChange={(
+                  e
+                ) =>
+                  setStage(
+                    e.target
+                      .value as
+                      | 'pool'
+                      | 'playoff'
+                  )
+                }
+              >
+                <option value="pool">
+                  Poules
+                </option>
+
+                <option value="playoff">
+                  Playoffs
+                </option>
+              </select>
+            </label>
+
+            {/* PLAYOFF OPTIONS */}
+
+            {stage ===
+              'playoff' && (
+              <>
+                <label>
+                  Bracket
+
+                  <select
+                    value={
+                      bracket
+                    }
+                    onChange={(
+                      e
+                    ) =>
+                      setBracket(
+                        e.target
+                          .value as
+                          | 'winner'
+                          | 'loser'
+                          | 'grand_final'
+                      )
+                    }
+                  >
+                    <option value="winner">
+                      Winner
+                    </option>
+
+                    <option value="loser">
+                      Loser
+                    </option>
+
+                    <option value="grand_final">
+                      Grande finale
+                    </option>
+                  </select>
+                </label>
+
+                <label>
+                  Round
+
+                  <input
+                    value={
+                      round
+                    }
+                    onChange={(
+                      e
+                    ) =>
+                      setRound(
+                        e.target
+                          .value
+                      )
+                    }
+                    placeholder="Quart, Demi..."
+                  />
+                </label>
+              </>
+            )}
+
+            {/* FORMAT */}
+
+            <label>
+              Format
+
+              <select
+                value={
+                  bestOf
+                }
+                onChange={(
+                  e
+                ) => {
+                  setBestOf(
+                    Number(
+                      e.target
+                        .value
+                    )
+                  );
+
+                  setGames(
+                    []
+                  );
+                }}
+              >
+                <option value={1}>
+                  BO1
+                </option>
+
+                <option value={3}>
+                  BO3
+                </option>
+
+                <option value={5}>
+                  BO5
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <button
+            className="joinTeamBtn"
+            type="button"
+            onClick={
+              regenerateGames
+            }
+          >
+            Préparer le match
+          </button>
+
+          {message && (
+            <p className="adminMessage">
+              {
+                message
+              }
+            </p>
+          )}
+        </section>
+
+        {/* =================================================
+            GAMES
+        ================================================= */}
+
+        {games.map(
+          (
+            game,
+            gameIndex
+          ) => (
+            <section
+              key={
+                game.gameNumber
+              }
+              className="card gameCard"
+            >
+              <div className="gameHeader">
+                <h3>
+                  Game{' '}
+                  {
+                    game.gameNumber
+                  }
+                </h3>
+
+                <div className="gameOptions">
+                  {/* DUREE MIN */}
+
+                  <label>
+                    Durée min
+
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        game.durationMinutes
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        updateGame(
+                          gameIndex,
+                          {
+                            durationMinutes:
+                              Number(
+                                e.target
+                                  .value
+                              ) ||
+                              0,
+                          }
+                        )
+                      }
+                    />
+                  </label>
+
+                  {/* SECONDES */}
+
+                  <label>
+                    sec
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={
+                        game.durationSeconds
+                      }
+                      onChange={(
+                        e
+                      ) => {
+                        const value =
+                          Math.max(
+                            0,
+                            Math.min(
+                              59,
+                              Number(
+                                e.target
+                                  .value
+                              ) ||
+                                0
+                            )
+                          );
+
+                        updateGame(
+                          gameIndex,
+                          {
+                            durationSeconds:
+                              value,
+                          }
+                        );
+                      }}
+                    />
+                  </label>
+
+                  {/* WINNER */}
+
+                  <label>
+                    Vainqueur
+
+                    <select
+                      value={
+                        game.winnerTeamId ??
+                        ''
+                      }
+                      onChange={(
+                        e
+                      ) => {
+                        const value =
+                          e.target
+                            .value;
+
+                        updateGame(
+                          gameIndex,
+                          {
+                            winnerTeamId:
+                              value
+                                ? Number(
+                                    value
+                                  )
+                                : null,
+                          }
+                        );
+                      }}
+                    >
+                      <option value="">
+                        -
+                      </option>
+
+                      <option
+                        value={
+                          team1Id ??
+                          ''
+                        }
+                      >
+                        {
+                          team1?.name
+                        }
+                      </option>
+
+                      <option
+                        value={
+                          team2Id ??
+                          ''
+                        }
+                      >
+                        {
+                          team2?.name
+                        }
+                      </option>
+                    </select>
+                  </label>
+
+                  {/* MVP */}
+
+                  <label>
+                    MVP
+
+                    <select
+                      value={
+                        game.mvpPlayerId ??
+                        ''
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        updateGame(
+                          gameIndex,
+                          {
+                            mvpPlayerId:
+                              e.target
+                                .value
+                                ? Number(
+                                    e.target
+                                      .value
+                                  )
+                                : null,
+                          }
+                        )
+                      }
+                    >
+                      <option value="">
+                        Aucun
+                      </option>
+
+                      {game.players.map(
+                        (
+                          player
+                        ) => {
+                          const rosterPlayer =
+                            [
+                              ...(team1?.roster ??
+                                []),
+
+                              ...(team2?.roster ??
+                                []),
+                            ].find(
+                              (
+                                p
+                              ) =>
+                                p.id ===
+                                player.playerId
+                            );
+
+                          return (
+                            <option
+                              key={
+                                player.playerId
+                              }
+                              value={
+                                player.playerId
+                              }
+                            >
+                              {
+                                rosterPlayer
+                                  ?.riotId ??
+                                `Joueur ${player.playerId}`
+                              }
+                            </option>
+                          );
+                        }
+                      )}
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              {/* =============================================
+                  TABLEAU
+              ============================================= */}
+
+              <div className="gameTable">
+                <div className="gameTableHeader">
+                  <span>
+                    Rôle
+                  </span>
+
+                  <span>
+                    Joueur
+                  </span>
+
+                  <span>
+                    Champion
+                  </span>
+
+                  <span>
+                    K
+                  </span>
+
+                  <span>
+                    D
+                  </span>
+
+                  <span>
+                    A
+                  </span>
+
+                  <span>
+                    CS
+                  </span>
+
+                  <span>
+                    Gold
+                  </span>
+
+                  <span>
+                    DMG
+                  </span>
+
+                  <span>
+                    Vision
+                  </span>
+                </div>
+
+                {game.players.map(
+                  (
+                    player,
+                    playerIndex
+                  ) => {
+                    const rosterPlayer =
+                      [
+                        ...(team1?.roster ??
+                          []),
+
+                        ...(team2?.roster ??
+                          []),
+                      ].find(
+                        (
+                          p
+                        ) =>
+                          p.id ===
+                          player.playerId
+                      );
+
+                    return (
+                      <div
+                        key={`${game.gameNumber}-${player.playerId}`}
+                        className="gamePlayerRow"
+                      >
+                        <strong>
+                          {
+                            player.role
+                          }
+                        </strong>
+
+                        <span>
+                          {
+                            rosterPlayer
+                              ?.riotId ??
+                            `Joueur ${player.playerId}`
+                          }
+                        </span>
+
+                        {/* CHAMPION */}
+
+                        <select
+                          value={
+                            player.championId
+                          }
+                          onChange={(
+                            e
+                          ) =>
+                            updatePlayer(
+                              gameIndex,
+                              playerIndex,
+                              {
+                                championId:
+                                  e.target
+                                    .value,
+                              }
+                            )
+                          }
+                        >
+                          <option value="">
+                            Champion
+                          </option>
+
+                          {champions.map(
+                            (
+                              champion
+                            ) => (
+                              <option
+                                key={
+                                  champion.id
+                                }
+                                value={
+                                  champion.id
+                                }
+                              >
+                                {
+                                  champion.name
+                                }
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        {/* STATS */}
+
+                        {(
+                          [
+                            'kills',
+                            'deaths',
+                            'assists',
+                            'cs',
+                            'gold',
+                            'damage',
+                            'visionScore',
+                          ] as const
+                        ).map(
+                          (
+                            field
+                          ) => (
+                            <input
+                              key={
+                                field
+                              }
+                              type="number"
+                              min="0"
+                              value={
+                                player[
+                                  field
+                                ]
+                              }
+                              onChange={(
+                                e
+                              ) =>
+                                updatePlayer(
+                                  gameIndex,
+                                  playerIndex,
+                                  {
+                                    [field]:
+                                      Number(
+                                        e.target
+                                          .value
+                                      ) ||
+                                      0,
+                                  }
+                                )
+                              }
+                            />
+                          )
+                        )}
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            </section>
+          )
+        )}
+
+        {/* =================================================
+            ENREGISTRER
+        ================================================= */}
+
+        {games.length >
+          0 && (
+          <button
+            className="saveMatchButton"
+            type="button"
+            disabled={
+              saving
+            }
+            onClick={
+              saveMatch
+            }
+          >
+            {saving
+              ? 'Enregistrement...'
+              : 'Enregistrer le match'}
+          </button>
+        )}
+
+        {/* =================================================
+            CSS
+        ================================================= */}
+
+        <style jsx>{`
+          .adminResultsPage {
+            position: relative;
+          }
+
+          .adminSetup {
+            margin-bottom:
+              20px;
+          }
+
+          .setupGrid {
+            display: grid;
+
+            grid-template-columns:
+              repeat(
+                3,
+                minmax(
+                  0,
+                  1fr
+                )
+              );
+
+            gap: 14px;
+
+            margin:
+              20px
+              0;
+          }
+
+          label {
+            display: flex;
+
+            flex-direction:
+              column;
+
+            gap: 6px;
+
+            color:
+              var(--navy);
+
+            font-size:
+              11px;
+
+            font-weight:
+              900;
+
+            text-transform:
+              uppercase;
+          }
+
+          label input,
+          label select {
+            width:
+              100%;
+          }
+
+          .adminMessage {
+            margin-top:
+              15px;
+
+            color:
+              var(--orange);
+
+            font-weight:
+              800;
+          }
+
+          /* =========================
+             GAME
+          ========================= */
+
+          .gameCard {
+            margin-bottom:
+              20px;
+          }
+
+          .gameHeader {
+            display:
+              flex;
+
+            align-items:
+              flex-end;
+
+            justify-content:
+              space-between;
+
+            gap: 20px;
+
+            margin-bottom:
+              22px;
+          }
+
+          .gameOptions {
+            display:
+              flex;
+
+            align-items:
+              flex-end;
+
+            gap: 10px;
+
+            flex-wrap:
+              wrap;
+          }
+
+          .gameOptions label {
+            width:
+              130px;
+          }
+
+          /* =========================
+             TABLE
+          ========================= */
+
+          .gameTable {
+            overflow-x:
+              auto;
+          }
+
+          .gameTableHeader,
+          .gamePlayerRow {
+            display:
+              grid;
+
+            grid-template-columns:
+              85px
+              minmax(
+                160px,
+                1fr
+              )
+              minmax(
+                150px,
+                1fr
+              )
+              65px
+              65px
+              65px
+              80px
+              100px
+              100px
+              90px;
+
+            gap:
+              8px;
+
+            align-items:
+              center;
+
+            min-width:
+              1100px;
+          }
+
+          .gameTableHeader {
+            padding:
+              0
+              8px
+              10px;
+
+            color:
+              var(--navy);
+
+            font-size:
+              10px;
+
+            font-weight:
+              900;
+
+            text-transform:
+              uppercase;
+          }
+
+          .gamePlayerRow {
+            padding:
+              8px;
+
+            border-top:
+              1px
+              solid
+              rgba(
+                9,
+                42,
+                63,
+                0.08
+              );
+          }
+
+          .gamePlayerRow input,
+          .gamePlayerRow select {
+            width:
+              100%;
+
+            min-height:
+              42px;
+
+            padding:
+              8px;
+          }
+
+          .gamePlayerRow strong {
+            color:
+              var(--orange);
+
+            font-size:
+              11px;
+          }
+
+          .gamePlayerRow span {
+            color:
+              var(--navy);
+
+            font-size:
+              12px;
+
+            font-weight:
+              800;
+          }
+
+          /* =========================
+             SAVE
+          ========================= */
+
+          .saveMatchButton {
+            width:
+              100%;
+
+            min-height:
+              58px;
+
+            margin-top:
+              8px;
+
+            border:
+              0;
+
+            border-radius:
+              8px;
+
+            background:
+              var(--navy);
+
+            color:
+              white;
+
+            font-size:
+              14px;
+
+            font-weight:
+              900;
+          }
+
+          /* =========================
+             RESPONSIVE
+          ========================= */
+
+          @media (
+            max-width:
+              900px
+          ) {
+            .setupGrid {
+              grid-template-columns:
+                1fr;
+            }
+
+            .gameHeader {
+              align-items:
+                stretch;
+
+              flex-direction:
+                column;
+            }
+          }
+        `}</style>
+      </main>
+    </>
+  );
 }
