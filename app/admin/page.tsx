@@ -299,15 +299,37 @@ export default function AdminPage() {
           <h2>Admin CZF</h2>
         </div>
 
-        <div className="card">
-          <h3>Actions rapides</h3>
+<div className="card">
+  <h3>Actions rapides</h3>
 
-          <button
-            className="joinTeamBtn"
-            onClick={refreshAllRiot}
-          >
-            🔄 Actualiser tous les joueurs Riot
-          </button>
+  <div
+    style={{
+      display: 'flex',
+      gap: '12px',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+    }}
+  >
+    <button
+      className="joinTeamBtn"
+      onClick={refreshAllRiot}
+    >
+      🔄 Actualiser tous les joueurs Riot
+    </button>
+
+    <a
+      href="/admin/results"
+      className="joinTeamBtn"
+      style={{
+        textDecoration: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      🏆 Gérer les résultats
+    </a>
+  </div>
 
           {message && (
             <p

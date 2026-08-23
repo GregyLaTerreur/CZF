@@ -1,4 +1,4 @@
- import {
+import {
   NextRequest,
   NextResponse,
 } from 'next/server';
@@ -37,6 +37,7 @@ type PlayerStatInput = {
   cs: number;
   gold: number;
   damage: number;
+  visionScore: number;
 };
 
 type GameInput = {
@@ -169,12 +170,6 @@ async function checkAdmin(
   const user =
     authData.user;
 
-  /*
-    On réutilise ton système
-    d'admin déjà existant :
-    profiles.is_admin
-  */
-
   const {
     data: profile,
     error: profileError,
@@ -214,10 +209,6 @@ export async function POST(
     | null = null;
 
   try {
-    /* =====================================================
-       AUTH
-    ===================================================== */
-
     const admin =
       await checkAdmin(
         request
@@ -236,10 +227,6 @@ export async function POST(
         }
       );
     }
-
-    /* =====================================================
-       BODY
-    ===================================================== */
 
     const body =
       (await request.json()) as
@@ -528,11 +515,7 @@ export async function POST(
     }
 
     /* =====================================================
-       ROSTERS DES 2 TEAMS
-
-       Important pour les SUBS :
-       un remplaçant est accepté uniquement s'il
-       appartient réellement au roster de la team.
+       ROSTERS
     ===================================================== */
 
     const {
@@ -619,7 +602,7 @@ export async function POST(
     }
 
     /* =====================================================
-       VALIDATION DE CHAQUE GAME
+       VALIDATION GAMES
     ===================================================== */
 
     const allowedRoles:
@@ -638,10 +621,6 @@ export async function POST(
       const game
       of games
     ) {
-      /* ---------------------------
-         NUMERO GAME
-      --------------------------- */
-
       if (
         !game.gameNumber ||
         Number(
@@ -671,10 +650,6 @@ export async function POST(
         )
       );
 
-      /* ---------------------------
-         DUREE
-      --------------------------- */
-
       if (
         Number(
           game.durationSeconds
@@ -684,10 +659,6 @@ export async function POST(
           `Durée invalide pour la Game ${game.gameNumber}.`
         );
       }
-
-      /* ---------------------------
-         VAINQUEUR GAME
-      --------------------------- */
 
       if (
         Number(
@@ -710,10 +681,6 @@ export async function POST(
         );
       }
 
-      /* ---------------------------
-         EXACTEMENT 10 JOUEURS
-      --------------------------- */
-
       if (
         !Array.isArray(
           game.players
@@ -725,10 +692,6 @@ export async function POST(
           `La Game ${game.gameNumber} doit contenir exactement 10 joueurs.`
         );
       }
-
-      /* ---------------------------
-         PAS DE DOUBLON
-      --------------------------- */
 
       const gamePlayerIds =
         game.players.map(
@@ -747,10 +710,6 @@ export async function POST(
           `Un joueur est présent plusieurs fois dans la Game ${game.gameNumber}.`
         );
       }
-
-      /* ---------------------------
-         5 VS 5
-      --------------------------- */
 
       const team1Players =
         game.players.filter(
@@ -785,10 +744,6 @@ export async function POST(
         );
       }
 
-      /* ---------------------------
-         ROLE + CHAMPION + STATS
-      --------------------------- */
-
       for (
         const player
         of game.players
@@ -819,6 +774,7 @@ export async function POST(
             player.cs,
             player.gold,
             player.damage,
+            player.visionScore,
           ];
 
         if (
@@ -838,10 +794,6 @@ export async function POST(
             `Stat invalide détectée dans la Game ${game.gameNumber}.`
           );
         }
-
-        /* -------------------------
-           VERIFICATION DU ROSTER
-        ------------------------- */
 
         const dbPlayer =
           playerById.get(
@@ -887,10 +839,6 @@ export async function POST(
         }
       }
 
-      /* ---------------------------
-         1 ROLE DE CHAQUE PAR TEAM
-      --------------------------- */
-
       for (
         const teamPlayers
         of [
@@ -925,10 +873,6 @@ export async function POST(
         }
       }
 
-      /* ---------------------------
-         MVP
-      --------------------------- */
-
       if (
         game.mvpPlayerId !==
           null &&
@@ -953,7 +897,7 @@ export async function POST(
     }
 
     /* =====================================================
-       VERIFICATION DU SCORE DU MATCH
+       SCORE MATCH
     ===================================================== */
 
     const winsTeam1 =
@@ -1086,7 +1030,7 @@ export async function POST(
       );
 
     /* =====================================================
-       CREATION DES GAMES
+       CREATION GAMES
     ===================================================== */
 
     for (
@@ -1143,7 +1087,7 @@ export async function POST(
       }
 
       /* ===================================================
-         STATS DES 10 JOUEURS
+         STATS JOUEURS
       =================================================== */
 
       const stats =
@@ -1199,6 +1143,11 @@ export async function POST(
               Number(
                 player.damage
               ),
+
+            vision_score:
+              Number(
+                player.visionScore
+              ) || 0,
           })
         );
 
@@ -1257,17 +1206,6 @@ export async function POST(
       '[CZF ADMIN RESULTS]',
       error
     );
-
-    /*
-      Si une erreur arrive après
-      la création du match :
-
-      suppression du match
-      ↓
-      cascade
-      ↓
-      games + stats supprimées.
-    */
 
     if (
       createdMatchId !==

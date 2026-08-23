@@ -24,36 +24,6 @@ type Role =
   | 'ADC'
   | 'Support';
 
-type StatSort =
-  | 'kda'
-  | 'kills'
-  | 'assists'
-  | 'gold'
-  | 'dpm'
-  | 'csPerMin'
-  | 'mvp';
-
-type ResultPlayer = {
-  id:
-    | number
-    | string
-    | null;
-
-  riotId: string;
-
-  discordName:
-    | string
-    | null;
-
-  role:
-    | string
-    | null;
-
-  avatar:
-    | string
-    | null;
-};
-
 type Team = {
   id:
     | number
@@ -74,31 +44,27 @@ type Team = {
   wins: number;
 
   losses: number;
-
-  roster:
-    ResultPlayer[];
-};
-
-type Champion = {
-  id: string;
-  key: string;
-  name: string;
-  image: string;
 };
 
 type HistoryTeam = {
   id: number;
+
   name: string;
+
   shortName: string;
+
   logo:
     | string
     | null;
+
   score: number;
 };
 
 type HistoryGame = {
   id: number;
+
   gameNumber: number;
+
   durationSeconds: number;
 
   winnerTeamId: number;
@@ -150,8 +116,11 @@ type HistoryMatch = {
   winner:
     | {
         id: number;
+
         name: string;
+
         shortName: string;
+
         logo:
           | string
           | null;
@@ -182,26 +151,35 @@ type PlayerStats = {
   games: number;
 
   wins: number;
+
   losses: number;
 
   kills: number;
+
   deaths: number;
+
   assists: number;
 
   kda: number;
 
   cs: number;
+
   csPerMin: number;
 
   gold: number;
+
   goldPerMin: number;
 
   damage: number;
+
   dpm: number;
+
+  visionScore: number;
 
   mvp: number;
 
-  totalDurationSeconds: number;
+  totalDurationSeconds:
+    number;
 };
 
 type ChampionRoleStat = {
@@ -226,83 +204,109 @@ type ChampionRoleStat = {
   winRate: number;
 };
 
-type RoleStats = Record<
-  Role,
-  PlayerStats[]
->;
+type RoleStats =
+  Record<
+    Role,
+    PlayerStats[]
+  >;
 
-type RoleChampions = Record<
-  Role,
-  ChampionRoleStat[]
->;
+type RoleChampions =
+  Record<
+    Role,
+    ChampionRoleStat[]
+  >;
 
 type ResultsApiData = {
   success: boolean;
 
-  divisions: {
-    Yordle: Team[];
-    Ixtal: Team[];
-    Targon: Team[];
-  };
-
   teams: Team[];
 
-  champions: Champion[];
+  divisions: {
+    Yordle:
+      Team[];
+
+    Ixtal:
+      Team[];
+
+    Targon:
+      Team[];
+  };
 
   historyByDivision: {
-    Yordle: HistoryMatch[];
-    Ixtal: HistoryMatch[];
-    Targon: HistoryMatch[];
+    Yordle:
+      HistoryMatch[];
+
+    Ixtal:
+      HistoryMatch[];
+
+    Targon:
+      HistoryMatch[];
   };
 
   playerStatsByDivision: {
-    Yordle: RoleStats;
-    Ixtal: RoleStats;
-    Targon: RoleStats;
+    Yordle:
+      RoleStats;
+
+    Ixtal:
+      RoleStats;
+
+    Targon:
+      RoleStats;
   };
 
   championsByDivision: {
-    Yordle: RoleChampions;
-    Ixtal: RoleChampions;
-    Targon: RoleChampions;
-  };
-};
+    Yordle:
+      RoleChampions;
 
-type DivisionConfig = {
-  name: Division;
-  color: string;
-  soft: string;
+    Ixtal:
+      RoleChampions;
+
+    Targon:
+      RoleChampions;
+  };
 };
 
 /* =========================================================
    CONFIG
 ========================================================= */
 
-const DIVISIONS:
-  DivisionConfig[] = [
+const DIVISIONS = [
   {
-    name: 'Yordle',
-    color: '#51a677',
+    name:
+      'Yordle' as Division,
+
+    color:
+      '#51a677',
+
     soft:
       'rgba(81, 166, 119, 0.11)',
   },
 
   {
-    name: 'Ixtal',
-    color: '#4387d8',
+    name:
+      'Ixtal' as Division,
+
+    color:
+      '#4387d8',
+
     soft:
       'rgba(67, 135, 216, 0.11)',
   },
 
   {
-    name: 'Targon',
-    color: '#8f6bc7',
+    name:
+      'Targon' as Division,
+
+    color:
+      '#8f6bc7',
+
     soft:
       'rgba(143, 107, 199, 0.11)',
   },
 ];
 
-const ROLES: Role[] = [
+const ROLES:
+  Role[] = [
   'Top',
   'Jungle',
   'Mid',
@@ -311,16 +315,31 @@ const ROLES: Role[] = [
 ];
 
 const ROLE_LABELS:
-  Record<Role, string> = {
-  Top: 'TOP',
-  Jungle: 'JGL',
-  Mid: 'MID',
-  ADC: 'ADC',
-  Support: 'SUP',
+  Record<
+    Role,
+    string
+  > = {
+  Top:
+    'TOP',
+
+  Jungle:
+    'JGL',
+
+  Mid:
+    'MID',
+
+  ADC:
+    'ADC',
+
+  Support:
+    'SUP',
 };
 
 const ROLE_ICONS:
-  Record<Role, string> = {
+  Record<
+    Role,
+    string
+  > = {
   Top:
     '/assets/roles/top.png',
 
@@ -336,46 +355,6 @@ const ROLE_ICONS:
   Support:
     '/assets/roles/sup.png',
 };
-
-const SORTS: {
-  id: StatSort;
-  label: string;
-}[] = [
-  {
-    id: 'kda',
-    label: 'KDA',
-  },
-
-  {
-    id: 'kills',
-    label: 'Kills',
-  },
-
-  {
-    id: 'assists',
-    label: 'Assists',
-  },
-
-  {
-    id: 'gold',
-    label: 'Gold',
-  },
-
-  {
-    id: 'dpm',
-    label: 'DPM',
-  },
-
-  {
-    id: 'csPerMin',
-    label: 'CS/min',
-  },
-
-  {
-    id: 'mvp',
-    label: 'MVP',
-  },
-];
 
 /* =========================================================
    PAGE
@@ -399,16 +378,8 @@ export default function ResultsPage() {
     );
 
   const [
-    sortBy,
-    setSortBy,
-  ] =
-    useState<StatSort>(
-      'kda'
-    );
-
-  const [
-    resultsData,
-    setResultsData,
+    data,
+    setData,
   ] =
     useState<
       ResultsApiData |
@@ -419,7 +390,9 @@ export default function ResultsPage() {
     loading,
     setLoading,
   ] =
-    useState(true);
+    useState(
+      true
+    );
 
   const [
     error,
@@ -428,13 +401,16 @@ export default function ResultsPage() {
     useState('');
 
   /* ======================================================
-     FETCH
+     LOAD
   ====================================================== */
 
   useEffect(() => {
-    async function loadResults() {
+    async function load() {
       try {
-        setLoading(true);
+        setLoading(
+          true
+        );
+
         setError('');
 
         const res =
@@ -446,149 +422,177 @@ export default function ResultsPage() {
             }
           );
 
-        const data:
-          ResultsApiData =
+        const json =
           await res.json();
 
         if (
           !res.ok ||
-          !data.success
+          !json.success
         ) {
           throw new Error(
-            'Impossible de charger les résultats.'
+            json.error ||
+              'Impossible de charger les résultats.'
           );
         }
 
-        setResultsData(
-          data
+        setData(
+          json
         );
       } catch (
-        err: any
+        error: any
       ) {
-        console.error(
-          err
-        );
-
         setError(
-          err?.message ||
+          error?.message ||
             'Erreur de chargement.'
         );
       } finally {
-        setLoading(false);
+        setLoading(
+          false
+        );
       }
     }
 
-    loadResults();
+    load();
   }, []);
 
   /* ======================================================
-     DIVISION
+     DIVISION DATA
   ====================================================== */
 
   const divisionConfig =
     DIVISIONS.find(
-      (item) =>
+      (
+        item
+      ) =>
         item.name ===
         division
     ) ??
     DIVISIONS[0];
 
-  const divisionTeams =
-    useMemo(() => {
-      if (!resultsData) {
-        return [];
-      }
+  const teams =
+    data
+      ?.divisions?.[
+      division
+    ] ??
+    [];
 
-      return (
-        resultsData
-          .divisions[
-          division
-        ] ?? []
-      ).slice(
-        0,
-        10
-      );
-    }, [
-      resultsData,
-      division,
-    ]);
-
-  const divisionHistory =
-    useMemo(() => {
-      if (!resultsData) {
-        return [];
-      }
-
-      return (
-        resultsData
-          .historyByDivision?.[
-          division
-        ] ?? []
-      );
-    }, [
-      resultsData,
-      division,
-    ]);
+  const history =
+    data
+      ?.historyByDivision?.[
+      division
+    ] ??
+    [];
 
   const roleStats =
-    useMemo(() => {
-      if (!resultsData) {
-        return [];
-      }
-
-      const source =
-        resultsData
-          .playerStatsByDivision?.[
-          division
-        ]?.[
-          selectedRole
-        ] ?? [];
-
-      return [
-        ...source,
-      ].sort(
-        (
-          a,
-          b
-        ) =>
-          getSortValue(
-            b,
-            sortBy
-          ) -
-          getSortValue(
-            a,
-            sortBy
-          )
-      );
-    }, [
-      resultsData,
-      division,
-      selectedRole,
-      sortBy,
-    ]);
+    data
+      ?.playerStatsByDivision?.[
+      division
+    ]?.[
+      selectedRole
+    ] ??
+    [];
 
   const roleChampions =
-    useMemo(() => {
-      if (!resultsData) {
-        return [];
-      }
+    data
+      ?.championsByDivision?.[
+      division
+    ]?.[
+      selectedRole
+    ] ??
+    [];
 
-      return (
-        resultsData
-          .championsByDivision?.[
-          division
-        ]?.[
-          selectedRole
-        ] ?? []
-      ).slice(
-        0,
-        3
-      );
-    }, [
-      resultsData,
-      division,
-      selectedRole,
-    ]);
+  /* ======================================================
+     MVP TOUS ROLES
+  ====================================================== */
+
+  const mvpRanking =
+    useMemo(
+      () => {
+        if (
+          !data
+        ) {
+          return [];
+        }
+
+        const divisionStats =
+          data
+            .playerStatsByDivision?.[
+            division
+          ];
+
+        if (
+          !divisionStats
+        ) {
+          return [];
+        }
+
+        const allPlayers =
+          ROLES.flatMap(
+            (
+              role
+            ) =>
+              divisionStats[
+                role
+              ] ??
+              []
+          );
+
+        const map =
+          new Map<
+            number,
+            PlayerStats
+          >();
+
+        for (
+          const player
+          of allPlayers
+        ) {
+          const existing =
+            map.get(
+              player.playerId
+            );
+
+          if (
+            !existing
+          ) {
+            map.set(
+              player.playerId,
+              {
+                ...player,
+              }
+            );
+
+            continue;
+          }
+
+          existing.mvp +=
+            player.mvp;
+        }
+
+        return Array.from(
+          map.values()
+        )
+          .filter(
+            (
+              player
+            ) =>
+              player.mvp >
+              0
+          )
+          .sort(
+            (
+              a,
+              b
+            ) =>
+              b.mvp -
+              a.mvp
+          );
+      },
+      [
+        data,
+        division,
+      ]
+    );
 
   /* ======================================================
      UI
@@ -610,23 +614,7 @@ export default function ResultsPage() {
           } as React.CSSProperties
         }
       >
-        {/* ÉCLAIRS */}
-
-        <img
-          className="resultBolt resultBoltOne"
-          src="/assets/eclairs/eclair_czf_04.png"
-          alt=""
-        />
-
-        <img
-          className="resultBolt resultBoltTwo"
-          src="/assets/eclairs/eclair_czf_06.png"
-          alt=""
-        />
-
-        {/* TITRE */}
-
-        <div className="sectionTitle resultsTitle">
+        <div className="sectionTitle">
           <span />
 
           <h2>
@@ -634,61 +622,56 @@ export default function ResultsPage() {
           </h2>
         </div>
 
-        {/* ERREUR */}
-
         {error && (
           <div className="resultsError">
             {error}
           </div>
         )}
 
-        {/* DIVISIONS */}
+        {/* =================================================
+            DIVISIONS
+        ================================================= */}
 
         <div className="divisionTabs">
           {DIVISIONS.map(
-            (item) => {
-              const active =
-                division ===
-                item.name;
-
-              return (
-                <button
-                  key={
+            (
+              item
+            ) => (
+              <button
+                key={
+                  item.name
+                }
+                type="button"
+                className={`divisionTab ${
+                  division ===
+                  item.name
+                    ? 'divisionTabActive'
+                    : ''
+                }`}
+                onClick={() => {
+                  setDivision(
                     item.name
-                  }
-                  type="button"
-                  onClick={() => {
-                    setDivision(
-                      item.name
-                    );
+                  );
 
-                    setSelectedRole(
-                      'Top'
-                    );
+                  setSelectedRole(
+                    'Top'
+                  );
+                }}
+                style={
+                  {
+                    '--tab-color':
+                      item.color,
 
-                    setSortBy(
-                      'kda'
-                    );
-                  }}
-                  className={`divisionTab ${
-                    active
-                      ? 'divisionTabActive'
-                      : ''
-                  }`}
-                  style={
-                    {
-                      '--tab-color':
-                        item.color,
-
-                      '--tab-soft':
-                        item.soft,
-                    } as React.CSSProperties
-                  }
-                >
-                  {item.name}
-                </button>
-              );
-            }
+                    '--tab-soft':
+                      item.soft,
+                  } as React.CSSProperties
+                }
+              >
+                {
+                  item.name
+                }
+              </button>
+            )
           )}
         </div>
 
@@ -697,25 +680,18 @@ export default function ResultsPage() {
         ================================================= */}
 
         <div className="resultsMainGrid">
-
-          {/* CLASSEMENT */}
+          {/* ===============================================
+              CLASSEMENT
+          =============================================== */}
 
           <section className="resultsCard standingsCard">
-            <div className="resultsCardHeader">
-              <div>
-                <p className="cardEyebrow">
-                  PHASE DE POULE
-                </p>
-
-                <h3>
-                  Classement
-                </h3>
-              </div>
-
-              <div className="divisionBadge">
-                {division}
-              </div>
-            </div>
+            <CardHeader
+              eyebrow="PHASE DE POULE"
+              title="Classement"
+              badge={
+                division
+              }
+            />
 
             <div className="standingHeader">
               <span>
@@ -732,38 +708,38 @@ export default function ResultsPage() {
             </div>
 
             {loading ? (
-              <div className="standingsMessage">
+              <div className="emptySection">
                 Chargement...
               </div>
             ) : (
               <div className="standingRows">
-                {divisionTeams.map(
-                  (
-                    team,
-                    index
-                  ) => {
-                    const rank =
-                      index +
-                      1;
-
-                    const qualified =
-                      rank <=
-                      8;
-
-                    return (
+                {teams
+                  .slice(
+                    0,
+                    10
+                  )
+                  .map(
+                    (
+                      team,
+                      index
+                    ) => (
                       <div
                         key={
                           team.id
                         }
                         className={`standingRow ${
-                          qualified
+                          index <
+                          8
                             ? 'standingQualified'
                             : 'standingEliminated'
                         }`}
                       >
-                        <div className="standingRank">
-                          {rank}
-                        </div>
+                        <strong className="standingRank">
+                          {
+                            index +
+                            1
+                          }
+                        </strong>
 
                         <div className="standingTeam">
                           <TeamLogo
@@ -772,7 +748,7 @@ export default function ResultsPage() {
                             }
                           />
 
-                          <div className="standingTeamText">
+                          <div>
                             <strong>
                               {
                                 team.shortName
@@ -787,34 +763,25 @@ export default function ResultsPage() {
                           </div>
                         </div>
 
-                        <div className="standingScore">
-                          <strong>
-                            {
-                              team.wins
-                            }
-                          </strong>
-
-                          <span>
-                            -
-                          </span>
-
-                          <strong>
-                            {
-                              team.losses
-                            }
-                          </strong>
-                        </div>
+                        <strong className="standingScore">
+                          {
+                            team.wins
+                          }
+                          {' - '}
+                          {
+                            team.losses
+                          }
+                        </strong>
                       </div>
-                    );
-                  }
-                )}
+                    )
+                  )}
 
                 {Array.from({
                   length:
                     Math.max(
                       0,
                       10 -
-                        divisionTeams.length
+                        teams.length
                     ),
                 }).map(
                   (
@@ -822,7 +789,7 @@ export default function ResultsPage() {
                     index
                   ) => {
                     const rank =
-                      divisionTeams.length +
+                      teams.length +
                       index +
                       1;
 
@@ -836,154 +803,133 @@ export default function ResultsPage() {
                             : 'standingEliminated'
                         }`}
                       >
-                        <div className="standingRank">
+                        <strong className="standingRank">
                           {
                             rank
                           }
-                        </div>
+                        </strong>
 
                         <div className="standingTeam">
                           <div className="resultTeamLogo">
                             ?
                           </div>
 
-                          <div className="standingTeamText">
+                          <div>
                             <strong>
                               TBD
                             </strong>
                           </div>
                         </div>
 
-                        <div className="standingScore">
-                          <strong>
-                            0
-                          </strong>
-
-                          <span>
-                            -
-                          </span>
-
-                          <strong>
-                            0
-                          </strong>
-                        </div>
+                        <strong className="standingScore">
+                          0 - 0
+                        </strong>
                       </div>
                     );
                   }
                 )}
               </div>
             )}
-
-            <div className="standingsLegend">
-              <div>
-                <span className="legendQualified" />
-                Top 8 qualifié
-              </div>
-
-              <div>
-                <span className="legendEliminated" />
-                9e et 10e éliminés
-              </div>
-            </div>
           </section>
 
-          {/* BRACKET */}
+          {/* ===============================================
+              BRACKET
+          =============================================== */}
 
           <section className="resultsCard bracketCard">
-            <div className="resultsCardHeader">
-              <div>
-                <p className="cardEyebrow">
-                  PHASE FINALE
-                </p>
-
-                <h3>
-                  Double élimination
-                </h3>
-              </div>
-
-              <div className="divisionBadge">
-                TOP 8
-              </div>
-            </div>
+            <CardHeader
+              eyebrow="PHASE FINALE"
+              title="Double élimination"
+              badge="TOP 8"
+            />
 
             <div className="bracketScroller">
               <div className="fullBracket">
-
-                {/* WINNER */}
-
                 <div className="laneTitle">
                   <span />
+
                   WINNER BRACKET
                 </div>
 
-                <div className="winnerBracket">
-
-                  {/* QUARTS */}
-
-                  <div className="bracketRound quarterRound">
-                    <ColumnTitle>
-                      Quarts
-                    </ColumnTitle>
+                <div className="bracketColumns">
+                  <div className="bracketRound">
+                    <h4>
+                      QUARTS
+                    </h4>
 
                     <div className="quarterMatches">
                       <BracketMatch
-                        team1={getSeedTeam(
-                          divisionTeams,
-                          1
-                        )}
-                        team2={getSeedTeam(
-                          divisionTeams,
-                          8
-                        )}
+                        team1={
+                          getSeedName(
+                            teams,
+                            1
+                          )
+                        }
+                        team2={
+                          getSeedName(
+                            teams,
+                            8
+                          )
+                        }
                       />
 
                       <BracketMatch
-                        team1={getSeedTeam(
-                          divisionTeams,
-                          4
-                        )}
-                        team2={getSeedTeam(
-                          divisionTeams,
-                          5
-                        )}
+                        team1={
+                          getSeedName(
+                            teams,
+                            4
+                          )
+                        }
+                        team2={
+                          getSeedName(
+                            teams,
+                            5
+                          )
+                        }
                       />
 
                       <BracketMatch
-                        team1={getSeedTeam(
-                          divisionTeams,
-                          2
-                        )}
-                        team2={getSeedTeam(
-                          divisionTeams,
-                          7
-                        )}
+                        team1={
+                          getSeedName(
+                            teams,
+                            2
+                          )
+                        }
+                        team2={
+                          getSeedName(
+                            teams,
+                            7
+                          )
+                        }
                       />
 
                       <BracketMatch
-                        team1={getSeedTeam(
-                          divisionTeams,
-                          3
-                        )}
-                        team2={getSeedTeam(
-                          divisionTeams,
-                          6
-                        )}
+                        team1={
+                          getSeedName(
+                            teams,
+                            3
+                          )
+                        }
+                        team2={
+                          getSeedName(
+                            teams,
+                            6
+                          )
+                        }
                       />
                     </div>
                   </div>
 
-                  <WinnerConnector
-                    type="quarters"
-                  />
+                  <div className="bracketArrow">
+                    →
+                  </div>
 
-                  {/* DEMIES */}
+                  <div className="bracketRound">
+                    <h4>
+                      DEMI-FINALES
+                    </h4>
 
-                  <div className="bracketRound semiRound">
-                    <ColumnTitle>
-                      Demi-finales
-                    </ColumnTitle>
-
-                    <div className="semiMatches">
+                    <div className="doubleMatches">
                       <BracketMatch
                         team1="TBD"
                         team2="TBD"
@@ -996,18 +942,16 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  <WinnerConnector
-                    type="semis"
-                  />
+                  <div className="bracketArrow">
+                    →
+                  </div>
 
-                  {/* FINALE WINNER */}
+                  <div className="bracketRound">
+                    <h4>
+                      FINALE WINNER
+                    </h4>
 
-                  <div className="bracketRound winnerFinalRound">
-                    <ColumnTitle>
-                      Finale Winner
-                    </ColumnTitle>
-
-                    <div className="singleMatchCenter">
+                    <div className="singleMatch">
                       <BracketMatch
                         team1="TBD"
                         team2="TBD"
@@ -1016,66 +960,42 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  <WinnerConnector
-                    type="final"
-                  />
+                  <div className="bracketArrow">
+                    →
+                  </div>
 
-                  {/* GRANDE FINALE */}
+                  <div className="bracketRound">
+                    <h4>
+                      GRANDE FINALE
+                    </h4>
 
-                  <div className="bracketRound grandFinalRound">
-                    <ColumnTitle>
-                      Grande finale
-                    </ColumnTitle>
-
-                    <div className="singleMatchCenter">
+                    <div className="singleMatch">
                       <BracketMatch
                         team1="Winner WB"
                         team2="Winner LB"
-                        grandFinal
+                        highlighted
                       />
-
-                      <div className="championBox">
-                        <span>
-                          CHAMPION
-                        </span>
-
-                        <strong>
-                          TBD
-                        </strong>
-                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* DESCENTES */}
-
-                <div className="dropArea">
-                  <div className="dropMessage">
-                    Les perdants du Winner Bracket descendent dans le Loser Bracket
-                  </div>
-
-                  <div className="dropLines">
-                    <div className="dropLine dropQuarter" />
-                    <div className="dropLine dropSemi" />
-                    <div className="dropLine dropWinnerFinal" />
-                  </div>
+                <div className="bracketDrop">
+                  Les perdants du Winner Bracket descendent dans le Loser Bracket
                 </div>
 
-                {/* LOSER */}
-
-                <div className="laneTitle loserLaneTitle">
+                <div className="laneTitle loserLane">
                   <span />
+
                   LOSER BRACKET
                 </div>
 
-                <div className="loserBracket">
+                <div className="bracketColumns">
+                  <div className="bracketRound">
+                    <h4>
+                      ROUND 1
+                    </h4>
 
-                  <div className="bracketRound loserRoundOne">
-                    <ColumnTitle>
-                      Round 1
-                    </ColumnTitle>
-
-                    <div className="loserTwoMatches">
+                    <div className="doubleMatches">
                       <BracketMatch
                         team1="Loser QF"
                         team2="Loser QF"
@@ -1088,16 +1008,16 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  <LoserConnector
-                    type="double"
-                  />
+                  <div className="bracketArrow">
+                    →
+                  </div>
 
-                  <div className="bracketRound loserRoundTwo">
-                    <ColumnTitle>
-                      Round 2
-                    </ColumnTitle>
+                  <div className="bracketRound">
+                    <h4>
+                      ROUND 2
+                    </h4>
 
-                    <div className="loserTwoMatches">
+                    <div className="doubleMatches">
                       <BracketMatch
                         team1="TBD"
                         team2="Loser SF"
@@ -1110,16 +1030,16 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  <LoserConnector
-                    type="double"
-                  />
+                  <div className="bracketArrow">
+                    →
+                  </div>
 
-                  <div className="bracketRound loserRoundThree">
-                    <ColumnTitle>
-                      Round 3
-                    </ColumnTitle>
+                  <div className="bracketRound">
+                    <h4>
+                      ROUND 3
+                    </h4>
 
-                    <div className="singleMatchCenter">
+                    <div className="singleMatch">
                       <BracketMatch
                         team1="TBD"
                         team2="TBD"
@@ -1127,36 +1047,23 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  <LoserConnector
-                    type="single"
-                  />
+                  <div className="bracketArrow">
+                    →
+                  </div>
 
-                  <div className="bracketRound loserFinalRound">
-                    <ColumnTitle>
-                      Finale Loser
-                    </ColumnTitle>
+                  <div className="bracketRound">
+                    <h4>
+                      FINALE LOSER
+                    </h4>
 
-                    <div className="singleMatchCenter">
+                    <div className="singleMatch">
                       <BracketMatch
                         team1="TBD"
                         team2="Loser WB"
                         highlighted
                       />
-
-                      <div className="returnFinal">
-                        Winner LB
-
-                        <span>
-                          {' '}
-                          → GRANDE FINALE
-                        </span>
-                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="loserReturnLine">
-                  Le vainqueur du Loser Bracket rejoint la Grande Finale
                 </div>
               </div>
             </div>
@@ -1168,46 +1075,29 @@ export default function ResultsPage() {
         ================================================= */}
 
         <section className="resultsCard historyCard">
-          <div className="resultsCardHeader">
-            <div>
-              <p className="cardEyebrow">
-                MATCHS TERMINÉS
-              </p>
+          <CardHeader
+            eyebrow="MATCHS TERMINÉS"
+            title="Historique des matchs"
+            badge={`${history.length} MATCH${
+              history.length ===
+              1
+                ? ''
+                : 'S'
+            }`}
+          />
 
-              <h3>
-                Historique des matchs
-              </h3>
-            </div>
-
-            <div className="divisionBadge">
-              {
-                divisionHistory.length
-              } MATCH
-              {
-                divisionHistory.length >
-                1
-                  ? 'S'
-                  : ''
-              }
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="emptySection">
-              Chargement...
-            </div>
-          ) : divisionHistory.length ===
-            0 ? (
+          {history.length ===
+          0 ? (
             <div className="emptySection">
               Aucun match enregistré pour le moment.
             </div>
           ) : (
             <div className="historyList">
-              {divisionHistory.map(
+              {history.map(
                 (
                   match
                 ) => (
-                  <HistoryMatchCard
+                  <HistoryCard
                     key={
                       match.id
                     }
@@ -1222,27 +1112,21 @@ export default function ResultsPage() {
         </section>
 
         {/* =================================================
-            STATS JOUEURS
+            STATS
         ================================================= */}
 
         <section className="resultsCard statsCard">
-          <div className="resultsCardHeader">
-            <div>
-              <p className="cardEyebrow">
-                PERFORMANCES
-              </p>
+          <CardHeader
+            eyebrow="PERFORMANCES"
+            title="Statistiques joueurs"
+            badge={
+              division
+            }
+          />
 
-              <h3>
-                Statistiques des joueurs
-              </h3>
-            </div>
-
-            <div className="divisionBadge">
-              {division}
-            </div>
-          </div>
-
-          {/* ROLES */}
+          {/* ===============================================
+              ROLES
+          =============================================== */}
 
           <div className="roleTabs">
             {ROLES.map(
@@ -1254,17 +1138,17 @@ export default function ResultsPage() {
                     role
                   }
                   type="button"
+                  className={
+                    selectedRole ===
+                    role
+                      ? 'roleActive'
+                      : ''
+                  }
                   onClick={() =>
                     setSelectedRole(
                       role
                     )
                   }
-                  className={`roleTab ${
-                    selectedRole ===
-                    role
-                      ? 'roleTabActive'
-                      : ''
-                  }`}
                 >
                   <img
                     src={
@@ -1287,47 +1171,95 @@ export default function ResultsPage() {
             )}
           </div>
 
-          {/* TRI */}
+          {/* ===============================================
+              4 BLOCS SUR UNE MEME LIGNE
+          =============================================== */}
 
-          <div className="statsToolbar">
-            <span>
-              Trier par
-            </span>
-
-            <div className="sortButtons">
-              {SORTS.map(
-                (
-                  sort
-                ) => (
-                  <button
-                    key={
-                      sort.id
-                    }
-                    type="button"
-                    onClick={() =>
-                      setSortBy(
-                        sort.id
-                      )
-                    }
-                    className={
-                      sortBy ===
-                      sort.id
-                        ? 'sortActive'
-                        : ''
-                    }
-                  >
-                    {
-                      sort.label
-                    }
-                  </button>
+          <div className="statRankingGrid">
+            <RankingCard
+              title="KDA"
+              players={
+                roleStats
+              }
+              valueKey="kda"
+              formatter={(
+                value
+              ) =>
+                value.toFixed(
+                  2
                 )
-              )}
-            </div>
+              }
+            />
+
+            <RankingCard
+              title="GOLD"
+              players={
+                roleStats
+              }
+              valueKey="goldPerMin"
+              formatter={(
+                value
+              ) =>
+                `${Math.round(
+                  value
+                )} GPM`
+              }
+            />
+
+            <RankingCard
+              title="DPM"
+              players={
+                roleStats
+              }
+              valueKey="dpm"
+              formatter={(
+                value
+              ) =>
+                Math.round(
+                  value
+                ).toString()
+              }
+            />
+
+            {selectedRole ===
+            'Support' ? (
+              <RankingCard
+                title="VISION"
+                players={
+                  roleStats
+                }
+                valueKey="visionScore"
+                formatter={(
+                  value
+                ) =>
+                  Math.round(
+                    value
+                  ).toString()
+                }
+              />
+            ) : (
+              <RankingCard
+                title="CS / MIN"
+                players={
+                  roleStats
+                }
+                valueKey="csPerMin"
+                formatter={(
+                  value
+                ) =>
+                  value.toFixed(
+                    1
+                  )
+                }
+              />
+            )}
           </div>
 
-          {/* TOP CHAMPIONS */}
+          {/* ===============================================
+              CHAMPIONS
+          =============================================== */}
 
-          <div className="championStatsSection">
+          <div className="statsSubSection">
             <div className="subSectionTitle">
               <div>
                 <span />
@@ -1343,37 +1275,41 @@ export default function ResultsPage() {
               </div>
 
               <small>
-                Top 3
+                TOP 5
               </small>
             </div>
 
             {roleChampions.length ===
             0 ? (
               <div className="miniEmpty">
-                Aucun pick enregistré.
+                Aucun champion enregistré pour le moment.
               </div>
             ) : (
-              <div className="topChampionsGrid">
-                {roleChampions.map(
-                  (
-                    champion,
-                    index
-                  ) => (
-                    <div
-                      key={
-                        champion.championId
-                      }
-                      className="championStatCard"
-                    >
-                      <span className="championRank">
-                        #
-                        {
-                          index +
-                          1
+              <div className="championRow">
+                {roleChampions
+                  .slice(
+                    0,
+                    5
+                  )
+                  .map(
+                    (
+                      champion,
+                      index
+                    ) => (
+                      <div
+                        key={
+                          champion.championId
                         }
-                      </span>
+                        className="championCard"
+                      >
+                        <span className="championRank">
+                          #
+                          {
+                            index +
+                            1
+                          }
+                        </span>
 
-                      <div className="championIdentity">
                         {champion.image ? (
                           <img
                             src={
@@ -1389,311 +1325,89 @@ export default function ResultsPage() {
                           </div>
                         )}
 
-                        <div>
-                          <strong>
-                            {
-                              champion.name
-                            }
-                          </strong>
+                        <strong className="championName">
+                          {
+                            champion.name
+                          }
+                        </strong>
 
-                          <span>
-                            {
-                              champion.picks
-                            }{' '}
-                            pick
-                            {
-                              champion.picks >
-                              1
-                                ? 's'
-                                : ''
-                            }
-                          </span>
+                        <span className="championPicks">
+                          {
+                            champion.picks
+                          }{' '}
+                          pick
+                          {
+                            champion.picks >
+                            1
+                              ? 's'
+                              : ''
+                          }
+                        </span>
+
+                        <div className="championStats">
+                          <div>
+                            <small>
+                              PICK RATE
+                            </small>
+
+                            <strong>
+                              {
+                                champion.pickRate
+                              }
+                              %
+                            </strong>
+                          </div>
+
+                          <div>
+                            <small>
+                              WIN RATE
+                            </small>
+
+                            <strong>
+                              {
+                                champion.winRate
+                              }
+                              %
+                            </strong>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="championRates">
-                        <div>
-                          <span>
-                            PICK RATE
-                          </span>
-
-                          <strong>
-                            {
-                              champion.pickRate
-                            }
-                            %
-                          </strong>
-                        </div>
-
-                        <div>
-                          <span>
-                            WIN RATE
-                          </span>
-
-                          <strong>
-                            {
-                              champion.winRate
-                            }
-                            %
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
+                    )
+                  )}
               </div>
             )}
           </div>
 
-          {/* TABLE JOUEURS */}
+          {/* ===============================================
+              MVP
+          =============================================== */}
 
-          <div className="playerStatsSection">
+          <div className="statsSubSection">
             <div className="subSectionTitle">
               <div>
                 <span />
 
                 <strong>
-                  Classement{' '}
-                  {
-                    ROLE_LABELS[
-                      selectedRole
-                    ]
-                  }
+                  Classement MVP
                 </strong>
               </div>
 
               <small>
-                {
-                  SORTS.find(
-                    (
-                      item
-                    ) =>
-                      item.id ===
-                      sortBy
-                  )?.label
-                }
+                TOUS RÔLES
               </small>
             </div>
 
-            {roleStats.length ===
+            {mvpRanking.length ===
             0 ? (
               <div className="miniEmpty">
-                Aucune statistique enregistrée pour ce rôle.
+                Aucun MVP attribué pour le moment.
               </div>
             ) : (
-              <div className="statsTableScroller">
-                <div className="statsTable">
-                  <div className="statsTableHeader">
-                    <span>
-                      #
-                    </span>
-
-                    <span>
-                      Joueur
-                    </span>
-
-                    <span>
-                      G
-                    </span>
-
-                    <span>
-                      KDA
-                    </span>
-
-                    <span>
-                      K
-                    </span>
-
-                    <span>
-                      D
-                    </span>
-
-                    <span>
-                      A
-                    </span>
-
-                    <span>
-                      Gold
-                    </span>
-
-                    <span>
-                      DPM
-                    </span>
-
-                    <span>
-                      CS/min
-                    </span>
-
-                    <span>
-                      MVP
-                    </span>
-                  </div>
-
-                  {roleStats.map(
-                    (
-                      player,
-                      index
-                    ) => (
-                      <div
-                        key={`${player.playerId}-${player.role}`}
-                        className="statsPlayerRow"
-                      >
-                        <strong className="statsRank">
-                          {
-                            index +
-                            1
-                          }
-                        </strong>
-
-                        <div className="statsPlayerIdentity">
-                          <div className="statsTeamLogo">
-                            {player.teamLogo ? (
-                              <img
-                                src={
-                                  player.teamLogo
-                                }
-                                alt={
-                                  player.teamName
-                                }
-                              />
-                            ) : (
-                              player.teamShortName?.slice(
-                                0,
-                                2
-                              )
-                            )}
-                          </div>
-
-                          <div>
-                            <strong>
-                              {
-                                player.riotId
-                              }
-                            </strong>
-
-                            <span>
-                              {
-                                player.teamShortName
-                              }{' '}
-                              •{' '}
-                              {
-                                player.wins
-                              }
-                              -
-                              {
-                                player.losses
-                              }
-                            </span>
-                          </div>
-                        </div>
-
-                        <span>
-                          {
-                            player.games
-                          }
-                        </span>
-
-                        <strong
-                          className={
-                            sortBy ===
-                            'kda'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.kda
-                          }
-                        </strong>
-
-                        <span
-                          className={
-                            sortBy ===
-                            'kills'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.kills
-                          }
-                        </span>
-
-                        <span>
-                          {
-                            player.deaths
-                          }
-                        </span>
-
-                        <span
-                          className={
-                            sortBy ===
-                            'assists'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.assists
-                          }
-                        </span>
-
-                        <span
-                          className={
-                            sortBy ===
-                            'gold'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.gold
-                          }
-                        </span>
-
-                        <span
-                          className={
-                            sortBy ===
-                            'dpm'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.dpm
-                          }
-                        </span>
-
-                        <span
-                          className={
-                            sortBy ===
-                            'csPerMin'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.csPerMin
-                          }
-                        </span>
-
-                        <strong
-                          className={
-                            sortBy ===
-                            'mvp'
-                              ? 'highlightStat'
-                              : ''
-                          }
-                        >
-                          {
-                            player.mvp
-                          }
-                        </strong>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
+              <MvpRanking
+                players={
+                  mvpRanking
+                }
+              />
             )}
           </div>
         </section>
@@ -1706,53 +1420,35 @@ export default function ResultsPage() {
           .resultsPage {
             position: relative;
             min-height: 100vh;
-            overflow: visible;
-          }
-
-          .resultsTitle {
-            position: relative;
-            z-index: 10;
-            margin-bottom: 28px;
-          }
-
-          .resultBolt {
-            position: absolute;
-            z-index: 7;
-            object-fit: contain;
-            pointer-events: none;
-          }
-
-          .resultBoltOne {
-            width: 145px;
-            left: -65px;
-            top: 250px;
-            opacity: 0.28;
-            transform: rotate(-12deg);
-          }
-
-          .resultBoltTwo {
-            width: 130px;
-            right: -50px;
-            top: 720px;
-            opacity: 0.22;
-            transform: rotate(15deg);
           }
 
           .resultsError {
-            position: relative;
-            z-index: 20;
+            margin-bottom: 18px;
+            padding: 14px 16px;
 
-            margin-bottom: 16px;
-            padding: 13px 16px;
+            border:
+              1px solid
+              rgba(
+                150,
+                55,
+                55,
+                0.3
+              );
 
-            border: 1px solid rgba(160, 60, 60, 0.25);
-            border-radius: 8px;
+            border-radius: 9px;
 
-            background: rgba(160, 60, 60, 0.08);
+            background:
+              rgba(
+                150,
+                55,
+                55,
+                0.08
+              );
 
-            color: #8f3434;
+            color: #933838;
+
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 900;
           }
 
           /* =========================
@@ -1760,12 +1456,16 @@ export default function ResultsPage() {
           ========================= */
 
           .divisionTabs {
-            position: relative;
-            z-index: 10;
-
             display: grid;
+
             grid-template-columns:
-              repeat(3, minmax(0, 1fr));
+              repeat(
+                3,
+                minmax(
+                  0,
+                  1fr
+                )
+              );
 
             gap: 14px;
 
@@ -1781,21 +1481,30 @@ export default function ResultsPage() {
 
             border:
               1.4px solid
-              rgba(9, 42, 63, 0.5);
+              rgba(
+                9,
+                42,
+                63,
+                0.5
+              );
 
             border-radius: 11px;
 
             background:
-              rgba(255, 246, 229, 0.8);
+              rgba(
+                255,
+                246,
+                229,
+                0.8
+              );
 
             color: var(--navy);
 
             font-size: 17px;
             font-weight: 900;
 
-            letter-spacing: 0.07em;
-
-            cursor: pointer;
+            letter-spacing:
+              0.07em;
           }
 
           .divisionTab::after {
@@ -1809,7 +1518,8 @@ export default function ResultsPage() {
 
             height: 5px;
 
-            background: var(--tab-color);
+            background:
+              var(--tab-color);
           }
 
           .divisionTabActive {
@@ -1817,114 +1527,67 @@ export default function ResultsPage() {
               var(--tab-color);
 
             background:
-              linear-gradient(
-                135deg,
-                var(--tab-soft),
-                rgba(
-                  255,
-                  250,
-                  240,
-                  0.97
-                )
-              );
+              var(--tab-soft);
           }
 
           /* =========================
-             CARTES
+             CARD
           ========================= */
 
-          .resultsMainGrid {
-            position: relative;
-            z-index: 10;
-
-            display: grid;
-
-            grid-template-columns:
-              minmax(290px, 0.24fr)
-              minmax(0, 0.76fr);
-
-            gap: 18px;
-          }
-
           .resultsCard {
-            position: relative;
-            z-index: 10;
-
             overflow: hidden;
 
             border:
               1.3px solid
-              rgba(9, 42, 63, 0.7);
+              rgba(
+                9,
+                42,
+                63,
+                0.7
+              );
 
             border-radius: 14px;
 
             background:
-              rgba(255, 246, 229, 0.84);
+              rgba(
+                255,
+                246,
+                229,
+                0.84
+              );
 
             box-shadow:
-              0 12px 30px
-              rgba(8, 24, 36, 0.055);
+              0
+              12px
+              30px
+              rgba(
+                8,
+                24,
+                36,
+                0.055
+              );
           }
 
-          .resultsCardHeader {
-            min-height: 88px;
+          .resultsMainGrid {
+            display: grid;
 
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            grid-template-columns:
+              minmax(
+                290px,
+                0.25fr
+              )
+              minmax(
+                0,
+                0.75fr
+              );
 
-            gap: 16px;
+            gap: 18px;
 
-            padding: 18px 22px;
-
-            border-bottom:
-              1px solid
-              rgba(9, 42, 63, 0.12);
-          }
-
-          .resultsCardHeader h3 {
-            margin: 0;
-
-            color: var(--navy);
-
-            font-family:
-              var(--font-display);
-
-            font-size: 28px;
-
-            text-transform: uppercase;
-          }
-
-          .cardEyebrow {
-            margin: 0 0 4px;
-
-            color: var(--orange);
-
-            font-size: 10px;
-            font-weight: 900;
-
-            letter-spacing: 0.14em;
-          }
-
-          .divisionBadge {
-            padding: 8px 11px;
-
-            border-radius: 6px;
-
-            background:
-              var(--division-soft);
-
-            color:
-              var(--division-color);
-
-            font-size: 10px;
-            font-weight: 900;
-
-            text-transform: uppercase;
+            margin-bottom: 18px;
           }
 
           /* =========================
-             CLASSEMENT
+             STANDINGS
           ========================= */
 
           .standingHeader,
@@ -1932,54 +1595,57 @@ export default function ResultsPage() {
             display: grid;
 
             grid-template-columns:
-              28px
-              minmax(0, 1fr)
-              58px;
+              30px
+              minmax(
+                0,
+                1fr
+              )
+              62px;
 
             align-items: center;
 
-            gap: 9px;
+            gap: 8px;
           }
 
           .standingHeader {
-            padding: 14px 15px 9px;
+            padding:
+              13px
+              15px;
 
             color:
-              rgba(7, 29, 45, 0.48);
+              var(--muted);
 
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 900;
-
-            text-transform: uppercase;
-          }
-
-          .standingHeader span:last-child {
-            text-align: right;
           }
 
           .standingRows {
             padding:
               0
               8px
-              10px;
+              8px;
           }
 
           .standingRow {
             position: relative;
 
-            min-height: 64px;
+            min-height: 65px;
 
             padding:
               0
               8px;
 
-            border-bottom:
+            border-top:
               1px solid
-              rgba(9, 42, 63, 0.08);
+              rgba(
+                9,
+                42,
+                63,
+                0.07
+              );
           }
 
-          .standingQualified::before,
-          .standingEliminated::before {
+          .standingRow::before {
             content: '';
 
             position: absolute;
@@ -1997,133 +1663,76 @@ export default function ResultsPage() {
           }
 
           .standingEliminated {
-            opacity: 0.48;
+            opacity: 0.5;
           }
 
           .standingEliminated::before {
-            background: #9b3838;
-          }
-
-          .standingRank {
-            color: var(--muted);
-
-            font-size: 13px;
-            font-weight: 900;
-          }
-
-          .standingTeam {
-            min-width: 0;
-
-            display: flex;
-            align-items: center;
-
-            gap: 10px;
-          }
-
-          .standingTeamText {
-            min-width: 0;
-
-            display: flex;
-            flex-direction: column;
-
-            gap: 2px;
-          }
-
-          .standingTeamText strong {
-            overflow: hidden;
-
-            color: var(--navy);
-
-            font-size: 14px;
-            font-weight: 900;
-
-            white-space: nowrap;
-
-            text-overflow: ellipsis;
-          }
-
-          .standingTeamText span {
-            overflow: hidden;
-
-            color: var(--muted);
-
-            font-size: 10px;
-            font-weight: 700;
-
-            white-space: nowrap;
-
-            text-overflow: ellipsis;
-          }
-
-          .standingScore {
-            display: flex;
-            justify-content: flex-end;
-
-            gap: 4px;
-
-            color: var(--navy);
-
-            font-size: 14px;
-          }
-
-          .standingScore span {
-            opacity: 0.35;
+            background:
+              #9b3d3d;
           }
 
           .standingEmpty {
             opacity: 0.4;
           }
 
-          .standingsMessage {
-            min-height: 200px;
+          .standingRank {
+            color:
+              var(--muted);
 
-            display: grid;
-            place-items: center;
-
-            color: var(--muted);
-
-            font-weight: 700;
+            font-size: 13px;
           }
 
-          .standingsLegend {
+          .standingTeam {
+            min-width: 0;
+
             display: flex;
-            flex-direction: column;
 
-            gap: 8px;
-
-            padding: 15px 18px;
-
-            border-top:
-              1px solid
-              rgba(9, 42, 63, 0.1);
-
-            color: var(--muted);
-
-            font-size: 10px;
-            font-weight: 800;
-          }
-
-          .standingsLegend div {
-            display: flex;
             align-items: center;
 
-            gap: 7px;
+            gap: 9px;
           }
 
-          .legendQualified,
-          .legendEliminated {
-            width: 14px;
-            height: 3px;
+          .standingTeam > div:last-child {
+            min-width: 0;
+
+            display: flex;
+
+            flex-direction: column;
           }
 
-          .legendQualified {
-            background:
-              var(--division-color);
+          .standingTeam strong {
+            overflow: hidden;
+
+            color: var(--navy);
+
+            font-size: 13px;
+
+            white-space: nowrap;
+
+            text-overflow:
+              ellipsis;
           }
 
-          .legendEliminated {
-            background:
-              #9b3838;
+          .standingTeam span {
+            overflow: hidden;
+
+            color:
+              var(--muted);
+
+            font-size: 9px;
+
+            white-space: nowrap;
+
+            text-overflow:
+              ellipsis;
+          }
+
+          .standingScore {
+            color: var(--navy);
+
+            font-size: 13px;
+
+            text-align: right;
           }
 
           :global(.resultTeamLogo) {
@@ -2133,22 +1742,34 @@ export default function ResultsPage() {
             flex-shrink: 0;
 
             display: grid;
+
             place-items: center;
 
             overflow: hidden;
 
             border:
               1px solid
-              rgba(9, 42, 63, 0.17);
+              rgba(
+                9,
+                42,
+                63,
+                0.16
+              );
 
             border-radius: 8px;
 
             background:
-              rgba(255, 255, 255, 0.65);
+              rgba(
+                255,
+                255,
+                255,
+                0.55
+              );
 
             color: var(--navy);
 
-            font-size: 9px;
+            font-size: 8px;
+
             font-weight: 900;
           }
 
@@ -2166,30 +1787,34 @@ export default function ResultsPage() {
           .bracketScroller {
             overflow-x: auto;
 
-            padding: 22px;
+            padding: 21px;
           }
 
           .fullBracket {
-            min-width: 1050px;
+            min-width:
+              1040px;
           }
 
           .laneTitle {
             display: flex;
+
             align-items: center;
 
             gap: 9px;
 
-            margin-bottom: 18px;
+            margin-bottom: 14px;
 
             color: var(--navy);
 
-            font-size: 12px;
+            font-size: 11px;
+
             font-weight: 900;
 
-            letter-spacing: 0.11em;
+            letter-spacing:
+              0.09em;
           }
 
-          .laneTitle > span {
+          .laneTitle span {
             width: 30px;
             height: 3px;
 
@@ -2197,509 +1822,484 @@ export default function ResultsPage() {
               var(--division-color);
           }
 
-          .loserLaneTitle > span {
+          .loserLane span {
             background:
               var(--orange);
           }
 
-          .winnerBracket,
-          .loserBracket {
+          .bracketColumns {
             display: grid;
 
             grid-template-columns:
               190px
-              72px
+              60px
               190px
-              72px
+              60px
               190px
-              72px
+              60px
               205px;
 
             align-items: stretch;
           }
 
-          :global(.columnTitle) {
-            margin-bottom: 14px;
+          .bracketRound h4 {
+            margin:
+              0
+              0
+              12px;
 
             color:
-              rgba(7, 29, 45, 0.58);
+              var(--muted);
 
-            font-size: 10px;
-            font-weight: 900;
+            font-size: 9px;
 
             text-align: center;
-
-            text-transform: uppercase;
-
-            letter-spacing: 0.08em;
           }
 
           .quarterMatches {
-            min-height: 420px;
+            min-height: 400px;
 
             display: flex;
+
             flex-direction: column;
 
-            justify-content: space-between;
+            justify-content:
+              space-between;
           }
 
-          .semiMatches {
-            min-height: 420px;
+          .doubleMatches {
+            min-height: 400px;
 
             display: flex;
+
             flex-direction: column;
 
-            justify-content: space-around;
-
-            padding:
-              55px
-              0;
+            justify-content:
+              space-around;
           }
 
-          .singleMatchCenter {
-            min-height: 420px;
+          .singleMatch {
+            min-height: 400px;
 
             display: flex;
-            flex-direction: column;
 
-            justify-content: center;
-          }
-
-          .loserTwoMatches {
-            min-height: 300px;
-
-            display: flex;
-            flex-direction: column;
-
-            justify-content: space-around;
-
-            padding:
-              35px
-              0;
-          }
-
-          :global(.bracketMatch) {
-            overflow: hidden;
-
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.3);
-
-            border-radius: 8px;
-
-            background:
-              rgba(255, 250, 241, 0.9);
-
-            box-shadow:
-              0 5px 14px
-              rgba(8, 24, 36, 0.05);
-          }
-
-          :global(.highlightedMatch) {
-            border-color:
-              var(--division-color);
-          }
-
-          :global(.grandFinalMatch) {
-            border:
-              1.7px solid
-              var(--division-color);
-          }
-
-          :global(.bracketTeam) {
-            min-height: 52px;
-
-            display: flex;
             align-items: center;
-
-            gap: 9px;
-
-            padding:
-              0
-              11px;
           }
 
-          :global(.bracketTeam + .bracketTeam) {
-            border-top:
-              1px solid
-              rgba(9, 42, 63, 0.11);
-          }
-
-          :global(.miniTeamLogo) {
-            width: 30px;
-            height: 30px;
-
-            flex-shrink: 0;
+          .bracketArrow {
+            min-height: 400px;
 
             display: grid;
+
             place-items: center;
 
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.16);
+            color:
+              rgba(
+                9,
+                42,
+                63,
+                0.35
+              );
 
-            border-radius: 6px;
-
-            background:
-              rgba(255, 255, 255, 0.7);
-
-            color: var(--muted);
-
-            font-size: 10px;
-            font-weight: 900;
+            font-size: 24px;
           }
 
-          :global(.bracketTeamName) {
-            flex: 1;
-
-            overflow: hidden;
-
-            color: var(--navy);
-
-            font-size: 12px;
-            font-weight: 900;
-
-            white-space: nowrap;
-
-            text-overflow: ellipsis;
-          }
-
-          :global(.matchScore) {
-            color: var(--muted);
-
-            font-size: 13px;
-            font-weight: 900;
-          }
-
-          /* CONNECTEURS */
-
-          :global(.winnerConnector),
-          :global(.loserConnector) {
-            position: relative;
-          }
-
-          :global(.winnerConnector) {
-            min-height: 420px;
-          }
-
-          :global(.winnerConnectorLine),
-          :global(.loserConnectorLine) {
-            position: absolute;
-
-            background:
-              rgba(9, 42, 63, 0.34);
-          }
-
-          :global(.winnerConnectorQ1) {
-            top: 12%;
-            left: 0;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorQ2) {
-            top: 36%;
-            left: 0;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorQ3) {
-            top: 64%;
-            left: 0;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorQ4) {
-            top: 88%;
-            left: 0;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorQV1) {
-            top: 12%;
-            left: 50%;
-            width: 1px;
-            height: 24%;
-          }
-
-          :global(.winnerConnectorQV2) {
-            top: 64%;
-            left: 50%;
-            width: 1px;
-            height: 24%;
-          }
-
-          :global(.winnerConnectorQOut1) {
-            top: 24%;
-            left: 50%;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorQOut2) {
-            top: 76%;
-            left: 50%;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorS1) {
-            top: 24%;
-            left: 0;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorS2) {
-            top: 76%;
-            left: 0;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorSV) {
-            top: 24%;
-            left: 50%;
-            width: 1px;
-            height: 52%;
-          }
-
-          :global(.winnerConnectorSOut) {
-            top: 50%;
-            left: 50%;
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.winnerConnectorFinal) {
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 1px;
-          }
-
-          .dropArea {
-            position: relative;
-
-            min-height: 105px;
-
+          .bracketDrop {
             margin:
               22px
               0;
 
-            border-top:
-              1px dashed
-              rgba(9, 42, 63, 0.14);
-
-            border-bottom:
-              1px dashed
-              rgba(9, 42, 63, 0.14);
-          }
-
-          .dropMessage {
-            position: absolute;
-
-            left: 50%;
-            top: 50%;
-
-            transform:
-              translate(-50%, -50%);
-
-            padding:
-              6px
-              12px;
-
-            background:
-              rgba(255, 246, 229, 0.94);
-
-            color: var(--muted);
-
-            font-size: 10px;
-            font-weight: 800;
-
-            z-index: 3;
-          }
-
-          .dropLines {
-            position: absolute;
-            inset: 0;
-          }
-
-          .dropLine {
-            position: absolute;
-
-            top: 0;
-            bottom: 0;
-
-            width: 1px;
-
-            background:
-              rgba(242, 101, 34, 0.42);
-          }
-
-          .dropLine::after {
-            content: '';
-
-            position: absolute;
-
-            left: -3px;
-            bottom: 0;
-
-            width: 7px;
-            height: 7px;
-
-            border-right:
-              1px solid
-              var(--orange);
-
-            border-bottom:
-              1px solid
-              var(--orange);
-
-            transform:
-              rotate(45deg);
-          }
-
-          .dropQuarter {
-            left: 20%;
-          }
-
-          .dropSemi {
-            left: 47%;
-          }
-
-          .dropWinnerFinal {
-            left: 72%;
-          }
-
-          :global(.loserConnector) {
-            min-height: 300px;
-          }
-
-          :global(.loserDoubleTop) {
-            top: 28%;
-            left: 0;
-
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.loserDoubleBottom) {
-            top: 72%;
-            left: 0;
-
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.loserDoubleVertical) {
-            top: 28%;
-            left: 50%;
-
-            width: 1px;
-            height: 44%;
-          }
-
-          :global(.loserDoubleOut) {
-            top: 50%;
-            left: 50%;
-
-            width: 50%;
-            height: 1px;
-          }
-
-          :global(.loserSingle) {
-            top: 50%;
-            left: 0;
-
-            width: 100%;
-            height: 1px;
-          }
-
-          .championBox {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            margin-top: 12px;
-
             padding: 12px;
 
-            border-radius: 7px;
-
-            background: var(--navy);
-
-            color: white;
-
-            font-size: 10px;
-            font-weight: 900;
-          }
-
-          .championBox strong {
-            color:
-              var(--division-color);
-
-            font-size: 12px;
-          }
-
-          .returnFinal {
-            margin-top: 10px;
-
-            color: var(--orange);
-
-            font-size: 10px;
-            font-weight: 900;
-
-            text-align: center;
-          }
-
-          .returnFinal span {
-            color:
-              var(--division-color);
-          }
-
-          .loserReturnLine {
-            margin-top: 22px;
-
-            padding: 11px;
-
-            border:
+            border-top:
               1px dashed
-              rgba(9, 42, 63, 0.15);
+              rgba(
+                9,
+                42,
+                63,
+                0.15
+              );
 
-            border-radius: 7px;
+            border-bottom:
+              1px dashed
+              rgba(
+                9,
+                42,
+                63,
+                0.15
+              );
 
-            color: var(--muted);
+            color:
+              var(--muted);
 
             font-size: 9px;
-            font-weight: 800;
 
             text-align: center;
           }
 
           /* =========================
-             HISTORIQUE
+             HISTORY
           ========================= */
 
-          .historyCard,
-          .statsCard {
-            margin-top: 18px;
+          .historyCard {
+            margin-bottom: 18px;
           }
 
           .historyList {
             display: flex;
+
             flex-direction: column;
           }
+
+          /* =========================
+             STATS
+          ========================= */
+
+          .roleTabs {
+            display: grid;
+
+            grid-template-columns:
+              repeat(
+                5,
+                minmax(
+                  0,
+                  1fr
+                )
+              );
+
+            gap: 10px;
+
+            padding: 20px;
+          }
+
+          .roleTabs button {
+            min-height: 57px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content:
+              center;
+
+            gap: 8px;
+
+            border:
+              1px solid
+              rgba(
+                9,
+                42,
+                63,
+                0.23
+              );
+
+            border-radius: 8px;
+
+            background:
+              transparent;
+
+            color: var(--navy);
+
+            font-size: 10px;
+
+            font-weight: 900;
+          }
+
+          .roleTabs img {
+            width: 25px;
+            height: 25px;
+
+            object-fit: contain;
+
+            opacity: 0.7;
+          }
+
+          .roleTabs button.roleActive {
+            border-color:
+              var(--division-color);
+
+            background:
+              var(--division-soft);
+          }
+
+          .roleTabs button.roleActive img {
+            opacity: 1;
+          }
+
+          /* =========================
+             4 BLOCS MEME LIGNE
+          ========================= */
+
+          .statRankingGrid {
+            display: grid;
+
+            grid-template-columns:
+              repeat(
+                4,
+                minmax(
+                  0,
+                  1fr
+                )
+              );
+
+            gap: 12px;
+
+            padding:
+              0
+              20px
+              20px;
+          }
+
+          /* =========================
+             SUB SECTIONS
+          ========================= */
+
+          .statsSubSection {
+            padding:
+              18px
+              20px
+              22px;
+
+            border-top:
+              1px solid
+              rgba(
+                9,
+                42,
+                63,
+                0.08
+              );
+          }
+
+          .subSectionTitle {
+            display: flex;
+
+            align-items: center;
+
+            justify-content:
+              space-between;
+
+            gap: 12px;
+
+            margin-bottom: 14px;
+          }
+
+          .subSectionTitle > div {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+          }
+
+          .subSectionTitle > div > span {
+            width: 23px;
+            height: 3px;
+
+            background:
+              var(--division-color);
+          }
+
+          .subSectionTitle strong {
+            color: var(--navy);
+
+            font-size: 10px;
+
+            text-transform:
+              uppercase;
+          }
+
+          .subSectionTitle small {
+            color:
+              var(--muted);
+
+            font-size: 8px;
+
+            font-weight: 900;
+          }
+
+          /* =========================
+             CHAMPIONS
+          ========================= */
+
+          .championRow {
+            display: grid;
+
+            grid-template-columns:
+              repeat(
+                5,
+                minmax(
+                  0,
+                  1fr
+                )
+              );
+
+            gap: 10px;
+          }
+
+          .championCard {
+            position: relative;
+
+            min-width: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            padding: 13px;
+
+            border:
+              1px solid
+              rgba(
+                9,
+                42,
+                63,
+                0.15
+              );
+
+            border-radius: 9px;
+
+            background:
+              rgba(
+                255,
+                250,
+                241,
+                0.52
+              );
+
+            text-align: center;
+          }
+
+          .championRank {
+            position: absolute;
+
+            top: 8px;
+            right: 9px;
+
+            color:
+              var(--division-color);
+
+            font-size: 9px;
+
+            font-weight: 900;
+          }
+
+          .championCard > img,
+          .championFallback {
+            width: 62px;
+            height: 62px;
+
+            margin-bottom: 8px;
+
+            border-radius: 9px;
+          }
+
+          .championCard > img {
+            object-fit: cover;
+          }
+
+          .championFallback {
+            display: grid;
+
+            place-items: center;
+
+            background:
+              rgba(
+                9,
+                42,
+                63,
+                0.07
+              );
+
+            color: var(--navy);
+          }
+
+          .championName {
+            overflow: hidden;
+
+            max-width: 100%;
+
+            color: var(--navy);
+
+            font-size: 11px;
+
+            white-space: nowrap;
+
+            text-overflow:
+              ellipsis;
+          }
+
+          .championPicks {
+            margin-top: 3px;
+
+            color:
+              var(--muted);
+
+            font-size: 8px;
+          }
+
+          .championStats {
+            width: 100%;
+
+            display: grid;
+
+            grid-template-columns:
+              repeat(
+                2,
+                1fr
+              );
+
+            gap: 5px;
+
+            margin-top: 10px;
+          }
+
+          .championStats > div {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 2px;
+
+            padding: 6px;
+
+            border-radius: 5px;
+
+            background:
+              rgba(
+                9,
+                42,
+                63,
+                0.045
+              );
+          }
+
+          .championStats small {
+            color:
+              var(--muted);
+
+            font-size: 6px;
+          }
+
+          .championStats strong {
+            color: var(--navy);
+
+            font-size: 10px;
+          }
+
+          /* =========================
+             EMPTY
+          ========================= */
 
           .emptySection,
           .miniEmpty {
             display: grid;
+
             place-items: center;
 
-            color: var(--muted);
+            color:
+              var(--muted);
 
             font-weight: 700;
 
@@ -2711,7 +2311,7 @@ export default function ResultsPage() {
 
             padding: 20px;
 
-            font-size: 12px;
+            font-size: 11px;
           }
 
           .miniEmpty {
@@ -2719,530 +2319,71 @@ export default function ResultsPage() {
 
             border:
               1px dashed
-              rgba(9, 42, 63, 0.13);
+              rgba(
+                9,
+                42,
+                63,
+                0.14
+              );
 
             border-radius: 8px;
-
-            font-size: 11px;
-          }
-
-          /* =========================
-             ROLE TABS
-          ========================= */
-
-          .roleTabs {
-            display: grid;
-
-            grid-template-columns:
-              repeat(5, 1fr);
-
-            gap: 10px;
-
-            padding:
-              20px
-              20px
-              0;
-          }
-
-          .roleTab {
-            min-height: 57px;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            gap: 8px;
-
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.24);
-
-            border-radius: 8px;
-
-            background:
-              rgba(255, 250, 241, 0.54);
-
-            color: var(--navy);
-
-            font-size: 11px;
-            font-weight: 900;
-
-            cursor: pointer;
-          }
-
-          .roleTab img {
-            width: 24px;
-            height: 24px;
-
-            object-fit: contain;
-
-            opacity: 0.72;
-          }
-
-          .roleTabActive {
-            border-color:
-              var(--division-color);
-
-            background:
-              var(--division-soft);
-          }
-
-          .roleTabActive img {
-            opacity: 1;
-          }
-
-          /* =========================
-             TRI
-          ========================= */
-
-          .statsToolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 14px;
-
-            padding:
-              16px
-              20px;
-
-            border-bottom:
-              1px solid
-              rgba(9, 42, 63, 0.08);
-          }
-
-          .statsToolbar > span {
-            color: var(--muted);
-
-            font-size: 9px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-          }
-
-          .sortButtons {
-            display: flex;
-            align-items: center;
-
-            gap: 6px;
-
-            flex-wrap: wrap;
-          }
-
-          .sortButtons button {
-            min-height: 31px;
-
-            padding:
-              0
-              10px;
-
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.16);
-
-            border-radius: 6px;
-
-            background:
-              rgba(255, 255, 255, 0.34);
-
-            color: var(--navy);
-
-            font-size: 9px;
-            font-weight: 900;
-
-            cursor: pointer;
-          }
-
-          .sortButtons .sortActive {
-            border-color:
-              var(--division-color);
-
-            background:
-              var(--division-soft);
-
-            color:
-              var(--division-color);
-          }
-
-          /* =========================
-             SOUS SECTIONS
-          ========================= */
-
-          .championStatsSection,
-          .playerStatsSection {
-            padding: 20px;
-          }
-
-          .playerStatsSection {
-            padding-top: 4px;
-          }
-
-          .subSectionTitle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 14px;
-
-            margin-bottom: 13px;
-          }
-
-          .subSectionTitle > div {
-            display: flex;
-            align-items: center;
-
-            gap: 8px;
-          }
-
-          .subSectionTitle > div > span {
-            width: 22px;
-            height: 3px;
-
-            background:
-              var(--division-color);
-          }
-
-          .subSectionTitle strong {
-            color: var(--navy);
-
-            font-size: 11px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-          }
-
-          .subSectionTitle small {
-            color: var(--muted);
-
-            font-size: 9px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-          }
-
-          /* =========================
-             CHAMPIONS
-          ========================= */
-
-          .topChampionsGrid {
-            display: grid;
-
-            grid-template-columns:
-              repeat(3, minmax(0, 1fr));
-
-            gap: 11px;
-          }
-
-          .championStatCard {
-            position: relative;
-
-            padding: 13px;
-
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.18);
-
-            border-radius: 9px;
-
-            background:
-              rgba(255, 250, 241, 0.62);
-          }
-
-          .championRank {
-            position: absolute;
-
-            right: 10px;
-            top: 9px;
-
-            color:
-              var(--division-color);
 
             font-size: 10px;
-            font-weight: 900;
-          }
-
-          .championIdentity {
-            display: flex;
-            align-items: center;
-
-            gap: 10px;
-
-            padding-right: 25px;
-          }
-
-          .championIdentity img,
-          .championFallback {
-            width: 46px;
-            height: 46px;
-
-            flex-shrink: 0;
-
-            border-radius: 8px;
-          }
-
-          .championIdentity img {
-            object-fit: cover;
-          }
-
-          .championFallback {
-            display: grid;
-            place-items: center;
-
-            background:
-              rgba(9, 42, 63, 0.08);
-
-            color: var(--navy);
-          }
-
-          .championIdentity > div {
-            min-width: 0;
-
-            display: flex;
-            flex-direction: column;
-
-            gap: 2px;
-          }
-
-          .championIdentity strong {
-            overflow: hidden;
-
-            color: var(--navy);
-
-            font-size: 13px;
-            font-weight: 900;
-
-            white-space: nowrap;
-
-            text-overflow: ellipsis;
-          }
-
-          .championIdentity span {
-            color: var(--muted);
-
-            font-size: 9px;
-            font-weight: 700;
-          }
-
-          .championRates {
-            display: grid;
-
-            grid-template-columns:
-              repeat(2, 1fr);
-
-            gap: 7px;
-
-            margin-top: 12px;
-          }
-
-          .championRates > div {
-            display: flex;
-            flex-direction: column;
-
-            gap: 2px;
-
-            padding:
-              7px
-              8px;
-
-            border-radius: 6px;
-
-            background:
-              rgba(9, 42, 63, 0.045);
-          }
-
-          .championRates span {
-            color: var(--muted);
-
-            font-size: 7px;
-            font-weight: 900;
-          }
-
-          .championRates strong {
-            color: var(--navy);
-
-            font-size: 12px;
-            font-weight: 900;
           }
 
           /* =========================
-             PLAYER STATS
+             RESPONSIVE
           ========================= */
 
-          .statsTableScroller {
-            overflow-x: auto;
-          }
-
-          .statsTable {
-            min-width: 920px;
-
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.14);
-
-            border-radius: 9px;
-
-            overflow: hidden;
-          }
-
-          .statsTableHeader,
-          .statsPlayerRow {
-            display: grid;
-
-            grid-template-columns:
-              28px
-              minmax(210px, 1fr)
-              40px
-              58px
-              45px
-              45px
-              45px
-              85px
-              65px
-              65px
-              48px;
-
-            gap: 6px;
-
-            align-items: center;
-
-            padding:
-              0
-              12px;
-          }
-
-          .statsTableHeader {
-            min-height: 38px;
-
-            background:
-              rgba(9, 42, 63, 0.045);
-
-            color: var(--muted);
-
-            font-size: 8px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-          }
-
-          .statsPlayerRow {
-            min-height: 63px;
-
-            border-top:
-              1px solid
-              rgba(9, 42, 63, 0.07);
-
-            color: var(--navy);
-
-            font-size: 10px;
-            font-weight: 800;
-          }
-
-          .statsRank {
-            color:
-              var(--division-color);
-
-            font-size: 12px;
-          }
-
-          .statsPlayerIdentity {
-            min-width: 0;
-
-            display: flex;
-            align-items: center;
-
-            gap: 9px;
-          }
-
-          .statsTeamLogo {
-            width: 35px;
-            height: 35px;
-
-            flex-shrink: 0;
-
-            display: grid;
-            place-items: center;
-
-            overflow: hidden;
-
-            border:
-              1px solid
-              rgba(9, 42, 63, 0.14);
-
-            border-radius: 7px;
-
-            background:
-              rgba(255, 255, 255, 0.5);
-
-            font-size: 8px;
-          }
-
-          .statsTeamLogo img {
-            width: 100%;
-            height: 100%;
-
-            object-fit: contain;
-          }
-
-          .statsPlayerIdentity > div:last-child {
-            min-width: 0;
-
-            display: flex;
-            flex-direction: column;
-
-            gap: 2px;
-          }
-
-          .statsPlayerIdentity strong {
-            overflow: hidden;
-
-            font-size: 11px;
-
-            white-space: nowrap;
-
-            text-overflow: ellipsis;
-          }
-
-          .statsPlayerIdentity span {
-            color: var(--muted);
-
-            font-size: 8px;
-          }
-
-          .highlightStat {
-            color:
-              var(--division-color) !important;
-
-            font-weight: 900 !important;
-          }
-
-          @media (max-width: 1150px) {
+          @media (
+            max-width:
+              1200px
+          ) {
             .resultsMainGrid {
-              grid-template-columns: 1fr;
+              grid-template-columns:
+                1fr;
+            }
+
+            .statRankingGrid {
+              grid-template-columns:
+                repeat(
+                  2,
+                  minmax(
+                    0,
+                    1fr
+                  )
+                );
             }
           }
 
-          @media (max-width: 800px) {
+          @media (
+            max-width:
+              760px
+          ) {
             .divisionTabs {
-              grid-template-columns: 1fr;
+              grid-template-columns:
+                1fr;
             }
 
             .roleTabs {
               grid-template-columns:
-                repeat(2, 1fr);
+                repeat(
+                  2,
+                  1fr
+                );
             }
 
-            .topChampionsGrid {
-              grid-template-columns: 1fr;
+            .statRankingGrid {
+              grid-template-columns:
+                1fr;
             }
 
-            .statsToolbar {
-              align-items: flex-start;
-
-              flex-direction: column;
-            }
-
-            .resultBolt {
-              opacity: 0.12;
+            .championRow {
+              grid-template-columns:
+                repeat(
+                  2,
+                  1fr
+                );
             }
           }
         `}</style>
@@ -3252,138 +2393,995 @@ export default function ResultsPage() {
 }
 
 /* =========================================================
-   HELPERS
+   CARD HEADER
+========================================================= */
+
+function CardHeader({
+  eyebrow,
+  title,
+  badge,
+}: {
+  eyebrow:
+    string;
+
+  title:
+    string;
+
+  badge:
+    string;
+}) {
+  return (
+    <div className="cardHeader">
+      <div>
+        <p>
+          {
+            eyebrow
+          }
+        </p>
+
+        <h3>
+          {
+            title
+          }
+        </h3>
+      </div>
+
+      <span>
+        {
+          badge
+        }
+      </span>
+
+      <style jsx>{`
+        .cardHeader {
+          min-height: 86px;
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content:
+            space-between;
+
+          gap: 15px;
+
+          padding:
+            17px
+            21px;
+
+          border-bottom:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.1
+            );
+        }
+
+        p {
+          margin:
+            0
+            0
+            3px;
+
+          color:
+            var(--orange);
+
+          font-size: 9px;
+
+          font-weight: 900;
+
+          letter-spacing:
+            0.12em;
+        }
+
+        h3 {
+          margin: 0;
+
+          color:
+            var(--navy);
+
+          font-family:
+            var(--font-display);
+
+          font-size: 27px;
+
+          text-transform:
+            uppercase;
+        }
+
+        .cardHeader > span {
+          padding:
+            7px
+            10px;
+
+          border-radius: 6px;
+
+          background:
+            var(--division-soft);
+
+          color:
+            var(--division-color);
+
+          font-size: 8px;
+
+          font-weight: 900;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* =========================================================
+   TEAM LOGO
 ========================================================= */
 
 function TeamLogo({
   team,
 }: {
-  team: Team;
+  team:
+    Team;
 }) {
   return (
     <div className="resultTeamLogo">
       {team.logo ? (
         <img
-          src={team.logo}
-          alt={team.name}
+          src={
+            team.logo
+          }
+          alt={
+            team.name
+          }
         />
       ) : (
         <span>
-          {team.shortName.slice(
-            0,
-            2
-          )}
+          {
+            team.shortName.slice(
+              0,
+              2
+            )
+          }
         </span>
       )}
     </div>
   );
 }
 
-function getSeedTeam(
-  teams: Team[],
-  seed: number
-) {
-  const team =
-    teams[
-      seed -
-        1
-    ];
+/* =========================================================
+   RANKING CARD
+========================================================= */
 
-  if (!team) {
-    return `#${seed} TBD`;
-  }
+function RankingCard({
+  title,
+  players,
+  valueKey,
+  formatter,
+}: {
+  title:
+    string;
 
-  return `#${seed} ${team.shortName}`;
-}
+  players:
+    PlayerStats[];
 
-function getSortValue(
-  player: PlayerStats,
-  sort:
-    StatSort
-) {
-  switch (sort) {
-    case 'kda':
-      return player.kda;
+  valueKey:
+    | 'kda'
+    | 'goldPerMin'
+    | 'dpm'
+    | 'csPerMin'
+    | 'visionScore';
 
-    case 'kills':
-      return player.kills;
-
-    case 'assists':
-      return player.assists;
-
-    case 'gold':
-      return player.gold;
-
-    case 'dpm':
-      return player.dpm;
-
-    case 'csPerMin':
-      return player.csPerMin;
-
-    case 'mvp':
-      return player.mvp;
-
-    default:
-      return player.kda;
-  }
-}
-
-function formatDuration(
-  seconds: number
-) {
-  const minutes =
-    Math.floor(
-      seconds /
-        60
+  formatter:
+    (
+      value:
+        number
+    ) =>
+      string;
+}) {
+  const [
+    expanded,
+    setExpanded,
+  ] =
+    useState(
+      false
     );
 
-  const remaining =
-    seconds %
-    60;
-
-  return `${minutes}:${String(
-    remaining
-  ).padStart(
-    2,
-    '0'
-  )}`;
-}
-
-function formatDate(
-  value: string
-) {
-  try {
-    return new Intl.DateTimeFormat(
-      'fr-FR',
-      {
-        day:
-          '2-digit',
-
-        month:
-          '2-digit',
-
-        year:
-          'numeric',
-      }
-    ).format(
-      new Date(
-        value
+  const ranking =
+    [
+      ...players,
+    ]
+      .filter(
+        (
+          player
+        ) =>
+          Number(
+            player[
+              valueKey
+            ] ??
+              0
+          ) >
+          0
       )
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          Number(
+            b[
+              valueKey
+            ] ??
+              0
+          ) -
+          Number(
+            a[
+              valueKey
+            ] ??
+              0
+          )
+      );
+
+  const visible =
+    ranking.slice(
+      0,
+      expanded
+        ? 10
+        : 5
     );
-  } catch {
-    return '';
-  }
+
+  const max =
+    Number(
+      ranking[
+        0
+      ]?.[
+        valueKey
+      ] ??
+        0
+    );
+
+  return (
+    <div className="rankingCard">
+      <div className="rankingHeader">
+        <strong>
+          {
+            title
+          }
+        </strong>
+
+        <span>
+          TOP{' '}
+          {expanded
+            ? '10'
+            : '5'}
+        </span>
+      </div>
+
+      {visible.length ===
+      0 ? (
+        <div className="rankingEmpty">
+          Aucune donnée
+        </div>
+      ) : (
+        <div className="rankingPlayers">
+          {visible.map(
+            (
+              player,
+              index
+            ) => {
+              const value =
+                Number(
+                  player[
+                    valueKey
+                  ] ??
+                    0
+                );
+
+              const percentage =
+                max >
+                0
+                  ? Math.max(
+                      4,
+                      Math.min(
+                        100,
+                        (
+                          value /
+                          max
+                        ) *
+                          100
+                      )
+                    )
+                  : 0;
+
+              return (
+                <div
+                  key={`${player.playerId}-${valueKey}`}
+                  className="rankingPlayer"
+                >
+                  <div className="rankingPlayerTop">
+                    <span className="rankNumber">
+                      #
+                      {
+                        index +
+                        1
+                      }
+                    </span>
+
+                    <div className="rankingIdentity">
+                      <div className="rankingLogo">
+                        {player.teamLogo ? (
+                          <img
+                            src={
+                              player.teamLogo
+                            }
+                            alt=""
+                          />
+                        ) : (
+                          player.teamShortName?.slice(
+                            0,
+                            2
+                          )
+                        )}
+                      </div>
+
+                      <div>
+                        <strong>
+                          {
+                            player.riotId
+                          }
+                        </strong>
+
+                        <span>
+                          {
+                            player.teamShortName
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    <strong className="rankingValue">
+                      {
+                        formatter(
+                          value
+                        )
+                      }
+                    </strong>
+                  </div>
+
+                  <div className="rankingBarTrack">
+                    <div
+                      className="rankingBarFill"
+                      style={{
+                        width:
+                          `${percentage}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      )}
+
+      {ranking.length >
+        5 && (
+        <button
+          type="button"
+          className="expandRanking"
+          onClick={() =>
+            setExpanded(
+              (
+                value
+              ) =>
+                !value
+            )
+          }
+        >
+          {expanded
+            ? 'Réduire'
+            : 'Voir top 10'}
+        </button>
+      )}
+
+      <style jsx>{`
+        .rankingCard {
+          min-width: 0;
+
+          padding: 13px;
+
+          border:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.16
+            );
+
+          border-radius: 9px;
+
+          background:
+            rgba(
+              255,
+              250,
+              241,
+              0.56
+            );
+        }
+
+        .rankingHeader {
+          display: flex;
+
+          align-items: center;
+
+          justify-content:
+            space-between;
+
+          margin-bottom: 13px;
+        }
+
+        .rankingHeader strong {
+          color: var(--navy);
+
+          font-size: 12px;
+        }
+
+        .rankingHeader span {
+          color:
+            var(--division-color);
+
+          font-size: 7px;
+
+          font-weight: 900;
+        }
+
+        .rankingPlayers {
+          display: flex;
+
+          flex-direction: column;
+
+          gap: 12px;
+        }
+
+        .rankingPlayerTop {
+          min-width: 0;
+
+          display: grid;
+
+          grid-template-columns:
+            22px
+            minmax(
+              0,
+              1fr
+            )
+            auto;
+
+          align-items: center;
+
+          gap: 6px;
+        }
+
+        .rankNumber {
+          color:
+            var(--division-color);
+
+          font-size: 9px;
+
+          font-weight: 900;
+        }
+
+        .rankingIdentity {
+          min-width: 0;
+
+          display: flex;
+
+          align-items: center;
+
+          gap: 6px;
+        }
+
+        .rankingLogo {
+          width: 27px;
+          height: 27px;
+
+          flex-shrink: 0;
+
+          display: grid;
+
+          place-items: center;
+
+          overflow: hidden;
+
+          border-radius: 5px;
+
+          background:
+            rgba(
+              9,
+              42,
+              63,
+              0.07
+            );
+
+          font-size: 6px;
+        }
+
+        .rankingLogo img {
+          width: 100%;
+          height: 100%;
+
+          object-fit: contain;
+        }
+
+        .rankingIdentity > div:last-child {
+          min-width: 0;
+
+          display: flex;
+
+          flex-direction: column;
+        }
+
+        .rankingIdentity strong {
+          overflow: hidden;
+
+          color: var(--navy);
+
+          font-size: 8px;
+
+          white-space: nowrap;
+
+          text-overflow:
+            ellipsis;
+        }
+
+        .rankingIdentity span {
+          color:
+            var(--muted);
+
+          font-size: 6px;
+        }
+
+        .rankingValue {
+          color: var(--navy);
+
+          font-size: 9px;
+        }
+
+        .rankingBarTrack {
+          height: 6px;
+
+          margin-top: 5px;
+
+          overflow: hidden;
+
+          border-radius: 100px;
+
+          background:
+            rgba(
+              9,
+              42,
+              63,
+              0.08
+            );
+        }
+
+        .rankingBarFill {
+          height: 100%;
+
+          border-radius:
+            inherit;
+
+          background:
+            var(--division-color);
+        }
+
+        .rankingEmpty {
+          min-height: 150px;
+
+          display: grid;
+
+          place-items: center;
+
+          color:
+            var(--muted);
+
+          font-size: 8px;
+        }
+
+        .expandRanking {
+          width: 100%;
+
+          min-height: 31px;
+
+          margin-top: 13px;
+
+          border:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.14
+            );
+
+          border-radius: 6px;
+
+          background:
+            transparent;
+
+          color: var(--navy);
+
+          font-size: 7px;
+
+          font-weight: 900;
+
+          text-transform:
+            uppercase;
+        }
+      `}</style>
+    </div>
+  );
 }
 
 /* =========================================================
-   HISTORIQUE
+   MVP
 ========================================================= */
 
-function HistoryMatchCard({
+function MvpRanking({
+  players,
+}: {
+  players:
+    PlayerStats[];
+}) {
+  const max =
+    players[
+      0
+    ]?.mvp ??
+    1;
+
+  return (
+    <div className="mvpRanking">
+      {players.map(
+        (
+          player,
+          index
+        ) => {
+          const width =
+            (
+              player.mvp /
+              max
+            ) *
+            100;
+
+          return (
+            <div
+              key={
+                player.playerId
+              }
+              className="mvpRow"
+            >
+              <div className="mvpTop">
+                <strong>
+                  #
+                  {
+                    index +
+                    1
+                  }
+                </strong>
+
+                <span>
+                  {
+                    player.riotId
+                  }
+                </span>
+
+                <small>
+                  {
+                    player.teamShortName
+                  }
+                </small>
+
+                <b>
+                  {
+                    player.mvp
+                  }{' '}
+                  MVP
+                </b>
+              </div>
+
+              <div className="mvpTrack">
+                <div
+                  className="mvpFill"
+                  style={{
+                    width:
+                      `${width}%`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        }
+      )}
+
+      <style jsx>{`
+        .mvpRanking {
+          display: grid;
+
+          grid-template-columns:
+            repeat(
+              2,
+              minmax(
+                0,
+                1fr
+              )
+            );
+
+          gap:
+            14px
+            20px;
+        }
+
+        .mvpTop {
+          display: grid;
+
+          grid-template-columns:
+            28px
+            minmax(
+              0,
+              1fr
+            )
+            auto
+            auto;
+
+          align-items: center;
+
+          gap: 7px;
+
+          color: var(--navy);
+
+          font-size: 9px;
+        }
+
+        .mvpTop > strong {
+          color:
+            var(--division-color);
+        }
+
+        .mvpTop small {
+          color:
+            var(--muted);
+        }
+
+        .mvpTop b {
+          font-size: 9px;
+        }
+
+        .mvpTrack {
+          height: 6px;
+
+          margin-top: 6px;
+
+          overflow: hidden;
+
+          border-radius: 100px;
+
+          background:
+            rgba(
+              9,
+              42,
+              63,
+              0.08
+            );
+        }
+
+        .mvpFill {
+          height: 100%;
+
+          border-radius:
+            inherit;
+
+          background:
+            var(--division-color);
+        }
+
+        @media (
+          max-width:
+            800px
+        ) {
+          .mvpRanking {
+            grid-template-columns:
+              1fr;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* =========================================================
+   BRACKET
+========================================================= */
+
+function BracketMatch({
+  team1,
+  team2,
+  highlighted =
+    false,
+}: {
+  team1:
+    string;
+
+  team2:
+    string;
+
+  highlighted?:
+    boolean;
+}) {
+  return (
+    <div
+      className={`bracketMatch ${
+        highlighted
+          ? 'highlighted'
+          : ''
+      }`}
+    >
+      <div>
+        <span>
+          ?
+        </span>
+
+        <strong>
+          {
+            team1
+          }
+        </strong>
+
+        <b>
+          -
+        </b>
+      </div>
+
+      <div>
+        <span>
+          ?
+        </span>
+
+        <strong>
+          {
+            team2
+          }
+        </strong>
+
+        <b>
+          -
+        </b>
+      </div>
+
+      <style jsx>{`
+        .bracketMatch {
+          width: 100%;
+
+          overflow: hidden;
+
+          border:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.3
+            );
+
+          border-radius: 8px;
+
+          background:
+            rgba(
+              255,
+              250,
+              241,
+              0.9
+            );
+        }
+
+        .bracketMatch.highlighted {
+          border-color:
+            var(--division-color);
+        }
+
+        .bracketMatch > div {
+          min-height: 48px;
+
+          display: grid;
+
+          grid-template-columns:
+            29px
+            minmax(
+              0,
+              1fr
+            )
+            20px;
+
+          align-items: center;
+
+          gap: 8px;
+
+          padding:
+            0
+            9px;
+        }
+
+        .bracketMatch > div + div {
+          border-top:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.1
+            );
+        }
+
+        span {
+          width: 27px;
+          height: 27px;
+
+          display: grid;
+
+          place-items: center;
+
+          border:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.15
+            );
+
+          border-radius: 5px;
+
+          font-size: 8px;
+        }
+
+        strong {
+          overflow: hidden;
+
+          color: var(--navy);
+
+          font-size: 10px;
+
+          white-space: nowrap;
+
+          text-overflow:
+            ellipsis;
+        }
+
+        b {
+          color:
+            var(--muted);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+function HistoryCard({
   match,
 }: {
-  match: HistoryMatch;
+  match:
+    HistoryMatch;
 }) {
+  const [
+    open,
+    setOpen,
+  ] =
+    useState(
+      false
+    );
+
   if (
     !match.team1 ||
     !match.team2
@@ -3393,129 +3391,123 @@ function HistoryMatchCard({
 
   return (
     <div className="historyMatch">
-      <div className="historyMeta">
-        <span>
-          {match.stage ===
-          'pool'
-            ? 'POULE'
-            : 'PLAYOFF'}
-        </span>
-
-        {match.round && (
+      <button
+        type="button"
+        className="historySummary"
+        onClick={() =>
+          setOpen(
+            (
+              value
+            ) =>
+              !value
+          )
+        }
+      >
+        <div className="historyMeta">
           <span>
-            {
-              match.round
-            }
+            {match.stage ===
+            'pool'
+              ? 'POULE'
+              : 'PLAYOFF'}
           </span>
-        )}
 
-        <small>
-          {formatDate(
-            match.playedAt
-          )}
-        </small>
-      </div>
+          <small>
+            {
+              formatDate(
+                match.playedAt
+              )
+            }
+          </small>
+        </div>
 
-      <div className="historyMain">
-        <HistoryTeamSide
-          team={
-            match.team1
-          }
-          winner={
-            match.winner
-              ?.id ===
-            match.team1
-              .id
-          }
-        />
+        <div className="historyTeams">
+          <HistoryTeam
+            team={
+              match.team1
+            }
+          />
 
-        <div className="historyScore">
-          <strong>
+          <div className="historyScore">
             {
               match.team1
                 .score
             }
-          </strong>
 
-          <span>
-            -
-          </span>
+            <span>
+              -
+            </span>
 
-          <strong>
             {
               match.team2
                 .score
             }
-          </strong>
+          </div>
+
+          <HistoryTeam
+            team={
+              match.team2
+            }
+            reverse
+          />
         </div>
 
-        <HistoryTeamSide
-          team={
-            match.team2
-          }
-          winner={
-            match.winner
-              ?.id ===
-            match.team2
-              .id
-          }
-          reverse
-        />
-      </div>
+        <span className="historyOpen">
+          {open
+            ? 'Réduire'
+            : 'Voir le match'}
+        </span>
+      </button>
 
-      <div className="historyGames">
-        {match.games.map(
-          (
-            game
-          ) => (
-            <div
-              key={
-                game.id
-              }
-              className="historyGame"
-            >
-              <strong>
-                G
-                {
-                  game.gameNumber
+      {open && (
+        <div className="historyGames">
+          {match.games.map(
+            (
+              game
+            ) => (
+              <div
+                key={
+                  game.id
                 }
-              </strong>
+                className="historyGame"
+              >
+                <strong>
+                  GAME{' '}
+                  {
+                    game.gameNumber
+                  }
+                </strong>
 
-              <span>
-                {
-                  formatDuration(
-                    game.durationSeconds
-                  )
-                }
-              </span>
+                <span>
+                  {
+                    formatDuration(
+                      game.durationSeconds
+                    )
+                  }
+                </span>
 
-              <span>
-                Winner :{' '}
-                {
-                  game.winnerName ??
-                  '-'
-                }
-              </span>
+                <span>
+                  Winner :{' '}
+                  {
+                    game.winnerName ??
+                    '-'
+                  }
+                </span>
 
-              {game.mvpRiotId && (
                 <span>
                   MVP :{' '}
                   {
-                    game.mvpRiotId
+                    game.mvpRiotId ??
+                    '-'
                   }
                 </span>
-              )}
-            </div>
-          )
-        )}
-      </div>
+              </div>
+            )
+          )}
+        </div>
+      )}
 
       <style jsx>{`
         .historyMatch {
-          padding:
-            16px
-            20px;
-
           border-bottom:
             1px solid
             rgba(
@@ -3530,19 +3522,55 @@ function HistoryMatchCard({
           border-bottom: 0;
         }
 
-        .historyMeta {
-          display: flex;
+        .historySummary {
+          width: 100%;
+
+          display: grid;
+
+          grid-template-columns:
+            115px
+            minmax(
+              0,
+              1fr
+            )
+            110px;
+
           align-items: center;
 
-          gap: 7px;
+          gap: 15px;
 
-          margin-bottom: 10px;
+          padding:
+            16px
+            20px;
+
+          border: 0;
+
+          background:
+            transparent;
+
+          text-align: left;
+        }
+
+        .historyMeta {
+          display: flex;
+
+          flex-direction: column;
+
+          align-items:
+            flex-start;
+
+          gap: 4px;
         }
 
         .historyMeta span {
+          width: auto;
+          height: auto;
+
           padding:
             4px
             7px;
+
+          border: 0;
 
           border-radius: 5px;
 
@@ -3552,79 +3580,97 @@ function HistoryMatchCard({
           color:
             var(--division-color);
 
-          font-size: 8px;
+          font-size: 7px;
+
           font-weight: 900;
         }
 
         .historyMeta small {
-          margin-left: auto;
-
           color:
             var(--muted);
 
-          font-size: 9px;
-          font-weight: 700;
+          font-size: 8px;
         }
 
-        .historyMain {
+        .historyTeams {
           display: grid;
 
           grid-template-columns:
-            minmax(
-              0,
-              1fr
-            )
-            90px
-            minmax(
-              0,
-              1fr
-            );
+            1fr
+            85px
+            1fr;
 
           align-items: center;
 
-          gap: 18px;
+          gap: 10px;
         }
 
         .historyScore {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          gap: 9px;
-
-          color:
-            var(--navy);
+          color: var(--navy);
 
           font-family:
             var(--font-display);
 
-          font-size: 25px;
+          font-size: 24px;
+
+          text-align: center;
         }
 
         .historyScore span {
+          width: auto;
+          height: auto;
+
+          margin:
+            0
+            8px;
+
+          border: 0;
+
           opacity: 0.35;
+        }
+
+        .historyOpen {
+          width: auto;
+          height: auto;
+
+          border: 0;
+
+          color:
+            var(--division-color);
+
+          font-size: 8px;
+
+          font-weight: 900;
+
+          text-transform:
+            uppercase;
         }
 
         .historyGames {
           display: flex;
+
           align-items: center;
 
-          gap: 7px;
+          gap: 8px;
 
           flex-wrap: wrap;
 
-          margin-top: 11px;
+          padding:
+            0
+            20px
+            15px;
         }
 
         .historyGame {
           display: flex;
+
           align-items: center;
 
-          gap: 7px;
+          gap: 8px;
 
           padding:
-            6px
-            8px;
+            7px
+            9px;
 
           border:
             1px solid
@@ -3632,7 +3678,7 @@ function HistoryMatchCard({
               9,
               42,
               63,
-              0.11
+              0.13
             );
 
           border-radius: 6px;
@@ -3641,7 +3687,6 @@ function HistoryMatchCard({
             var(--muted);
 
           font-size: 8px;
-          font-weight: 700;
         }
 
         .historyGame strong {
@@ -3650,19 +3695,21 @@ function HistoryMatchCard({
         }
 
         @media (
-          max-width: 700px
+          max-width:
+            700px
         ) {
-          .historyMain {
+          .historySummary {
+            grid-template-columns:
+              1fr;
+
+            gap: 10px;
+          }
+
+          .historyTeams {
             grid-template-columns:
               1fr
               55px
               1fr;
-
-            gap: 7px;
-          }
-
-          .historyScore {
-            font-size: 19px;
           }
         }
       `}</style>
@@ -3670,24 +3717,22 @@ function HistoryMatchCard({
   );
 }
 
-function HistoryTeamSide({
+function HistoryTeam({
   team,
-  winner,
-  reverse = false,
+  reverse =
+    false,
 }: {
-  team: HistoryTeam;
-  winner: boolean;
-  reverse?: boolean;
+  team:
+    HistoryTeam;
+
+  reverse?:
+    boolean;
 }) {
   return (
     <div
-      className={`historyTeamSide ${
+      className={`historyTeam ${
         reverse
           ? 'reverse'
-          : ''
-      } ${
-        winner
-          ? 'winner'
           : ''
       }`}
     >
@@ -3697,9 +3742,7 @@ function HistoryTeamSide({
             src={
               team.logo
             }
-            alt={
-              team.name
-            }
+            alt=""
           />
         ) : (
           team.shortName.slice(
@@ -3724,35 +3767,33 @@ function HistoryTeamSide({
       </div>
 
       <style jsx>{`
-        .historyTeamSide {
+        .historyTeam {
           min-width: 0;
 
           display: flex;
+
           align-items: center;
 
-          gap: 10px;
+          gap: 8px;
 
-          opacity: 0.66;
+          text-align: left;
         }
 
-        .historyTeamSide.reverse {
+        .historyTeam.reverse {
           flex-direction:
             row-reverse;
 
           text-align: right;
         }
 
-        .historyTeamSide.winner {
-          opacity: 1;
-        }
-
         .historyLogo {
-          width: 42px;
-          height: 42px;
+          width: 39px;
+          height: 39px;
 
           flex-shrink: 0;
 
           display: grid;
+
           place-items: center;
 
           overflow: hidden;
@@ -3763,24 +3804,12 @@ function HistoryTeamSide({
               9,
               42,
               63,
-              0.14
+              0.13
             );
 
-          border-radius: 8px;
+          border-radius: 7px;
 
-          background:
-            rgba(
-              255,
-              255,
-              255,
-              0.5
-            );
-
-          color:
-            var(--navy);
-
-          font-size: 8px;
-          font-weight: 900;
+          font-size: 7px;
         }
 
         .historyLogo img {
@@ -3790,39 +3819,32 @@ function HistoryTeamSide({
           object-fit: contain;
         }
 
-        .historyTeamSide > div:last-child {
+        .historyTeam > div:last-child {
           min-width: 0;
 
           display: flex;
+
           flex-direction: column;
-
-          gap: 2px;
         }
 
-        .historyTeamSide strong {
-          color:
-            var(--navy);
+        strong {
+          color: var(--navy);
 
-          font-size: 13px;
-          font-weight: 900;
+          font-size: 11px;
         }
 
-        .historyTeamSide.winner strong {
-          color:
-            var(--division-color);
-        }
-
-        .historyTeamSide span {
+        span {
           overflow: hidden;
 
           color:
             var(--muted);
 
-          font-size: 9px;
+          font-size: 7px;
 
           white-space: nowrap;
 
-          text-overflow: ellipsis;
+          text-overflow:
+            ellipsis;
         }
       `}</style>
     </div>
@@ -3830,159 +3852,76 @@ function HistoryTeamSide({
 }
 
 /* =========================================================
-   BRACKET
+   HELPERS
 ========================================================= */
 
-function ColumnTitle({
-  children,
-}: {
-  children:
-    React.ReactNode;
-}) {
-  return (
-    <div className="columnTitle">
-      {children}
-    </div>
-  );
-}
+function getSeedName(
+  teams:
+    Team[],
 
-function BracketMatch({
-  team1,
-  team2,
-  highlighted = false,
-  grandFinal = false,
-}: {
-  team1: string;
-  team2: string;
-
-  highlighted?: boolean;
-  grandFinal?: boolean;
-}) {
-  return (
-    <div
-      className={[
-        'bracketMatch',
-
-        highlighted
-          ? 'highlightedMatch'
-          : '',
-
-        grandFinal
-          ? 'grandFinalMatch'
-          : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <div className="bracketTeam">
-        <span className="miniTeamLogo">
-          ?
-        </span>
-
-        <span className="bracketTeamName">
-          {team1}
-        </span>
-
-        <strong className="matchScore">
-          -
-        </strong>
-      </div>
-
-      <div className="bracketTeam">
-        <span className="miniTeamLogo">
-          ?
-        </span>
-
-        <span className="bracketTeamName">
-          {team2}
-        </span>
-
-        <strong className="matchScore">
-          -
-        </strong>
-      </div>
-    </div>
-  );
-}
-
-function WinnerConnector({
-  type,
-}: {
-  type:
-    | 'quarters'
-    | 'semis'
-    | 'final';
-}) {
-  if (
-    type ===
-    'quarters'
-  ) {
-    return (
-      <div className="winnerConnector">
-        <span className="winnerConnectorLine winnerConnectorQ1" />
-        <span className="winnerConnectorLine winnerConnectorQ2" />
-        <span className="winnerConnectorLine winnerConnectorQ3" />
-        <span className="winnerConnectorLine winnerConnectorQ4" />
-
-        <span className="winnerConnectorLine winnerConnectorQV1" />
-        <span className="winnerConnectorLine winnerConnectorQV2" />
-
-        <span className="winnerConnectorLine winnerConnectorQOut1" />
-        <span className="winnerConnectorLine winnerConnectorQOut2" />
-      </div>
-    );
-  }
+  seed:
+    number
+) {
+  const team =
+    teams[
+      seed -
+        1
+    ];
 
   if (
-    type ===
-    'semis'
+    !team
   ) {
-    return (
-      <div className="winnerConnector">
-        <span className="winnerConnectorLine winnerConnectorS1" />
-        <span className="winnerConnectorLine winnerConnectorS2" />
-
-        <span className="winnerConnectorLine winnerConnectorSV" />
-
-        <span className="winnerConnectorLine winnerConnectorSOut" />
-      </div>
-    );
+    return `#${seed} TBD`;
   }
 
-  return (
-    <div className="winnerConnector">
-      <span className="winnerConnectorLine winnerConnectorFinal" />
-    </div>
-  );
+  return `#${seed} ${team.shortName}`;
 }
 
-function LoserConnector({
-  type,
-}: {
-  type:
-    | 'double'
-    | 'single';
-}) {
-  if (
-    type ===
-    'double'
-  ) {
-    return (
-      <div className="loserConnector">
-        <span className="loserConnectorLine loserDoubleTop" />
-
-        <span className="loserConnectorLine loserDoubleBottom" />
-
-        <span className="loserConnectorLine loserDoubleVertical" />
-
-        <span className="loserConnectorLine loserDoubleOut" />
-      </div>
+function formatDuration(
+  seconds:
+    number
+) {
+  const minutes =
+    Math.floor(
+      seconds /
+        60
     );
-  }
 
-  return (
-    <div className="loserConnector">
-      <span className="loserConnectorLine loserSingle" />
-    </div>
-  );
+  const rest =
+    seconds %
+    60;
+
+  return `${minutes}:${String(
+    rest
+  ).padStart(
+    2,
+    '0'
+  )}`;
+}
+
+function formatDate(
+  value:
+    string
+) {
+  try {
+    return new Intl.DateTimeFormat(
+      'fr-FR',
+      {
+        day:
+          '2-digit',
+
+        month:
+          '2-digit',
+
+        year:
+          'numeric',
+      }
+    ).format(
+      new Date(
+        value
+      )
+    );
+  } catch {
+    return '';
+  }
 }

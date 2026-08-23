@@ -10,8 +10,7 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-type AnyObject =
-  Record<string, any>;
+type AnyObject = Record<string, any>;
 
 type Division =
   | 'Yordle'
@@ -89,6 +88,7 @@ type PlayerStats = {
   riotId: string;
 
   teamId: number;
+
   teamName: string;
   teamShortName: string;
 
@@ -117,6 +117,8 @@ type PlayerStats = {
 
   damage: number;
   dpm: number;
+
+  visionScore: number;
 
   mvp: number;
 
@@ -174,8 +176,11 @@ const supabaseAdmin =
     serviceRoleKey,
     {
       auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+        autoRefreshToken:
+          false,
+
+        persistSession:
+          false,
       },
     }
   );
@@ -204,21 +209,24 @@ export async function GET(
         fetch(
           `${origin}/api/teams`,
           {
-            cache: 'no-store',
+            cache:
+              'no-store',
           }
         ),
 
         fetch(
           `${origin}/api/team-members`,
           {
-            cache: 'no-store',
+            cache:
+              'no-store',
           }
         ),
 
         fetch(
           `${origin}/api/players`,
           {
-            cache: 'no-store',
+            cache:
+              'no-store',
           }
         ),
       ]);
@@ -274,7 +282,8 @@ export async function GET(
     const validatedTeams =
       rawTeams.filter(
         (
-          team: AnyObject
+          team:
+            AnyObject
         ) =>
           isValidated(
             team
@@ -289,7 +298,8 @@ export async function GET(
       ResultTeam[] =
       validatedTeams.map(
         (
-          team: AnyObject
+          team:
+            AnyObject
         ) => {
           const teamId =
             getValue(
@@ -452,7 +462,8 @@ export async function GET(
               );
 
           return {
-            id: teamId,
+            id:
+              teamId,
 
             name:
               getTeamName(
@@ -518,7 +529,8 @@ export async function GET(
 
     const {
       data: matches,
-      error: matchesError,
+      error:
+        matchesError,
     } =
       await supabaseAdmin
         .from(
@@ -549,7 +561,8 @@ export async function GET(
 
     const {
       data: games,
-      error: gamesError,
+      error:
+        gamesError,
     } =
       await supabaseAdmin
         .from(
@@ -1323,12 +1336,17 @@ export async function GET(
         let cs = 0;
         let gold = 0;
         let damage = 0;
+        let visionScore =
+          0;
 
         let wins = 0;
         let losses = 0;
 
-        let duration = 0;
-        let mvp = 0;
+        let duration =
+          0;
+
+        let mvp =
+          0;
 
         for (
           const row
@@ -1377,6 +1395,11 @@ export async function GET(
               row.damage
             ) || 0;
 
+          visionScore +=
+            Number(
+              row.vision_score
+            ) || 0;
+
           duration +=
             Number(
               game
@@ -1394,7 +1417,8 @@ export async function GET(
           ) {
             wins += 1;
           } else {
-            losses += 1;
+            losses +=
+              1;
           }
 
           if (
@@ -1404,7 +1428,8 @@ export async function GET(
             ) ===
             playerId
           ) {
-            mvp += 1;
+            mvp +=
+              1;
           }
         }
 
@@ -1501,6 +1526,8 @@ export async function GET(
                     minutes
                 )
               : 0,
+
+          visionScore,
 
           mvp,
 
@@ -1620,8 +1647,11 @@ export async function GET(
           new Map<
             string,
             {
-              picks: number;
-              wins: number;
+              picks:
+                number;
+
+              wins:
+                number;
             }
           >();
 
@@ -1659,8 +1689,11 @@ export async function GET(
             map.get(
               championId
             ) ?? {
-              picks: 0,
-              wins: 0,
+              picks:
+                0,
+
+              wins:
+                0,
             };
 
           current.picks +=
@@ -1775,7 +1808,7 @@ export async function GET(
             )
             .slice(
               0,
-              3
+              5
             );
       }
 
@@ -1826,7 +1859,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        success: true,
+        success:
+          true,
 
         divisions,
 
@@ -1871,36 +1905,56 @@ export async function GET(
 
         roles: [
           {
-            id: 'Top',
-            label: 'TOP',
+            id:
+              'Top',
+
+            label:
+              'TOP',
+
             icon:
               '/assets/roles/top.png',
           },
 
           {
-            id: 'Jungle',
-            label: 'JGL',
+            id:
+              'Jungle',
+
+            label:
+              'JGL',
+
             icon:
               '/assets/roles/jungle.png',
           },
 
           {
-            id: 'Mid',
-            label: 'MID',
+            id:
+              'Mid',
+
+            label:
+              'MID',
+
             icon:
               '/assets/roles/mid.png',
           },
 
           {
-            id: 'ADC',
-            label: 'ADC',
+            id:
+              'ADC',
+
+            label:
+              'ADC',
+
             icon:
               '/assets/roles/adc.png',
           },
 
           {
-            id: 'Support',
-            label: 'SUP',
+            id:
+              'Support',
+
+            label:
+              'SUP',
+
             icon:
               '/assets/roles/sup.png',
           },
@@ -1954,22 +2008,25 @@ export async function GET(
         },
       }
     );
-} catch (error: any) {
-  console.error(
-    '[RESULTS API]',
-    error
-  );
+  } catch (
+    error: any
+  ) {
+    console.error(
+      '[RESULTS API]',
+      error
+    );
 
-  return NextResponse.json(
-    {
-      success: false,
+    return NextResponse.json(
+      {
+        success:
+          false,
 
-      error:
-        error?.message ||
-        'Impossible de charger les données de la page Résultats.',
+        error:
+          error?.message ||
+          'Impossible de charger les données de la page Résultats.',
 
-      details:
-        error,
+        details:
+          error,
 
         teams: [],
 
@@ -2012,7 +2069,8 @@ export async function GET(
         },
       },
       {
-        status: 500,
+        status:
+          500,
       }
     );
   }
@@ -2221,10 +2279,12 @@ function getValue(
     if (
       object[
         key
-      ] !== undefined &&
+      ] !==
+        undefined &&
       object[
         key
-      ] !== null
+      ] !==
+        null
     ) {
       return object[
         key
@@ -2241,9 +2301,12 @@ function stringOrNull(
   | string
   | null {
   if (
-    value === undefined ||
-    value === null ||
-    value === ''
+    value ===
+      undefined ||
+    value ===
+      null ||
+    value ===
+      ''
   ) {
     return null;
   }
@@ -2254,7 +2317,8 @@ function stringOrNull(
 }
 
 function round2(
-  value: number
+  value:
+    number
 ) {
   return (
     Math.round(
@@ -2567,7 +2631,8 @@ function findPlayer(
 ========================================================= */
 
 function normalizeRole(
-  value: any
+  value:
+    any
 ):
   | string
   | null {
