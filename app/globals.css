@@ -4860,78 +4860,32 @@ input:checked +
 }
 
 /* =========================================================
-   CZF — TOUS LES ÉCLAIRS EN ARRIÈRE-PLAN
+   CZF — ÉCLAIRS VRAIMENT EN FOND
 ========================================================= */
-
-
-/* Les conteneurs créent leur propre couche */
-
-.homeHero,
-.discordCard,
-
-#divisions,
-#equipes,
-#compte,
-#resultats,
-#hall-of-fame,
-#rulebook,
-
-.profilePage,
-.profileCard,
-
-.playersPage,
-.playersCreateCard,
-.playersListCard,
-
-.teamsPage,
-.teamsCreateCard,
-.teamsListCard,
-
-.divisionsPage,
-.divisionsIntroCard,
-.divisionCard {
-  position: relative;
-  isolation: isolate;
-}
 
 
 /* =========================================================
-   TOUS LES ÉCLAIRS
+   1. ON DÉSACTIVE LES ÉCLAIRS COLLÉS AUX CARTES
 ========================================================= */
-
-.homeHero::before,
-.homeHero::after,
 
 .discordCard::before,
 .discordCard::after,
 
-#divisions::before,
-#divisions::after,
-
-#equipes::before,
-#equipes::after,
-
 #compte .importBox::before,
 #compte .importBox::after,
-
-#resultats::after,
-
-#hall-of-fame::before,
 
 #rulebook .rulebook::before,
 #rulebook .rulebook::after,
 
-.profilePage::before,
-.profilePage::after,
 .profileCard::before,
 .profileCard::after,
 
-.playersPage::before,
-.playersPage::after,
 .playersCreateCard::before,
 .playersCreateCard::after,
 .playersListCard::before,
 .playersListCard::after,
+.playersPage > .card:last-of-type::before,
+.playersPage > .card:last-of-type::after,
 
 .teamsCreateCard::after,
 .teamsListCard::before,
@@ -4939,60 +4893,96 @@ input:checked +
 .divisionsIntroCard::after,
 .divisionCard-targon::before,
 .divisionCard-yordle::before {
-  z-index: 0 !important;
+  display: none !important;
+}
 
+
+/* =========================================================
+   2. LES PAGES DEVIENNENT LE SUPPORT DES ÉCLAIRS
+========================================================= */
+
+.profilePage,
+.playersPage,
+.teamsPage,
+.divisionsPage,
+.czfPageContent {
+  position: relative;
+  isolation: isolate;
+}
+
+
+/* =========================================================
+   3. ÉCLAIRS DE PAGE = DERRIÈRE LES CARTES
+========================================================= */
+
+.profilePage::before,
+.profilePage::after,
+
+.playersPage::before,
+.playersPage::after {
+  z-index: -1 !important;
   pointer-events: none !important;
 }
 
 
 /* =========================================================
-   LE CONTENU PASSE TOUJOURS DEVANT
-========================================================= */
-
-.homeHero > *,
-
-.discordCard > *,
-
-#compte .importBox > *,
-
-#rulebook .rulebook > *,
-
-.profileCard > *,
-
-.playersCreateCard > *,
-.playersListCard > *,
-
-.teamsCreateCard > *,
-.teamsListCard > *,
-
-.divisionsIntroCard > *,
-.divisionCard > * {
-  position: relative;
-
-  z-index: 2 !important;
-}
-
-
-/* =========================================================
-   LES CARTES RESTENT AU-DESSUS DES ÉCLAIRS DE PAGE
+   4. CARTES TOUJOURS DEVANT
 ========================================================= */
 
 .profilePage > .card,
 .playersPage > .card,
 .teamsPage > .card,
-.divisionsPage > .card {
-  position: relative;
+.divisionsPage > .card,
 
-  z-index: 2;
+.discordCard,
+.importBox,
+.rulebook,
+.divisionCard {
+  position: relative;
+  z-index: 2 !important;
 }
 
 
 /* =========================================================
-   TITRES DE SECTION TOUJOURS DEVANT
+   5. ÉCLAIRS ACCUEIL DERRIÈRE LES SECTIONS
 ========================================================= */
 
-.sectionTitle {
-  position: relative;
+.homeHero::before,
+.homeHero::after,
 
-  z-index: 3 !important;
+#divisions::before,
+#divisions::after,
+
+#equipes::before,
+#equipes::after,
+
+#resultats::after,
+#hall-of-fame::before {
+  z-index: -1 !important;
+}
+
+
+/* Les sections créent leur propre calque */
+
+.homeHero,
+#divisions,
+#equipes,
+#resultats,
+#hall-of-fame {
+  isolation: isolate;
+}
+
+
+/* =========================================================
+   6. CONTENU TOUJOURS DEVANT
+========================================================= */
+
+.sectionTitle,
+.heroText,
+.card,
+.grid,
+.importBox,
+.rulebook {
+  position: relative;
+  z-index: 2;
 }
