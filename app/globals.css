@@ -4858,3 +4858,21 @@ input:checked +
     font-size: 30px;
   }
 }
+-- 
+
+.playersCreateCard::before,
+.playersCreateCard::after,
+.teamsCreateCard::after,
+.divisionsIntroCard::after,
+.discordCard::before,
+.discordCard::after {
+  z-index: 0 !important;
+}
+
+.playersCreateCard > *,
+.teamsCreateCard > *,
+.divisionsIntroCard > *,
+.discordCard > * {
+  position: relative;
+  z-index: 2;
+}
