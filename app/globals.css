@@ -4858,21 +4858,141 @@ input:checked +
     font-size: 30px;
   }
 }
--- 
 
-.playersCreateCard::before,
-.playersCreateCard::after,
-.teamsCreateCard::after,
-.divisionsIntroCard::after,
-.discordCard::before,
-.discordCard::after {
-  z-index: 0 !important;
+/* =========================================================
+   CZF — TOUS LES ÉCLAIRS EN ARRIÈRE-PLAN
+========================================================= */
+
+
+/* Les conteneurs créent leur propre couche */
+
+.homeHero,
+.discordCard,
+
+#divisions,
+#equipes,
+#compte,
+#resultats,
+#hall-of-fame,
+#rulebook,
+
+.profilePage,
+.profileCard,
+
+.playersPage,
+.playersCreateCard,
+.playersListCard,
+
+.teamsPage,
+.teamsCreateCard,
+.teamsListCard,
+
+.divisionsPage,
+.divisionsIntroCard,
+.divisionCard {
+  position: relative;
+  isolation: isolate;
 }
 
+
+/* =========================================================
+   TOUS LES ÉCLAIRS
+========================================================= */
+
+.homeHero::before,
+.homeHero::after,
+
+.discordCard::before,
+.discordCard::after,
+
+#divisions::before,
+#divisions::after,
+
+#equipes::before,
+#equipes::after,
+
+#compte .importBox::before,
+#compte .importBox::after,
+
+#resultats::after,
+
+#hall-of-fame::before,
+
+#rulebook .rulebook::before,
+#rulebook .rulebook::after,
+
+.profilePage::before,
+.profilePage::after,
+.profileCard::before,
+.profileCard::after,
+
+.playersPage::before,
+.playersPage::after,
+.playersCreateCard::before,
+.playersCreateCard::after,
+.playersListCard::before,
+.playersListCard::after,
+
+.teamsCreateCard::after,
+.teamsListCard::before,
+
+.divisionsIntroCard::after,
+.divisionCard-targon::before,
+.divisionCard-yordle::before {
+  z-index: 0 !important;
+
+  pointer-events: none !important;
+}
+
+
+/* =========================================================
+   LE CONTENU PASSE TOUJOURS DEVANT
+========================================================= */
+
+.homeHero > *,
+
+.discordCard > *,
+
+#compte .importBox > *,
+
+#rulebook .rulebook > *,
+
+.profileCard > *,
+
 .playersCreateCard > *,
+.playersListCard > *,
+
 .teamsCreateCard > *,
+.teamsListCard > *,
+
 .divisionsIntroCard > *,
-.discordCard > * {
+.divisionCard > * {
   position: relative;
+
+  z-index: 2 !important;
+}
+
+
+/* =========================================================
+   LES CARTES RESTENT AU-DESSUS DES ÉCLAIRS DE PAGE
+========================================================= */
+
+.profilePage > .card,
+.playersPage > .card,
+.teamsPage > .card,
+.divisionsPage > .card {
+  position: relative;
+
   z-index: 2;
+}
+
+
+/* =========================================================
+   TITRES DE SECTION TOUJOURS DEVANT
+========================================================= */
+
+.sectionTitle {
+  position: relative;
+
+  z-index: 3 !important;
 }
