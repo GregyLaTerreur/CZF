@@ -1,27 +1,82 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import Nav from '../components/Nav';
 
-type Division = 'Yordle' | 'Ixtal' | 'Targon';
+/* =========================================================
+   TYPES
+========================================================= */
+
+type Division =
+  | 'Yordle'
+  | 'Ixtal'
+  | 'Targon';
+
+type Role =
+  | 'Top'
+  | 'Jungle'
+  | 'Mid'
+  | 'ADC'
+  | 'Support';
+
+type StatSort =
+  | 'kda'
+  | 'kills'
+  | 'assists'
+  | 'gold'
+  | 'dpm'
+  | 'csPerMin'
+  | 'mvp';
 
 type ResultPlayer = {
-  id: number | string | null;
+  id:
+    | number
+    | string
+    | null;
+
   riotId: string;
-  discordName: string | null;
-  role: string | null;
-  avatar: string | null;
+
+  discordName:
+    | string
+    | null;
+
+  role:
+    | string
+    | null;
+
+  avatar:
+    | string
+    | null;
 };
 
 type Team = {
-  id: number | string;
+  id:
+    | number
+    | string;
+
   name: string;
+
   shortName: string;
-  logo: string | null;
-  division: Division | null;
+
+  logo:
+    | string
+    | null;
+
+  division:
+    | Division
+    | null;
+
   wins: number;
+
   losses: number;
-  roster: ResultPlayer[];
+
+  roster:
+    ResultPlayer[];
 };
 
 type Champion = {
@@ -31,11 +86,155 @@ type Champion = {
   image: string;
 };
 
-type DivisionConfig = {
-  name: Division;
-  color: string;
-  soft: string;
+type HistoryTeam = {
+  id: number;
+  name: string;
+  shortName: string;
+  logo:
+    | string
+    | null;
+  score: number;
 };
+
+type HistoryGame = {
+  id: number;
+  gameNumber: number;
+  durationSeconds: number;
+
+  winnerTeamId: number;
+
+  winnerName:
+    | string
+    | null;
+
+  mvpPlayerId:
+    | number
+    | null;
+
+  mvpRiotId:
+    | string
+    | null;
+};
+
+type HistoryMatch = {
+  id: number;
+
+  division: Division;
+
+  stage:
+    | 'pool'
+    | 'playoff';
+
+  bracket:
+    | 'winner'
+    | 'loser'
+    | 'grand_final'
+    | null;
+
+  round:
+    | string
+    | null;
+
+  bestOf: number;
+
+  playedAt: string;
+
+  team1:
+    | HistoryTeam
+    | null;
+
+  team2:
+    | HistoryTeam
+    | null;
+
+  winner:
+    | {
+        id: number;
+        name: string;
+        shortName: string;
+        logo:
+          | string
+          | null;
+      }
+    | null;
+
+  games:
+    HistoryGame[];
+};
+
+type PlayerStats = {
+  playerId: number;
+
+  riotId: string;
+
+  teamId: number;
+
+  teamName: string;
+
+  teamShortName: string;
+
+  teamLogo:
+    | string
+    | null;
+
+  role: Role;
+
+  games: number;
+
+  wins: number;
+  losses: number;
+
+  kills: number;
+  deaths: number;
+  assists: number;
+
+  kda: number;
+
+  cs: number;
+  csPerMin: number;
+
+  gold: number;
+  goldPerMin: number;
+
+  damage: number;
+  dpm: number;
+
+  mvp: number;
+
+  totalDurationSeconds: number;
+};
+
+type ChampionRoleStat = {
+  championId: string;
+
+  name: string;
+
+  image:
+    | string
+    | null;
+
+  role: Role;
+
+  picks: number;
+
+  wins: number;
+
+  losses: number;
+
+  pickRate: number;
+
+  winRate: number;
+};
+
+type RoleStats = Record<
+  Role,
+  PlayerStats[]
+>;
+
+type RoleChampions = Record<
+  Role,
+  ChampionRoleStat[]
+>;
 
 type ResultsApiData = {
   success: boolean;
@@ -46,71 +245,234 @@ type ResultsApiData = {
     Targon: Team[];
   };
 
+  teams: Team[];
+
   champions: Champion[];
+
+  historyByDivision: {
+    Yordle: HistoryMatch[];
+    Ixtal: HistoryMatch[];
+    Targon: HistoryMatch[];
+  };
+
+  playerStatsByDivision: {
+    Yordle: RoleStats;
+    Ixtal: RoleStats;
+    Targon: RoleStats;
+  };
+
+  championsByDivision: {
+    Yordle: RoleChampions;
+    Ixtal: RoleChampions;
+    Targon: RoleChampions;
+  };
 };
 
-const DIVISIONS: DivisionConfig[] = [
+type DivisionConfig = {
+  name: Division;
+  color: string;
+  soft: string;
+};
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const DIVISIONS:
+  DivisionConfig[] = [
   {
     name: 'Yordle',
     color: '#51a677',
-    soft: 'rgba(81, 166, 119, 0.11)',
+    soft:
+      'rgba(81, 166, 119, 0.11)',
   },
+
   {
     name: 'Ixtal',
     color: '#4387d8',
-    soft: 'rgba(67, 135, 216, 0.11)',
+    soft:
+      'rgba(67, 135, 216, 0.11)',
   },
+
   {
     name: 'Targon',
     color: '#8f6bc7',
-    soft: 'rgba(143, 107, 199, 0.11)',
+    soft:
+      'rgba(143, 107, 199, 0.11)',
   },
 ];
 
+const ROLES: Role[] = [
+  'Top',
+  'Jungle',
+  'Mid',
+  'ADC',
+  'Support',
+];
+
+const ROLE_LABELS:
+  Record<Role, string> = {
+  Top: 'TOP',
+  Jungle: 'JGL',
+  Mid: 'MID',
+  ADC: 'ADC',
+  Support: 'SUP',
+};
+
+const ROLE_ICONS:
+  Record<Role, string> = {
+  Top:
+    '/assets/roles/top.png',
+
+  Jungle:
+    '/assets/roles/jungle.png',
+
+  Mid:
+    '/assets/roles/mid.png',
+
+  ADC:
+    '/assets/roles/adc.png',
+
+  Support:
+    '/assets/roles/sup.png',
+};
+
+const SORTS: {
+  id: StatSort;
+  label: string;
+}[] = [
+  {
+    id: 'kda',
+    label: 'KDA',
+  },
+
+  {
+    id: 'kills',
+    label: 'Kills',
+  },
+
+  {
+    id: 'assists',
+    label: 'Assists',
+  },
+
+  {
+    id: 'gold',
+    label: 'Gold',
+  },
+
+  {
+    id: 'dpm',
+    label: 'DPM',
+  },
+
+  {
+    id: 'csPerMin',
+    label: 'CS/min',
+  },
+
+  {
+    id: 'mvp',
+    label: 'MVP',
+  },
+];
+
+/* =========================================================
+   PAGE
+========================================================= */
+
 export default function ResultsPage() {
-  const [division, setDivision] =
-    useState<Division>('Yordle');
+  const [
+    division,
+    setDivision,
+  ] =
+    useState<Division>(
+      'Yordle'
+    );
 
-  const [resultsData, setResultsData] =
-    useState<ResultsApiData | null>(null);
+  const [
+    selectedRole,
+    setSelectedRole,
+  ] =
+    useState<Role>(
+      'Top'
+    );
 
-  const [champions, setChampions] =
-    useState<Champion[]>([]);
+  const [
+    sortBy,
+    setSortBy,
+  ] =
+    useState<StatSort>(
+      'kda'
+    );
 
-  const [loading, setLoading] =
+  const [
+    resultsData,
+    setResultsData,
+  ] =
+    useState<
+      ResultsApiData |
+      null
+    >(null);
+
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true);
+
+  const [
+    error,
+    setError,
+  ] =
+    useState('');
+
+  /* ======================================================
+     FETCH
+  ====================================================== */
 
   useEffect(() => {
     async function loadResults() {
       try {
         setLoading(true);
+        setError('');
 
-        const res = await fetch('/api/results', {
-          cache: 'no-store',
-        });
+        const res =
+          await fetch(
+            '/api/results',
+            {
+              cache:
+                'no-store',
+            }
+          );
 
-        const data: ResultsApiData =
+        const data:
+          ResultsApiData =
           await res.json();
 
-        if (!res.ok || !data.success) {
+        if (
+          !res.ok ||
+          !data.success
+        ) {
           throw new Error(
-            'Impossible de récupérer les résultats'
+            'Impossible de charger les résultats.'
           );
         }
 
-        setResultsData(data);
-
-        setChampions(
-          data.champions || []
+        setResultsData(
+          data
         );
-      } catch (error) {
+      } catch (
+        err: any
+      ) {
         console.error(
-          'Erreur chargement résultats :',
-          error
+          err
         );
 
-        setResultsData(null);
-        setChampions([]);
+        setError(
+          err?.message ||
+            'Erreur de chargement.'
+        );
       } finally {
         setLoading(false);
       }
@@ -119,11 +481,17 @@ export default function ResultsPage() {
     loadResults();
   }, []);
 
+  /* ======================================================
+     DIVISION
+  ====================================================== */
+
   const divisionConfig =
     DIVISIONS.find(
       (item) =>
-        item.name === division
-    ) || DIVISIONS[0];
+        item.name ===
+        division
+    ) ??
+    DIVISIONS[0];
 
   const divisionTeams =
     useMemo(() => {
@@ -132,14 +500,99 @@ export default function ResultsPage() {
       }
 
       return (
-        resultsData.divisions[
+        resultsData
+          .divisions[
           division
-        ] || []
-      ).slice(0, 10);
+        ] ?? []
+      ).slice(
+        0,
+        10
+      );
     }, [
       resultsData,
       division,
     ]);
+
+  const divisionHistory =
+    useMemo(() => {
+      if (!resultsData) {
+        return [];
+      }
+
+      return (
+        resultsData
+          .historyByDivision?.[
+          division
+        ] ?? []
+      );
+    }, [
+      resultsData,
+      division,
+    ]);
+
+  const roleStats =
+    useMemo(() => {
+      if (!resultsData) {
+        return [];
+      }
+
+      const source =
+        resultsData
+          .playerStatsByDivision?.[
+          division
+        ]?.[
+          selectedRole
+        ] ?? [];
+
+      return [
+        ...source,
+      ].sort(
+        (
+          a,
+          b
+        ) =>
+          getSortValue(
+            b,
+            sortBy
+          ) -
+          getSortValue(
+            a,
+            sortBy
+          )
+      );
+    }, [
+      resultsData,
+      division,
+      selectedRole,
+      sortBy,
+    ]);
+
+  const roleChampions =
+    useMemo(() => {
+      if (!resultsData) {
+        return [];
+      }
+
+      return (
+        resultsData
+          .championsByDivision?.[
+          division
+        ]?.[
+          selectedRole
+        ] ?? []
+      ).slice(
+        0,
+        3
+      );
+    }, [
+      resultsData,
+      division,
+      selectedRole,
+    ]);
+
+  /* ======================================================
+     UI
+  ====================================================== */
 
   return (
     <>
@@ -157,6 +610,8 @@ export default function ResultsPage() {
           } as React.CSSProperties
         }
       >
+        {/* ÉCLAIRS */}
+
         <img
           className="resultBolt resultBoltOne"
           src="/assets/eclairs/eclair_czf_04.png"
@@ -169,26 +624,52 @@ export default function ResultsPage() {
           alt=""
         />
 
+        {/* TITRE */}
+
         <div className="sectionTitle resultsTitle">
           <span />
-          <h2>Résultats</h2>
+
+          <h2>
+            Résultats
+          </h2>
         </div>
+
+        {/* ERREUR */}
+
+        {error && (
+          <div className="resultsError">
+            {error}
+          </div>
+        )}
+
+        {/* DIVISIONS */}
 
         <div className="divisionTabs">
           {DIVISIONS.map(
             (item) => {
               const active =
-                division === item.name;
+                division ===
+                item.name;
 
               return (
                 <button
-                  key={item.name}
+                  key={
+                    item.name
+                  }
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setDivision(
                       item.name
-                    )
-                  }
+                    );
+
+                    setSelectedRole(
+                      'Top'
+                    );
+
+                    setSortBy(
+                      'kda'
+                    );
+                  }}
                   className={`divisionTab ${
                     active
                       ? 'divisionTabActive'
@@ -211,10 +692,13 @@ export default function ResultsPage() {
           )}
         </div>
 
+        {/* =================================================
+            CLASSEMENT + BRACKET
+        ================================================= */}
+
         <div className="resultsMainGrid">
-          {/* =========================
-              CLASSEMENT
-          ========================= */}
+
+          {/* CLASSEMENT */}
 
           <section className="resultsCard standingsCard">
             <div className="resultsCardHeader">
@@ -234,9 +718,17 @@ export default function ResultsPage() {
             </div>
 
             <div className="standingHeader">
-              <span>#</span>
-              <span>Équipe</span>
-              <span>V/D</span>
+              <span>
+                #
+              </span>
+
+              <span>
+                Équipe
+              </span>
+
+              <span>
+                V/D
+              </span>
             </div>
 
             {loading ? (
@@ -246,34 +738,28 @@ export default function ResultsPage() {
             ) : (
               <div className="standingRows">
                 {divisionTeams.map(
-                  (team, index) => {
+                  (
+                    team,
+                    index
+                  ) => {
                     const rank =
-                      index + 1;
+                      index +
+                      1;
 
                     const qualified =
-                      rank <= 8;
-
-                    const roster =
-                      team.roster || [];
+                      rank <=
+                      8;
 
                     return (
                       <div
-                        key={team.id}
+                        key={
+                          team.id
+                        }
                         className={`standingRow ${
                           qualified
                             ? 'standingQualified'
                             : 'standingEliminated'
                         }`}
-                        title={
-                          roster.length > 0
-                            ? roster
-                                .map(
-                                  (player) =>
-                                    `${player.role ?? 'Rôle'} : ${player.riotId}`
-                                )
-                                .join('\n')
-                            : 'Roster non trouvé'
-                        }
                       >
                         <div className="standingRank">
                           {rank}
@@ -281,23 +767,31 @@ export default function ResultsPage() {
 
                         <div className="standingTeam">
                           <TeamLogo
-                            team={team}
+                            team={
+                              team
+                            }
                           />
 
                           <div className="standingTeamText">
                             <strong>
-                              {team.shortName}
+                              {
+                                team.shortName
+                              }
                             </strong>
 
                             <span>
-                              {team.name}
+                              {
+                                team.name
+                              }
                             </span>
                           </div>
                         </div>
 
                         <div className="standingScore">
                           <strong>
-                            {team.wins}
+                            {
+                              team.wins
+                            }
                           </strong>
 
                           <span>
@@ -305,7 +799,9 @@ export default function ResultsPage() {
                           </span>
 
                           <strong>
-                            {team.losses}
+                            {
+                              team.losses
+                            }
                           </strong>
                         </div>
                       </div>
@@ -321,7 +817,10 @@ export default function ResultsPage() {
                         divisionTeams.length
                     ),
                 }).map(
-                  (_, index) => {
+                  (
+                    _,
+                    index
+                  ) => {
                     const rank =
                       divisionTeams.length +
                       index +
@@ -331,13 +830,16 @@ export default function ResultsPage() {
                       <div
                         key={`empty-${rank}`}
                         className={`standingRow standingEmpty ${
-                          rank <= 8
+                          rank <=
+                          8
                             ? 'standingQualified'
                             : 'standingEliminated'
                         }`}
                       >
                         <div className="standingRank">
-                          {rank}
+                          {
+                            rank
+                          }
                         </div>
 
                         <div className="standingTeam">
@@ -385,9 +887,7 @@ export default function ResultsPage() {
             </div>
           </section>
 
-          {/* =========================
-              BRACKET
-          ========================= */}
+          {/* BRACKET */}
 
           <section className="resultsCard bracketCard">
             <div className="resultsCardHeader">
@@ -409,7 +909,7 @@ export default function ResultsPage() {
             <div className="bracketScroller">
               <div className="fullBracket">
 
-                {/* WINNER BRACKET */}
+                {/* WINNER */}
 
                 <div className="laneTitle">
                   <span />
@@ -500,7 +1000,7 @@ export default function ResultsPage() {
                     type="semis"
                   />
 
-                  {/* WINNER FINAL */}
+                  {/* FINALE WINNER */}
 
                   <div className="bracketRound winnerFinalRound">
                     <ColumnTitle>
@@ -547,7 +1047,7 @@ export default function ResultsPage() {
                   </div>
                 </div>
 
-                {/* DESCENTES WINNER -> LOSER */}
+                {/* DESCENTES */}
 
                 <div className="dropArea">
                   <div className="dropMessage">
@@ -555,21 +1055,13 @@ export default function ResultsPage() {
                   </div>
 
                   <div className="dropLines">
-                    <div className="dropLine dropQuarter">
-                      <span />
-                    </div>
-
-                    <div className="dropLine dropSemi">
-                      <span />
-                    </div>
-
-                    <div className="dropLine dropWinnerFinal">
-                      <span />
-                    </div>
+                    <div className="dropLine dropQuarter" />
+                    <div className="dropLine dropSemi" />
+                    <div className="dropLine dropWinnerFinal" />
                   </div>
                 </div>
 
-                {/* LOSER BRACKET */}
+                {/* LOSER */}
 
                 <div className="laneTitle loserLaneTitle">
                   <span />
@@ -577,8 +1069,6 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="loserBracket">
-
-                  {/* ROUND 1 */}
 
                   <div className="bracketRound loserRoundOne">
                     <ColumnTitle>
@@ -602,8 +1092,6 @@ export default function ResultsPage() {
                     type="double"
                   />
 
-                  {/* ROUND 2 */}
-
                   <div className="bracketRound loserRoundTwo">
                     <ColumnTitle>
                       Round 2
@@ -626,8 +1114,6 @@ export default function ResultsPage() {
                     type="double"
                   />
 
-                  {/* ROUND 3 */}
-
                   <div className="bracketRound loserRoundThree">
                     <ColumnTitle>
                       Round 3
@@ -645,8 +1131,6 @@ export default function ResultsPage() {
                     type="single"
                   />
 
-                  {/* LOSER FINAL */}
-
                   <div className="bracketRound loserFinalRound">
                     <ColumnTitle>
                       Finale Loser
@@ -661,7 +1145,9 @@ export default function ResultsPage() {
 
                       <div className="returnFinal">
                         Winner LB
+
                         <span>
+                          {' '}
                           → GRANDE FINALE
                         </span>
                       </div>
@@ -670,24 +1156,16 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="loserReturnLine">
-                  <span>
-                    Le vainqueur du Loser Bracket remonte en Grande Finale
-                  </span>
-
-                  <div className="loserReturnPath">
-                    <div className="returnHorizontal" />
-                    <div className="returnVertical" />
-                    <div className="returnTop" />
-                  </div>
+                  Le vainqueur du Loser Bracket rejoint la Grande Finale
                 </div>
               </div>
             </div>
           </section>
         </div>
 
-        {/* =========================
+        {/* =================================================
             HISTORIQUE
-        ========================= */}
+        ================================================= */}
 
         <section className="resultsCard historyCard">
           <div className="resultsCardHeader">
@@ -700,16 +1178,52 @@ export default function ResultsPage() {
                 Historique des matchs
               </h3>
             </div>
+
+            <div className="divisionBadge">
+              {
+                divisionHistory.length
+              } MATCH
+              {
+                divisionHistory.length >
+                1
+                  ? 'S'
+                  : ''
+              }
+            </div>
           </div>
 
-          <div className="emptySection">
-            Aucun match enregistré pour le moment.
-          </div>
+          {loading ? (
+            <div className="emptySection">
+              Chargement...
+            </div>
+          ) : divisionHistory.length ===
+            0 ? (
+            <div className="emptySection">
+              Aucun match enregistré pour le moment.
+            </div>
+          ) : (
+            <div className="historyList">
+              {divisionHistory.map(
+                (
+                  match
+                ) => (
+                  <HistoryMatchCard
+                    key={
+                      match.id
+                    }
+                    match={
+                      match
+                    }
+                  />
+                )
+              )}
+            </div>
+          )}
         </section>
 
-        {/* =========================
-            STATS
-        ========================= */}
+        {/* =================================================
+            STATS JOUEURS
+        ================================================= */}
 
         <section className="resultsCard statsCard">
           <div className="resultsCardHeader">
@@ -722,31 +1236,471 @@ export default function ResultsPage() {
                 Statistiques des joueurs
               </h3>
             </div>
+
+            <div className="divisionBadge">
+              {division}
+            </div>
           </div>
 
-          <div className="roleTabsPreview">
-            {[
-              'TOP',
-              'JGL',
-              'MID',
-              'ADC',
-              'SUP',
-            ].map((role) => (
-              <div
-                key={role}
-                className="rolePreview"
-              >
-                {role}
+          {/* ROLES */}
+
+          <div className="roleTabs">
+            {ROLES.map(
+              (
+                role
+              ) => (
+                <button
+                  key={
+                    role
+                  }
+                  type="button"
+                  onClick={() =>
+                    setSelectedRole(
+                      role
+                    )
+                  }
+                  className={`roleTab ${
+                    selectedRole ===
+                    role
+                      ? 'roleTabActive'
+                      : ''
+                  }`}
+                >
+                  <img
+                    src={
+                      ROLE_ICONS[
+                        role
+                      ]
+                    }
+                    alt=""
+                  />
+
+                  <span>
+                    {
+                      ROLE_LABELS[
+                        role
+                      ]
+                    }
+                  </span>
+                </button>
+              )
+            )}
+          </div>
+
+          {/* TRI */}
+
+          <div className="statsToolbar">
+            <span>
+              Trier par
+            </span>
+
+            <div className="sortButtons">
+              {SORTS.map(
+                (
+                  sort
+                ) => (
+                  <button
+                    key={
+                      sort.id
+                    }
+                    type="button"
+                    onClick={() =>
+                      setSortBy(
+                        sort.id
+                      )
+                    }
+                    className={
+                      sortBy ===
+                      sort.id
+                        ? 'sortActive'
+                        : ''
+                    }
+                  >
+                    {
+                      sort.label
+                    }
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* TOP CHAMPIONS */}
+
+          <div className="championStatsSection">
+            <div className="subSectionTitle">
+              <div>
+                <span />
+
+                <strong>
+                  Champions les plus joués —{' '}
+                  {
+                    ROLE_LABELS[
+                      selectedRole
+                    ]
+                  }
+                </strong>
               </div>
-            ))}
+
+              <small>
+                Top 3
+              </small>
+            </div>
+
+            {roleChampions.length ===
+            0 ? (
+              <div className="miniEmpty">
+                Aucun pick enregistré.
+              </div>
+            ) : (
+              <div className="topChampionsGrid">
+                {roleChampions.map(
+                  (
+                    champion,
+                    index
+                  ) => (
+                    <div
+                      key={
+                        champion.championId
+                      }
+                      className="championStatCard"
+                    >
+                      <span className="championRank">
+                        #
+                        {
+                          index +
+                          1
+                        }
+                      </span>
+
+                      <div className="championIdentity">
+                        {champion.image ? (
+                          <img
+                            src={
+                              champion.image
+                            }
+                            alt={
+                              champion.name
+                            }
+                          />
+                        ) : (
+                          <div className="championFallback">
+                            ?
+                          </div>
+                        )}
+
+                        <div>
+                          <strong>
+                            {
+                              champion.name
+                            }
+                          </strong>
+
+                          <span>
+                            {
+                              champion.picks
+                            }{' '}
+                            pick
+                            {
+                              champion.picks >
+                              1
+                                ? 's'
+                                : ''
+                            }
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="championRates">
+                        <div>
+                          <span>
+                            PICK RATE
+                          </span>
+
+                          <strong>
+                            {
+                              champion.pickRate
+                            }
+                            %
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>
+                            WIN RATE
+                          </span>
+
+                          <strong>
+                            {
+                              champion.winRate
+                            }
+                            %
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="emptySection statsEmpty">
-            KDA, kills, assists, gold,
-            DPM, CS/min et MVP seront
-            alimentés par les games CZF.
+          {/* TABLE JOUEURS */}
+
+          <div className="playerStatsSection">
+            <div className="subSectionTitle">
+              <div>
+                <span />
+
+                <strong>
+                  Classement{' '}
+                  {
+                    ROLE_LABELS[
+                      selectedRole
+                    ]
+                  }
+                </strong>
+              </div>
+
+              <small>
+                {
+                  SORTS.find(
+                    (
+                      item
+                    ) =>
+                      item.id ===
+                      sortBy
+                  )?.label
+                }
+              </small>
+            </div>
+
+            {roleStats.length ===
+            0 ? (
+              <div className="miniEmpty">
+                Aucune statistique enregistrée pour ce rôle.
+              </div>
+            ) : (
+              <div className="statsTableScroller">
+                <div className="statsTable">
+                  <div className="statsTableHeader">
+                    <span>
+                      #
+                    </span>
+
+                    <span>
+                      Joueur
+                    </span>
+
+                    <span>
+                      G
+                    </span>
+
+                    <span>
+                      KDA
+                    </span>
+
+                    <span>
+                      K
+                    </span>
+
+                    <span>
+                      D
+                    </span>
+
+                    <span>
+                      A
+                    </span>
+
+                    <span>
+                      Gold
+                    </span>
+
+                    <span>
+                      DPM
+                    </span>
+
+                    <span>
+                      CS/min
+                    </span>
+
+                    <span>
+                      MVP
+                    </span>
+                  </div>
+
+                  {roleStats.map(
+                    (
+                      player,
+                      index
+                    ) => (
+                      <div
+                        key={`${player.playerId}-${player.role}`}
+                        className="statsPlayerRow"
+                      >
+                        <strong className="statsRank">
+                          {
+                            index +
+                            1
+                          }
+                        </strong>
+
+                        <div className="statsPlayerIdentity">
+                          <div className="statsTeamLogo">
+                            {player.teamLogo ? (
+                              <img
+                                src={
+                                  player.teamLogo
+                                }
+                                alt={
+                                  player.teamName
+                                }
+                              />
+                            ) : (
+                              player.teamShortName?.slice(
+                                0,
+                                2
+                              )
+                            )}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {
+                                player.riotId
+                              }
+                            </strong>
+
+                            <span>
+                              {
+                                player.teamShortName
+                              }{' '}
+                              •{' '}
+                              {
+                                player.wins
+                              }
+                              -
+                              {
+                                player.losses
+                              }
+                            </span>
+                          </div>
+                        </div>
+
+                        <span>
+                          {
+                            player.games
+                          }
+                        </span>
+
+                        <strong
+                          className={
+                            sortBy ===
+                            'kda'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.kda
+                          }
+                        </strong>
+
+                        <span
+                          className={
+                            sortBy ===
+                            'kills'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.kills
+                          }
+                        </span>
+
+                        <span>
+                          {
+                            player.deaths
+                          }
+                        </span>
+
+                        <span
+                          className={
+                            sortBy ===
+                            'assists'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.assists
+                          }
+                        </span>
+
+                        <span
+                          className={
+                            sortBy ===
+                            'gold'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.gold
+                          }
+                        </span>
+
+                        <span
+                          className={
+                            sortBy ===
+                            'dpm'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.dpm
+                          }
+                        </span>
+
+                        <span
+                          className={
+                            sortBy ===
+                            'csPerMin'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.csPerMin
+                          }
+                        </span>
+
+                        <strong
+                          className={
+                            sortBy ===
+                            'mvp'
+                              ? 'highlightStat'
+                              : ''
+                          }
+                        >
+                          {
+                            player.mvp
+                          }
+                        </strong>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
+
+        {/* =================================================
+            CSS
+        ================================================= */}
 
         <style jsx>{`
           .resultsPage {
@@ -784,6 +1738,23 @@ export default function ResultsPage() {
             transform: rotate(15deg);
           }
 
+          .resultsError {
+            position: relative;
+            z-index: 20;
+
+            margin-bottom: 16px;
+            padding: 13px 16px;
+
+            border: 1px solid rgba(160, 60, 60, 0.25);
+            border-radius: 8px;
+
+            background: rgba(160, 60, 60, 0.08);
+
+            color: #8f3434;
+            font-size: 12px;
+            font-weight: 800;
+          }
+
           /* =========================
              DIVISIONS
           ========================= */
@@ -797,6 +1768,7 @@ export default function ResultsPage() {
               repeat(3, minmax(0, 1fr));
 
             gap: 14px;
+
             margin-bottom: 20px;
           }
 
@@ -822,6 +1794,8 @@ export default function ResultsPage() {
             font-weight: 900;
 
             letter-spacing: 0.07em;
+
+            cursor: pointer;
           }
 
           .divisionTab::after {
@@ -839,7 +1813,8 @@ export default function ResultsPage() {
           }
 
           .divisionTabActive {
-            border-color: var(--tab-color);
+            border-color:
+              var(--tab-color);
 
             background:
               linear-gradient(
@@ -855,7 +1830,7 @@ export default function ResultsPage() {
           }
 
           /* =========================
-             LAYOUT
+             CARTES
           ========================= */
 
           .resultsMainGrid {
@@ -936,9 +1911,11 @@ export default function ResultsPage() {
 
             border-radius: 6px;
 
-            background: var(--division-soft);
+            background:
+              var(--division-soft);
 
-            color: var(--division-color);
+            color:
+              var(--division-color);
 
             font-size: 10px;
             font-weight: 900;
@@ -947,7 +1924,7 @@ export default function ResultsPage() {
           }
 
           /* =========================
-             CLASSEMENT PLUS GROS
+             CLASSEMENT
           ========================= */
 
           .standingHeader,
@@ -981,7 +1958,10 @@ export default function ResultsPage() {
           }
 
           .standingRows {
-            padding: 0 8px 10px;
+            padding:
+              0
+              8px
+              10px;
           }
 
           .standingRow {
@@ -989,7 +1969,9 @@ export default function ResultsPage() {
 
             min-height: 64px;
 
-            padding: 0 8px;
+            padding:
+              0
+              8px;
 
             border-bottom:
               1px solid
@@ -1140,7 +2122,8 @@ export default function ResultsPage() {
           }
 
           .legendEliminated {
-            background: #9b3838;
+            background:
+              #9b3838;
           }
 
           :global(.resultTeamLogo) {
@@ -1161,7 +2144,7 @@ export default function ResultsPage() {
             border-radius: 8px;
 
             background:
-              rgba(255,255,255,.65);
+              rgba(255, 255, 255, 0.65);
 
             color: var(--navy);
 
@@ -1173,7 +2156,7 @@ export default function ResultsPage() {
             width: 100%;
             height: 100%;
 
-            object-fit: cover;
+            object-fit: contain;
           }
 
           /* =========================
@@ -1215,7 +2198,8 @@ export default function ResultsPage() {
           }
 
           .loserLaneTitle > span {
-            background: var(--orange);
+            background:
+              var(--orange);
           }
 
           .winnerBracket,
@@ -1234,15 +2218,11 @@ export default function ResultsPage() {
             align-items: stretch;
           }
 
-          .bracketRound {
-            min-width: 0;
-          }
-
           :global(.columnTitle) {
             margin-bottom: 14px;
 
             color:
-              rgba(7,29,45,.58);
+              rgba(7, 29, 45, 0.58);
 
             font-size: 10px;
             font-weight: 900;
@@ -1271,7 +2251,9 @@ export default function ResultsPage() {
 
             justify-content: space-around;
 
-            padding: 55px 0;
+            padding:
+              55px
+              0;
           }
 
           .singleMatchCenter {
@@ -1291,7 +2273,9 @@ export default function ResultsPage() {
 
             justify-content: space-around;
 
-            padding: 35px 0;
+            padding:
+              35px
+              0;
           }
 
           :global(.bracketMatch) {
@@ -1299,16 +2283,16 @@ export default function ResultsPage() {
 
             border:
               1px solid
-              rgba(9,42,63,.3);
+              rgba(9, 42, 63, 0.3);
 
             border-radius: 8px;
 
             background:
-              rgba(255,250,241,.9);
+              rgba(255, 250, 241, 0.9);
 
             box-shadow:
               0 5px 14px
-              rgba(8,24,36,.05);
+              rgba(8, 24, 36, 0.05);
           }
 
           :global(.highlightedMatch) {
@@ -1330,13 +2314,15 @@ export default function ResultsPage() {
 
             gap: 9px;
 
-            padding: 0 11px;
+            padding:
+              0
+              11px;
           }
 
           :global(.bracketTeam + .bracketTeam) {
             border-top:
               1px solid
-              rgba(9,42,63,.11);
+              rgba(9, 42, 63, 0.11);
           }
 
           :global(.miniTeamLogo) {
@@ -1350,12 +2336,12 @@ export default function ResultsPage() {
 
             border:
               1px solid
-              rgba(9,42,63,.16);
+              rgba(9, 42, 63, 0.16);
 
             border-radius: 6px;
 
             background:
-              rgba(255,255,255,.7);
+              rgba(255, 255, 255, 0.7);
 
             color: var(--muted);
 
@@ -1385,21 +2371,23 @@ export default function ResultsPage() {
             font-weight: 900;
           }
 
-          /* =========================
-             CONNECTEURS WINNER
-          ========================= */
+          /* CONNECTEURS */
+
+          :global(.winnerConnector),
+          :global(.loserConnector) {
+            position: relative;
+          }
 
           :global(.winnerConnector) {
-            position: relative;
-
             min-height: 420px;
           }
 
-          :global(.winnerConnectorLine) {
+          :global(.winnerConnectorLine),
+          :global(.loserConnectorLine) {
             position: absolute;
 
             background:
-              rgba(9,42,63,.32);
+              rgba(9, 42, 63, 0.34);
           }
 
           :global(.winnerConnectorQ1) {
@@ -1493,24 +2481,22 @@ export default function ResultsPage() {
             height: 1px;
           }
 
-          /* =========================
-             DESCENTE LOSER
-          ========================= */
-
           .dropArea {
             position: relative;
 
             min-height: 105px;
 
-            margin: 22px 0;
+            margin:
+              22px
+              0;
 
             border-top:
               1px dashed
-              rgba(9,42,63,.14);
+              rgba(9, 42, 63, 0.14);
 
             border-bottom:
               1px dashed
-              rgba(9,42,63,.14);
+              rgba(9, 42, 63, 0.14);
           }
 
           .dropMessage {
@@ -1522,10 +2508,12 @@ export default function ResultsPage() {
             transform:
               translate(-50%, -50%);
 
-            padding: 6px 12px;
+            padding:
+              6px
+              12px;
 
             background:
-              rgba(255,246,229,.92);
+              rgba(255, 246, 229, 0.94);
 
             color: var(--muted);
 
@@ -1549,7 +2537,7 @@ export default function ResultsPage() {
             width: 1px;
 
             background:
-              rgba(242,101,34,.42);
+              rgba(242, 101, 34, 0.42);
           }
 
           .dropLine::after {
@@ -1587,21 +2575,8 @@ export default function ResultsPage() {
             left: 72%;
           }
 
-          /* =========================
-             CONNECTEURS LOSER
-          ========================= */
-
           :global(.loserConnector) {
-            position: relative;
-
             min-height: 300px;
-          }
-
-          :global(.loserConnectorLine) {
-            position: absolute;
-
-            background:
-              rgba(242,101,34,.38);
           }
 
           :global(.loserDoubleTop) {
@@ -1643,10 +2618,6 @@ export default function ResultsPage() {
             width: 100%;
             height: 1px;
           }
-
-          /* =========================
-             GRANDE FINALE
-          ========================= */
 
           .championBox {
             display: flex;
@@ -1691,83 +2662,26 @@ export default function ResultsPage() {
           }
 
           .loserReturnLine {
-            position: relative;
+            margin-top: 22px;
 
-            min-height: 80px;
+            padding: 11px;
 
-            margin-top: 10px;
+            border:
+              1px dashed
+              rgba(9, 42, 63, 0.15);
+
+            border-radius: 7px;
 
             color: var(--muted);
 
             font-size: 9px;
             font-weight: 800;
-          }
 
-          .loserReturnLine > span {
-            position: absolute;
-
-            left: 50%;
-            bottom: 0;
-
-            transform:
-              translateX(-50%);
-          }
-
-          .loserReturnPath {
-            position: absolute;
-
-            right: 85px;
-            top: -10px;
-
-            width: 250px;
-            height: 80px;
-          }
-
-          .returnHorizontal {
-            position: absolute;
-
-            right: 0;
-            bottom: 0;
-
-            width: 190px;
-            height: 1px;
-
-            background:
-              linear-gradient(
-                90deg,
-                var(--orange),
-                var(--division-color)
-              );
-          }
-
-          .returnVertical {
-            position: absolute;
-
-            right: 0;
-            top: 0;
-
-            width: 1px;
-            height: 80px;
-
-            background:
-              var(--division-color);
-          }
-
-          .returnTop {
-            position: absolute;
-
-            right: 0;
-            top: 0;
-
-            width: 70px;
-            height: 1px;
-
-            background:
-              var(--division-color);
+            text-align: center;
           }
 
           /* =========================
-             BAS PAGE
+             HISTORIQUE
           ========================= */
 
           .historyCard,
@@ -1775,23 +2689,48 @@ export default function ResultsPage() {
             margin-top: 18px;
           }
 
-          .emptySection {
-            min-height: 110px;
+          .historyList {
+            display: flex;
+            flex-direction: column;
+          }
 
+          .emptySection,
+          .miniEmpty {
             display: grid;
             place-items: center;
 
-            padding: 20px;
-
             color: var(--muted);
 
-            font-size: 12px;
             font-weight: 700;
 
             text-align: center;
           }
 
-          .roleTabsPreview {
+          .emptySection {
+            min-height: 115px;
+
+            padding: 20px;
+
+            font-size: 12px;
+          }
+
+          .miniEmpty {
+            min-height: 90px;
+
+            border:
+              1px dashed
+              rgba(9, 42, 63, 0.13);
+
+            border-radius: 8px;
+
+            font-size: 11px;
+          }
+
+          /* =========================
+             ROLE TABS
+          ========================= */
+
+          .roleTabs {
             display: grid;
 
             grid-template-columns:
@@ -1799,29 +2738,481 @@ export default function ResultsPage() {
 
             gap: 10px;
 
-            padding: 20px 20px 0;
+            padding:
+              20px
+              20px
+              0;
           }
 
-          .rolePreview {
-            min-height: 50px;
+          .roleTab {
+            min-height: 57px;
 
-            display: grid;
-            place-items: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
 
             border:
               1px solid
-              rgba(9,42,63,.25);
+              rgba(9, 42, 63, 0.24);
 
             border-radius: 8px;
 
+            background:
+              rgba(255, 250, 241, 0.54);
+
+            color: var(--navy);
+
+            font-size: 11px;
+            font-weight: 900;
+
+            cursor: pointer;
+          }
+
+          .roleTab img {
+            width: 24px;
+            height: 24px;
+
+            object-fit: contain;
+
+            opacity: 0.72;
+          }
+
+          .roleTabActive {
+            border-color:
+              var(--division-color);
+
+            background:
+              var(--division-soft);
+          }
+
+          .roleTabActive img {
+            opacity: 1;
+          }
+
+          /* =========================
+             TRI
+          ========================= */
+
+          .statsToolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 14px;
+
+            padding:
+              16px
+              20px;
+
+            border-bottom:
+              1px solid
+              rgba(9, 42, 63, 0.08);
+          }
+
+          .statsToolbar > span {
+            color: var(--muted);
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+          }
+
+          .sortButtons {
+            display: flex;
+            align-items: center;
+
+            gap: 6px;
+
+            flex-wrap: wrap;
+          }
+
+          .sortButtons button {
+            min-height: 31px;
+
+            padding:
+              0
+              10px;
+
+            border:
+              1px solid
+              rgba(9, 42, 63, 0.16);
+
+            border-radius: 6px;
+
+            background:
+              rgba(255, 255, 255, 0.34);
+
+            color: var(--navy);
+
+            font-size: 9px;
+            font-weight: 900;
+
+            cursor: pointer;
+          }
+
+          .sortButtons .sortActive {
+            border-color:
+              var(--division-color);
+
+            background:
+              var(--division-soft);
+
+            color:
+              var(--division-color);
+          }
+
+          /* =========================
+             SOUS SECTIONS
+          ========================= */
+
+          .championStatsSection,
+          .playerStatsSection {
+            padding: 20px;
+          }
+
+          .playerStatsSection {
+            padding-top: 4px;
+          }
+
+          .subSectionTitle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 14px;
+
+            margin-bottom: 13px;
+          }
+
+          .subSectionTitle > div {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+          }
+
+          .subSectionTitle > div > span {
+            width: 22px;
+            height: 3px;
+
+            background:
+              var(--division-color);
+          }
+
+          .subSectionTitle strong {
+            color: var(--navy);
+
+            font-size: 11px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+          }
+
+          .subSectionTitle small {
+            color: var(--muted);
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+          }
+
+          /* =========================
+             CHAMPIONS
+          ========================= */
+
+          .topChampionsGrid {
+            display: grid;
+
+            grid-template-columns:
+              repeat(3, minmax(0, 1fr));
+
+            gap: 11px;
+          }
+
+          .championStatCard {
+            position: relative;
+
+            padding: 13px;
+
+            border:
+              1px solid
+              rgba(9, 42, 63, 0.18);
+
+            border-radius: 9px;
+
+            background:
+              rgba(255, 250, 241, 0.62);
+          }
+
+          .championRank {
+            position: absolute;
+
+            right: 10px;
+            top: 9px;
+
+            color:
+              var(--division-color);
+
+            font-size: 10px;
+            font-weight: 900;
+          }
+
+          .championIdentity {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+
+            padding-right: 25px;
+          }
+
+          .championIdentity img,
+          .championFallback {
+            width: 46px;
+            height: 46px;
+
+            flex-shrink: 0;
+
+            border-radius: 8px;
+          }
+
+          .championIdentity img {
+            object-fit: cover;
+          }
+
+          .championFallback {
+            display: grid;
+            place-items: center;
+
+            background:
+              rgba(9, 42, 63, 0.08);
+
+            color: var(--navy);
+          }
+
+          .championIdentity > div {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 2px;
+          }
+
+          .championIdentity strong {
+            overflow: hidden;
+
+            color: var(--navy);
+
+            font-size: 13px;
+            font-weight: 900;
+
+            white-space: nowrap;
+
+            text-overflow: ellipsis;
+          }
+
+          .championIdentity span {
+            color: var(--muted);
+
+            font-size: 9px;
+            font-weight: 700;
+          }
+
+          .championRates {
+            display: grid;
+
+            grid-template-columns:
+              repeat(2, 1fr);
+
+            gap: 7px;
+
+            margin-top: 12px;
+          }
+
+          .championRates > div {
+            display: flex;
+            flex-direction: column;
+
+            gap: 2px;
+
+            padding:
+              7px
+              8px;
+
+            border-radius: 6px;
+
+            background:
+              rgba(9, 42, 63, 0.045);
+          }
+
+          .championRates span {
+            color: var(--muted);
+
+            font-size: 7px;
+            font-weight: 900;
+          }
+
+          .championRates strong {
             color: var(--navy);
 
             font-size: 12px;
             font-weight: 900;
           }
 
-          .statsEmpty {
-            min-height: 80px;
+          /* =========================
+             PLAYER STATS
+          ========================= */
+
+          .statsTableScroller {
+            overflow-x: auto;
+          }
+
+          .statsTable {
+            min-width: 920px;
+
+            border:
+              1px solid
+              rgba(9, 42, 63, 0.14);
+
+            border-radius: 9px;
+
+            overflow: hidden;
+          }
+
+          .statsTableHeader,
+          .statsPlayerRow {
+            display: grid;
+
+            grid-template-columns:
+              28px
+              minmax(210px, 1fr)
+              40px
+              58px
+              45px
+              45px
+              45px
+              85px
+              65px
+              65px
+              48px;
+
+            gap: 6px;
+
+            align-items: center;
+
+            padding:
+              0
+              12px;
+          }
+
+          .statsTableHeader {
+            min-height: 38px;
+
+            background:
+              rgba(9, 42, 63, 0.045);
+
+            color: var(--muted);
+
+            font-size: 8px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+          }
+
+          .statsPlayerRow {
+            min-height: 63px;
+
+            border-top:
+              1px solid
+              rgba(9, 42, 63, 0.07);
+
+            color: var(--navy);
+
+            font-size: 10px;
+            font-weight: 800;
+          }
+
+          .statsRank {
+            color:
+              var(--division-color);
+
+            font-size: 12px;
+          }
+
+          .statsPlayerIdentity {
+            min-width: 0;
+
+            display: flex;
+            align-items: center;
+
+            gap: 9px;
+          }
+
+          .statsTeamLogo {
+            width: 35px;
+            height: 35px;
+
+            flex-shrink: 0;
+
+            display: grid;
+            place-items: center;
+
+            overflow: hidden;
+
+            border:
+              1px solid
+              rgba(9, 42, 63, 0.14);
+
+            border-radius: 7px;
+
+            background:
+              rgba(255, 255, 255, 0.5);
+
+            font-size: 8px;
+          }
+
+          .statsTeamLogo img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: contain;
+          }
+
+          .statsPlayerIdentity > div:last-child {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 2px;
+          }
+
+          .statsPlayerIdentity strong {
+            overflow: hidden;
+
+            font-size: 11px;
+
+            white-space: nowrap;
+
+            text-overflow: ellipsis;
+          }
+
+          .statsPlayerIdentity span {
+            color: var(--muted);
+
+            font-size: 8px;
+          }
+
+          .highlightStat {
+            color:
+              var(--division-color) !important;
+
+            font-weight: 900 !important;
           }
 
           @media (max-width: 1150px) {
@@ -1830,14 +3221,24 @@ export default function ResultsPage() {
             }
           }
 
-          @media (max-width: 750px) {
+          @media (max-width: 800px) {
             .divisionTabs {
               grid-template-columns: 1fr;
             }
 
-            .roleTabsPreview {
+            .roleTabs {
               grid-template-columns:
                 repeat(2, 1fr);
+            }
+
+            .topChampionsGrid {
+              grid-template-columns: 1fr;
+            }
+
+            .statsToolbar {
+              align-items: flex-start;
+
+              flex-direction: column;
             }
 
             .resultBolt {
@@ -1849,6 +3250,10 @@ export default function ResultsPage() {
     </>
   );
 }
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function TeamLogo({
   team,
@@ -1864,7 +3269,10 @@ function TeamLogo({
         />
       ) : (
         <span>
-          {team.shortName.slice(0, 2)}
+          {team.shortName.slice(
+            0,
+            2
+          )}
         </span>
       )}
     </div>
@@ -1876,7 +3284,10 @@ function getSeedTeam(
   seed: number
 ) {
   const team =
-    teams[seed - 1];
+    teams[
+      seed -
+        1
+    ];
 
   if (!team) {
     return `#${seed} TBD`;
@@ -1885,10 +3296,548 @@ function getSeedTeam(
   return `#${seed} ${team.shortName}`;
 }
 
+function getSortValue(
+  player: PlayerStats,
+  sort:
+    StatSort
+) {
+  switch (sort) {
+    case 'kda':
+      return player.kda;
+
+    case 'kills':
+      return player.kills;
+
+    case 'assists':
+      return player.assists;
+
+    case 'gold':
+      return player.gold;
+
+    case 'dpm':
+      return player.dpm;
+
+    case 'csPerMin':
+      return player.csPerMin;
+
+    case 'mvp':
+      return player.mvp;
+
+    default:
+      return player.kda;
+  }
+}
+
+function formatDuration(
+  seconds: number
+) {
+  const minutes =
+    Math.floor(
+      seconds /
+        60
+    );
+
+  const remaining =
+    seconds %
+    60;
+
+  return `${minutes}:${String(
+    remaining
+  ).padStart(
+    2,
+    '0'
+  )}`;
+}
+
+function formatDate(
+  value: string
+) {
+  try {
+    return new Intl.DateTimeFormat(
+      'fr-FR',
+      {
+        day:
+          '2-digit',
+
+        month:
+          '2-digit',
+
+        year:
+          'numeric',
+      }
+    ).format(
+      new Date(
+        value
+      )
+    );
+  } catch {
+    return '';
+  }
+}
+
+/* =========================================================
+   HISTORIQUE
+========================================================= */
+
+function HistoryMatchCard({
+  match,
+}: {
+  match: HistoryMatch;
+}) {
+  if (
+    !match.team1 ||
+    !match.team2
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="historyMatch">
+      <div className="historyMeta">
+        <span>
+          {match.stage ===
+          'pool'
+            ? 'POULE'
+            : 'PLAYOFF'}
+        </span>
+
+        {match.round && (
+          <span>
+            {
+              match.round
+            }
+          </span>
+        )}
+
+        <small>
+          {formatDate(
+            match.playedAt
+          )}
+        </small>
+      </div>
+
+      <div className="historyMain">
+        <HistoryTeamSide
+          team={
+            match.team1
+          }
+          winner={
+            match.winner
+              ?.id ===
+            match.team1
+              .id
+          }
+        />
+
+        <div className="historyScore">
+          <strong>
+            {
+              match.team1
+                .score
+            }
+          </strong>
+
+          <span>
+            -
+          </span>
+
+          <strong>
+            {
+              match.team2
+                .score
+            }
+          </strong>
+        </div>
+
+        <HistoryTeamSide
+          team={
+            match.team2
+          }
+          winner={
+            match.winner
+              ?.id ===
+            match.team2
+              .id
+          }
+          reverse
+        />
+      </div>
+
+      <div className="historyGames">
+        {match.games.map(
+          (
+            game
+          ) => (
+            <div
+              key={
+                game.id
+              }
+              className="historyGame"
+            >
+              <strong>
+                G
+                {
+                  game.gameNumber
+                }
+              </strong>
+
+              <span>
+                {
+                  formatDuration(
+                    game.durationSeconds
+                  )
+                }
+              </span>
+
+              <span>
+                Winner :{' '}
+                {
+                  game.winnerName ??
+                  '-'
+                }
+              </span>
+
+              {game.mvpRiotId && (
+                <span>
+                  MVP :{' '}
+                  {
+                    game.mvpRiotId
+                  }
+                </span>
+              )}
+            </div>
+          )
+        )}
+      </div>
+
+      <style jsx>{`
+        .historyMatch {
+          padding:
+            16px
+            20px;
+
+          border-bottom:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.08
+            );
+        }
+
+        .historyMatch:last-child {
+          border-bottom: 0;
+        }
+
+        .historyMeta {
+          display: flex;
+          align-items: center;
+
+          gap: 7px;
+
+          margin-bottom: 10px;
+        }
+
+        .historyMeta span {
+          padding:
+            4px
+            7px;
+
+          border-radius: 5px;
+
+          background:
+            var(--division-soft);
+
+          color:
+            var(--division-color);
+
+          font-size: 8px;
+          font-weight: 900;
+        }
+
+        .historyMeta small {
+          margin-left: auto;
+
+          color:
+            var(--muted);
+
+          font-size: 9px;
+          font-weight: 700;
+        }
+
+        .historyMain {
+          display: grid;
+
+          grid-template-columns:
+            minmax(
+              0,
+              1fr
+            )
+            90px
+            minmax(
+              0,
+              1fr
+            );
+
+          align-items: center;
+
+          gap: 18px;
+        }
+
+        .historyScore {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          gap: 9px;
+
+          color:
+            var(--navy);
+
+          font-family:
+            var(--font-display);
+
+          font-size: 25px;
+        }
+
+        .historyScore span {
+          opacity: 0.35;
+        }
+
+        .historyGames {
+          display: flex;
+          align-items: center;
+
+          gap: 7px;
+
+          flex-wrap: wrap;
+
+          margin-top: 11px;
+        }
+
+        .historyGame {
+          display: flex;
+          align-items: center;
+
+          gap: 7px;
+
+          padding:
+            6px
+            8px;
+
+          border:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.11
+            );
+
+          border-radius: 6px;
+
+          color:
+            var(--muted);
+
+          font-size: 8px;
+          font-weight: 700;
+        }
+
+        .historyGame strong {
+          color:
+            var(--division-color);
+        }
+
+        @media (
+          max-width: 700px
+        ) {
+          .historyMain {
+            grid-template-columns:
+              1fr
+              55px
+              1fr;
+
+            gap: 7px;
+          }
+
+          .historyScore {
+            font-size: 19px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function HistoryTeamSide({
+  team,
+  winner,
+  reverse = false,
+}: {
+  team: HistoryTeam;
+  winner: boolean;
+  reverse?: boolean;
+}) {
+  return (
+    <div
+      className={`historyTeamSide ${
+        reverse
+          ? 'reverse'
+          : ''
+      } ${
+        winner
+          ? 'winner'
+          : ''
+      }`}
+    >
+      <div className="historyLogo">
+        {team.logo ? (
+          <img
+            src={
+              team.logo
+            }
+            alt={
+              team.name
+            }
+          />
+        ) : (
+          team.shortName.slice(
+            0,
+            2
+          )
+        )}
+      </div>
+
+      <div>
+        <strong>
+          {
+            team.shortName
+          }
+        </strong>
+
+        <span>
+          {
+            team.name
+          }
+        </span>
+      </div>
+
+      <style jsx>{`
+        .historyTeamSide {
+          min-width: 0;
+
+          display: flex;
+          align-items: center;
+
+          gap: 10px;
+
+          opacity: 0.66;
+        }
+
+        .historyTeamSide.reverse {
+          flex-direction:
+            row-reverse;
+
+          text-align: right;
+        }
+
+        .historyTeamSide.winner {
+          opacity: 1;
+        }
+
+        .historyLogo {
+          width: 42px;
+          height: 42px;
+
+          flex-shrink: 0;
+
+          display: grid;
+          place-items: center;
+
+          overflow: hidden;
+
+          border:
+            1px solid
+            rgba(
+              9,
+              42,
+              63,
+              0.14
+            );
+
+          border-radius: 8px;
+
+          background:
+            rgba(
+              255,
+              255,
+              255,
+              0.5
+            );
+
+          color:
+            var(--navy);
+
+          font-size: 8px;
+          font-weight: 900;
+        }
+
+        .historyLogo img {
+          width: 100%;
+          height: 100%;
+
+          object-fit: contain;
+        }
+
+        .historyTeamSide > div:last-child {
+          min-width: 0;
+
+          display: flex;
+          flex-direction: column;
+
+          gap: 2px;
+        }
+
+        .historyTeamSide strong {
+          color:
+            var(--navy);
+
+          font-size: 13px;
+          font-weight: 900;
+        }
+
+        .historyTeamSide.winner strong {
+          color:
+            var(--division-color);
+        }
+
+        .historyTeamSide span {
+          overflow: hidden;
+
+          color:
+            var(--muted);
+
+          font-size: 9px;
+
+          white-space: nowrap;
+
+          text-overflow: ellipsis;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* =========================================================
+   BRACKET
+========================================================= */
+
 function ColumnTitle({
   children,
 }: {
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }) {
   return (
     <div className="columnTitle">
@@ -1905,6 +3854,7 @@ function BracketMatch({
 }: {
   team1: string;
   team2: string;
+
   highlighted?: boolean;
   grandFinal?: boolean;
 }) {
@@ -1958,9 +3908,15 @@ function BracketMatch({
 function WinnerConnector({
   type,
 }: {
-  type: 'quarters' | 'semis' | 'final';
+  type:
+    | 'quarters'
+    | 'semis'
+    | 'final';
 }) {
-  if (type === 'quarters') {
+  if (
+    type ===
+    'quarters'
+  ) {
     return (
       <div className="winnerConnector">
         <span className="winnerConnectorLine winnerConnectorQ1" />
@@ -1977,7 +3933,10 @@ function WinnerConnector({
     );
   }
 
-  if (type === 'semis') {
+  if (
+    type ===
+    'semis'
+  ) {
     return (
       <div className="winnerConnector">
         <span className="winnerConnectorLine winnerConnectorS1" />
@@ -2000,12 +3959,18 @@ function WinnerConnector({
 function LoserConnector({
   type,
 }: {
-  type: 'double' | 'single';
+  type:
+    | 'double'
+    | 'single';
 }) {
-  if (type === 'double') {
+  if (
+    type ===
+    'double'
+  ) {
     return (
       <div className="loserConnector">
         <span className="loserConnectorLine loserDoubleTop" />
+
         <span className="loserConnectorLine loserDoubleBottom" />
 
         <span className="loserConnectorLine loserDoubleVertical" />

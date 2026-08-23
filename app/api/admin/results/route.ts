@@ -1,11 +1,14 @@
-import {
+ import {
   NextRequest,
   NextResponse,
 } from 'next/server';
 
-import { createClient } from '@supabase/supabase-js';
+import {
+  createClient,
+} from '@supabase/supabase-js';
 
-export const dynamic = 'force-dynamic';
+export const dynamic =
+  'force-dynamic';
 
 type Division =
   | 'Yordle'
@@ -43,9 +46,12 @@ type GameInput = {
 
   winnerTeamId: number;
 
-  mvpPlayerId?: number | null;
+  mvpPlayerId?:
+    | number
+    | null;
 
-  players: PlayerStatInput[];
+  players:
+    PlayerStatInput[];
 };
 
 type MatchInput = {
@@ -66,7 +72,9 @@ type MatchInput = {
     | 'grand_final'
     | null;
 
-  round?: string | null;
+  round?:
+    | string
+    | null;
 
   bestOf?: number;
 
@@ -80,10 +88,12 @@ type MatchInput = {
 ========================================================= */
 
 const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env
+    .NEXT_PUBLIC_SUPABASE_URL;
 
 const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env
+    .SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl) {
   throw new Error(
@@ -103,14 +113,17 @@ const supabaseAdmin =
     serviceRoleKey,
     {
       auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+        autoRefreshToken:
+          false,
+
+        persistSession:
+          false,
       },
     }
   );
 
 /* =========================================================
-   VERIFICATION ADMIN
+   ADMIN
 ========================================================= */
 
 async function checkAdmin(
@@ -136,18 +149,15 @@ async function checkAdmin(
       ''
     );
 
-  /*
-    On vérifie d'abord que le token
-    correspond bien à un user Supabase.
-  */
-
   const {
     data: authData,
     error: authError,
   } =
-    await supabaseAdmin.auth.getUser(
-      token
-    );
+    await supabaseAdmin
+      .auth
+      .getUser(
+        token
+      );
 
   if (
     authError ||
@@ -160,17 +170,9 @@ async function checkAdmin(
     authData.user;
 
   /*
-    IMPORTANT :
-
-    Remplace uniquement
-    REMPLACE_PAR_TA_TABLE_ADMIN
-
-    par le nom de la table qui contient
-    la colonne is_admin.
-
-    Exemple si ta table s'appelle profiles :
-
-    .from('profiles')
+    On réutilise ton système
+    d'admin déjà existant :
+    profiles.is_admin
   */
 
   const {
@@ -179,7 +181,9 @@ async function checkAdmin(
   } =
     await supabaseAdmin
       .from('profiles')
-      .select('is_admin')
+      .select(
+        'is_admin'
+      )
       .eq(
         'id',
         user.id
@@ -189,7 +193,8 @@ async function checkAdmin(
   if (
     profileError ||
     !profile ||
-    profile.is_admin !== true
+    profile.is_admin !==
+      true
   ) {
     return null;
   }
@@ -199,7 +204,6 @@ async function checkAdmin(
 
 /* =========================================================
    POST
-   ENREGISTRER UN MATCH
 ========================================================= */
 
 export async function POST(
@@ -211,7 +215,7 @@ export async function POST(
 
   try {
     /* =====================================================
-       AUTH ADMIN
+       AUTH
     ===================================================== */
 
     const admin =
@@ -263,7 +267,7 @@ export async function POST(
     } = body;
 
     /* =====================================================
-       VALIDATION DIVISION
+       DIVISION
     ===================================================== */
 
     const allowedDivisions:
@@ -279,12 +283,12 @@ export async function POST(
       )
     ) {
       throw new Error(
-        'Division invalide'
+        'Division invalide.'
       );
     }
 
     /* =====================================================
-       VALIDATION TEAMS
+       TEAMS
     ===================================================== */
 
     if (
@@ -292,7 +296,7 @@ export async function POST(
       !team2Id
     ) {
       throw new Error(
-        'Deux équipes sont obligatoires'
+        'Deux équipes sont obligatoires.'
       );
     }
 
@@ -301,23 +305,31 @@ export async function POST(
       Number(team2Id)
     ) {
       throw new Error(
-        'Une équipe ne peut pas jouer contre elle-même'
+        'Une équipe ne peut pas jouer contre elle-même.'
       );
     }
 
     if (
-      Number(winnerTeamId) !==
-        Number(team1Id) &&
-      Number(winnerTeamId) !==
-        Number(team2Id)
+      Number(
+        winnerTeamId
+      ) !==
+        Number(
+          team1Id
+        ) &&
+      Number(
+        winnerTeamId
+      ) !==
+        Number(
+          team2Id
+        )
     ) {
       throw new Error(
-        'Le gagnant doit être une des deux équipes'
+        'Le gagnant doit être une des deux équipes.'
       );
     }
 
     /* =====================================================
-       VALIDATION TYPE MATCH
+       PHASE
     ===================================================== */
 
     if (
@@ -325,42 +337,66 @@ export async function POST(
       stage !== 'playoff'
     ) {
       throw new Error(
-        'Type de match invalide'
+        'Phase invalide.'
       );
     }
 
     if (
-      stage === 'playoff' &&
+      stage ===
+        'playoff' &&
       ![
         'winner',
         'loser',
         'grand_final',
       ].includes(
-        String(bracket)
+        String(
+          bracket
+        )
       )
     ) {
       throw new Error(
-        'Bracket invalide'
+        'Bracket invalide.'
       );
     }
 
     /* =====================================================
-       VALIDATION GAMES
+       BEST OF
+    ===================================================== */
+
+    if (
+      ![
+        1,
+        3,
+        5,
+      ].includes(
+        Number(
+          bestOf
+        )
+      )
+    ) {
+      throw new Error(
+        'Format BO invalide.'
+      );
+    }
+
+    /* =====================================================
+       GAMES
     ===================================================== */
 
     if (
       !Array.isArray(
         games
       ) ||
-      games.length === 0
+      games.length ===
+        0
     ) {
       throw new Error(
-        'Au moins une game est obligatoire'
+        'Au moins une game est obligatoire.'
       );
     }
 
     /* =====================================================
-       RECUPERATION EQUIPES
+       RECUPERATION DES 2 TEAMS
     ===================================================== */
 
     const {
@@ -383,23 +419,21 @@ export async function POST(
           ]
         );
 
-    if (teamsError) {
+    if (
+      teamsError
+    ) {
       throw teamsError;
     }
 
     if (
       !teams ||
-      teams.length !== 2
+      teams.length !==
+        2
     ) {
       throw new Error(
-        'Une des équipes est introuvable'
+        'Une des équipes est introuvable.'
       );
     }
-
-    /*
-      On vérifie que les 2 teams
-      sont validées et dans la bonne division.
-    */
 
     for (
       const team
@@ -411,7 +445,7 @@ export async function POST(
         true
       ) {
         throw new Error(
-          `L'équipe ${team.name} n'est pas validée`
+          `L'équipe ${team.name} n'est pas validée.`
         );
       }
 
@@ -420,13 +454,13 @@ export async function POST(
         division
       ) {
         throw new Error(
-          `L'équipe ${team.name} n'appartient pas à la division ${division}`
+          `L'équipe ${team.name} n'appartient pas à ${division}.`
         );
       }
     }
 
     /* =====================================================
-       VALIDATION DES JOUEURS
+       IDS JOUEURS
     ===================================================== */
 
     const allPlayerIds =
@@ -448,16 +482,22 @@ export async function POST(
       ];
 
     if (
-      uniquePlayerIds.length === 0
+      uniquePlayerIds.length ===
+      0
     ) {
       throw new Error(
-        'Aucun joueur reçu'
+        'Aucun joueur reçu.'
       );
     }
 
+    /* =====================================================
+       VERIFICATION DES JOUEURS
+    ===================================================== */
+
     const {
       data: dbPlayers,
-      error: playersError,
+      error:
+        playersError,
     } =
       await supabaseAdmin
         .from('players')
@@ -469,18 +509,112 @@ export async function POST(
           uniquePlayerIds
         );
 
-    if (playersError) {
+    if (
+      playersError
+    ) {
       throw playersError;
     }
 
     if (
       (
-        dbPlayers ?? []
+        dbPlayers ??
+        []
       ).length !==
       uniquePlayerIds.length
     ) {
       throw new Error(
-        'Au moins un joueur est introuvable'
+        'Au moins un joueur est introuvable.'
+      );
+    }
+
+    /* =====================================================
+       ROSTERS DES 2 TEAMS
+
+       Important pour les SUBS :
+       un remplaçant est accepté uniquement s'il
+       appartient réellement au roster de la team.
+    ===================================================== */
+
+    const {
+      data: teamMembers,
+      error:
+        membersError,
+    } =
+      await supabaseAdmin
+        .from(
+          'team_members'
+        )
+        .select(
+          'team_id, riot_id'
+        )
+        .in(
+          'team_id',
+          [
+            team1Id,
+            team2Id,
+          ]
+        );
+
+    if (
+      membersError
+    ) {
+      throw membersError;
+    }
+
+    const normalizeRiotId =
+      (
+        value:
+          string |
+          null |
+          undefined
+      ) =>
+        String(
+          value ?? ''
+        )
+          .trim()
+          .toLowerCase()
+          .replace(
+            /\s+/g,
+            ''
+          );
+
+    const playerById =
+      new Map<
+        number,
+        any
+      >();
+
+    for (
+      const player
+      of dbPlayers ??
+        []
+    ) {
+      playerById.set(
+        Number(
+          player.id
+        ),
+        player
+      );
+    }
+
+    const memberTeamByRiotId =
+      new Map<
+        string,
+        number
+      >();
+
+    for (
+      const member
+      of teamMembers ??
+        []
+    ) {
+      memberTeamByRiotId.set(
+        normalizeRiotId(
+          member.riot_id
+        ),
+        Number(
+          member.team_id
+        )
       );
     }
 
@@ -497,54 +631,104 @@ export async function POST(
       'Support',
     ];
 
+    const gameNumbers =
+      new Set<number>();
+
     for (
       const game
       of games
     ) {
+      /* ---------------------------
+         NUMERO GAME
+      --------------------------- */
+
       if (
         !game.gameNumber ||
-        game.gameNumber < 1
+        Number(
+          game.gameNumber
+        ) < 1
       ) {
         throw new Error(
-          'Numéro de game invalide'
+          'Numéro de game invalide.'
         );
       }
 
       if (
-        game.durationSeconds <
-        0
+        gameNumbers.has(
+          Number(
+            game.gameNumber
+          )
+        )
       ) {
         throw new Error(
-          `Durée invalide pour la game ${game.gameNumber}`
+          `La Game ${game.gameNumber} est présente deux fois.`
         );
       }
 
+      gameNumbers.add(
+        Number(
+          game.gameNumber
+        )
+      );
+
+      /* ---------------------------
+         DUREE
+      --------------------------- */
+
       if (
         Number(
-          game.winnerTeamId
-        ) !==
-          Number(team1Id) &&
-        Number(
-          game.winnerTeamId
-        ) !==
-          Number(team2Id)
+          game.durationSeconds
+        ) <= 0
       ) {
         throw new Error(
-          `Gagnant invalide pour la game ${game.gameNumber}`
+          `Durée invalide pour la Game ${game.gameNumber}.`
         );
       }
+
+      /* ---------------------------
+         VAINQUEUR GAME
+      --------------------------- */
+
+      if (
+        Number(
+          game
+            .winnerTeamId
+        ) !==
+          Number(
+            team1Id
+          ) &&
+        Number(
+          game
+            .winnerTeamId
+        ) !==
+          Number(
+            team2Id
+          )
+      ) {
+        throw new Error(
+          `Vainqueur invalide pour la Game ${game.gameNumber}.`
+        );
+      }
+
+      /* ---------------------------
+         EXACTEMENT 10 JOUEURS
+      --------------------------- */
 
       if (
         !Array.isArray(
           game.players
         ) ||
-        game.players.length !==
-          10
+        game.players
+          .length !== 10
       ) {
         throw new Error(
-          `La game ${game.gameNumber} doit contenir exactement 10 joueurs`
+          `La Game ${game.gameNumber} doit contenir exactement 10 joueurs.`
         );
       }
+
+      /* ---------------------------
+         PAS DE DOUBLON
+      --------------------------- */
 
       const gamePlayerIds =
         game.players.map(
@@ -560,13 +744,13 @@ export async function POST(
         ).size !== 10
       ) {
         throw new Error(
-          `Un joueur est présent plusieurs fois dans la game ${game.gameNumber}`
+          `Un joueur est présent plusieurs fois dans la Game ${game.gameNumber}.`
         );
       }
 
-      /*
-        Vérification 5 joueurs par team.
-      */
+      /* ---------------------------
+         5 VS 5
+      --------------------------- */
 
       const team1Players =
         game.players.filter(
@@ -574,7 +758,9 @@ export async function POST(
             Number(
               player.teamId
             ) ===
-            Number(team1Id)
+            Number(
+              team1Id
+            )
         );
 
       const team2Players =
@@ -583,7 +769,9 @@ export async function POST(
             Number(
               player.teamId
             ) ===
-            Number(team2Id)
+            Number(
+              team2Id
+            )
         );
 
       if (
@@ -593,13 +781,13 @@ export async function POST(
           5
       ) {
         throw new Error(
-          `La game ${game.gameNumber} doit avoir 5 joueurs de chaque équipe`
+          `La Game ${game.gameNumber} doit avoir exactement 5 joueurs de chaque équipe.`
         );
       }
 
-      /*
-        Vérification des rôles.
-      */
+      /* ---------------------------
+         ROLE + CHAMPION + STATS
+      --------------------------- */
 
       for (
         const player
@@ -611,7 +799,7 @@ export async function POST(
           )
         ) {
           throw new Error(
-            `Rôle invalide dans la game ${game.gameNumber}`
+            `Rôle invalide dans la Game ${game.gameNumber}.`
           );
         }
 
@@ -619,7 +807,7 @@ export async function POST(
           !player.championId
         ) {
           throw new Error(
-            `Champion manquant dans la game ${game.gameNumber}`
+            `Champion manquant dans la Game ${game.gameNumber}.`
           );
         }
 
@@ -636,20 +824,72 @@ export async function POST(
         if (
           numericStats.some(
             (value) =>
-              Number(value) <
-              0
+              !Number.isFinite(
+                Number(
+                  value
+                )
+              ) ||
+              Number(
+                value
+              ) < 0
           )
         ) {
           throw new Error(
-            `Stat négative détectée dans la game ${game.gameNumber}`
+            `Stat invalide détectée dans la Game ${game.gameNumber}.`
+          );
+        }
+
+        /* -------------------------
+           VERIFICATION DU ROSTER
+        ------------------------- */
+
+        const dbPlayer =
+          playerById.get(
+            Number(
+              player.playerId
+            )
+          );
+
+        if (
+          !dbPlayer
+        ) {
+          throw new Error(
+            `Joueur ${player.playerId} introuvable.`
+          );
+        }
+
+        const realTeamId =
+          memberTeamByRiotId.get(
+            normalizeRiotId(
+              dbPlayer.riot_id
+            )
+          );
+
+        if (
+          !realTeamId
+        ) {
+          throw new Error(
+            `${dbPlayer.riot_id} n'est dans aucun roster du match.`
+          );
+        }
+
+        if (
+          Number(
+            realTeamId
+          ) !==
+          Number(
+            player.teamId
+          )
+        ) {
+          throw new Error(
+            `${dbPlayer.riot_id} n'appartient pas à l'équipe indiquée.`
           );
         }
       }
 
-      /*
-        Les 5 rôles doivent être présents
-        dans chaque équipe.
-      */
+      /* ---------------------------
+         1 ROLE DE CHAQUE PAR TEAM
+      --------------------------- */
 
       for (
         const teamPlayers
@@ -668,17 +908,104 @@ export async function POST(
           const requiredRole
           of allowedRoles
         ) {
+          const count =
+            roles.filter(
+              (role) =>
+                role ===
+                requiredRole
+            ).length;
+
           if (
-            !roles.includes(
-              requiredRole
-            )
+            count !== 1
           ) {
             throw new Error(
-              `Le rôle ${requiredRole} est manquant dans la game ${game.gameNumber}`
+              `Chaque équipe doit avoir exactement un ${requiredRole} dans la Game ${game.gameNumber}.`
             );
           }
         }
       }
+
+      /* ---------------------------
+         MVP
+      --------------------------- */
+
+      if (
+        game.mvpPlayerId !==
+          null &&
+        game.mvpPlayerId !==
+          undefined
+      ) {
+        const mvpIsPlaying =
+          gamePlayerIds.includes(
+            Number(
+              game.mvpPlayerId
+            )
+          );
+
+        if (
+          !mvpIsPlaying
+        ) {
+          throw new Error(
+            `Le MVP de la Game ${game.gameNumber} ne fait pas partie des 10 joueurs.`
+          );
+        }
+      }
+    }
+
+    /* =====================================================
+       VERIFICATION DU SCORE DU MATCH
+    ===================================================== */
+
+    const winsTeam1 =
+      games.filter(
+        (game) =>
+          Number(
+            game.winnerTeamId
+          ) ===
+          Number(
+            team1Id
+          )
+      ).length;
+
+    const winsTeam2 =
+      games.filter(
+        (game) =>
+          Number(
+            game.winnerTeamId
+          ) ===
+          Number(
+            team2Id
+          )
+      ).length;
+
+    if (
+      winsTeam1 ===
+      winsTeam2
+    ) {
+      throw new Error(
+        'Le score du match est à égalité.'
+      );
+    }
+
+    const calculatedWinner =
+      winsTeam1 >
+      winsTeam2
+        ? Number(
+            team1Id
+          )
+        : Number(
+            team2Id
+          );
+
+    if (
+      Number(
+        winnerTeamId
+      ) !==
+      calculatedWinner
+    ) {
+      throw new Error(
+        'Le vainqueur du match ne correspond pas au résultat des games.'
+      );
     }
 
     /* =====================================================
@@ -697,13 +1024,19 @@ export async function POST(
           division,
 
           team1_id:
-            team1Id,
+            Number(
+              team1Id
+            ),
 
           team2_id:
-            team2Id,
+            Number(
+              team2Id
+            ),
 
           winner_team_id:
-            winnerTeamId,
+            Number(
+              winnerTeamId
+            ),
 
           stage,
 
@@ -720,7 +1053,9 @@ export async function POST(
               : null,
 
           best_of:
-            bestOf,
+            Number(
+              bestOf
+            ),
 
           status:
             'finished',
@@ -740,16 +1075,18 @@ export async function POST(
       throw (
         matchError ??
         new Error(
-          'Impossible de créer le match'
+          'Impossible de créer le match.'
         )
       );
     }
 
     createdMatchId =
-      createdMatch.id;
+      Number(
+        createdMatch.id
+      );
 
     /* =====================================================
-       CREATION GAMES
+       CREATION DES GAMES
     ===================================================== */
 
     for (
@@ -769,21 +1106,26 @@ export async function POST(
               createdMatch.id,
 
             game_number:
-              game
-                .gameNumber,
+              Number(
+                game.gameNumber
+              ),
 
             duration_seconds:
-              game
-                .durationSeconds,
+              Number(
+                game.durationSeconds
+              ),
 
             winner_team_id:
-              game
-                .winnerTeamId,
+              Number(
+                game.winnerTeamId
+              ),
 
             mvp_player_id:
-              game
-                .mvpPlayerId ??
-              null,
+              game.mvpPlayerId
+                ? Number(
+                    game.mvpPlayerId
+                  )
+                : null,
           })
           .select('*')
           .single();
@@ -795,26 +1137,32 @@ export async function POST(
         throw (
           gameError ??
           new Error(
-            `Impossible de créer la game ${game.gameNumber}`
+            `Impossible de créer la Game ${game.gameNumber}.`
           )
         );
       }
 
       /* ===================================================
-         STATS JOUEURS
+         STATS DES 10 JOUEURS
       =================================================== */
 
       const stats =
         game.players.map(
           (player) => ({
             game_id:
-              createdGame.id,
+              Number(
+                createdGame.id
+              ),
 
             player_id:
-              player.playerId,
+              Number(
+                player.playerId
+              ),
 
             team_id:
-              player.teamId,
+              Number(
+                player.teamId
+              ),
 
             role:
               player.role,
@@ -825,37 +1173,38 @@ export async function POST(
             kills:
               Number(
                 player.kills
-              ) || 0,
+              ),
 
             deaths:
               Number(
                 player.deaths
-              ) || 0,
+              ),
 
             assists:
               Number(
                 player.assists
-              ) || 0,
+              ),
 
             cs:
               Number(
                 player.cs
-              ) || 0,
+              ),
 
             gold:
               Number(
                 player.gold
-              ) || 0,
+              ),
 
             damage:
               Number(
                 player.damage
-              ) || 0,
+              ),
           })
         );
 
       const {
-        error: statsError,
+        error:
+          statsError,
       } =
         await supabaseAdmin
           .from(
@@ -865,13 +1214,15 @@ export async function POST(
             stats
           );
 
-      if (statsError) {
+      if (
+        statsError
+      ) {
         throw statsError;
       }
     }
 
     /* =====================================================
-       OK
+       SUCCESS
     ===================================================== */
 
     return NextResponse.json(
@@ -884,6 +1235,14 @@ export async function POST(
         gamesCreated:
           games.length,
 
+        score: {
+          team1:
+            winsTeam1,
+
+          team2:
+            winsTeam2,
+        },
+
         message:
           'Match CZF enregistré avec succès.',
       },
@@ -891,19 +1250,23 @@ export async function POST(
         status: 201,
       }
     );
-  } catch (error: any) {
+  } catch (
+    error: any
+  ) {
     console.error(
-      '[CZF ADMIN RESULTS MATCH]',
+      '[CZF ADMIN RESULTS]',
       error
     );
 
     /*
-      Si une erreur survient après
-      création du match,
-      on supprime le match.
+      Si une erreur arrive après
+      la création du match :
 
-      Grâce aux foreign keys ON DELETE CASCADE,
-      les games + stats sont supprimées aussi.
+      suppression du match
+      ↓
+      cascade
+      ↓
+      games + stats supprimées.
     */
 
     if (
@@ -927,7 +1290,7 @@ export async function POST(
 
         error:
           error?.message ??
-          'Erreur inconnue',
+          'Erreur inconnue.',
       },
       {
         status: 400,

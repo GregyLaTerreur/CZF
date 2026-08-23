@@ -1,26 +1,78 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {
+  NextRequest,
+  NextResponse,
+} from 'next/server';
+
+import {
+  createClient,
+} from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-type AnyObject = Record<string, any>;
+type AnyObject =
+  Record<string, any>;
+
+type Division =
+  | 'Yordle'
+  | 'Ixtal'
+  | 'Targon';
+
+type Role =
+  | 'Top'
+  | 'Jungle'
+  | 'Mid'
+  | 'ADC'
+  | 'Support';
+
+const ROLES: Role[] = [
+  'Top',
+  'Jungle',
+  'Mid',
+  'ADC',
+  'Support',
+];
 
 type ResultPlayer = {
-  id: string | number | null;
+  id:
+    | string
+    | number
+    | null;
+
   riotId: string;
-  discordName: string | null;
-  role: string | null;
-  avatar: string | null;
+
+  discordName:
+    | string
+    | null;
+
+  role:
+    | string
+    | null;
+
+  avatar:
+    | string
+    | null;
 };
 
 type ResultTeam = {
-  id: string | number;
+  id:
+    | string
+    | number;
+
   name: string;
   shortName: string;
-  logo: string | null;
-  division: 'Yordle' | 'Ixtal' | 'Targon' | null;
+
+  logo:
+    | string
+    | null;
+
+  division:
+    | Division
+    | null;
+
   wins: number;
   losses: number;
+
   roster: ResultPlayer[];
 };
 
@@ -31,88 +83,214 @@ type Champion = {
   image: string;
 };
 
+type PlayerStats = {
+  playerId: number;
+
+  riotId: string;
+
+  teamId: number;
+  teamName: string;
+  teamShortName: string;
+
+  teamLogo:
+    | string
+    | null;
+
+  role: Role;
+
+  games: number;
+
+  wins: number;
+  losses: number;
+
+  kills: number;
+  deaths: number;
+  assists: number;
+
+  kda: number;
+
+  cs: number;
+  csPerMin: number;
+
+  gold: number;
+  goldPerMin: number;
+
+  damage: number;
+  dpm: number;
+
+  mvp: number;
+
+  totalDurationSeconds:
+    number;
+};
+
+type ChampionRoleStat = {
+  championId: string;
+
+  name: string;
+
+  image:
+    | string
+    | null;
+
+  role: Role;
+
+  picks: number;
+
+  wins: number;
+  losses: number;
+
+  pickRate: number;
+  winRate: number;
+};
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+const supabaseUrl =
+  process.env
+    .NEXT_PUBLIC_SUPABASE_URL;
+
+const serviceRoleKey =
+  process.env
+    .SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl) {
+  throw new Error(
+    'NEXT_PUBLIC_SUPABASE_URL manquant'
+  );
+}
+
+if (!serviceRoleKey) {
+  throw new Error(
+    'SUPABASE_SERVICE_ROLE_KEY manquant'
+  );
+}
+
+const supabaseAdmin =
+  createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
+
 /* =========================================================
    GET
 ========================================================= */
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest
+) {
   try {
-    const origin = request.nextUrl.origin;
+    const origin =
+      request.nextUrl.origin;
 
-    /*
-      On récupère les données déjà existantes du site.
+    /* =====================================================
+       DONNEES EXISTANTES DU SITE
+    ===================================================== */
 
-      Cette route ne recrée PAS les équipes / joueurs :
-      elle centralise simplement les API actuelles.
-    */
-
-    const [teamsResult, membersResult, playersResult] =
+    const [
+      teamsResult,
+      membersResult,
+      playersResult,
+    ] =
       await Promise.allSettled([
-        fetch(`${origin}/api/teams`, {
-          cache: 'no-store',
-        }),
+        fetch(
+          `${origin}/api/teams`,
+          {
+            cache: 'no-store',
+          }
+        ),
 
-        fetch(`${origin}/api/team-members`, {
-          cache: 'no-store',
-        }),
+        fetch(
+          `${origin}/api/team-members`,
+          {
+            cache: 'no-store',
+          }
+        ),
 
-        fetch(`${origin}/api/players`, {
-          cache: 'no-store',
-        }),
+        fetch(
+          `${origin}/api/players`,
+          {
+            cache: 'no-store',
+          }
+        ),
       ]);
 
     const teamsData =
-      await readSettledResponse(teamsResult);
+      await readSettledResponse(
+        teamsResult
+      );
 
     const membersData =
-      await readSettledResponse(membersResult);
+      await readSettledResponse(
+        membersResult
+      );
 
     const playersData =
-      await readSettledResponse(playersResult);
+      await readSettledResponse(
+        playersResult
+      );
 
-    const rawTeams = extractArray(
-      teamsData,
-      [
-        'teams',
-        'data',
-      ]
-    );
+    const rawTeams =
+      extractArray(
+        teamsData,
+        [
+          'teams',
+          'data',
+        ]
+      );
 
-    const rawMembers = extractArray(
-      membersData,
-      [
-        'members',
-        'teamMembers',
-        'team_members',
-        'data',
-      ]
-    );
+    const rawMembers =
+      extractArray(
+        membersData,
+        [
+          'members',
+          'teamMembers',
+          'team_members',
+          'data',
+        ]
+      );
 
-    const rawPlayers = extractArray(
-      playersData,
-      [
-        'players',
-        'data',
-      ]
-    );
+    const rawPlayers =
+      extractArray(
+        playersData,
+        [
+          'players',
+          'data',
+        ]
+      );
 
     /* =====================================================
-       ÉQUIPES VALIDÉES
+       TEAMS VALIDEES
     ===================================================== */
 
     const validatedTeams =
       rawTeams.filter(
-        (team: AnyObject) =>
-          isValidated(team)
+        (
+          team: AnyObject
+        ) =>
+          isValidated(
+            team
+          )
       );
 
     /* =====================================================
-       CONSTRUCTION DES ROSTERS
+       CONSTRUCTION ROSTERS
     ===================================================== */
 
-    const resultTeams: ResultTeam[] =
+    let resultTeams:
+      ResultTeam[] =
       validatedTeams.map(
-        (team: AnyObject) => {
+        (
+          team: AnyObject
+        ) => {
           const teamId =
             getValue(
               team,
@@ -126,7 +304,8 @@ export async function GET(request: NextRequest) {
           const teamMembers =
             rawMembers.filter(
               (
-                member: AnyObject
+                member:
+                  AnyObject
               ) => {
                 const memberTeamId =
                   getValue(
@@ -142,7 +321,9 @@ export async function GET(request: NextRequest) {
                   String(
                     memberTeamId
                   ) ===
-                  String(teamId)
+                  String(
+                    teamId
+                  )
                 );
               }
             );
@@ -151,7 +332,8 @@ export async function GET(request: NextRequest) {
             teamMembers
               .map(
                 (
-                  member: AnyObject
+                  member:
+                    AnyObject
                 ): ResultPlayer => {
                   const riotId =
                     String(
@@ -163,7 +345,8 @@ export async function GET(request: NextRequest) {
                           'summoner_name',
                           'summonerName',
                         ]
-                      ) ?? ''
+                      ) ??
+                        ''
                     );
 
                   const player =
@@ -205,7 +388,7 @@ export async function GET(request: NextRequest) {
                             'summonerName',
                           ]
                         ) ??
-                        'Joueur'
+                          'Joueur'
                       ),
 
                     discordName:
@@ -231,13 +414,13 @@ export async function GET(request: NextRequest) {
                             'position',
                           ]
                         ) ??
-                        getValue(
-                          player,
-                          [
-                            'role',
-                            'position',
-                          ]
-                        )
+                          getValue(
+                            player,
+                            [
+                              'role',
+                              'position',
+                            ]
+                          )
                       ),
 
                     avatar:
@@ -257,8 +440,8 @@ export async function GET(request: NextRequest) {
               )
               .sort(
                 (
-                  a: ResultPlayer,
-                  b: ResultPlayer
+                  a,
+                  b
                 ) =>
                   roleOrder(
                     a.role
@@ -298,14 +481,6 @@ export async function GET(request: NextRequest) {
                 )
               ),
 
-            /*
-              Pour l'instant on met 0-0
-              tant que le vrai système de games
-              CZF n'est pas branché.
-
-              Plus tard ces deux valeurs seront
-              calculées à partir des matchs enregistrés.
-            */
             wins: 0,
             losses: 0,
 
@@ -315,38 +490,1338 @@ export async function GET(request: NextRequest) {
       );
 
     /* =====================================================
-       CHAMPIONS LEAGUE OF LEGENDS
+       CHAMPIONS
     ===================================================== */
 
     const champions =
       await getChampions();
+
+    const championMap =
+      new Map<
+        string,
+        Champion
+      >();
+
+    for (
+      const champion
+      of champions
+    ) {
+      championMap.set(
+        champion.id,
+        champion
+      );
+    }
+
+    /* =====================================================
+       MATCHS
+    ===================================================== */
+
+    const {
+      data: matches,
+      error: matchesError,
+    } =
+      await supabaseAdmin
+        .from(
+          'czf_matches'
+        )
+        .select('*')
+        .eq(
+          'status',
+          'finished'
+        )
+        .order(
+          'played_at',
+          {
+            ascending:
+              false,
+          }
+        );
+
+    if (
+      matchesError
+    ) {
+      throw matchesError;
+    }
+
+    /* =====================================================
+       GAMES
+    ===================================================== */
+
+    const {
+      data: games,
+      error: gamesError,
+    } =
+      await supabaseAdmin
+        .from(
+          'czf_games'
+        )
+        .select('*');
+
+    if (
+      gamesError
+    ) {
+      throw gamesError;
+    }
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    const {
+      data:
+        playerStatsRows,
+      error:
+        playerStatsError,
+    } =
+      await supabaseAdmin
+        .from(
+          'czf_game_player_stats'
+        )
+        .select('*');
+
+    if (
+      playerStatsError
+    ) {
+      throw playerStatsError;
+    }
+
+    const allMatches =
+      matches ?? [];
+
+    const allGames =
+      games ?? [];
+
+    const allStats =
+      playerStatsRows ??
+      [];
+
+    /* =====================================================
+       MAP TEAMS
+    ===================================================== */
+
+    const teamMap =
+      new Map<
+        number,
+        ResultTeam
+      >();
+
+    for (
+      const team
+      of resultTeams
+    ) {
+      teamMap.set(
+        Number(
+          team.id
+        ),
+        team
+      );
+    }
+
+    /* =====================================================
+       MAP PLAYERS
+    ===================================================== */
+
+    const playerMap =
+      new Map<
+        number,
+        AnyObject
+      >();
+
+    for (
+      const player
+      of rawPlayers
+    ) {
+      const id =
+        Number(
+          getValue(
+            player,
+            [
+              'id',
+              'player_id',
+              'playerId',
+            ]
+          )
+        );
+
+      if (
+        Number.isFinite(
+          id
+        )
+      ) {
+        playerMap.set(
+          id,
+          player
+        );
+      }
+    }
+
+    /* =====================================================
+       MAP GAMES
+    ===================================================== */
+
+    const gameMap =
+      new Map<
+        number,
+        AnyObject
+      >();
+
+    for (
+      const game
+      of allGames
+    ) {
+      gameMap.set(
+        Number(
+          game.id
+        ),
+        game
+      );
+    }
+
+    /* =====================================================
+       MATCH -> GAMES
+    ===================================================== */
+
+    const gamesByMatch =
+      new Map<
+        number,
+        AnyObject[]
+      >();
+
+    for (
+      const game
+      of allGames
+    ) {
+      const matchId =
+        Number(
+          game.match_id
+        );
+
+      if (
+        !gamesByMatch.has(
+          matchId
+        )
+      ) {
+        gamesByMatch.set(
+          matchId,
+          []
+        );
+      }
+
+      gamesByMatch
+        .get(
+          matchId
+        )!
+        .push(
+          game
+        );
+    }
+
+    /* =====================================================
+       CLASSEMENT POULES
+    ===================================================== */
+
+    const poolMatches =
+      allMatches.filter(
+        (
+          match
+        ) =>
+          match.stage ===
+          'pool'
+      );
+
+    for (
+      const match
+      of poolMatches
+    ) {
+      const team1 =
+        teamMap.get(
+          Number(
+            match.team1_id
+          )
+        );
+
+      const team2 =
+        teamMap.get(
+          Number(
+            match.team2_id
+          )
+        );
+
+      if (
+        !team1 ||
+        !team2
+      ) {
+        continue;
+      }
+
+      const winnerId =
+        Number(
+          match
+            .winner_team_id
+        );
+
+      if (
+        winnerId ===
+        Number(
+          team1.id
+        )
+      ) {
+        team1.wins +=
+          1;
+
+        team2.losses +=
+          1;
+      } else if (
+        winnerId ===
+        Number(
+          team2.id
+        )
+      ) {
+        team2.wins +=
+          1;
+
+        team1.losses +=
+          1;
+      }
+    }
+
+    /* =====================================================
+       TRI TEAMS
+    ===================================================== */
+
+    resultTeams =
+      resultTeams.sort(
+        (
+          a,
+          b
+        ) => {
+          if (
+            b.wins !==
+            a.wins
+          ) {
+            return (
+              b.wins -
+              a.wins
+            );
+          }
+
+          if (
+            a.losses !==
+            b.losses
+          ) {
+            return (
+              a.losses -
+              b.losses
+            );
+          }
+
+          return a.name.localeCompare(
+            b.name,
+            'fr'
+          );
+        }
+      );
 
     /* =====================================================
        DIVISIONS
     ===================================================== */
 
     const divisions = {
-      Yordle: resultTeams.filter(
-        (team) =>
-          team.division ===
-          'Yordle'
-      ),
+      Yordle:
+        resultTeams.filter(
+          (
+            team
+          ) =>
+            team.division ===
+            'Yordle'
+        ),
 
-      Ixtal: resultTeams.filter(
-        (team) =>
-          team.division ===
-          'Ixtal'
-      ),
+      Ixtal:
+        resultTeams.filter(
+          (
+            team
+          ) =>
+            team.division ===
+            'Ixtal'
+        ),
 
-      Targon: resultTeams.filter(
-        (team) =>
-          team.division ===
-          'Targon'
-      ),
+      Targon:
+        resultTeams.filter(
+          (
+            team
+          ) =>
+            team.division ===
+            'Targon'
+        ),
     };
 
     /* =====================================================
-       RÉPONSE
+       HISTORIQUE
+    ===================================================== */
+
+    const history =
+      allMatches.map(
+        (
+          match
+        ) => {
+          const team1 =
+            teamMap.get(
+              Number(
+                match.team1_id
+              )
+            );
+
+          const team2 =
+            teamMap.get(
+              Number(
+                match.team2_id
+              )
+            );
+
+          const winner =
+            teamMap.get(
+              Number(
+                match
+                  .winner_team_id
+              )
+            );
+
+          const matchGames =
+            (
+              gamesByMatch.get(
+                Number(
+                  match.id
+                )
+              ) ??
+              []
+            ).sort(
+              (
+                a,
+                b
+              ) =>
+                Number(
+                  a.game_number
+                ) -
+                Number(
+                  b.game_number
+                )
+            );
+
+          const team1Score =
+            matchGames.filter(
+              (
+                game
+              ) =>
+                Number(
+                  game
+                    .winner_team_id
+                ) ===
+                Number(
+                  match
+                    .team1_id
+                )
+            ).length;
+
+          const team2Score =
+            matchGames.filter(
+              (
+                game
+              ) =>
+                Number(
+                  game
+                    .winner_team_id
+                ) ===
+                Number(
+                  match
+                    .team2_id
+                )
+            ).length;
+
+          return {
+            id:
+              Number(
+                match.id
+              ),
+
+            division:
+              match.division as Division,
+
+            stage:
+              match.stage,
+
+            bracket:
+              match.bracket,
+
+            round:
+              match.round,
+
+            bestOf:
+              Number(
+                match.best_of
+              ),
+
+            playedAt:
+              match.played_at,
+
+            team1:
+              team1
+                ? {
+                    id:
+                      Number(
+                        team1.id
+                      ),
+
+                    name:
+                      team1.name,
+
+                    shortName:
+                      team1.shortName,
+
+                    logo:
+                      team1.logo,
+
+                    score:
+                      team1Score,
+                  }
+                : null,
+
+            team2:
+              team2
+                ? {
+                    id:
+                      Number(
+                        team2.id
+                      ),
+
+                    name:
+                      team2.name,
+
+                    shortName:
+                      team2.shortName,
+
+                    logo:
+                      team2.logo,
+
+                    score:
+                      team2Score,
+                  }
+                : null,
+
+            winner:
+              winner
+                ? {
+                    id:
+                      Number(
+                        winner.id
+                      ),
+
+                    name:
+                      winner.name,
+
+                    shortName:
+                      winner.shortName,
+
+                    logo:
+                      winner.logo,
+                  }
+                : null,
+
+            games:
+              matchGames.map(
+                (
+                  game
+                ) => {
+                  const gameWinner =
+                    teamMap.get(
+                      Number(
+                        game
+                          .winner_team_id
+                      )
+                    );
+
+                  const mvpPlayer =
+                    game
+                      .mvp_player_id
+                      ? playerMap.get(
+                          Number(
+                            game
+                              .mvp_player_id
+                          )
+                        )
+                      : null;
+
+                  return {
+                    id:
+                      Number(
+                        game.id
+                      ),
+
+                    gameNumber:
+                      Number(
+                        game
+                          .game_number
+                      ),
+
+                    durationSeconds:
+                      Number(
+                        game
+                          .duration_seconds
+                      ),
+
+                    winnerTeamId:
+                      Number(
+                        game
+                          .winner_team_id
+                      ),
+
+                    winnerName:
+                      gameWinner
+                        ?.name ??
+                      null,
+
+                    mvpPlayerId:
+                      game
+                        .mvp_player_id
+                        ? Number(
+                            game
+                              .mvp_player_id
+                          )
+                        : null,
+
+                    mvpRiotId:
+                      mvpPlayer
+                        ? String(
+                            getValue(
+                              mvpPlayer,
+                              [
+                                'riot_id',
+                                'riotId',
+                              ]
+                            ) ??
+                              ''
+                          )
+                        : null,
+                  };
+                }
+              ),
+          };
+        }
+      );
+
+    /* =====================================================
+       HISTORIQUE PAR DIVISION
+    ===================================================== */
+
+    const historyByDivision = {
+      Yordle:
+        history.filter(
+          (
+            match
+          ) =>
+            match.division ===
+            'Yordle'
+        ),
+
+      Ixtal:
+        history.filter(
+          (
+            match
+          ) =>
+            match.division ===
+            'Ixtal'
+        ),
+
+      Targon:
+        history.filter(
+          (
+            match
+          ) =>
+            match.division ===
+            'Targon'
+        ),
+    };
+
+    /* =====================================================
+       STATS PAR DIVISION
+    ===================================================== */
+
+    function statsForDivision(
+      division: Division
+    ): Record<
+      Role,
+      PlayerStats[]
+    > {
+      const divisionMatchIds =
+        new Set<number>(
+          allMatches
+            .filter(
+              (
+                match
+              ) =>
+                match.division ===
+                division
+            )
+            .map(
+              (
+                match
+              ) =>
+                Number(
+                  match.id
+                )
+            )
+        );
+
+      const divisionGameIds =
+        new Set<number>(
+          allGames
+            .filter(
+              (
+                game
+              ) =>
+                divisionMatchIds.has(
+                  Number(
+                    game.match_id
+                  )
+                )
+            )
+            .map(
+              (
+                game
+              ) =>
+                Number(
+                  game.id
+                )
+            )
+        );
+
+      const result:
+        Record<
+          Role,
+          PlayerStats[]
+        > = {
+        Top: [],
+        Jungle: [],
+        Mid: [],
+        ADC: [],
+        Support: [],
+      };
+
+      const playerRoleKeys =
+        new Set<string>();
+
+      for (
+        const stat
+        of allStats
+      ) {
+        if (
+          !divisionGameIds.has(
+            Number(
+              stat.game_id
+            )
+          )
+        ) {
+          continue;
+        }
+
+        const role =
+          normalizeRole(
+            stat.role
+          ) as
+            | Role
+            | null;
+
+        if (
+          !role ||
+          !ROLES.includes(
+            role
+          )
+        ) {
+          continue;
+        }
+
+        playerRoleKeys.add(
+          `${Number(
+            stat.player_id
+          )}:${role}`
+        );
+      }
+
+      for (
+        const key
+        of playerRoleKeys
+      ) {
+        const [
+          playerIdRaw,
+          roleRaw,
+        ] =
+          key.split(':');
+
+        const playerId =
+          Number(
+            playerIdRaw
+          );
+
+        const role =
+          roleRaw as Role;
+
+        const rows =
+          allStats.filter(
+            (
+              stat
+            ) =>
+              Number(
+                stat.player_id
+              ) ===
+                playerId &&
+              normalizeRole(
+                stat.role
+              ) ===
+                role &&
+              divisionGameIds.has(
+                Number(
+                  stat.game_id
+                )
+              )
+          );
+
+        if (
+          rows.length ===
+          0
+        ) {
+          continue;
+        }
+
+        const first =
+          rows[0];
+
+        const teamId =
+          Number(
+            first.team_id
+          );
+
+        const team =
+          teamMap.get(
+            teamId
+          );
+
+        const rawPlayer =
+          playerMap.get(
+            playerId
+          );
+
+        if (
+          !team ||
+          !rawPlayer
+        ) {
+          continue;
+        }
+
+        let kills = 0;
+        let deaths = 0;
+        let assists = 0;
+
+        let cs = 0;
+        let gold = 0;
+        let damage = 0;
+
+        let wins = 0;
+        let losses = 0;
+
+        let duration = 0;
+        let mvp = 0;
+
+        for (
+          const row
+          of rows
+        ) {
+          const game =
+            gameMap.get(
+              Number(
+                row.game_id
+              )
+            );
+
+          if (
+            !game
+          ) {
+            continue;
+          }
+
+          kills +=
+            Number(
+              row.kills
+            ) || 0;
+
+          deaths +=
+            Number(
+              row.deaths
+            ) || 0;
+
+          assists +=
+            Number(
+              row.assists
+            ) || 0;
+
+          cs +=
+            Number(
+              row.cs
+            ) || 0;
+
+          gold +=
+            Number(
+              row.gold
+            ) || 0;
+
+          damage +=
+            Number(
+              row.damage
+            ) || 0;
+
+          duration +=
+            Number(
+              game
+                .duration_seconds
+            ) || 0;
+
+          if (
+            Number(
+              game
+                .winner_team_id
+            ) ===
+            Number(
+              row.team_id
+            )
+          ) {
+            wins += 1;
+          } else {
+            losses += 1;
+          }
+
+          if (
+            Number(
+              game
+                .mvp_player_id
+            ) ===
+            playerId
+          ) {
+            mvp += 1;
+          }
+        }
+
+        const minutes =
+          duration /
+          60;
+
+        const kda =
+          deaths >
+          0
+            ? round2(
+                (
+                  kills +
+                  assists
+                ) /
+                  deaths
+              )
+            : round2(
+                kills +
+                  assists
+              );
+
+        result[
+          role
+        ].push({
+          playerId,
+
+          riotId:
+            String(
+              getValue(
+                rawPlayer,
+                [
+                  'riot_id',
+                  'riotId',
+                ]
+              ) ??
+                `Joueur ${playerId}`
+            ),
+
+          teamId,
+
+          teamName:
+            team.name,
+
+          teamShortName:
+            team.shortName,
+
+          teamLogo:
+            team.logo,
+
+          role,
+
+          games:
+            rows.length,
+
+          wins,
+          losses,
+
+          kills,
+          deaths,
+          assists,
+
+          kda,
+
+          cs,
+
+          csPerMin:
+            minutes >
+            0
+              ? round2(
+                  cs /
+                    minutes
+                )
+              : 0,
+
+          gold,
+
+          goldPerMin:
+            minutes >
+            0
+              ? round2(
+                  gold /
+                    minutes
+                )
+              : 0,
+
+          damage,
+
+          dpm:
+            minutes >
+            0
+              ? round2(
+                  damage /
+                    minutes
+                )
+              : 0,
+
+          mvp,
+
+          totalDurationSeconds:
+            duration,
+        });
+      }
+
+      for (
+        const role
+        of ROLES
+      ) {
+        result[
+          role
+        ].sort(
+          (
+            a,
+            b
+          ) =>
+            b.kda -
+            a.kda
+        );
+      }
+
+      return result;
+    }
+
+    /* =====================================================
+       CHAMPIONS PAR DIVISION
+    ===================================================== */
+
+    function championsForDivision(
+      division: Division
+    ): Record<
+      Role,
+      ChampionRoleStat[]
+    > {
+      const divisionMatchIds =
+        new Set<number>(
+          allMatches
+            .filter(
+              (
+                match
+              ) =>
+                match.division ===
+                division
+            )
+            .map(
+              (
+                match
+              ) =>
+                Number(
+                  match.id
+                )
+            )
+        );
+
+      const divisionGameIds =
+        new Set<number>(
+          allGames
+            .filter(
+              (
+                game
+              ) =>
+                divisionMatchIds.has(
+                  Number(
+                    game.match_id
+                  )
+                )
+            )
+            .map(
+              (
+                game
+              ) =>
+                Number(
+                  game.id
+                )
+            )
+        );
+
+      const result:
+        Record<
+          Role,
+          ChampionRoleStat[]
+        > = {
+        Top: [],
+        Jungle: [],
+        Mid: [],
+        ADC: [],
+        Support: [],
+      };
+
+      for (
+        const role
+        of ROLES
+      ) {
+        const roleRows =
+          allStats.filter(
+            (
+              stat
+            ) =>
+              divisionGameIds.has(
+                Number(
+                  stat.game_id
+                )
+              ) &&
+              normalizeRole(
+                stat.role
+              ) ===
+                role
+          );
+
+        const total =
+          roleRows.length;
+
+        const map =
+          new Map<
+            string,
+            {
+              picks: number;
+              wins: number;
+            }
+          >();
+
+        for (
+          const row
+          of roleRows
+        ) {
+          const championId =
+            String(
+              row
+                .champion_id ??
+                ''
+            );
+
+          if (
+            !championId
+          ) {
+            continue;
+          }
+
+          const game =
+            gameMap.get(
+              Number(
+                row.game_id
+              )
+            );
+
+          if (
+            !game
+          ) {
+            continue;
+          }
+
+          const current =
+            map.get(
+              championId
+            ) ?? {
+              picks: 0,
+              wins: 0,
+            };
+
+          current.picks +=
+            1;
+
+          if (
+            Number(
+              game
+                .winner_team_id
+            ) ===
+            Number(
+              row.team_id
+            )
+          ) {
+            current.wins +=
+              1;
+          }
+
+          map.set(
+            championId,
+            current
+          );
+        }
+
+        result[
+          role
+        ] =
+          Array.from(
+            map.entries()
+          )
+            .map(
+              ([
+                championId,
+                values,
+              ]) => {
+                const champion =
+                  championMap.get(
+                    championId
+                  );
+
+                return {
+                  championId,
+
+                  name:
+                    champion
+                      ?.name ??
+                    championId,
+
+                  image:
+                    champion
+                      ?.image ??
+                    null,
+
+                  role,
+
+                  picks:
+                    values.picks,
+
+                  wins:
+                    values.wins,
+
+                  losses:
+                    values.picks -
+                    values.wins,
+
+                  pickRate:
+                    total >
+                    0
+                      ? round2(
+                          (
+                            values.picks /
+                            total
+                          ) *
+                            100
+                        )
+                      : 0,
+
+                  winRate:
+                    values.picks >
+                    0
+                      ? round2(
+                          (
+                            values.wins /
+                            values.picks
+                          ) *
+                            100
+                        )
+                      : 0,
+                };
+              }
+            )
+            .sort(
+              (
+                a,
+                b
+              ) => {
+                if (
+                  b.picks !==
+                  a.picks
+                ) {
+                  return (
+                    b.picks -
+                    a.picks
+                  );
+                }
+
+                return (
+                  b.winRate -
+                  a.winRate
+                );
+              }
+            )
+            .slice(
+              0,
+              3
+            );
+      }
+
+      return result;
+    }
+
+    /* =====================================================
+       RESULTATS PAR DIVISION
+    ===================================================== */
+
+    const playerStatsByDivision = {
+      Yordle:
+        statsForDivision(
+          'Yordle'
+        ),
+
+      Ixtal:
+        statsForDivision(
+          'Ixtal'
+        ),
+
+      Targon:
+        statsForDivision(
+          'Targon'
+        ),
+    };
+
+    const championsByDivision = {
+      Yordle:
+        championsForDivision(
+          'Yordle'
+        ),
+
+      Ixtal:
+        championsForDivision(
+          'Ixtal'
+        ),
+
+      Targon:
+        championsForDivision(
+          'Targon'
+        ),
+    };
+
+    /* =====================================================
+       RESPONSE
     ===================================================== */
 
     return NextResponse.json(
@@ -355,19 +1830,24 @@ export async function GET(request: NextRequest) {
 
         divisions,
 
-        teams: resultTeams,
+        teams:
+          resultTeams,
 
         champions,
+
+        history,
+
+        historyByDivision,
+
+        playerStatsByDivision,
+
+        championsByDivision,
 
         divisionAssets: {
           Yordle: {
             color:
               '#51a677',
 
-            /*
-              Mets ton logo ici plus tard
-              si tu as un PNG dédié.
-            */
             logo:
               '/assets/divisions/yordle.png',
           },
@@ -442,14 +1922,29 @@ export async function GET(request: NextRequest) {
           champions:
             champions.length,
 
+          matches:
+            allMatches.length,
+
+          games:
+            allGames.length,
+
+          gamePlayerStats:
+            allStats.length,
+
           yordle:
-            divisions.Yordle.length,
+            divisions
+              .Yordle
+              .length,
 
           ixtal:
-            divisions.Ixtal.length,
+            divisions
+              .Ixtal
+              .length,
 
           targon:
-            divisions.Targon.length,
+            divisions
+              .Targon
+              .length,
         },
       },
       {
@@ -459,7 +1954,9 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       '[RESULTS API]',
       error
@@ -476,10 +1973,40 @@ export async function GET(request: NextRequest) {
 
         champions: [],
 
+        history: [],
+
+        historyByDivision: {
+          Yordle: [],
+          Ixtal: [],
+          Targon: [],
+        },
+
         divisions: {
           Yordle: [],
           Ixtal: [],
           Targon: [],
+        },
+
+        playerStatsByDivision: {
+          Yordle:
+            emptyRoleStats(),
+
+          Ixtal:
+            emptyRoleStats(),
+
+          Targon:
+            emptyRoleStats(),
+        },
+
+        championsByDivision: {
+          Yordle:
+            emptyRoleStats(),
+
+          Ixtal:
+            emptyRoleStats(),
+
+          Targon:
+            emptyRoleStats(),
         },
       },
       {
@@ -490,24 +2017,20 @@ export async function GET(request: NextRequest) {
 }
 
 /* =========================================================
-   CHAMPIONS RIOT / DATA DRAGON
+   CHAMPIONS RIOT
 ========================================================= */
 
 async function getChampions(): Promise<
   Champion[]
 > {
   try {
-    /*
-      On récupère automatiquement
-      la version actuelle de Data Dragon.
-    */
-
     const versionsResponse =
       await fetch(
         'https://ddragon.leagueoflegends.com/api/versions.json',
         {
           next: {
-            revalidate: 86400,
+            revalidate:
+              86400,
           },
         }
       );
@@ -524,7 +2047,9 @@ async function getChampions(): Promise<
     const version =
       versions?.[0];
 
-    if (!version) {
+    if (
+      !version
+    ) {
       return [];
     }
 
@@ -533,7 +2058,8 @@ async function getChampions(): Promise<
         `https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`,
         {
           next: {
-            revalidate: 86400,
+            revalidate:
+              86400,
           },
         }
       );
@@ -548,7 +2074,8 @@ async function getChampions(): Promise<
       await championsResponse.json();
 
     const championsObject =
-      championsData?.data ??
+      championsData
+        ?.data ??
       {};
 
     return Object.values(
@@ -556,7 +2083,8 @@ async function getChampions(): Promise<
     )
       .map(
         (
-          champion: any
+          champion:
+            any
         ): Champion => ({
           id:
             champion.id,
@@ -573,15 +2101,17 @@ async function getChampions(): Promise<
       )
       .sort(
         (
-          a: Champion,
-          b: Champion
+          a,
+          b
         ) =>
           a.name.localeCompare(
             b.name,
             'fr'
           )
       );
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       '[RESULTS CHAMPIONS]',
       error
@@ -592,12 +2122,12 @@ async function getChampions(): Promise<
 }
 
 /* =========================================================
-   EXTRACTION DES RÉPONSES API
+   HELPERS API
 ========================================================= */
 
 async function readSettledResponse(
   result:
-    | PromiseSettledResult<Response>
+    PromiseSettledResult<Response>
 ): Promise<any> {
   if (
     result.status !==
@@ -609,7 +2139,9 @@ async function readSettledResponse(
   const response =
     result.value;
 
-  if (!response.ok) {
+  if (
+    !response.ok
+  ) {
     return null;
   }
 
@@ -622,10 +2154,13 @@ async function readSettledResponse(
 
 function extractArray(
   data: any,
-  possibleKeys: string[]
+  possibleKeys:
+    string[]
 ): AnyObject[] {
   if (
-    Array.isArray(data)
+    Array.isArray(
+      data
+    )
   ) {
     return data;
   }
@@ -644,10 +2179,14 @@ function extractArray(
   ) {
     if (
       Array.isArray(
-        data[key]
+        data[
+          key
+        ]
       )
     ) {
-      return data[key];
+      return data[
+        key
+      ];
     }
   }
 
@@ -655,14 +2194,21 @@ function extractArray(
 }
 
 /* =========================================================
-   HELPERS GÉNÉRIQUES
+   HELPERS GENERIQUES
 ========================================================= */
 
 function getValue(
-  object: AnyObject | null | undefined,
-  keys: string[]
+  object:
+    | AnyObject
+    | null
+    | undefined,
+
+  keys:
+    string[]
 ) {
-  if (!object) {
+  if (
+    !object
+  ) {
     return undefined;
   }
 
@@ -671,12 +2217,16 @@ function getValue(
     of keys
   ) {
     if (
-      object[key] !==
-        undefined &&
-      object[key] !==
-        null
+      object[
+        key
+      ] !== undefined &&
+      object[
+        key
+      ] !== null
     ) {
-      return object[key];
+      return object[
+        key
+      ];
     }
   }
 
@@ -685,7 +2235,9 @@ function getValue(
 
 function stringOrNull(
   value: any
-): string | null {
+):
+  | string
+  | null {
   if (
     value === undefined ||
     value === null ||
@@ -694,15 +2246,40 @@ function stringOrNull(
     return null;
   }
 
-  return String(value);
+  return String(
+    value
+  );
+}
+
+function round2(
+  value: number
+) {
+  return (
+    Math.round(
+      value *
+        100
+    ) /
+    100
+  );
+}
+
+function emptyRoleStats() {
+  return {
+    Top: [],
+    Jungle: [],
+    Mid: [],
+    ADC: [],
+    Support: [],
+  };
 }
 
 /* =========================================================
-   ÉQUIPE VALIDÉE
+   VALIDATION TEAM
 ========================================================= */
 
 function isValidated(
-  team: AnyObject
+  team:
+    AnyObject
 ) {
   const value =
     getValue(
@@ -714,20 +2291,26 @@ function isValidated(
     );
 
   return (
-    value === true ||
-    value === 1 ||
-    value === '1' ||
-    String(value)
-      .toLowerCase() ===
+    value ===
+      true ||
+    value ===
+      1 ||
+    value ===
+      '1' ||
+    String(
+      value
+    ).toLowerCase() ===
       'true'
   );
 }
+
 /* =========================================================
    TEAM
 ========================================================= */
 
 function getTeamName(
-  team: AnyObject
+  team:
+    AnyObject
 ) {
   return String(
     getValue(
@@ -738,12 +2321,13 @@ function getTeamName(
         'teamName',
       ]
     ) ??
-    'Équipe'
+      'Équipe'
   );
 }
 
 function getTeamShortName(
-  team: AnyObject
+  team:
+    AnyObject
 ) {
   const existing =
     getValue(
@@ -756,41 +2340,61 @@ function getTeamShortName(
       ]
     );
 
-  if (existing) {
+  if (
+    existing
+  ) {
     return String(
       existing
     ).toUpperCase();
   }
 
   const name =
-    getTeamName(team);
+    getTeamName(
+      team
+    );
 
   const words =
     name
       .trim()
-      .split(/\s+/);
+      .split(
+        /\s+/
+      );
 
   if (
-    words.length > 1
+    words.length >
+    1
   ) {
     return words
       .map(
-        (word) =>
-          word.charAt(0)
+        (
+          word
+        ) =>
+          word.charAt(
+            0
+          )
       )
       .join('')
-      .slice(0, 4)
+      .slice(
+        0,
+        4
+      )
       .toUpperCase();
   }
 
   return name
-    .slice(0, 4)
+    .slice(
+      0,
+      4
+    )
     .toUpperCase();
 }
 
 function getTeamLogo(
-  team: AnyObject
-): string | null {
+  team:
+    AnyObject
+):
+  | string
+  | null {
   return stringOrNull(
     getValue(
       team,
@@ -813,16 +2417,18 @@ function getTeamLogo(
 function normalizeDivision(
   value: any
 ):
-  | 'Yordle'
-  | 'Ixtal'
-  | 'Targon'
+  | Division
   | null {
-  if (!value) {
+  if (
+    !value
+  ) {
     return null;
   }
 
   const division =
-    String(value)
+    String(
+      value
+    )
       .trim()
       .toLowerCase();
 
@@ -858,22 +2464,27 @@ function normalizeRiotId(
   value: any
 ) {
   return String(
-    value ?? ''
+    value ??
+      ''
   )
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, '');
+    .replace(
+      /\s+/g,
+      ''
+    );
 }
 
 function findPlayer(
-  players: AnyObject[],
-  riotId: string,
-  member: AnyObject
-) {
-  /*
-    1. On essaie d'abord avec player_id.
-  */
+  players:
+    AnyObject[],
 
+  riotId:
+    string,
+
+  member:
+    AnyObject
+) {
   const memberPlayerId =
     getValue(
       member,
@@ -886,11 +2497,14 @@ function findPlayer(
   if (
     memberPlayerId !==
       undefined &&
-    memberPlayerId !== null
+    memberPlayerId !==
+      null
   ) {
     const byId =
       players.find(
-        (player) =>
+        (
+          player
+        ) =>
           String(
             getValue(
               player,
@@ -906,27 +2520,29 @@ function findPlayer(
           )
       );
 
-    if (byId) {
+    if (
+      byId
+    ) {
       return byId;
     }
   }
-
-  /*
-    2. Sinon avec Riot ID.
-  */
 
   const normalized =
     normalizeRiotId(
       riotId
     );
 
-  if (!normalized) {
+  if (
+    !normalized
+  ) {
     return {};
   }
 
   return (
     players.find(
-      (player) =>
+      (
+        player
+      ) =>
         normalizeRiotId(
           getValue(
             player,
@@ -937,8 +2553,10 @@ function findPlayer(
               'summonerName',
             ]
           )
-        ) === normalized
-    ) ?? {}
+        ) ===
+        normalized
+    ) ??
+    {}
   );
 }
 
@@ -948,60 +2566,84 @@ function findPlayer(
 
 function normalizeRole(
   value: any
-): string | null {
-  if (!value) {
+):
+  | string
+  | null {
+  if (
+    !value
+  ) {
     return null;
   }
 
   const role =
-    String(value)
+    String(
+      value
+    )
       .trim()
       .toLowerCase();
 
   if (
-    role === 'top' ||
-    role === 'toplane'
+    role ===
+      'top' ||
+    role ===
+      'toplane'
   ) {
     return 'Top';
   }
 
   if (
-    role === 'jungle' ||
-    role === 'jgl' ||
-    role === 'jg'
+    role ===
+      'jungle' ||
+    role ===
+      'jgl' ||
+    role ===
+      'jg'
   ) {
     return 'Jungle';
   }
 
   if (
-    role === 'mid' ||
-    role === 'middle'
+    role ===
+      'mid' ||
+    role ===
+      'middle'
   ) {
     return 'Mid';
   }
 
   if (
-    role === 'adc' ||
-    role === 'bot' ||
-    role === 'bottom'
+    role ===
+      'adc' ||
+    role ===
+      'bot' ||
+    role ===
+      'bottom'
   ) {
     return 'ADC';
   }
 
   if (
-    role === 'support' ||
-    role === 'sup'
+    role ===
+      'support' ||
+    role ===
+      'sup'
   ) {
     return 'Support';
   }
 
-  return String(value);
+  return String(
+    value
+  );
 }
 
 function roleOrder(
-  role: string | null
+  role:
+    | string
+    | null
 ) {
-  switch (role) {
+  switch (
+    role
+  ) {
     case 'Top':
       return 0;
 
