@@ -4240,3 +4240,621 @@ input:checked +
     opacity: 0.3;
   }
 }
+
+/* =========================================================
+   RESPONSIVE CZF
+   À COLLER TOUT EN BAS DU GLOBALS.CSS
+========================================================= */
+
+
+/* =========================================================
+   TABLETTE / PETITS ÉCRANS
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  /* Retire l'espace réservé au gros logo de droite */
+  .czfPageLayout {
+    display: block;
+    width: 100%;
+    max-width: none;
+    padding-right: 0 !important;
+  }
+
+  .czfPageContent {
+    width: 100%;
+  }
+
+  .czfPageBrand {
+    display: none !important;
+  }
+
+  .section {
+    width: 100%;
+    padding:
+      42px
+      clamp(20px, 4vw, 45px);
+  }
+
+  .hero {
+    width: 100%;
+    min-height: auto;
+    padding:
+      60px
+      clamp(20px, 5vw, 50px);
+    display: block;
+  }
+
+  .heroText {
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    font-size:
+      clamp(50px, 9vw, 84px);
+    line-height: 0.95;
+  }
+
+  .card,
+  .empty,
+  .importBox,
+  .rulebook {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+
+  /* =========================
+     NAV
+  ========================= */
+
+  .nav {
+    position: relative;
+
+    width: 100%;
+    min-height: auto;
+
+    padding: 10px 14px;
+
+    gap: 14px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    flex-wrap: nowrap;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .navLogo {
+    flex: 0 0 auto;
+  }
+
+  .navLogo img {
+    width: 45px;
+    height: 45px;
+  }
+
+  .navLinks {
+    display: flex;
+
+    flex-wrap: nowrap !important;
+
+    gap: 16px !important;
+
+    min-width: max-content;
+  }
+
+  .navLinks a {
+    flex: 0 0 auto;
+
+    white-space: nowrap;
+
+    font-size: 11px;
+  }
+
+  .navBolt {
+    opacity: 0.08 !important;
+  }
+
+
+  /* =========================
+     STRUCTURE ACCUEIL
+  ========================= */
+
+  .czfPageLayout {
+    display: block;
+
+    width: 100%;
+
+    padding: 0 !important;
+
+    margin: 0;
+  }
+
+  .czfPageContent {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .czfPageBrand {
+    display: none !important;
+  }
+
+
+  /* =========================
+     HERO
+  ========================= */
+
+  .hero {
+    width: 100%;
+
+    min-height: auto;
+
+    padding:
+      45px
+      20px
+      55px;
+
+    text-align: left;
+
+    overflow: visible;
+  }
+
+  .heroText {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 {
+    width: 100%;
+    max-width: 100%;
+
+    margin-bottom: 22px;
+
+    font-size:
+      clamp(46px, 14vw, 68px);
+
+    line-height: 0.91;
+
+    transform: skewX(-2deg);
+
+    word-break: normal;
+  }
+
+  .hero h1::after {
+    margin-left: 0;
+    margin-right: 0;
+
+    width: 65px;
+  }
+
+  .heroText > p:not(.eyebrow) {
+    width: 100%;
+    max-width: 100%;
+
+    margin-left: 0;
+    margin-right: 0;
+
+    font-size: 16px;
+    line-height: 1.5;
+
+    word-break: normal;
+  }
+
+
+  /* =========================
+     BOUTONS HERO
+  ========================= */
+
+  .heroActions {
+    width: 100%;
+
+    margin-top: 24px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+  }
+
+  .heroActions a {
+    width: 100%;
+
+    min-height: 50px;
+
+    padding: 13px 16px;
+
+    text-align: center;
+  }
+
+
+  /* =========================
+     SECTIONS
+  ========================= */
+
+  .section {
+    width: 100%;
+
+    padding:
+      38px
+      16px;
+  }
+
+  .sectionTitle {
+    width: 100%;
+
+    gap: 10px;
+
+    margin-bottom: 18px;
+  }
+
+  .sectionTitle span {
+    width: 32px;
+    height: 4px;
+  }
+
+  .sectionTitle h2 {
+    min-width: 0;
+
+    font-size:
+      clamp(28px, 9vw, 38px);
+
+    line-height: 1;
+  }
+
+
+  /* =========================
+     CARTES
+  ========================= */
+
+  .card,
+  .empty,
+  .importBox,
+  .rulebook {
+    width: 100%;
+
+    min-width: 0;
+
+    padding: 20px;
+
+    border-radius: 12px;
+  }
+
+  .card h3,
+  .importBox h3,
+  .rulebook h3 {
+    font-size:
+      clamp(23px, 7vw, 30px);
+
+    line-height: 1.05;
+  }
+
+  .card p,
+  .importBox p,
+  .rulebook p,
+  .card li {
+    font-size: 15px;
+    line-height: 1.5;
+
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+
+  /* =========================
+     DISCORD
+  ========================= */
+
+  .discordCard {
+    width: 100%;
+
+    padding:
+      28px
+      22px;
+  }
+
+  .discordCard h3 {
+    font-size: 28px;
+    line-height: 1.05;
+  }
+
+  .discordCard p {
+    width: 100%;
+    max-width: 100%;
+
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .discordCard .joinTeamBtn {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+
+  /* =========================
+     COMPTE CZF
+  ========================= */
+
+  .importBox {
+    display: block;
+  }
+
+  .accountAction {
+    width: 100%;
+    margin-top: 22px;
+  }
+
+  .accountAction .rulebookButton {
+    width: 100%;
+  }
+
+
+  /* =========================
+     GRILLES
+  ========================= */
+
+  .grid.three,
+  .grid.two {
+    grid-template-columns: 1fr;
+  }
+
+
+  /* =========================
+     DIVISIONS
+  ========================= */
+
+  .divisionTeamsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .divisionTeamButton {
+    width: 100%;
+    min-height: 64px;
+  }
+
+
+  /* =========================
+     FORMULAIRES
+  ========================= */
+
+  .fakeForm {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+  }
+
+  .fakeForm input,
+  .fakeForm textarea,
+  .fakeForm select,
+  .fakeForm button {
+    width: 100%;
+    min-width: 0;
+  }
+
+
+  /* =========================
+     PLAYERS
+  ========================= */
+
+  .playersSearch {
+    width: 100%;
+    max-width: none;
+
+    flex: none;
+  }
+
+  .playersFilterChecks {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+  }
+
+  .participantsCheck {
+    width: 100%;
+    min-height: 48px;
+  }
+
+
+  /* =========================
+     TEAMS
+  ========================= */
+
+  .teamsFilters {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+  }
+
+  .teamsSearch {
+    width: 100%;
+    min-width: 0;
+
+    flex: none;
+  }
+
+  .teamsParticipantsCheck,
+  .teamsFilterSelect {
+    width: 100%;
+
+    min-height: 48px;
+  }
+
+
+  /* =========================
+     TABLEAUX
+  ========================= */
+
+  .playersTable {
+    width: 100%;
+
+    overflow-x: auto;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .playersHeader,
+  .playerRow,
+  .teamsHeader,
+  .teamRow {
+    min-width: 800px;
+  }
+
+
+  /* =========================
+     DETAILS TEAM
+  ========================= */
+
+  .teamDetails {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    padding: 18px;
+  }
+
+  .teamInfos {
+    width: 100%;
+    min-width: 0;
+
+    flex: none;
+  }
+
+  .teamLogoBigContainer {
+    width: 100%;
+
+    flex: none;
+  }
+
+  .teamLogoBig {
+    width: min(240px, 80vw);
+    height: auto;
+  }
+
+
+  /* =========================
+     ÉCLAIRS SUR MOBILE
+  ========================= */
+
+  .homeHero::before,
+  .homeHero::after,
+  .discordCard::before,
+  .discordCard::after,
+  #divisions::before,
+  #divisions::after,
+  #equipes::before,
+  #equipes::after,
+  #compte .importBox::before,
+  #compte .importBox::after,
+  #resultats::after,
+  #hall-of-fame::before,
+  #rulebook .rulebook::before,
+  #rulebook .rulebook::after,
+  .playersCreateCard::before,
+  .playersCreateCard::after,
+  .playersListCard::before,
+  .playersListCard::after,
+  .playersPage::before,
+  .playersPage::after,
+  .teamsCreateCard::after,
+  .teamsListCard::before,
+  .divisionsIntroCard::after,
+  .divisionCard-targon::before,
+  .divisionCard-yordle::before {
+    opacity: 0.18 !important;
+
+    transform:
+      scale(0.55) !important;
+
+    pointer-events: none;
+  }
+
+  .playersPage::after,
+  .teamsListCard::before,
+  .divisionCard-yordle::before {
+    display: none;
+  }
+}
+
+
+/* =========================================================
+   TRÈS PETITS TÉLÉPHONES
+========================================================= */
+
+@media (max-width: 420px) {
+
+  .hero {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .hero h1 {
+    font-size:
+      clamp(42px, 14vw, 58px);
+  }
+
+  .heroText > p:not(.eyebrow) {
+    font-size: 15px;
+  }
+
+  .section {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .card,
+  .empty,
+  .importBox,
+  .rulebook {
+    padding: 18px;
+  }
+
+  .sectionTitle h2 {
+    font-size: 30px;
+  }
+}
