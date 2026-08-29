@@ -236,11 +236,50 @@ const { data, error } = await supabaseAdmin
 export async function PATCH(request: Request) {
   const body = await request.json();
 
-  const { player_id, lft } = body;
+  const {
+    player_id,
+    lft,
+    main_role,
+    secondary_role,
+    description,
+    peak_tier,
+    peak_rank,
+    peak_lp,
+  } = body;
 
-  const { data, error } = await supabase
+  const updates: any = {};
+
+  if (lft !== undefined) {
+    updates.lft = lft;
+  }
+
+  if (main_role !== undefined) {
+    updates.main_role = main_role;
+  }
+
+  if (secondary_role !== undefined) {
+    updates.secondary_role = secondary_role;
+  }
+
+  if (description !== undefined) {
+    updates.description = description;
+  }
+
+  if (peak_tier !== undefined) {
+    updates.peak_tier = peak_tier;
+  }
+
+  if (peak_rank !== undefined) {
+    updates.peak_rank = peak_rank;
+  }
+
+  if (peak_lp !== undefined) {
+    updates.peak_lp = peak_lp;
+  }
+
+  const { data, error } = await supabaseAdmin
     .from('players')
-    .update({ lft })
+    .update(updates)
     .eq('id', player_id)
     .select();
 
