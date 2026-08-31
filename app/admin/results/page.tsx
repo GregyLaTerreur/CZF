@@ -174,6 +174,25 @@ function normalizeText(
     );
 }
 
+function normalizeRiotName(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  const text =
+    String(
+      value ?? ''
+    ).trim();
+
+  const gameName =
+    text.split('#')[0];
+
+  return normalizeText(
+    gameName
+  );
+}
+
 function normalizeRole(
   value:
     | string
@@ -627,74 +646,109 @@ export default function AdminResultsPage() {
   ========================================================= */
 
   function findPlayer(
-    value:
-      | string
-      | number
-      | null
-      | undefined,
-    availablePlayers:
-      Player[]
+  value:
+    | string
+    | number
+    | null
+    | undefined,
+  availablePlayers:
+    Player[]
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
   ) {
-    if (
-      value ===
-        null ||
-      value ===
-        undefined ||
-      value ===
-        ''
-    ) {
-      return undefined;
-    }
+    return undefined;
+  }
 
-    const numeric =
-      Number(
-        value
+  const numeric =
+    Number(
+      value
+    );
+
+  if (
+    Number.isFinite(
+      numeric
+    )
+  ) {
+    const byId =
+      availablePlayers.find(
+        (
+          player
+        ) =>
+          Number(
+            player.id
+          ) === numeric
       );
 
     if (
-      Number.isFinite(
-        numeric
-      )
+      byId
     ) {
-      const byId =
-        availablePlayers.find(
-          (
-            player
-          ) =>
-            Number(
-              player.id
-            ) ===
-            numeric
+      return byId;
+    }
+  }
+
+  const rawSearch =
+    String(
+      value
+    ).trim();
+
+  const searchFull =
+    normalizeText(
+      rawSearch
+    );
+
+  const searchRiotName =
+    normalizeRiotName(
+      rawSearch
+    );
+
+  return availablePlayers.find(
+    (
+      player
+    ) => {
+      const playerFull =
+        normalizeText(
+          player.riotId
         );
 
       if (
-        byId
+        playerFull ===
+        searchFull
       ) {
-        return byId;
+        return true;
       }
-    }
 
-    const search =
-      normalizeText(
-        String(
-          value
-        )
-      );
-
-    return availablePlayers.find(
-      (
-        player
-      ) =>
-        normalizeText(
+      const playerRiotName =
+        normalizeRiotName(
           player.riotId
-        ) ===
-          search ||
+        );
+
+      if (
+        playerRiotName ===
+        searchRiotName
+      ) {
+        return true;
+      }
+
+      const playerDiscord =
         normalizeText(
           player.discordName
-        ) ===
-          search
-    );
-  }
+        );
+
+      if (
+        playerDiscord &&
+        playerDiscord ===
+          searchFull
+      ) {
+        return true;
+      }
+
+      return false;
+    }
+  );
+}
 
   /* =========================================================
      FIND CHAMPION
