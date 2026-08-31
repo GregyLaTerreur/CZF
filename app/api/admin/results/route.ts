@@ -47,10 +47,6 @@ type GameInput = {
 
   winnerTeamId: number;
 
-  mvpPlayerId?:
-    | number
-    | null;
-
   players:
     PlayerStatInput[];
 };
@@ -61,7 +57,20 @@ type MatchInput = {
   team1Id: number;
   team2Id: number;
 
-  winnerTeamId: number;
+  /*
+    NULL possible uniquement
+    pour un 1-1 en poules.
+  */
+  winnerTeamId:
+    | number
+    | null;
+
+  /*
+    MVP UNIQUE DU MATCH / BO
+  */
+  mvpPlayerId:
+    | number
+    | null;
 
   stage:
     | 'pool'
@@ -240,6 +249,8 @@ export async function POST(
 
       winnerTeamId,
 
+      mvpPlayerId,
+
       stage,
 
       bracket = null,
@@ -296,25 +307,6 @@ export async function POST(
       );
     }
 
-    if (
-      Number(
-        winnerTeamId
-      ) !==
-        Number(
-          team1Id
-        ) &&
-      Number(
-        winnerTeamId
-      ) !==
-        Number(
-          team2Id
-        )
-    ) {
-      throw new Error(
-        'Le gagnant doit être une des deux équipes.'
-      );
-    }
-
     /* =====================================================
        PHASE
     ===================================================== */
@@ -347,23 +339,46 @@ export async function POST(
     }
 
     /* =====================================================
-       BEST OF
+       FORMAT
     ===================================================== */
 
+    /*
+      POULES :
+      exactement 2 games.
+
+      PLAYOFFS :
+      BO1 / BO3 / BO5.
+    */
+
     if (
-      ![
-        1,
-        3,
-        5,
-      ].includes(
+      stage ===
+      'pool'
+    ) {
+      if (
         Number(
           bestOf
+        ) !== 2
+      ) {
+        throw new Error(
+          'Les matchs de poule doivent obligatoirement être joués en 2 games.'
+        );
+      }
+    } else {
+      if (
+        ![
+          1,
+          3,
+          5,
+        ].includes(
+          Number(
+            bestOf
+          )
         )
-      )
-    ) {
-      throw new Error(
-        'Format BO invalide.'
-      );
+      ) {
+        throw new Error(
+          'Format de playoffs invalide.'
+        );
+      }
     }
 
     /* =====================================================
@@ -379,6 +394,30 @@ export async function POST(
     ) {
       throw new Error(
         'Au moins une game est obligatoire.'
+      );
+    }
+
+    if (
+      stage ===
+        'pool' &&
+      games.length !==
+        2
+    ) {
+      throw new Error(
+        'Un match de poule doit contenir exactement 2 games.'
+      );
+    }
+
+    if (
+      stage ===
+        'playoff' &&
+      games.length >
+        Number(
+          bestOf
+        )
+    ) {
+      throw new Error(
+        'Trop de games pour ce format de playoffs.'
       );
     }
 
@@ -478,7 +517,7 @@ export async function POST(
     }
 
     /* =====================================================
-       VERIFICATION DES JOUEURS
+       JOUEURS DB
     ===================================================== */
 
     const {
@@ -662,15 +701,13 @@ export async function POST(
 
       if (
         Number(
-          game
-            .winnerTeamId
+          game.winnerTeamId
         ) !==
           Number(
             team1Id
           ) &&
         Number(
-          game
-            .winnerTeamId
+          game.winnerTeamId
         ) !==
           Number(
             team2Id
@@ -839,6 +876,12 @@ export async function POST(
         }
       }
 
+      /*
+        Chaque équipe doit avoir
+        exactement :
+        Top / Jungle / Mid / ADC / Support
+      */
+
       for (
         const teamPlayers
         of [
@@ -872,28 +915,33 @@ export async function POST(
           }
         }
       }
+    }
 
-      if (
-        game.mvpPlayerId !==
-          null &&
-        game.mvpPlayerId !==
-          undefined
-      ) {
-        const mvpIsPlaying =
-          gamePlayerIds.includes(
-            Number(
-              game.mvpPlayerId
-            )
-          );
+    /* =====================================================
+       MVP UNIQUE MATCH
+    ===================================================== */
 
-        if (
-          !mvpIsPlaying
-        ) {
-          throw new Error(
-            `Le MVP de la Game ${game.gameNumber} ne fait pas partie des 10 joueurs.`
-          );
-        }
-      }
+    if (
+      !mvpPlayerId
+    ) {
+      throw new Error(
+        'Le MVP du match est obligatoire.'
+      );
+    }
+
+    const mvpNumericId =
+      Number(
+        mvpPlayerId
+      );
+
+    if (
+      !uniquePlayerIds.includes(
+        mvpNumericId
+      )
+    ) {
+      throw new Error(
+        'Le MVP doit avoir participé à au moins une game du match.'
+      );
     }
 
     /* =====================================================
@@ -922,34 +970,136 @@ export async function POST(
           )
       ).length;
 
-    if (
-      winsTeam1 ===
-      winsTeam2
-    ) {
-      throw new Error(
-        'Le score du match est à égalité.'
-      );
-    }
+    let calculatedWinner:
+      | number
+      | null =
+      null;
 
-    const calculatedWinner =
+    if (
       winsTeam1 >
       winsTeam2
-        ? Number(
-            team1Id
-          )
-        : Number(
-            team2Id
-          );
+    ) {
+      calculatedWinner =
+        Number(
+          team1Id
+        );
+    } else if (
+      winsTeam2 >
+      winsTeam1
+    ) {
+      calculatedWinner =
+        Number(
+          team2Id
+        );
+    }
+
+    /* =====================================================
+       REGLES POULES
+    ===================================================== */
 
     if (
-      Number(
-        winnerTeamId
-      ) !==
-      calculatedWinner
+      stage ===
+      'pool'
     ) {
-      throw new Error(
-        'Le vainqueur du match ne correspond pas au résultat des games.'
-      );
+      /*
+        2-0
+        1-1
+        0-2
+        autorisés
+      */
+
+      if (
+        winsTeam1 +
+          winsTeam2 !==
+        2
+      ) {
+        throw new Error(
+          'Un match de poule doit contenir exactement deux résultats de game.'
+        );
+      }
+
+      /*
+        Si 1-1 :
+        winnerTeamId doit être NULL.
+      */
+
+      if (
+        winsTeam1 ===
+        winsTeam2
+      ) {
+        if (
+          winnerTeamId !==
+            null &&
+          winnerTeamId !==
+            undefined
+        ) {
+          throw new Error(
+            'Un match de poule terminé 1-1 ne doit pas avoir de vainqueur de match.'
+          );
+        }
+      } else {
+        if (
+          Number(
+            winnerTeamId
+          ) !==
+          calculatedWinner
+        ) {
+          throw new Error(
+            'Le vainqueur du match ne correspond pas au score des games.'
+          );
+        }
+      }
+    }
+
+    /* =====================================================
+       REGLES PLAYOFFS
+    ===================================================== */
+
+    if (
+      stage ===
+      'playoff'
+    ) {
+      if (
+        calculatedWinner ===
+        null
+      ) {
+        throw new Error(
+          'Un match de playoffs ne peut pas terminer sur une égalité.'
+        );
+      }
+
+      if (
+        Number(
+          winnerTeamId
+        ) !==
+        calculatedWinner
+      ) {
+        throw new Error(
+          'Le vainqueur du match ne correspond pas au score des games.'
+        );
+      }
+
+      const requiredWins =
+        Math.floor(
+          Number(
+            bestOf
+          ) / 2
+        ) + 1;
+
+      const winningScore =
+        Math.max(
+          winsTeam1,
+          winsTeam2
+        );
+
+      if (
+        winningScore !==
+        requiredWins
+      ) {
+        throw new Error(
+          `Le vainqueur doit avoir ${requiredWins} victoire(s) pour terminer ce BO${bestOf}.`
+        );
+      }
     }
 
     /* =====================================================
@@ -977,10 +1127,17 @@ export async function POST(
               team2Id
             ),
 
+          /*
+            NULL si 1-1
+          */
           winner_team_id:
-            Number(
-              winnerTeamId
-            ),
+            calculatedWinner,
+
+          /*
+            MVP UNIQUE DU BO
+          */
+          mvp_player_id:
+            mvpNumericId,
 
           stage,
 
@@ -997,9 +1154,12 @@ export async function POST(
               : null,
 
           best_of:
-            Number(
-              bestOf
-            ),
+            stage ===
+            'pool'
+              ? 2
+              : Number(
+                  bestOf
+                ),
 
           status:
             'finished',
@@ -1063,13 +1223,6 @@ export async function POST(
               Number(
                 game.winnerTeamId
               ),
-
-            mvp_player_id:
-              game.mvpPlayerId
-                ? Number(
-                    game.mvpPlayerId
-                  )
-                : null,
           })
           .select('*')
           .single();
@@ -1192,8 +1345,21 @@ export async function POST(
             winsTeam2,
         },
 
+        winnerTeamId:
+          calculatedWinner,
+
+        draw:
+          calculatedWinner ===
+          null,
+
+        mvpPlayerId:
+          mvpNumericId,
+
         message:
-          'Match CZF enregistré avec succès.',
+          calculatedWinner ===
+          null
+            ? 'Match CZF enregistré : 1-1.'
+            : 'Match CZF enregistré avec succès.',
       },
       {
         status: 201,
@@ -1207,6 +1373,15 @@ export async function POST(
       error
     );
 
+    /*
+      Si quelque chose plante
+      après création du match,
+      on supprime le match.
+
+      Les games/stats devraient
+      être supprimées avec les FK
+      CASCADE si configurées.
+    */
     if (
       createdMatchId !==
       null

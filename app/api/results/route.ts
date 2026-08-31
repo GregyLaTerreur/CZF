@@ -33,44 +33,23 @@ const ROLES: Role[] = [
 ];
 
 type ResultPlayer = {
-  id:
-    | string
-    | number
-    | null;
-
+  id: string | number | null;
   riotId: string;
-
-  discordName:
-    | string
-    | null;
-
-  role:
-    | string
-    | null;
-
-  avatar:
-    | string
-    | null;
+  discordName: string | null;
+  role: string | null;
+  avatar: string | null;
 };
 
 type ResultTeam = {
-  id:
-    | string
-    | number;
-
+  id: string | number;
   name: string;
   shortName: string;
-
-  logo:
-    | string
-    | null;
-
-  division:
-    | Division
-    | null;
+  logo: string | null;
+  division: Division | null;
 
   wins: number;
   losses: number;
+  gameDiff: number;
 
   roster: ResultPlayer[];
 };
@@ -84,29 +63,22 @@ type Champion = {
 
 type PlayerStats = {
   playerId: number;
-
   riotId: string;
 
   teamId: number;
-
   teamName: string;
   teamShortName: string;
-
-  teamLogo:
-    | string
-    | null;
+  teamLogo: string | null;
 
   role: Role;
 
   games: number;
-
   wins: number;
   losses: number;
 
   kills: number;
   deaths: number;
   assists: number;
-
   kda: number;
 
   cs: number;
@@ -122,23 +94,17 @@ type PlayerStats = {
 
   mvp: number;
 
-  totalDurationSeconds:
-    number;
+  totalDurationSeconds: number;
 };
 
 type ChampionRoleStat = {
   championId: string;
-
   name: string;
-
-  image:
-    | string
-    | null;
+  image: string | null;
 
   role: Role;
 
   picks: number;
-
   wins: number;
   losses: number;
 
@@ -151,12 +117,10 @@ type ChampionRoleStat = {
 ========================================================= */
 
 const supabaseUrl =
-  process.env
-    .NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 const serviceRoleKey =
-  process.env
-    .SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl) {
   throw new Error(
@@ -176,11 +140,8 @@ const supabaseAdmin =
     serviceRoleKey,
     {
       auth: {
-        autoRefreshToken:
-          false,
-
-        persistSession:
-          false,
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   );
@@ -197,39 +158,35 @@ export async function GET(
       request.nextUrl.origin;
 
     /* =====================================================
-       DONNEES EXISTANTES DU SITE
+       DONNEES EXISTANTES
     ===================================================== */
 
     const [
       teamsResult,
       membersResult,
       playersResult,
-    ] =
-      await Promise.allSettled([
-        fetch(
-          `${origin}/api/teams`,
-          {
-            cache:
-              'no-store',
-          }
-        ),
+    ] = await Promise.allSettled([
+      fetch(
+        `${origin}/api/teams`,
+        {
+          cache: 'no-store',
+        }
+      ),
 
-        fetch(
-          `${origin}/api/team-members`,
-          {
-            cache:
-              'no-store',
-          }
-        ),
+      fetch(
+        `${origin}/api/team-members`,
+        {
+          cache: 'no-store',
+        }
+      ),
 
-        fetch(
-          `${origin}/api/players`,
-          {
-            cache:
-              'no-store',
-          }
-        ),
-      ]);
+      fetch(
+        `${origin}/api/players`,
+        {
+          cache: 'no-store',
+        }
+      ),
+    ]);
 
     const teamsData =
       await readSettledResponse(
@@ -282,8 +239,7 @@ export async function GET(
     const validatedTeams =
       rawTeams.filter(
         (
-          team:
-            AnyObject
+          team: AnyObject
         ) =>
           isValidated(
             team
@@ -291,15 +247,14 @@ export async function GET(
       );
 
     /* =====================================================
-       CONSTRUCTION ROSTERS
+       ROSTERS
     ===================================================== */
 
     let resultTeams:
       ResultTeam[] =
       validatedTeams.map(
         (
-          team:
-            AnyObject
+          team: AnyObject
         ) => {
           const teamId =
             getValue(
@@ -314,8 +269,7 @@ export async function GET(
           const teamMembers =
             rawMembers.filter(
               (
-                member:
-                  AnyObject
+                member: AnyObject
               ) => {
                 const memberTeamId =
                   getValue(
@@ -342,8 +296,7 @@ export async function GET(
             teamMembers
               .map(
                 (
-                  member:
-                    AnyObject
+                  member: AnyObject
                 ): ResultPlayer => {
                   const riotId =
                     String(
@@ -355,8 +308,7 @@ export async function GET(
                           'summoner_name',
                           'summonerName',
                         ]
-                      ) ??
-                        ''
+                      ) ?? ''
                     );
 
                   const player =
@@ -462,8 +414,7 @@ export async function GET(
               );
 
           return {
-            id:
-              teamId,
+            id: teamId,
 
             name:
               getTeamName(
@@ -494,6 +445,7 @@ export async function GET(
 
             wins: 0,
             losses: 0,
+            gameDiff: 0,
 
             roster,
           };
@@ -529,8 +481,7 @@ export async function GET(
 
     const {
       data: matches,
-      error:
-        matchesError,
+      error: matchesError,
     } =
       await supabaseAdmin
         .from(
@@ -544,14 +495,11 @@ export async function GET(
         .order(
           'played_at',
           {
-            ascending:
-              false,
+            ascending: false,
           }
         );
 
-    if (
-      matchesError
-    ) {
+    if (matchesError) {
       throw matchesError;
     }
 
@@ -561,8 +509,7 @@ export async function GET(
 
     const {
       data: games,
-      error:
-        gamesError,
+      error: gamesError,
     } =
       await supabaseAdmin
         .from(
@@ -570,21 +517,17 @@ export async function GET(
         )
         .select('*');
 
-    if (
-      gamesError
-    ) {
+    if (gamesError) {
       throw gamesError;
     }
 
     /* =====================================================
-       STATS
+       PLAYER STATS
     ===================================================== */
 
     const {
-      data:
-        playerStatsRows,
-      error:
-        playerStatsError,
+      data: playerStatsRows,
+      error: playerStatsError,
     } =
       await supabaseAdmin
         .from(
@@ -592,9 +535,7 @@ export async function GET(
         )
         .select('*');
 
-    if (
-      playerStatsError
-    ) {
+    if (playerStatsError) {
       throw playerStatsError;
     }
 
@@ -605,8 +546,7 @@ export async function GET(
       games ?? [];
 
     const allStats =
-      playerStatsRows ??
-      [];
+      playerStatsRows ?? [];
 
     /* =====================================================
        MAP TEAMS
@@ -666,6 +606,28 @@ export async function GET(
           player
         );
       }
+    }
+
+    /* =====================================================
+       MAP MATCHS
+    ===================================================== */
+
+    const matchMap =
+      new Map<
+        number,
+        AnyObject
+      >();
+
+    for (
+      const match
+      of allMatches
+    ) {
+      matchMap.set(
+        Number(
+          match.id
+        ),
+        match
+      );
     }
 
     /* =====================================================
@@ -730,7 +692,19 @@ export async function GET(
     }
 
     /* =====================================================
-       CLASSEMENT POULES
+       CLASSEMENT DES POULES
+
+       Chaque BO2 contient exactement 2 games.
+
+       2-0 :
+       équipe A = +2 wins
+       équipe B = +2 losses
+
+       1-1 :
+       chaque équipe = +1 win / +1 loss
+
+       0-2 :
+       inverse du 2-0
     ===================================================== */
 
     const poolMatches =
@@ -767,39 +741,159 @@ export async function GET(
         continue;
       }
 
-      const winnerId =
-        Number(
-          match
-            .winner_team_id
-        );
+      const matchGames =
+        gamesByMatch.get(
+          Number(
+            match.id
+          )
+        ) ?? [];
 
-      if (
-        winnerId ===
-        Number(
-          team1.id
-        )
+      for (
+        const game
+        of matchGames
       ) {
-        team1.wins +=
-          1;
+        const winnerId =
+          Number(
+            game.winner_team_id
+          );
 
-        team2.losses +=
-          1;
-      } else if (
-        winnerId ===
-        Number(
-          team2.id
-        )
-      ) {
-        team2.wins +=
-          1;
+        if (
+          winnerId ===
+          Number(
+            team1.id
+          )
+        ) {
+          team1.wins += 1;
+          team2.losses += 1;
+        }
 
-        team1.losses +=
-          1;
+        if (
+          winnerId ===
+          Number(
+            team2.id
+          )
+        ) {
+          team2.wins += 1;
+          team1.losses += 1;
+        }
       }
     }
 
+    /*
+      Différence de games.
+    */
+
+    for (
+      const team
+      of resultTeams
+    ) {
+      team.gameDiff =
+        team.wins -
+        team.losses;
+    }
+
     /* =====================================================
-       TRI TEAMS
+       CONFRONTATION DIRECTE
+
+       Renvoie :
+       - nombre positif si A doit passer devant B
+       - nombre négatif si B doit passer devant A
+       - 0 si leur confrontation est elle-même à égalité
+
+       On regarde uniquement les matchs de POULE.
+    ===================================================== */
+
+    function getHeadToHeadDifference(
+      teamAId: number,
+      teamBId: number
+    ) {
+      let winsA = 0;
+      let winsB = 0;
+
+      for (
+        const match
+        of poolMatches
+      ) {
+        const matchTeam1 =
+          Number(
+            match.team1_id
+          );
+
+        const matchTeam2 =
+          Number(
+            match.team2_id
+          );
+
+        const isDirectMatch =
+          (
+            matchTeam1 ===
+              teamAId &&
+            matchTeam2 ===
+              teamBId
+          ) ||
+          (
+            matchTeam1 ===
+              teamBId &&
+            matchTeam2 ===
+              teamAId
+          );
+
+        if (
+          !isDirectMatch
+        ) {
+          continue;
+        }
+
+        const matchGames =
+          gamesByMatch.get(
+            Number(
+              match.id
+            )
+          ) ?? [];
+
+        for (
+          const game
+          of matchGames
+        ) {
+          const winnerId =
+            Number(
+              game.winner_team_id
+            );
+
+          if (
+            winnerId ===
+            teamAId
+          ) {
+            winsA += 1;
+          }
+
+          if (
+            winnerId ===
+            teamBId
+          ) {
+            winsB += 1;
+          }
+        }
+      }
+
+      return (
+        winsA -
+        winsB
+      );
+    }
+
+    /* =====================================================
+       TRI DU CLASSEMENT
+
+       1. Nombre de victoires de games
+       2. Différence de games
+       3. Confrontation directe
+       4. Toujours égal = tiebreaker nécessaire
+
+       IMPORTANT :
+       Le tiebreaker n'est PAS inventé automatiquement.
+       On garde simplement un ordre stable en attendant
+       le résultat du tiebreaker.
     ===================================================== */
 
     resultTeams =
@@ -808,6 +902,10 @@ export async function GET(
           a,
           b
         ) => {
+          /*
+            1. Victoires
+          */
+
           if (
             b.wins !==
             a.wins
@@ -818,15 +916,61 @@ export async function GET(
             );
           }
 
+          /*
+            2. Différence
+            de games
+          */
+
           if (
-            a.losses !==
-            b.losses
+            b.gameDiff !==
+            a.gameDiff
           ) {
             return (
-              a.losses -
-              b.losses
+              b.gameDiff -
+              a.gameDiff
             );
           }
+
+          /*
+            3. Confrontation
+            directe
+          */
+
+          const headToHead =
+            getHeadToHeadDifference(
+              Number(
+                a.id
+              ),
+              Number(
+                b.id
+              )
+            );
+
+          if (
+            headToHead !==
+            0
+          ) {
+            /*
+              Si A a gagné plus
+              de games contre B,
+              A passe devant.
+            */
+
+            return (
+              -headToHead
+            );
+          }
+
+          /*
+            4. Toujours égal :
+            tiebreaker nécessaire.
+
+            On utilise seulement
+            le nom pour conserver
+            un affichage stable
+            avant que le tiebreaker
+            soit joué.
+          */
 
           return a.name.localeCompare(
             b.name,
@@ -892,12 +1036,25 @@ export async function GET(
             );
 
           const winner =
-            teamMap.get(
-              Number(
-                match
-                  .winner_team_id
-              )
-            );
+            match.winner_team_id !==
+              null &&
+            match.winner_team_id !==
+              undefined
+              ? teamMap.get(
+                  Number(
+                    match.winner_team_id
+                  )
+                )
+              : undefined;
+
+          const matchMvpPlayer =
+            match.mvp_player_id
+              ? playerMap.get(
+                  Number(
+                    match.mvp_player_id
+                  )
+                )
+              : null;
 
           const matchGames =
             (
@@ -905,8 +1062,7 @@ export async function GET(
                 Number(
                   match.id
                 )
-              ) ??
-              []
+              ) ?? []
             ).sort(
               (
                 a,
@@ -926,12 +1082,10 @@ export async function GET(
                 game
               ) =>
                 Number(
-                  game
-                    .winner_team_id
+                  game.winner_team_id
                 ) ===
                 Number(
-                  match
-                    .team1_id
+                  match.team1_id
                 )
             ).length;
 
@@ -941,12 +1095,10 @@ export async function GET(
                 game
               ) =>
                 Number(
-                  game
-                    .winner_team_id
+                  game.winner_team_id
                 ) ===
                 Number(
-                  match
-                    .team2_id
+                  match.team2_id
                 )
             ).length;
 
@@ -975,6 +1127,26 @@ export async function GET(
 
             playedAt:
               match.played_at,
+
+            mvpPlayerId:
+              match.mvp_player_id
+                ? Number(
+                    match.mvp_player_id
+                  )
+                : null,
+
+            mvpRiotId:
+              matchMvpPlayer
+                ? String(
+                    getValue(
+                      matchMvpPlayer,
+                      [
+                        'riot_id',
+                        'riotId',
+                      ]
+                    ) ?? ''
+                  )
+                : null,
 
             team1:
               team1
@@ -1020,6 +1192,11 @@ export async function GET(
                   }
                 : null,
 
+            /*
+              Sur un 1-1 :
+              winner = null
+            */
+
             winner:
               winner
                 ? {
@@ -1047,21 +1224,9 @@ export async function GET(
                   const gameWinner =
                     teamMap.get(
                       Number(
-                        game
-                          .winner_team_id
+                        game.winner_team_id
                       )
                     );
-
-                  const mvpPlayer =
-                    game
-                      .mvp_player_id
-                      ? playerMap.get(
-                          Number(
-                            game
-                              .mvp_player_id
-                          )
-                        )
-                      : null;
 
                   return {
                     id:
@@ -1071,49 +1236,23 @@ export async function GET(
 
                     gameNumber:
                       Number(
-                        game
-                          .game_number
+                        game.game_number
                       ),
 
                     durationSeconds:
                       Number(
-                        game
-                          .duration_seconds
+                        game.duration_seconds
                       ),
 
                     winnerTeamId:
                       Number(
-                        game
-                          .winner_team_id
+                        game.winner_team_id
                       ),
 
                     winnerName:
                       gameWinner
                         ?.name ??
                       null,
-
-                    mvpPlayerId:
-                      game
-                        .mvp_player_id
-                        ? Number(
-                            game
-                              .mvp_player_id
-                          )
-                        : null,
-
-                    mvpRiotId:
-                      mvpPlayer
-                        ? String(
-                            getValue(
-                              mvpPlayer,
-                              [
-                                'riot_id',
-                                'riotId',
-                              ]
-                            ) ??
-                              ''
-                          )
-                        : null,
                   };
                 }
               ),
@@ -1155,7 +1294,7 @@ export async function GET(
     };
 
     /* =====================================================
-       STATS PAR DIVISION
+       STATS JOUEURS
     ===================================================== */
 
     function statsForDivision(
@@ -1336,17 +1475,21 @@ export async function GET(
         let cs = 0;
         let gold = 0;
         let damage = 0;
-        let visionScore =
-          0;
+        let visionScore = 0;
 
         let wins = 0;
         let losses = 0;
 
-        let duration =
-          0;
+        let duration = 0;
 
-        let mvp =
-          0;
+        /*
+          1 MVP MAX PAR BO
+        */
+
+        let mvp = 0;
+
+        const playerMatchIds =
+          new Set<number>();
 
         for (
           const row
@@ -1402,14 +1545,12 @@ export async function GET(
 
           duration +=
             Number(
-              game
-                .duration_seconds
+              game.duration_seconds
             ) || 0;
 
           if (
             Number(
-              game
-                .winner_team_id
+              game.winner_team_id
             ) ===
             Number(
               row.team_id
@@ -1417,19 +1558,48 @@ export async function GET(
           ) {
             wins += 1;
           } else {
-            losses +=
-              1;
+            losses += 1;
           }
 
-          if (
+          const matchId =
             Number(
-              game
-                .mvp_player_id
-            ) ===
-            playerId
+              game.match_id
+            );
+
+          if (
+            Number.isFinite(
+              matchId
+            )
           ) {
-            mvp +=
-              1;
+            playerMatchIds.add(
+              matchId
+            );
+          }
+        }
+
+        /*
+          On compte les MVP
+          sur les MATCHS et non
+          sur les games.
+        */
+
+        for (
+          const matchId
+          of playerMatchIds
+        ) {
+          const match =
+            matchMap.get(
+              matchId
+            );
+
+          if (
+            match &&
+            Number(
+              match.mvp_player_id
+            ) ===
+              playerId
+          ) {
+            mvp += 1;
           }
         }
 
@@ -1438,8 +1608,7 @@ export async function GET(
           60;
 
         const kda =
-          deaths >
-          0
+          deaths > 0
             ? round2(
                 (
                   kills +
@@ -1497,8 +1666,7 @@ export async function GET(
           cs,
 
           csPerMin:
-            minutes >
-            0
+            minutes > 0
               ? round2(
                   cs /
                     minutes
@@ -1508,8 +1676,7 @@ export async function GET(
           gold,
 
           goldPerMin:
-            minutes >
-            0
+            minutes > 0
               ? round2(
                   gold /
                     minutes
@@ -1519,8 +1686,7 @@ export async function GET(
           damage,
 
           dpm:
-            minutes >
-            0
+            minutes > 0
               ? round2(
                   damage /
                     minutes
@@ -1556,7 +1722,7 @@ export async function GET(
     }
 
     /* =====================================================
-       CHAMPIONS PAR DIVISION
+       CHAMPIONS
     ===================================================== */
 
     function championsForDivision(
@@ -1647,11 +1813,8 @@ export async function GET(
           new Map<
             string,
             {
-              picks:
-                number;
-
-              wins:
-                number;
+              picks: number;
+              wins: number;
             }
           >();
 
@@ -1661,8 +1824,7 @@ export async function GET(
         ) {
           const championId =
             String(
-              row
-                .champion_id ??
+              row.champion_id ??
                 ''
             );
 
@@ -1689,11 +1851,8 @@ export async function GET(
             map.get(
               championId
             ) ?? {
-              picks:
-                0,
-
-              wins:
-                0,
+              picks: 0,
+              wins: 0,
             };
 
           current.picks +=
@@ -1701,8 +1860,7 @@ export async function GET(
 
           if (
             Number(
-              game
-                .winner_team_id
+              game.winner_team_id
             ) ===
             Number(
               row.team_id
@@ -1760,8 +1918,7 @@ export async function GET(
                     values.wins,
 
                   pickRate:
-                    total >
-                    0
+                    total > 0
                       ? round2(
                           (
                             values.picks /
@@ -1772,8 +1929,7 @@ export async function GET(
                       : 0,
 
                   winRate:
-                    values.picks >
-                    0
+                    values.picks > 0
                       ? round2(
                           (
                             values.wins /
@@ -1859,8 +2015,7 @@ export async function GET(
 
     return NextResponse.json(
       {
-        success:
-          true,
+        success: true,
 
         divisions,
 
@@ -1905,56 +2060,36 @@ export async function GET(
 
         roles: [
           {
-            id:
-              'Top',
-
-            label:
-              'TOP',
-
+            id: 'Top',
+            label: 'TOP',
             icon:
               '/assets/roles/top.png',
           },
 
           {
-            id:
-              'Jungle',
-
-            label:
-              'JGL',
-
+            id: 'Jungle',
+            label: 'JGL',
             icon:
               '/assets/roles/jungle.png',
           },
 
           {
-            id:
-              'Mid',
-
-            label:
-              'MID',
-
+            id: 'Mid',
+            label: 'MID',
             icon:
               '/assets/roles/mid.png',
           },
 
           {
-            id:
-              'ADC',
-
-            label:
-              'ADC',
-
+            id: 'ADC',
+            label: 'ADC',
             icon:
               '/assets/roles/adc.png',
           },
 
           {
-            id:
-              'Support',
-
-            label:
-              'SUP',
-
+            id: 'Support',
+            label: 'SUP',
             icon:
               '/assets/roles/sup.png',
           },
@@ -2018,8 +2153,7 @@ export async function GET(
 
     return NextResponse.json(
       {
-        success:
-          false,
+        success: false,
 
         error:
           error?.message ||
@@ -2069,8 +2203,7 @@ export async function GET(
         },
       },
       {
-        status:
-          500,
+        status: 500,
       }
     );
   }
@@ -2089,8 +2222,7 @@ async function getChampions(): Promise<
         'https://ddragon.leagueoflegends.com/api/versions.json',
         {
           next: {
-            revalidate:
-              86400,
+            revalidate: 86400,
           },
         }
       );
@@ -2118,8 +2250,7 @@ async function getChampions(): Promise<
         `https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`,
         {
           next: {
-            revalidate:
-              86400,
+            revalidate: 86400,
           },
         }
       );
@@ -2134,8 +2265,7 @@ async function getChampions(): Promise<
       await championsResponse.json();
 
     const championsObject =
-      championsData
-        ?.data ??
+      championsData?.data ??
       {};
 
     return Object.values(
@@ -2143,8 +2273,7 @@ async function getChampions(): Promise<
     )
       .map(
         (
-          champion:
-            any
+          champion: any
         ): Champion => ({
           id:
             champion.id,
@@ -2214,8 +2343,7 @@ async function readSettledResponse(
 
 function extractArray(
   data: any,
-  possibleKeys:
-    string[]
+  possibleKeys: string[]
 ): AnyObject[] {
   if (
     Array.isArray(
@@ -2239,14 +2367,10 @@ function extractArray(
   ) {
     if (
       Array.isArray(
-        data[
-          key
-        ]
+        data[key]
       )
     ) {
-      return data[
-        key
-      ];
+      return data[key];
     }
   }
 
@@ -2263,8 +2387,7 @@ function getValue(
     | null
     | undefined,
 
-  keys:
-    string[]
+  keys: string[]
 ) {
   if (
     !object
@@ -2277,18 +2400,12 @@ function getValue(
     of keys
   ) {
     if (
-      object[
-        key
-      ] !==
+      object[key] !==
         undefined &&
-      object[
-        key
-      ] !==
+      object[key] !==
         null
     ) {
-      return object[
-        key
-      ];
+      return object[key];
     }
   }
 
@@ -2297,9 +2414,7 @@ function getValue(
 
 function stringOrNull(
   value: any
-):
-  | string
-  | null {
+): string | null {
   if (
     value ===
       undefined ||
@@ -2317,8 +2432,7 @@ function stringOrNull(
 }
 
 function round2(
-  value:
-    number
+  value: number
 ) {
   return (
     Math.round(
@@ -2344,8 +2458,7 @@ function emptyRoleStats() {
 ========================================================= */
 
 function isValidated(
-  team:
-    AnyObject
+  team: AnyObject
 ) {
   const value =
     getValue(
@@ -2357,12 +2470,9 @@ function isValidated(
     );
 
   return (
-    value ===
-      true ||
-    value ===
-      1 ||
-    value ===
-      '1' ||
+    value === true ||
+    value === 1 ||
+    value === '1' ||
     String(
       value
     ).toLowerCase() ===
@@ -2375,8 +2485,7 @@ function isValidated(
 ========================================================= */
 
 function getTeamName(
-  team:
-    AnyObject
+  team: AnyObject
 ) {
   return String(
     getValue(
@@ -2392,8 +2501,7 @@ function getTeamName(
 }
 
 function getTeamShortName(
-  team:
-    AnyObject
+  team: AnyObject
 ) {
   const existing =
     getValue(
@@ -2456,11 +2564,8 @@ function getTeamShortName(
 }
 
 function getTeamLogo(
-  team:
-    AnyObject
-):
-  | string
-  | null {
+  team: AnyObject
+): string | null {
   return stringOrNull(
     getValue(
       team,
@@ -2482,9 +2587,7 @@ function getTeamLogo(
 
 function normalizeDivision(
   value: any
-):
-  | Division
-  | null {
+): Division | null {
   if (
     !value
   ) {
@@ -2530,8 +2633,7 @@ function normalizeRiotId(
   value: any
 ) {
   return String(
-    value ??
-      ''
+    value ?? ''
   )
     .trim()
     .toLowerCase()
@@ -2542,14 +2644,11 @@ function normalizeRiotId(
 }
 
 function findPlayer(
-  players:
-    AnyObject[],
+  players: AnyObject[],
 
-  riotId:
-    string,
+  riotId: string,
 
-  member:
-    AnyObject
+  member: AnyObject
 ) {
   const memberPlayerId =
     getValue(
@@ -2631,11 +2730,8 @@ function findPlayer(
 ========================================================= */
 
 function normalizeRole(
-  value:
-    any
-):
-  | string
-  | null {
+  value: any
+): string | null {
   if (
     !value
   ) {

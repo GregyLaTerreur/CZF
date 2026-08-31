@@ -72,14 +72,6 @@ type HistoryGame = {
   winnerName:
     | string
     | null;
-
-  mvpPlayerId:
-    | number
-    | null;
-
-  mvpRiotId:
-    | string
-    | null;
 };
 
 type HistoryMatch = {
@@ -104,6 +96,14 @@ type HistoryMatch = {
   bestOf: number;
 
   playedAt: string;
+
+  mvpPlayerId:
+    | number
+    | null;
+
+  mvpRiotId:
+    | string
+    | null;
 
   team1:
     | HistoryTeam
@@ -680,10 +680,6 @@ export default function ResultsPage() {
         ================================================= */}
 
         <div className="resultsMainGrid">
-          {/* ===============================================
-              CLASSEMENT
-          =============================================== */}
-
           <section className="resultsCard standingsCard">
             <CardHeader
               eyebrow="PHASE DE POULE"
@@ -831,10 +827,6 @@ export default function ResultsPage() {
               </div>
             )}
           </section>
-
-          {/* ===============================================
-              BRACKET
-          =============================================== */}
 
           <section className="resultsCard bracketCard">
             <CardHeader
@@ -1124,10 +1116,6 @@ export default function ResultsPage() {
             }
           />
 
-          {/* ===============================================
-              ROLES
-          =============================================== */}
-
           <div className="roleTabs">
             {ROLES.map(
               (
@@ -1170,10 +1158,6 @@ export default function ResultsPage() {
               )
             )}
           </div>
-
-          {/* ===============================================
-              4 BLOCS SUR UNE MEME LIGNE
-          =============================================== */}
 
           <div className="statRankingGrid">
             <RankingCard
@@ -1254,10 +1238,6 @@ export default function ResultsPage() {
               />
             )}
           </div>
-
-          {/* ===============================================
-              CHAMPIONS
-          =============================================== */}
 
           <div className="statsSubSection">
             <div className="subSectionTitle">
@@ -1378,10 +1358,6 @@ export default function ResultsPage() {
             )}
           </div>
 
-          {/* ===============================================
-              MVP
-          =============================================== */}
-
           <div className="statsSubSection">
             <div className="subSectionTitle">
               <div>
@@ -1412,10 +1388,6 @@ export default function ResultsPage() {
           </div>
         </section>
 
-        {/* =================================================
-            CSS
-        ================================================= */}
-
         <style jsx>{`
           .resultsPage {
             position: relative;
@@ -1425,241 +1397,101 @@ export default function ResultsPage() {
           .resultsError {
             margin-bottom: 18px;
             padding: 14px 16px;
-
-            border:
-              1px solid
-              rgba(
-                150,
-                55,
-                55,
-                0.3
-              );
-
+            border: 1px solid rgba(150, 55, 55, 0.3);
             border-radius: 9px;
-
-            background:
-              rgba(
-                150,
-                55,
-                55,
-                0.08
-              );
-
+            background: rgba(150, 55, 55, 0.08);
             color: #933838;
-
             font-size: 12px;
             font-weight: 900;
           }
 
-          /* =========================
-             DIVISIONS
-          ========================= */
-
           .divisionTabs {
             display: grid;
-
-            grid-template-columns:
-              repeat(
-                3,
-                minmax(
-                  0,
-                  1fr
-                )
-              );
-
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 14px;
-
             margin-bottom: 20px;
           }
 
           .divisionTab {
             position: relative;
-
             min-height: 68px;
-
             overflow: hidden;
-
-            border:
-              1.4px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.5
-              );
-
+            border: 1.4px solid rgba(9, 42, 63, 0.5);
             border-radius: 11px;
-
-            background:
-              rgba(
-                255,
-                246,
-                229,
-                0.8
-              );
-
+            background: rgba(255, 246, 229, 0.8);
             color: var(--navy);
-
             font-size: 17px;
             font-weight: 900;
-
-            letter-spacing:
-              0.07em;
+            letter-spacing: 0.07em;
           }
 
           .divisionTab::after {
             content: '';
-
             position: absolute;
-
             left: 0;
             right: 0;
             bottom: 0;
-
             height: 5px;
-
-            background:
-              var(--tab-color);
+            background: var(--tab-color);
           }
 
           .divisionTabActive {
-            border-color:
-              var(--tab-color);
-
-            background:
-              var(--tab-soft);
+            border-color: var(--tab-color);
+            background: var(--tab-soft);
           }
-
-          /* =========================
-             CARD
-          ========================= */
 
           .resultsCard {
             overflow: hidden;
-
-            border:
-              1.3px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.7
-              );
-
+            border: 1.3px solid rgba(9, 42, 63, 0.7);
             border-radius: 14px;
-
-            background:
-              rgba(
-                255,
-                246,
-                229,
-                0.84
-              );
-
-            box-shadow:
-              0
-              12px
-              30px
-              rgba(
-                8,
-                24,
-                36,
-                0.055
-              );
+            background: rgba(255, 246, 229, 0.84);
+            box-shadow: 0 12px 30px rgba(8, 24, 36, 0.055);
           }
 
           .resultsMainGrid {
             display: grid;
-
-            grid-template-columns:
-              minmax(
-                290px,
-                0.25fr
-              )
-              minmax(
-                0,
-                0.75fr
-              );
-
+            grid-template-columns: minmax(290px, 0.25fr) minmax(0, 0.75fr);
             gap: 18px;
-
             margin-bottom: 18px;
           }
-
-          /* =========================
-             STANDINGS
-          ========================= */
 
           .standingHeader,
           .standingRow {
             display: grid;
-
-            grid-template-columns:
-              30px
-              minmax(
-                0,
-                1fr
-              )
-              62px;
-
+            grid-template-columns: 30px minmax(0, 1fr) 62px;
             align-items: center;
-
             gap: 8px;
           }
 
           .standingHeader {
-            padding:
-              13px
-              15px;
-
-            color:
-              var(--muted);
-
+            padding: 13px 15px;
+            color: var(--muted);
             font-size: 9px;
             font-weight: 900;
           }
 
           .standingRows {
-            padding:
-              0
-              8px
-              8px;
+            padding: 0 8px 8px;
           }
 
           .standingRow {
             position: relative;
-
             min-height: 65px;
-
-            padding:
-              0
-              8px;
-
-            border-top:
-              1px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.07
-              );
+            padding: 0 8px;
+            border-top: 1px solid rgba(9, 42, 63, 0.07);
           }
 
           .standingRow::before {
             content: '';
-
             position: absolute;
-
             left: -8px;
             top: 12px;
             bottom: 12px;
-
             width: 3px;
           }
 
           .standingQualified::before {
-            background:
-              var(--division-color);
+            background: var(--division-color);
           }
 
           .standingEliminated {
@@ -1667,8 +1499,7 @@ export default function ResultsPage() {
           }
 
           .standingEliminated::before {
-            background:
-              #9b3d3d;
+            background: #9b3d3d;
           }
 
           .standingEmpty {
@@ -1676,270 +1507,146 @@ export default function ResultsPage() {
           }
 
           .standingRank {
-            color:
-              var(--muted);
-
+            color: var(--muted);
             font-size: 13px;
           }
 
           .standingTeam {
             min-width: 0;
-
             display: flex;
-
             align-items: center;
-
             gap: 9px;
           }
 
           .standingTeam > div:last-child {
             min-width: 0;
-
             display: flex;
-
             flex-direction: column;
           }
 
           .standingTeam strong {
             overflow: hidden;
-
             color: var(--navy);
-
             font-size: 13px;
-
             white-space: nowrap;
-
-            text-overflow:
-              ellipsis;
+            text-overflow: ellipsis;
           }
 
           .standingTeam span {
             overflow: hidden;
-
-            color:
-              var(--muted);
-
+            color: var(--muted);
             font-size: 9px;
-
             white-space: nowrap;
-
-            text-overflow:
-              ellipsis;
+            text-overflow: ellipsis;
           }
 
           .standingScore {
             color: var(--navy);
-
             font-size: 13px;
-
             text-align: right;
           }
 
           :global(.resultTeamLogo) {
             width: 38px;
             height: 38px;
-
             flex-shrink: 0;
-
             display: grid;
-
             place-items: center;
-
             overflow: hidden;
-
-            border:
-              1px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.16
-              );
-
+            border: 1px solid rgba(9, 42, 63, 0.16);
             border-radius: 8px;
-
-            background:
-              rgba(
-                255,
-                255,
-                255,
-                0.55
-              );
-
+            background: rgba(255, 255, 255, 0.55);
             color: var(--navy);
-
             font-size: 8px;
-
             font-weight: 900;
           }
 
           :global(.resultTeamLogo img) {
             width: 100%;
             height: 100%;
-
             object-fit: contain;
           }
 
-          /* =========================
-             BRACKET
-          ========================= */
-
           .bracketScroller {
             overflow-x: auto;
-
             padding: 21px;
           }
 
           .fullBracket {
-            min-width:
-              1040px;
+            min-width: 1040px;
           }
 
           .laneTitle {
             display: flex;
-
             align-items: center;
-
             gap: 9px;
-
             margin-bottom: 14px;
-
             color: var(--navy);
-
             font-size: 11px;
-
             font-weight: 900;
-
-            letter-spacing:
-              0.09em;
+            letter-spacing: 0.09em;
           }
 
           .laneTitle span {
             width: 30px;
             height: 3px;
-
-            background:
-              var(--division-color);
+            background: var(--division-color);
           }
 
           .loserLane span {
-            background:
-              var(--orange);
+            background: var(--orange);
           }
 
           .bracketColumns {
             display: grid;
-
-            grid-template-columns:
-              190px
-              60px
-              190px
-              60px
-              190px
-              60px
-              205px;
-
+            grid-template-columns: 190px 60px 190px 60px 190px 60px 205px;
             align-items: stretch;
           }
 
           .bracketRound h4 {
-            margin:
-              0
-              0
-              12px;
-
-            color:
-              var(--muted);
-
+            margin: 0 0 12px;
+            color: var(--muted);
             font-size: 9px;
-
             text-align: center;
           }
 
           .quarterMatches {
             min-height: 400px;
-
             display: flex;
-
             flex-direction: column;
-
-            justify-content:
-              space-between;
+            justify-content: space-between;
           }
 
           .doubleMatches {
             min-height: 400px;
-
             display: flex;
-
             flex-direction: column;
-
-            justify-content:
-              space-around;
+            justify-content: space-around;
           }
 
           .singleMatch {
             min-height: 400px;
-
             display: flex;
-
             align-items: center;
           }
 
           .bracketArrow {
             min-height: 400px;
-
             display: grid;
-
             place-items: center;
-
-            color:
-              rgba(
-                9,
-                42,
-                63,
-                0.35
-              );
-
+            color: rgba(9, 42, 63, 0.35);
             font-size: 24px;
           }
 
           .bracketDrop {
-            margin:
-              22px
-              0;
-
+            margin: 22px 0;
             padding: 12px;
-
-            border-top:
-              1px dashed
-              rgba(
-                9,
-                42,
-                63,
-                0.15
-              );
-
-            border-bottom:
-              1px dashed
-              rgba(
-                9,
-                42,
-                63,
-                0.15
-              );
-
-            color:
-              var(--muted);
-
+            border-top: 1px dashed rgba(9, 42, 63, 0.15);
+            border-bottom: 1px dashed rgba(9, 42, 63, 0.15);
+            color: var(--muted);
             font-size: 9px;
-
             text-align: center;
           }
-
-          /* =========================
-             HISTORY
-          ========================= */
 
           .historyCard {
             margin-bottom: 18px;
@@ -1947,241 +1654,115 @@ export default function ResultsPage() {
 
           .historyList {
             display: flex;
-
             flex-direction: column;
           }
 
-          /* =========================
-             STATS
-          ========================= */
-
           .roleTabs {
             display: grid;
-
-            grid-template-columns:
-              repeat(
-                5,
-                minmax(
-                  0,
-                  1fr
-                )
-              );
-
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 10px;
-
             padding: 20px;
           }
 
           .roleTabs button {
             min-height: 57px;
-
             display: flex;
-
             align-items: center;
-
-            justify-content:
-              center;
-
+            justify-content: center;
             gap: 8px;
-
-            border:
-              1px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.23
-              );
-
+            border: 1px solid rgba(9, 42, 63, 0.23);
             border-radius: 8px;
-
-            background:
-              transparent;
-
+            background: transparent;
             color: var(--navy);
-
             font-size: 10px;
-
             font-weight: 900;
           }
 
           .roleTabs img {
             width: 25px;
             height: 25px;
-
             object-fit: contain;
-
             opacity: 0.7;
           }
 
           .roleTabs button.roleActive {
-            border-color:
-              var(--division-color);
-
-            background:
-              var(--division-soft);
+            border-color: var(--division-color);
+            background: var(--division-soft);
           }
 
           .roleTabs button.roleActive img {
             opacity: 1;
           }
 
-          /* =========================
-             4 BLOCS MEME LIGNE
-          ========================= */
-
           .statRankingGrid {
             display: grid;
-
-            grid-template-columns:
-              repeat(
-                4,
-                minmax(
-                  0,
-                  1fr
-                )
-              );
-
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
-
-            padding:
-              0
-              20px
-              20px;
+            padding: 0 20px 20px;
           }
 
-          /* =========================
-             SUB SECTIONS
-          ========================= */
-
           .statsSubSection {
-            padding:
-              18px
-              20px
-              22px;
-
-            border-top:
-              1px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.08
-              );
+            padding: 18px 20px 22px;
+            border-top: 1px solid rgba(9, 42, 63, 0.08);
           }
 
           .subSectionTitle {
             display: flex;
-
             align-items: center;
-
-            justify-content:
-              space-between;
-
+            justify-content: space-between;
             gap: 12px;
-
             margin-bottom: 14px;
           }
 
           .subSectionTitle > div {
             display: flex;
-
             align-items: center;
-
             gap: 8px;
           }
 
           .subSectionTitle > div > span {
             width: 23px;
             height: 3px;
-
-            background:
-              var(--division-color);
+            background: var(--division-color);
           }
 
           .subSectionTitle strong {
             color: var(--navy);
-
             font-size: 10px;
-
-            text-transform:
-              uppercase;
+            text-transform: uppercase;
           }
 
           .subSectionTitle small {
-            color:
-              var(--muted);
-
+            color: var(--muted);
             font-size: 8px;
-
             font-weight: 900;
           }
 
-          /* =========================
-             CHAMPIONS
-          ========================= */
-
           .championRow {
             display: grid;
-
-            grid-template-columns:
-              repeat(
-                5,
-                minmax(
-                  0,
-                  1fr
-                )
-              );
-
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 10px;
           }
 
           .championCard {
             position: relative;
-
             min-width: 0;
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             padding: 13px;
-
-            border:
-              1px solid
-              rgba(
-                9,
-                42,
-                63,
-                0.15
-              );
-
+            border: 1px solid rgba(9, 42, 63, 0.15);
             border-radius: 9px;
-
-            background:
-              rgba(
-                255,
-                250,
-                241,
-                0.52
-              );
-
+            background: rgba(255, 250, 241, 0.52);
             text-align: center;
           }
 
           .championRank {
             position: absolute;
-
             top: 8px;
             right: 9px;
-
-            color:
-              var(--division-color);
-
+            color: var(--division-color);
             font-size: 9px;
-
             font-weight: 900;
           }
 
@@ -2189,9 +1770,7 @@ export default function ResultsPage() {
           .championFallback {
             width: 62px;
             height: 62px;
-
             margin-bottom: 8px;
-
             border-radius: 9px;
           }
 
@@ -2201,189 +1780,100 @@ export default function ResultsPage() {
 
           .championFallback {
             display: grid;
-
             place-items: center;
-
-            background:
-              rgba(
-                9,
-                42,
-                63,
-                0.07
-              );
-
+            background: rgba(9, 42, 63, 0.07);
             color: var(--navy);
           }
 
           .championName {
             overflow: hidden;
-
             max-width: 100%;
-
             color: var(--navy);
-
             font-size: 11px;
-
             white-space: nowrap;
-
-            text-overflow:
-              ellipsis;
+            text-overflow: ellipsis;
           }
 
           .championPicks {
             margin-top: 3px;
-
-            color:
-              var(--muted);
-
+            color: var(--muted);
             font-size: 8px;
           }
 
           .championStats {
             width: 100%;
-
             display: grid;
-
-            grid-template-columns:
-              repeat(
-                2,
-                1fr
-              );
-
+            grid-template-columns: repeat(2, 1fr);
             gap: 5px;
-
             margin-top: 10px;
           }
 
           .championStats > div {
             display: flex;
-
             flex-direction: column;
-
             gap: 2px;
-
             padding: 6px;
-
             border-radius: 5px;
-
-            background:
-              rgba(
-                9,
-                42,
-                63,
-                0.045
-              );
+            background: rgba(9, 42, 63, 0.045);
           }
 
           .championStats small {
-            color:
-              var(--muted);
-
+            color: var(--muted);
             font-size: 6px;
           }
 
           .championStats strong {
             color: var(--navy);
-
             font-size: 10px;
           }
-
-          /* =========================
-             EMPTY
-          ========================= */
 
           .emptySection,
           .miniEmpty {
             display: grid;
-
             place-items: center;
-
-            color:
-              var(--muted);
-
+            color: var(--muted);
             font-weight: 700;
-
             text-align: center;
           }
 
           .emptySection {
             min-height: 115px;
-
             padding: 20px;
-
             font-size: 11px;
           }
 
           .miniEmpty {
             min-height: 90px;
-
-            border:
-              1px dashed
-              rgba(
-                9,
-                42,
-                63,
-                0.14
-              );
-
+            border: 1px dashed rgba(9, 42, 63, 0.14);
             border-radius: 8px;
-
             font-size: 10px;
           }
 
-          /* =========================
-             RESPONSIVE
-          ========================= */
-
-          @media (
-            max-width:
-              1200px
-          ) {
+          @media (max-width: 1200px) {
             .resultsMainGrid {
-              grid-template-columns:
-                1fr;
+              grid-template-columns: 1fr;
             }
 
             .statRankingGrid {
-              grid-template-columns:
-                repeat(
-                  2,
-                  minmax(
-                    0,
-                    1fr
-                  )
-                );
+              grid-template-columns: repeat(2, minmax(0, 1fr));
             }
           }
 
-          @media (
-            max-width:
-              760px
-          ) {
+          @media (max-width: 760px) {
             .divisionTabs {
-              grid-template-columns:
-                1fr;
+              grid-template-columns: 1fr;
             }
 
             .roleTabs {
-              grid-template-columns:
-                repeat(
-                  2,
-                  1fr
-                );
+              grid-template-columns: repeat(2, 1fr);
             }
 
             .statRankingGrid {
-              grid-template-columns:
-                1fr;
+              grid-template-columns: 1fr;
             }
 
             .championRow {
-              grid-template-columns:
-                repeat(
-                  2,
-                  1fr
-                );
+              grid-template-columns: repeat(2, 1fr);
             }
           }
         `}</style>
@@ -2435,77 +1925,36 @@ function CardHeader({
       <style jsx>{`
         .cardHeader {
           min-height: 86px;
-
           display: flex;
-
           align-items: center;
-
-          justify-content:
-            space-between;
-
+          justify-content: space-between;
           gap: 15px;
-
-          padding:
-            17px
-            21px;
-
-          border-bottom:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.1
-            );
+          padding: 17px 21px;
+          border-bottom: 1px solid rgba(9, 42, 63, 0.1);
         }
 
         p {
-          margin:
-            0
-            0
-            3px;
-
-          color:
-            var(--orange);
-
+          margin: 0 0 3px;
+          color: var(--orange);
           font-size: 9px;
-
           font-weight: 900;
-
-          letter-spacing:
-            0.12em;
+          letter-spacing: 0.12em;
         }
 
         h3 {
           margin: 0;
-
-          color:
-            var(--navy);
-
-          font-family:
-            var(--font-display);
-
+          color: var(--navy);
+          font-family: var(--font-display);
           font-size: 27px;
-
-          text-transform:
-            uppercase;
+          text-transform: uppercase;
         }
 
         .cardHeader > span {
-          padding:
-            7px
-            10px;
-
+          padding: 7px 10px;
           border-radius: 6px;
-
-          background:
-            var(--division-soft);
-
-          color:
-            var(--division-color);
-
+          background: var(--division-soft);
+          color: var(--division-color);
           font-size: 8px;
-
           font-weight: 900;
         }
       `}</style>
@@ -2786,236 +2235,132 @@ function RankingCard({
       <style jsx>{`
         .rankingCard {
           min-width: 0;
-
           padding: 13px;
-
-          border:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.16
-            );
-
+          border: 1px solid rgba(9, 42, 63, 0.16);
           border-radius: 9px;
-
-          background:
-            rgba(
-              255,
-              250,
-              241,
-              0.56
-            );
+          background: rgba(255, 250, 241, 0.56);
         }
 
         .rankingHeader {
           display: flex;
-
           align-items: center;
-
-          justify-content:
-            space-between;
-
+          justify-content: space-between;
           margin-bottom: 13px;
         }
 
         .rankingHeader strong {
           color: var(--navy);
-
           font-size: 12px;
         }
 
         .rankingHeader span {
-          color:
-            var(--division-color);
-
+          color: var(--division-color);
           font-size: 7px;
-
           font-weight: 900;
         }
 
         .rankingPlayers {
           display: flex;
-
           flex-direction: column;
-
           gap: 12px;
         }
 
         .rankingPlayerTop {
           min-width: 0;
-
           display: grid;
-
-          grid-template-columns:
-            22px
-            minmax(
-              0,
-              1fr
-            )
-            auto;
-
+          grid-template-columns: 22px minmax(0, 1fr) auto;
           align-items: center;
-
           gap: 6px;
         }
 
         .rankNumber {
-          color:
-            var(--division-color);
-
+          color: var(--division-color);
           font-size: 9px;
-
           font-weight: 900;
         }
 
         .rankingIdentity {
           min-width: 0;
-
           display: flex;
-
           align-items: center;
-
           gap: 6px;
         }
 
         .rankingLogo {
           width: 27px;
           height: 27px;
-
           flex-shrink: 0;
-
           display: grid;
-
           place-items: center;
-
           overflow: hidden;
-
           border-radius: 5px;
-
-          background:
-            rgba(
-              9,
-              42,
-              63,
-              0.07
-            );
-
+          background: rgba(9, 42, 63, 0.07);
           font-size: 6px;
         }
 
         .rankingLogo img {
           width: 100%;
           height: 100%;
-
           object-fit: contain;
         }
 
         .rankingIdentity > div:last-child {
           min-width: 0;
-
           display: flex;
-
           flex-direction: column;
         }
 
         .rankingIdentity strong {
           overflow: hidden;
-
           color: var(--navy);
-
           font-size: 8px;
-
           white-space: nowrap;
-
-          text-overflow:
-            ellipsis;
+          text-overflow: ellipsis;
         }
 
         .rankingIdentity span {
-          color:
-            var(--muted);
-
+          color: var(--muted);
           font-size: 6px;
         }
 
         .rankingValue {
           color: var(--navy);
-
           font-size: 9px;
         }
 
         .rankingBarTrack {
           height: 6px;
-
           margin-top: 5px;
-
           overflow: hidden;
-
           border-radius: 100px;
-
-          background:
-            rgba(
-              9,
-              42,
-              63,
-              0.08
-            );
+          background: rgba(9, 42, 63, 0.08);
         }
 
         .rankingBarFill {
           height: 100%;
-
-          border-radius:
-            inherit;
-
-          background:
-            var(--division-color);
+          border-radius: inherit;
+          background: var(--division-color);
         }
 
         .rankingEmpty {
           min-height: 150px;
-
           display: grid;
-
           place-items: center;
-
-          color:
-            var(--muted);
-
+          color: var(--muted);
           font-size: 8px;
         }
 
         .expandRanking {
           width: 100%;
-
           min-height: 31px;
-
           margin-top: 13px;
-
-          border:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.14
-            );
-
+          border: 1px solid rgba(9, 42, 63, 0.14);
           border-radius: 6px;
-
-          background:
-            transparent;
-
+          background: transparent;
           color: var(--navy);
-
           font-size: 7px;
-
           font-weight: 900;
-
-          text-transform:
-            uppercase;
+          text-transform: uppercase;
         }
       `}</style>
     </div>
@@ -3105,50 +2450,25 @@ function MvpRanking({
       <style jsx>{`
         .mvpRanking {
           display: grid;
-
-          grid-template-columns:
-            repeat(
-              2,
-              minmax(
-                0,
-                1fr
-              )
-            );
-
-          gap:
-            14px
-            20px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 14px 20px;
         }
 
         .mvpTop {
           display: grid;
-
-          grid-template-columns:
-            28px
-            minmax(
-              0,
-              1fr
-            )
-            auto
-            auto;
-
+          grid-template-columns: 28px minmax(0, 1fr) auto auto;
           align-items: center;
-
           gap: 7px;
-
           color: var(--navy);
-
           font-size: 9px;
         }
 
         .mvpTop > strong {
-          color:
-            var(--division-color);
+          color: var(--division-color);
         }
 
         .mvpTop small {
-          color:
-            var(--muted);
+          color: var(--muted);
         }
 
         .mvpTop b {
@@ -3157,39 +2477,21 @@ function MvpRanking({
 
         .mvpTrack {
           height: 6px;
-
           margin-top: 6px;
-
           overflow: hidden;
-
           border-radius: 100px;
-
-          background:
-            rgba(
-              9,
-              42,
-              63,
-              0.08
-            );
+          background: rgba(9, 42, 63, 0.08);
         }
 
         .mvpFill {
           height: 100%;
-
-          border-radius:
-            inherit;
-
-          background:
-            var(--division-color);
+          border-radius: inherit;
+          background: var(--division-color);
         }
 
-        @media (
-          max-width:
-            800px
-        ) {
+        @media (max-width: 800px) {
           .mvpRanking {
-            grid-template-columns:
-              1fr;
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
@@ -3259,105 +2561,49 @@ function BracketMatch({
       <style jsx>{`
         .bracketMatch {
           width: 100%;
-
           overflow: hidden;
-
-          border:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.3
-            );
-
+          border: 1px solid rgba(9, 42, 63, 0.3);
           border-radius: 8px;
-
-          background:
-            rgba(
-              255,
-              250,
-              241,
-              0.9
-            );
+          background: rgba(255, 250, 241, 0.9);
         }
 
         .bracketMatch.highlighted {
-          border-color:
-            var(--division-color);
+          border-color: var(--division-color);
         }
 
         .bracketMatch > div {
           min-height: 48px;
-
           display: grid;
-
-          grid-template-columns:
-            29px
-            minmax(
-              0,
-              1fr
-            )
-            20px;
-
+          grid-template-columns: 29px minmax(0, 1fr) 20px;
           align-items: center;
-
           gap: 8px;
-
-          padding:
-            0
-            9px;
+          padding: 0 9px;
         }
 
         .bracketMatch > div + div {
-          border-top:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.1
-            );
+          border-top: 1px solid rgba(9, 42, 63, 0.1);
         }
 
         span {
           width: 27px;
           height: 27px;
-
           display: grid;
-
           place-items: center;
-
-          border:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.15
-            );
-
+          border: 1px solid rgba(9, 42, 63, 0.15);
           border-radius: 5px;
-
           font-size: 8px;
         }
 
         strong {
           overflow: hidden;
-
           color: var(--navy);
-
           font-size: 10px;
-
           white-space: nowrap;
-
-          text-overflow:
-            ellipsis;
+          text-overflow: ellipsis;
         }
 
         b {
-          color:
-            var(--muted);
+          color: var(--muted);
         }
       `}</style>
     </div>
@@ -3459,63 +2705,63 @@ function HistoryCard({
       </button>
 
       {open && (
-        <div className="historyGames">
-          {match.games.map(
-            (
-              game
-            ) => (
-              <div
-                key={
-                  game.id
-                }
-                className="historyGame"
-              >
-                <strong>
-                  GAME{' '}
-                  {
-                    game.gameNumber
-                  }
-                </strong>
+        <div className="historyDetails">
+          <div className="historyMvp">
+            <span>
+              MVP DU BO
+            </span>
 
-                <span>
-                  {
-                    formatDuration(
-                      game.durationSeconds
-                    )
-                  }
-                </span>
+            <strong>
+              {
+                match.mvpRiotId ??
+                '-'
+              }
+            </strong>
+          </div>
 
-                <span>
-                  Winner :{' '}
-                  {
-                    game.winnerName ??
-                    '-'
+          <div className="historyGames">
+            {match.games.map(
+              (
+                game
+              ) => (
+                <div
+                  key={
+                    game.id
                   }
-                </span>
+                  className="historyGame"
+                >
+                  <strong>
+                    GAME{' '}
+                    {
+                      game.gameNumber
+                    }
+                  </strong>
 
-                <span>
-                  MVP :{' '}
-                  {
-                    game.mvpRiotId ??
-                    '-'
-                  }
-                </span>
-              </div>
-            )
-          )}
+                  <span>
+                    {
+                      formatDuration(
+                        game.durationSeconds
+                      )
+                    }
+                  </span>
+
+                  <span>
+                    Winner :{' '}
+                    {
+                      game.winnerName ??
+                      '-'
+                    }
+                  </span>
+                </div>
+              )
+            )}
+          </div>
         </div>
       )}
 
       <style jsx>{`
         .historyMatch {
-          border-bottom:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.08
-            );
+          border-bottom: 1px solid rgba(9, 42, 63, 0.08);
         }
 
         .historyMatch:last-child {
@@ -3524,192 +2770,128 @@ function HistoryCard({
 
         .historySummary {
           width: 100%;
-
           display: grid;
-
-          grid-template-columns:
-            115px
-            minmax(
-              0,
-              1fr
-            )
-            110px;
-
+          grid-template-columns: 115px minmax(0, 1fr) 110px;
           align-items: center;
-
           gap: 15px;
-
-          padding:
-            16px
-            20px;
-
+          padding: 16px 20px;
           border: 0;
-
-          background:
-            transparent;
-
+          background: transparent;
           text-align: left;
         }
 
         .historyMeta {
           display: flex;
-
           flex-direction: column;
-
-          align-items:
-            flex-start;
-
+          align-items: flex-start;
           gap: 4px;
         }
 
         .historyMeta span {
           width: auto;
           height: auto;
-
-          padding:
-            4px
-            7px;
-
+          padding: 4px 7px;
           border: 0;
-
           border-radius: 5px;
-
-          background:
-            var(--division-soft);
-
-          color:
-            var(--division-color);
-
+          background: var(--division-soft);
+          color: var(--division-color);
           font-size: 7px;
-
           font-weight: 900;
         }
 
         .historyMeta small {
-          color:
-            var(--muted);
-
+          color: var(--muted);
           font-size: 8px;
         }
 
         .historyTeams {
           display: grid;
-
-          grid-template-columns:
-            1fr
-            85px
-            1fr;
-
+          grid-template-columns: 1fr 85px 1fr;
           align-items: center;
-
           gap: 10px;
         }
 
         .historyScore {
           color: var(--navy);
-
-          font-family:
-            var(--font-display);
-
+          font-family: var(--font-display);
           font-size: 24px;
-
           text-align: center;
         }
 
         .historyScore span {
           width: auto;
           height: auto;
-
-          margin:
-            0
-            8px;
-
+          margin: 0 8px;
           border: 0;
-
           opacity: 0.35;
         }
 
         .historyOpen {
           width: auto;
           height: auto;
-
           border: 0;
-
-          color:
-            var(--division-color);
-
+          color: var(--division-color);
           font-size: 8px;
-
           font-weight: 900;
+          text-transform: uppercase;
+        }
 
-          text-transform:
-            uppercase;
+        .historyDetails {
+          padding: 0 20px 15px;
+        }
+
+        .historyMvp {
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          margin-bottom: 10px;
+          padding: 8px 11px;
+          border: 1px solid rgba(9, 42, 63, 0.13);
+          border-radius: 6px;
+          background: var(--division-soft);
+        }
+
+        .historyMvp span {
+          color: var(--division-color);
+          font-size: 7px;
+          font-weight: 900;
+        }
+
+        .historyMvp strong {
+          color: var(--navy);
+          font-size: 9px;
         }
 
         .historyGames {
           display: flex;
-
           align-items: center;
-
           gap: 8px;
-
           flex-wrap: wrap;
-
-          padding:
-            0
-            20px
-            15px;
         }
 
         .historyGame {
           display: flex;
-
           align-items: center;
-
           gap: 8px;
-
-          padding:
-            7px
-            9px;
-
-          border:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.13
-            );
-
+          padding: 7px 9px;
+          border: 1px solid rgba(9, 42, 63, 0.13);
           border-radius: 6px;
-
-          color:
-            var(--muted);
-
+          color: var(--muted);
           font-size: 8px;
         }
 
         .historyGame strong {
-          color:
-            var(--division-color);
+          color: var(--division-color);
         }
 
-        @media (
-          max-width:
-            700px
-        ) {
+        @media (max-width: 700px) {
           .historySummary {
-            grid-template-columns:
-              1fr;
-
+            grid-template-columns: 1fr;
             gap: 10px;
           }
 
           .historyTeams {
-            grid-template-columns:
-              1fr
-              55px
-              1fr;
+            grid-template-columns: 1fr 55px 1fr;
           }
         }
       `}</style>
@@ -3769,82 +2951,52 @@ function HistoryTeam({
       <style jsx>{`
         .historyTeam {
           min-width: 0;
-
           display: flex;
-
           align-items: center;
-
           gap: 8px;
-
           text-align: left;
         }
 
         .historyTeam.reverse {
-          flex-direction:
-            row-reverse;
-
+          flex-direction: row-reverse;
           text-align: right;
         }
 
         .historyLogo {
           width: 39px;
           height: 39px;
-
           flex-shrink: 0;
-
           display: grid;
-
           place-items: center;
-
           overflow: hidden;
-
-          border:
-            1px solid
-            rgba(
-              9,
-              42,
-              63,
-              0.13
-            );
-
+          border: 1px solid rgba(9, 42, 63, 0.13);
           border-radius: 7px;
-
           font-size: 7px;
         }
 
         .historyLogo img {
           width: 100%;
           height: 100%;
-
           object-fit: contain;
         }
 
         .historyTeam > div:last-child {
           min-width: 0;
-
           display: flex;
-
           flex-direction: column;
         }
 
         strong {
           color: var(--navy);
-
           font-size: 11px;
         }
 
         span {
           overflow: hidden;
-
-          color:
-            var(--muted);
-
+          color: var(--muted);
           font-size: 7px;
-
           white-space: nowrap;
-
-          text-overflow:
-            ellipsis;
+          text-overflow: ellipsis;
         }
       `}</style>
     </div>
