@@ -1726,18 +1726,19 @@ export default function ResultsPage() {
             background: var(--division-color);
           }
 
-          .subSectionTitle strong {
-            color: var(--navy);
-            font-size: 10px;
-            text-transform: uppercase;
-          }
+.subSectionTitle strong {
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
 
-          .subSectionTitle small {
-            color: var(--muted);
-            font-size: 8px;
-            font-weight: 900;
-          }
 
+.subSectionTitle small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+}
           .championRow {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1785,20 +1786,22 @@ export default function ResultsPage() {
             color: var(--navy);
           }
 
-          .championName {
-            overflow: hidden;
-            max-width: 100%;
-            color: var(--navy);
-            font-size: 11px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-          }
+.championName {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
-          .championPicks {
-            margin-top: 3px;
-            color: var(--muted);
-            font-size: 8px;
-          }
+.championPicks {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
 
           .championStats {
             width: 100%;
@@ -1817,15 +1820,17 @@ export default function ResultsPage() {
             background: rgba(9, 42, 63, 0.045);
           }
 
-          .championStats small {
-            color: var(--muted);
-            font-size: 6px;
-          }
+.championStats small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+}
 
-          .championStats strong {
-            color: var(--navy);
-            font-size: 10px;
-          }
+.championStats strong {
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 900;
+}
 
           .emptySection,
           .miniEmpty {
@@ -2310,23 +2315,25 @@ function RankingCard({
           flex-direction: column;
         }
 
-        .rankingIdentity strong {
-          overflow: hidden;
-          color: var(--navy);
-          font-size: 8px;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-        }
+.rankingIdentity strong {
+  overflow: hidden;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
-        .rankingIdentity span {
-          color: var(--muted);
-          font-size: 6px;
-        }
-
-        .rankingValue {
-          color: var(--navy);
-          font-size: 9px;
-        }
+.rankingIdentity span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+}
+.rankingValue {
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 900;
+}
 
         .rankingBarTrack {
           height: 6px;
@@ -2454,26 +2461,28 @@ function MvpRanking({
           gap: 14px 20px;
         }
 
-        .mvpTop {
-          display: grid;
-          grid-template-columns: 28px minmax(0, 1fr) auto auto;
-          align-items: center;
-          gap: 7px;
-          color: var(--navy);
-          font-size: 9px;
-        }
+.mvpTop {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  color: var(--navy);
+  font-size: 12px;
+}
 
         .mvpTop > strong {
           color: var(--division-color);
         }
 
-        .mvpTop small {
-          color: var(--muted);
-        }
-
-        .mvpTop b {
-          font-size: 9px;
-        }
+.mvpTop small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+.mvpTop b {
+  font-size: 12px;
+  font-weight: 900;
+} }
 
         .mvpTrack {
           height: 6px;
