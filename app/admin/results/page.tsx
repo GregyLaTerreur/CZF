@@ -49,6 +49,7 @@ type Champion = {
 type GamePlayer = {
   playerId: number;
   teamId: number;
+
   role: Role;
   championId: string;
 
@@ -82,6 +83,15 @@ type ImportPlayer = {
   team?: string;
 
   role?: string;
+
+  /*
+    Si true :
+    le joueur est un sub.
+
+    Ses stats ne seront PAS
+    enregistrées.
+  */
+  sub?: boolean;
 
   champion?: string;
   championId?: string;
@@ -485,6 +495,7 @@ export default function AdminResultsPage() {
     setMatchMvpPlayerId(
       null
     );
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
@@ -646,109 +657,109 @@ export default function AdminResultsPage() {
   ========================================================= */
 
   function findPlayer(
-  value:
-    | string
-    | number
-    | null
-    | undefined,
-  availablePlayers:
-    Player[]
-) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ''
+    value:
+      | string
+      | number
+      | null
+      | undefined,
+    availablePlayers:
+      Player[]
   ) {
-    return undefined;
-  }
+    if (
+      value === null ||
+      value === undefined ||
+      value === ''
+    ) {
+      return undefined;
+    }
 
-  const numeric =
-    Number(
-      value
-    );
-
-  if (
-    Number.isFinite(
-      numeric
-    )
-  ) {
-    const byId =
-      availablePlayers.find(
-        (
-          player
-        ) =>
-          Number(
-            player.id
-          ) === numeric
+    const numeric =
+      Number(
+        value
       );
 
     if (
-      byId
+      Number.isFinite(
+        numeric
+      )
     ) {
-      return byId;
+      const byId =
+        availablePlayers.find(
+          (
+            player
+          ) =>
+            Number(
+              player.id
+            ) === numeric
+        );
+
+      if (
+        byId
+      ) {
+        return byId;
+      }
     }
-  }
 
-  const rawSearch =
-    String(
-      value
-    ).trim();
+    const rawSearch =
+      String(
+        value
+      ).trim();
 
-  const searchFull =
-    normalizeText(
-      rawSearch
-    );
+    const searchFull =
+      normalizeText(
+        rawSearch
+      );
 
-  const searchRiotName =
-    normalizeRiotName(
-      rawSearch
-    );
+    const searchRiotName =
+      normalizeRiotName(
+        rawSearch
+      );
 
-  return availablePlayers.find(
-    (
-      player
-    ) => {
-      const playerFull =
-        normalizeText(
-          player.riotId
-        );
+    return availablePlayers.find(
+      (
+        player
+      ) => {
+        const playerFull =
+          normalizeText(
+            player.riotId
+          );
 
-      if (
-        playerFull ===
-        searchFull
-      ) {
-        return true;
-      }
-
-      const playerRiotName =
-        normalizeRiotName(
-          player.riotId
-        );
-
-      if (
-        playerRiotName ===
-        searchRiotName
-      ) {
-        return true;
-      }
-
-      const playerDiscord =
-        normalizeText(
-          player.discordName
-        );
-
-      if (
-        playerDiscord &&
-        playerDiscord ===
+        if (
+          playerFull ===
           searchFull
-      ) {
-        return true;
-      }
+        ) {
+          return true;
+        }
 
-      return false;
-    }
-  );
-}
+        const playerRiotName =
+          normalizeRiotName(
+            player.riotId
+          );
+
+        if (
+          playerRiotName ===
+          searchRiotName
+        ) {
+          return true;
+        }
+
+        const playerDiscord =
+          normalizeText(
+            player.discordName
+          );
+
+        if (
+          playerDiscord &&
+          playerDiscord ===
+            searchFull
+        ) {
+          return true;
+        }
+
+        return false;
+      }
+    );
+  }
 
   /* =========================================================
      FIND CHAMPION
@@ -937,7 +948,7 @@ export default function AdminResultsPage() {
     }
 
     /*
-      POULLES :
+      POULES :
       exactement 2 games.
 
       PLAYOFFS :
@@ -1377,6 +1388,11 @@ export default function AdminResultsPage() {
               );
             }
 
+            /*
+              Le JSON doit toujours décrire
+              les 10 joueurs de la vraie game,
+              même si certains sont des subs.
+            */
             if (
               !Array.isArray(
                 importedGame.players
@@ -1401,6 +1417,26 @@ export default function AdminResultsPage() {
                 importedPlayer.player ??
                 importedPlayer.riotId;
 
+              const isSub =
+                importedPlayer.sub ===
+                true;
+
+              /*
+                IMPORTANT :
+
+                Les subs sont ignorés
+                pour toutes les stats.
+
+                Ils n'ont pas besoin
+                d'exister dans players,
+                ni dans le roster.
+              */
+              if (
+                isSub
+              ) {
+                continue;
+              }
+
               const rosterPlayer =
                 findPlayer(
                   playerName,
@@ -1411,7 +1447,7 @@ export default function AdminResultsPage() {
                 !rosterPlayer
               ) {
                 throw new Error(
-                  `Joueur "${playerName ?? '?'}" non reconnu dans la Game ${gameNumber}. Vérifie qu'il est bien enregistré dans le roster, notamment s'il s'agit d'un sub.`
+                  `Joueur "${playerName ?? '?'}" non reconnu dans le roster pour la Game ${gameNumber}.`
                 );
               }
 
@@ -1432,6 +1468,11 @@ export default function AdminResultsPage() {
                   );
               }
 
+              /*
+                Si l'équipe n'est pas
+                précisée dans le JSON,
+                on la déduit du roster.
+              */
               if (
                 !playerTeam
               ) {
@@ -1614,7 +1655,33 @@ export default function AdminResultsPage() {
           throw new Error(
             `MVP "${String(
               importedMvpValue
-            )}" non reconnu.`
+            )}" non reconnu. Un sub ne peut pas être MVP.`
+          );
+        }
+
+        /*
+          On vérifie aussi que le MVP
+          n'a pas été ignoré comme sub.
+        */
+        const mvpPlayed =
+          importedGames.some(
+            (
+              game
+            ) =>
+              game.players.some(
+                (
+                  player
+                ) =>
+                  player.playerId ===
+                  importedMvp.id
+              )
+          );
+
+        if (
+          !mvpPlayed
+        ) {
+          throw new Error(
+            `Le MVP "${importedMvp.riotId}" n'a aucune statistique enregistrée sur ce match.`
           );
         }
 
@@ -1665,7 +1732,7 @@ export default function AdminResultsPage() {
       );
 
       setMessage(
-        `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Vérifie les données puis enregistre le match.`
+        `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Les subs ont été ignorés pour les statistiques. Vérifie les données puis enregistre le match.`
       );
     } catch (
       error: any
@@ -1758,12 +1825,21 @@ export default function AdminResultsPage() {
           );
         }
 
+        /*
+          Normalement 10.
+
+          Mais s'il y a un ou plusieurs
+          subs, ceux-ci sont ignorés
+          dans les statistiques.
+        */
         if (
-          game.players.length !==
-          10
+          game.players.length ===
+            0 ||
+          game.players.length >
+            10
         ) {
           throw new Error(
-            `La Game ${game.gameNumber} doit contenir exactement 10 joueurs.`
+            `Nombre de joueurs invalide dans la Game ${game.gameNumber}.`
           );
         }
 
@@ -1811,7 +1887,7 @@ export default function AdminResultsPage() {
         !mvpPlayedMatch
       ) {
         throw new Error(
-          'Le MVP sélectionné n’a joué aucune game du match.'
+          'Le MVP sélectionné n’a joué aucune game enregistrée du match.'
         );
       }
 
@@ -1960,6 +2036,10 @@ export default function AdminResultsPage() {
               winnerTeamId:
                 game.winnerTeamId,
 
+              /*
+                Ici il n'y a déjà
+                plus les subs.
+              */
               players:
                 game.players.map(
                   (
@@ -2176,8 +2256,6 @@ export default function AdminResultsPage() {
           </h3>
 
           <div className="setupGrid">
-            {/* DIVISION */}
-
             <label>
               Division
 
@@ -2223,8 +2301,6 @@ export default function AdminResultsPage() {
                 </option>
               </select>
             </label>
-
-            {/* TEAM 1 */}
 
             <label>
               Équipe 1
@@ -2287,8 +2363,6 @@ export default function AdminResultsPage() {
               </select>
             </label>
 
-            {/* TEAM 2 */}
-
             <label>
               Équipe 2
 
@@ -2350,8 +2424,6 @@ export default function AdminResultsPage() {
               </select>
             </label>
 
-            {/* PHASE */}
-
             <label>
               Phase
 
@@ -2379,8 +2451,6 @@ export default function AdminResultsPage() {
                 </option>
               </select>
             </label>
-
-            {/* PLAYOFF OPTIONS */}
 
             {stage ===
               'playoff' && (
@@ -2439,8 +2509,6 @@ export default function AdminResultsPage() {
               </>
             )}
 
-            {/* FORMAT */}
-
             <label>
               Format
 
@@ -2488,8 +2556,6 @@ export default function AdminResultsPage() {
                 </select>
               )}
             </label>
-
-            {/* MVP MATCH */}
 
             <label>
               MVP du match
@@ -2593,8 +2659,6 @@ export default function AdminResultsPage() {
                 </h3>
 
                 <div className="gameOptions">
-                  {/* DUREE MIN */}
-
                   <label>
                     Durée min
 
@@ -2621,8 +2685,6 @@ export default function AdminResultsPage() {
                       }
                     />
                   </label>
-
-                  {/* SECONDES */}
 
                   <label>
                     sec
@@ -2660,8 +2722,6 @@ export default function AdminResultsPage() {
                       }}
                     />
                   </label>
-
-                  {/* WINNER */}
 
                   <label>
                     Vainqueur
@@ -2721,10 +2781,6 @@ export default function AdminResultsPage() {
                 </div>
               </div>
 
-              {/* =============================================
-                  TABLEAU
-              ============================================= */}
-
               <div className="gameTable">
                 <div className="gameTableHeader">
                   <span>
@@ -2772,201 +2828,178 @@ export default function AdminResultsPage() {
                   (
                     player,
                     playerIndex
-                  ) => {
-                    const rosterPlayer =
-                      [
-                        ...(team1?.roster ??
-                          []),
+                  ) => (
+                    <div
+                      key={`${game.gameNumber}-${player.playerId}-${player.role}`}
+                      className="gamePlayerRow"
+                    >
+                      <strong>
+                        {
+                          player.role
+                        }
+                      </strong>
 
-                        ...(team2?.roster ??
-                          []),
-                      ].find(
-                        (
-                          p
-                        ) =>
-                          p.id ===
+                      <select
+                        value={
                           player.playerId
-                      );
-
-                    return (
-                      <div
-                        key={`${game.gameNumber}-${player.playerId}-${player.role}`}
-                        className="gamePlayerRow"
-                      >
-                        <strong>
-                          {
-                            player.role
-                          }
-                        </strong>
-
-                        {/* JOUEUR / SUB */}
-
-                        <select
-                          value={
-                            player.playerId
-                          }
-                          onChange={(
-                            e
-                          ) => {
-                            const newPlayerId =
-                              Number(
-                                e.target
-                                  .value
-                              );
-
-                            const selectedPlayer =
-                              matchPlayers.find(
-                                (
-                                  p
-                                ) =>
-                                  p.id ===
-                                  newPlayerId
-                              );
-
-                            if (
-                              !selectedPlayer
-                            ) {
-                              return;
-                            }
-
-                            const selectedTeamId =
-                              team1?.roster.some(
-                                (
-                                  p
-                                ) =>
-                                  p.id ===
-                                  selectedPlayer.id
-                              )
-                                ? team1.id
-                                : team2?.id ??
-                                  player.teamId;
-
-                            updatePlayer(
-                              gameIndex,
-                              playerIndex,
-                              {
-                                playerId:
-                                  selectedPlayer.id,
-
-                                teamId:
-                                  selectedTeamId,
-                              }
+                        }
+                        onChange={(
+                          e
+                        ) => {
+                          const newPlayerId =
+                            Number(
+                              e.target
+                                .value
                             );
-                          }}
-                        >
-                          {matchPlayers.map(
-                            (
-                              rosterPlayerOption
-                            ) => (
-                              <option
-                                key={
-                                  rosterPlayerOption.id
-                                }
-                                value={
-                                  rosterPlayerOption.id
-                                }
-                              >
-                                {
-                                  rosterPlayerOption.riotId
-                                }
-                              </option>
-                            )
-                          )}
-                        </select>
 
-                        {/* CHAMPION */}
-
-                        <select
-                          value={
-                            player.championId
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            updatePlayer(
-                              gameIndex,
-                              playerIndex,
-                              {
-                                championId:
-                                  e.target
-                                    .value,
-                              }
-                            )
-                          }
-                        >
-                          <option value="">
-                            Champion
-                          </option>
-
-                          {champions.map(
-                            (
-                              champion
-                            ) => (
-                              <option
-                                key={
-                                  champion.id
-                                }
-                                value={
-                                  champion.id
-                                }
-                              >
-                                {
-                                  champion.name
-                                }
-                              </option>
-                            )
-                          )}
-                        </select>
-
-                        {/* STATS */}
-
-                        {(
-                          [
-                            'kills',
-                            'deaths',
-                            'assists',
-                            'cs',
-                            'gold',
-                            'damage',
-                            'visionScore',
-                          ] as const
-                        ).map(
-                          (
-                            field
-                          ) => (
-                            <input
-                              key={
-                                field
-                              }
-                              type="number"
-                              min="0"
-                              value={
-                                player[
-                                  field
-                                ]
-                              }
-                              onChange={(
-                                e
+                          const selectedPlayer =
+                            matchPlayers.find(
+                              (
+                                p
                               ) =>
-                                updatePlayer(
-                                  gameIndex,
-                                  playerIndex,
-                                  {
-                                    [field]:
-                                      Number(
-                                        e.target
-                                          .value
-                                      ) ||
-                                      0,
-                                  }
-                                )
+                                p.id ===
+                                newPlayerId
+                            );
+
+                          if (
+                            !selectedPlayer
+                          ) {
+                            return;
+                          }
+
+                          const selectedTeamId =
+                            team1?.roster.some(
+                              (
+                                p
+                              ) =>
+                                p.id ===
+                                selectedPlayer.id
+                            )
+                              ? team1.id
+                              : team2?.id ??
+                                player.teamId;
+
+                          updatePlayer(
+                            gameIndex,
+                            playerIndex,
+                            {
+                              playerId:
+                                selectedPlayer.id,
+
+                              teamId:
+                                selectedTeamId,
+                            }
+                          );
+                        }}
+                      >
+                        {matchPlayers.map(
+                          (
+                            rosterPlayerOption
+                          ) => (
+                            <option
+                              key={
+                                rosterPlayerOption.id
                               }
-                            />
+                              value={
+                                rosterPlayerOption.id
+                              }
+                            >
+                              {
+                                rosterPlayerOption.riotId
+                              }
+                            </option>
                           )
                         )}
-                      </div>
-                    );
-                  }
+                      </select>
+
+                      <select
+                        value={
+                          player.championId
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          updatePlayer(
+                            gameIndex,
+                            playerIndex,
+                            {
+                              championId:
+                                e.target
+                                  .value,
+                            }
+                          )
+                        }
+                      >
+                        <option value="">
+                          Champion
+                        </option>
+
+                        {champions.map(
+                          (
+                            champion
+                          ) => (
+                            <option
+                              key={
+                                champion.id
+                              }
+                              value={
+                                champion.id
+                              }
+                            >
+                              {
+                                champion.name
+                              }
+                            </option>
+                          )
+                        )}
+                      </select>
+
+                      {(
+                        [
+                          'kills',
+                          'deaths',
+                          'assists',
+                          'cs',
+                          'gold',
+                          'damage',
+                          'visionScore',
+                        ] as const
+                      ).map(
+                        (
+                          field
+                        ) => (
+                          <input
+                            key={
+                              field
+                            }
+                            type="number"
+                            min="0"
+                            value={
+                              player[
+                                field
+                              ]
+                            }
+                            onChange={(
+                              e
+                            ) =>
+                              updatePlayer(
+                                gameIndex,
+                                playerIndex,
+                                {
+                                  [field]:
+                                    Number(
+                                      e.target
+                                        .value
+                                    ) ||
+                                    0,
+                                }
+                              )
+                            }
+                          />
+                        )
+                      )}
+                    </div>
+                  )
                 )}
               </div>
             </section>
@@ -3008,10 +3041,6 @@ export default function AdminResultsPage() {
           .importCard {
             margin-bottom: 20px;
           }
-
-          /* =========================
-             IMPORT
-          ========================= */
 
           .importHeader {
             display: flex;
@@ -3070,13 +3099,8 @@ export default function AdminResultsPage() {
             cursor: pointer;
           }
 
-          /* =========================
-             SETUP
-          ========================= */
-
           .setupGrid {
             display: grid;
-
             grid-template-columns:
               repeat(
                 3,
@@ -3085,9 +3109,7 @@ export default function AdminResultsPage() {
                   1fr
                 )
               );
-
             gap: 14px;
-
             margin:
               20px
               0;
@@ -3095,21 +3117,15 @@ export default function AdminResultsPage() {
 
           label {
             display: flex;
-
             flex-direction:
               column;
-
             gap: 6px;
-
             color:
               var(--navy);
-
             font-size:
               11px;
-
             font-weight:
               900;
-
             text-transform:
               uppercase;
           }
@@ -3133,17 +3149,11 @@ export default function AdminResultsPage() {
           .adminMessage {
             margin-top:
               15px;
-
             color:
               var(--orange);
-
             font-weight:
               800;
           }
-
-          /* =========================
-             GAME
-          ========================= */
 
           .gameCard {
             margin-bottom:
@@ -3153,15 +3163,11 @@ export default function AdminResultsPage() {
           .gameHeader {
             display:
               flex;
-
             align-items:
               flex-end;
-
             justify-content:
               space-between;
-
             gap: 20px;
-
             margin-bottom:
               22px;
           }
@@ -3169,12 +3175,9 @@ export default function AdminResultsPage() {
           .gameOptions {
             display:
               flex;
-
             align-items:
               flex-end;
-
             gap: 10px;
-
             flex-wrap:
               wrap;
           }
@@ -3183,10 +3186,6 @@ export default function AdminResultsPage() {
             width:
               130px;
           }
-
-          /* =========================
-             TABLE
-          ========================= */
 
           .gameTable {
             overflow-x:
@@ -3197,7 +3196,6 @@ export default function AdminResultsPage() {
           .gamePlayerRow {
             display:
               grid;
-
             grid-template-columns:
               85px
               minmax(
@@ -3215,13 +3213,10 @@ export default function AdminResultsPage() {
               100px
               100px
               90px;
-
             gap:
               8px;
-
             align-items:
               center;
-
             min-width:
               1100px;
           }
@@ -3231,16 +3226,12 @@ export default function AdminResultsPage() {
               0
               8px
               10px;
-
             color:
               var(--navy);
-
             font-size:
               10px;
-
             font-weight:
               900;
-
             text-transform:
               uppercase;
           }
@@ -3248,7 +3239,6 @@ export default function AdminResultsPage() {
           .gamePlayerRow {
             padding:
               8px;
-
             border-top:
               1px
               solid
@@ -3264,10 +3254,8 @@ export default function AdminResultsPage() {
           .gamePlayerRow select {
             width:
               100%;
-
             min-height:
               42px;
-
             padding:
               8px;
           }
@@ -3275,43 +3263,29 @@ export default function AdminResultsPage() {
           .gamePlayerRow strong {
             color:
               var(--orange);
-
             font-size:
               11px;
           }
 
-          /* =========================
-             SAVE
-          ========================= */
-
           .saveMatchButton {
             width:
               100%;
-
             min-height:
               58px;
-
             margin-top:
               8px;
-
             border:
               0;
-
             border-radius:
               8px;
-
             background:
               var(--navy);
-
             color:
               white;
-
             font-size:
               14px;
-
             font-weight:
               900;
-
             cursor: pointer;
           }
 
@@ -3319,10 +3293,6 @@ export default function AdminResultsPage() {
             opacity: 0.6;
             cursor: not-allowed;
           }
-
-          /* =========================
-             RESPONSIVE
-          ========================= */
 
           @media (
             max-width:
@@ -3336,13 +3306,13 @@ export default function AdminResultsPage() {
             .gameHeader {
               align-items:
                 stretch;
-
               flex-direction:
                 column;
             }
 
             .importHeader {
-              flex-direction: column;
+              flex-direction:
+                column;
             }
           }
         `}</style>

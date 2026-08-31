@@ -47,6 +47,15 @@ type GameInput = {
 
   winnerTeamId: number;
 
+  /*
+    Il peut y avoir moins
+    de 10 lignes ici si
+    un ou plusieurs subs
+    ont joué.
+
+    Les subs ne sont pas
+    enregistrés dans les stats.
+  */
   players:
     PlayerStatInput[];
 };
@@ -489,6 +498,15 @@ export async function POST(
        IDS JOUEURS
     ===================================================== */
 
+    /*
+      Les subs ne sont pas
+      présents ici.
+
+      On récupère uniquement
+      les IDs des joueurs dont
+      on veut enregistrer
+      les statistiques.
+    */
     const allPlayerIds =
       games.flatMap(
         (game) =>
@@ -557,6 +575,18 @@ export async function POST(
        ROSTERS
     ===================================================== */
 
+    /*
+      On récupère uniquement
+      les rosters des 2 équipes
+      du match.
+
+      Tous les joueurs reçus
+      par cette API doivent être
+      des joueurs officiels.
+
+      Les subs ont déjà été
+      supprimés côté front.
+    */
     const {
       data: teamMembers,
       error:
@@ -718,17 +748,29 @@ export async function POST(
         );
       }
 
+      /*
+        Il peut y avoir moins
+        de 10 joueurs dans
+        game.players si un ou
+        plusieurs subs ont joué.
+      */
       if (
         !Array.isArray(
           game.players
         ) ||
-        game.players
-          .length !== 10
+        game.players.length ===
+          0 ||
+        game.players.length >
+          10
       ) {
         throw new Error(
-          `La Game ${game.gameNumber} doit contenir exactement 10 joueurs.`
+          `Nombre de joueurs invalide dans la Game ${game.gameNumber}.`
         );
       }
+
+      /* ===================================================
+         PAS DE JOUEUR EN DOUBLE
+      =================================================== */
 
       const gamePlayerIds =
         game.players.map(
@@ -741,12 +783,17 @@ export async function POST(
       if (
         new Set(
           gamePlayerIds
-        ).size !== 10
+        ).size !==
+        gamePlayerIds.length
       ) {
         throw new Error(
           `Un joueur est présent plusieurs fois dans la Game ${game.gameNumber}.`
         );
       }
+
+      /* ===================================================
+         JOUEURS PAR TEAM
+      =================================================== */
 
       const team1Players =
         game.players.filter(
@@ -770,16 +817,39 @@ export async function POST(
             )
         );
 
+      /*
+        Tous les joueurs reçus
+        doivent appartenir à
+        l'une des 2 équipes.
+
+        Le total peut être inférieur
+        à 10 uniquement à cause
+        des subs ignorés.
+      */
       if (
-        team1Players.length !==
+        team1Players.length +
+          team2Players.length !==
+        game.players.length
+      ) {
+        throw new Error(
+          `Un joueur possède une équipe invalide dans la Game ${game.gameNumber}.`
+        );
+      }
+
+      if (
+        team1Players.length >
           5 ||
-        team2Players.length !==
+        team2Players.length >
           5
       ) {
         throw new Error(
-          `La Game ${game.gameNumber} doit avoir exactement 5 joueurs de chaque équipe.`
+          `Une équipe contient plus de 5 joueurs enregistrés dans la Game ${game.gameNumber}.`
         );
       }
+
+      /* ===================================================
+         VALIDATION JOUEURS
+      =================================================== */
 
       for (
         const player
@@ -847,6 +917,12 @@ export async function POST(
           );
         }
 
+        /*
+          Comme les subs n'arrivent
+          jamais ici, chaque joueur
+          reçu doit appartenir au
+          roster officiel de son équipe.
+        */
         const realTeamId =
           memberTeamByRiotId.get(
             normalizeRiotId(
@@ -876,10 +952,22 @@ export async function POST(
         }
       }
 
+      /* ===================================================
+         ROLES
+      =================================================== */
+
       /*
-        Chaque équipe doit avoir
-        exactement :
-        Top / Jungle / Mid / ADC / Support
+        Un rôle peut manquer.
+
+        Exemple :
+        le Top était un sub,
+        donc aucune stat Top
+        n'est enregistrée pour
+        cette équipe.
+
+        En revanche, on interdit
+        deux fois le même rôle
+        dans une équipe.
       */
 
       for (
@@ -895,24 +983,15 @@ export async function POST(
               player.role
           );
 
-        for (
-          const requiredRole
-          of allowedRoles
+        if (
+          new Set(
+            roles
+          ).size !==
+          roles.length
         ) {
-          const count =
-            roles.filter(
-              (role) =>
-                role ===
-                requiredRole
-            ).length;
-
-          if (
-            count !== 1
-          ) {
-            throw new Error(
-              `Chaque équipe doit avoir exactement un ${requiredRole} dans la Game ${game.gameNumber}.`
-            );
-          }
+          throw new Error(
+            `Un rôle est présent plusieurs fois dans la même équipe pour la Game ${game.gameNumber}.`
+          );
         }
       }
     }
@@ -934,13 +1013,21 @@ export async function POST(
         mvpPlayerId
       );
 
+    /*
+      Le MVP doit faire partie
+      des joueurs effectivement
+      enregistrés dans les stats.
+
+      Donc un sub ignoré ne peut
+      pas être MVP.
+    */
     if (
       !uniquePlayerIds.includes(
         mvpNumericId
       )
     ) {
       throw new Error(
-        'Le MVP doit avoir participé à au moins une game du match.'
+        'Le MVP doit avoir participé à au moins une game enregistrée du match.'
       );
     }
 
@@ -1243,6 +1330,15 @@ export async function POST(
          STATS JOUEURS
       =================================================== */
 
+      /*
+        game.players contient
+        uniquement les joueurs
+        officiels dont on veut
+        conserver les stats.
+
+        Les subs n'arrivent
+        jamais jusqu'ici.
+      */
       const stats =
         game.players.map(
           (player) => ({
@@ -1304,22 +1400,27 @@ export async function POST(
           })
         );
 
-      const {
-        error:
-          statsError,
-      } =
-        await supabaseAdmin
-          .from(
-            'czf_game_player_stats'
-          )
-          .insert(
-            stats
-          );
-
       if (
-        statsError
+        stats.length >
+        0
       ) {
-        throw statsError;
+        const {
+          error:
+            statsError,
+        } =
+          await supabaseAdmin
+            .from(
+              'czf_game_player_stats'
+            )
+            .insert(
+              stats
+            );
+
+        if (
+          statsError
+        ) {
+          throw statsError;
+        }
       }
     }
 
