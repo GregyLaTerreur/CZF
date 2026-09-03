@@ -1702,28 +1702,93 @@ export async function GET(
         });
       }
 
-            /*
-        PICK RATE FEARLESS
+                  for (
+        const role
+        of ROLES
+      ) {
+        result[
+          role
+        ].sort(
+          (
+            a,
+            b
+          ) =>
+            b.kda -
+            a.kda
+        );
+      }
 
-        Le Pick Rate est calculé PAR BO :
+      return result;
+    }
 
-        nombre de BO dans lesquels
-        le champion a été joué
-        /
-        nombre total de BO joués
-        dans la division.
+    /* =====================================================
+       CHAMPIONS
+    ===================================================== */
 
-        Un champion joué plusieurs
-        fois dans le même BO ne
-        compte donc qu'une fois
-        pour son Pick Rate.
+        function championsForDivision(
+      division: Division
+    ): Record<
+      Role,
+      ChampionRoleStat[]
+    > {
+      const divisionMatches =
+        allMatches.filter(
+          (
+            match
+          ) =>
+            match.division ===
+            division
+        );
 
-        Les picks et le Win Rate
-        restent calculés par game.
-      */
+      const divisionMatchIds =
+        new Set<number>(
+          divisionMatches.map(
+            (
+              match
+            ) =>
+              Number(
+                match.id
+              )
+          )
+        );
+
+      const divisionGameIds =
+        new Set<number>(
+          allGames
+            .filter(
+              (
+                game
+              ) =>
+                divisionMatchIds.has(
+                  Number(
+                    game.match_id
+                  )
+                )
+            )
+            .map(
+              (
+                game
+              ) =>
+                Number(
+                  game.id
+                )
+            )
+        );
 
       const totalBos =
-        divisionMatchIds.size;
+        divisionMatches.length;
+
+      const result:
+        Record<
+          Role,
+          ChampionRoleStat[]
+        > = {
+        Top: [],
+        Jungle: [],
+        Mid: [],
+        ADC: [],
+        Support: [],
+      };
 
       for (
         const role
@@ -1751,13 +1816,6 @@ export async function GET(
             {
               picks: number;
               wins: number;
-
-              /*
-                Liste des BO
-                dans lesquels
-                ce champion
-                a été joué.
-              */
               matchIds:
                 Set<number>;
             }
@@ -1807,20 +1865,8 @@ export async function GET(
                 new Set<number>(),
             };
 
-          /*
-            Nombre réel de picks :
-            toujours par game.
-          */
-
           current.picks +=
             1;
-
-          /*
-            Victoires :
-            toujours par game,
-            pour calculer le
-            Win Rate normalement.
-          */
 
           if (
             Number(
@@ -1833,12 +1879,6 @@ export async function GET(
             current.wins +=
               1;
           }
-
-          /*
-            Pour le Pick Rate,
-            le BO ne peut être
-            ajouté qu'une seule fois.
-          */
 
           if (
             Number.isFinite(
@@ -1894,11 +1934,6 @@ export async function GET(
 
                   role,
 
-                  /*
-                    Toujours le
-                    nombre de games
-                    où il a été pick.
-                  */
                   picks:
                     values.picks,
 
@@ -1909,265 +1944,12 @@ export async function GET(
                     values.picks -
                     values.wins,
 
-                  /*
-                    PICK RATE PAR BO
-                  */
                   pickRate:
                     totalBos > 0
                       ? round2(
                           (
                             bosPicked /
                             totalBos
-                          ) *
-                            100
-                        )
-                      : 0,
-
-                  /*
-                    WIN RATE PAR GAME
-                  */
-                  winRate:
-                    values.picks > 0
-                      ? round2(
-                          (
-                            values.wins /
-                            values.picks
-                          ) *
-                            100
-                        )
-                      : 0,
-                };
-              }
-            )
-            .sort(
-              (
-                a,
-                b
-              ) => {
-                if (
-                  b.picks !==
-                  a.picks
-                ) {
-                  return (
-                    b.picks -
-                    a.picks
-                  );
-                }
-
-                return (
-                  b.winRate -
-                  a.winRate
-                );
-              }
-            )
-            .slice(
-              0,
-              5
-            );
-      }
-
-    /* =====================================================
-       CHAMPIONS
-    ===================================================== */
-
-    function championsForDivision(
-      division: Division
-    ): Record<
-      Role,
-      ChampionRoleStat[]
-    > {
-      const divisionMatchIds =
-        new Set<number>(
-          allMatches
-            .filter(
-              (
-                match
-              ) =>
-                match.division ===
-                division
-            )
-            .map(
-              (
-                match
-              ) =>
-                Number(
-                  match.id
-                )
-            )
-        );
-
-      const divisionGameIds =
-        new Set<number>(
-          allGames
-            .filter(
-              (
-                game
-              ) =>
-                divisionMatchIds.has(
-                  Number(
-                    game.match_id
-                  )
-                )
-            )
-            .map(
-              (
-                game
-              ) =>
-                Number(
-                  game.id
-                )
-            )
-        );
-
-      const result:
-        Record<
-          Role,
-          ChampionRoleStat[]
-        > = {
-        Top: [],
-        Jungle: [],
-        Mid: [],
-        ADC: [],
-        Support: [],
-      };
-
-      for (
-        const role
-        of ROLES
-      ) {
-        const roleRows =
-          allStats.filter(
-            (
-              stat
-            ) =>
-              divisionGameIds.has(
-                Number(
-                  stat.game_id
-                )
-              ) &&
-              normalizeRole(
-                stat.role
-              ) ===
-                role
-          );
-
-        const total =
-          roleRows.length;
-
-        const map =
-          new Map<
-            string,
-            {
-              picks: number;
-              wins: number;
-            }
-          >();
-
-        for (
-          const row
-          of roleRows
-        ) {
-          const championId =
-            String(
-              row.champion_id ??
-                ''
-            );
-
-          if (
-            !championId
-          ) {
-            continue;
-          }
-
-          const game =
-            gameMap.get(
-              Number(
-                row.game_id
-              )
-            );
-
-          if (
-            !game
-          ) {
-            continue;
-          }
-
-          const current =
-            map.get(
-              championId
-            ) ?? {
-              picks: 0,
-              wins: 0,
-            };
-
-          current.picks +=
-            1;
-
-          if (
-            Number(
-              game.winner_team_id
-            ) ===
-            Number(
-              row.team_id
-            )
-          ) {
-            current.wins +=
-              1;
-          }
-
-          map.set(
-            championId,
-            current
-          );
-        }
-
-        result[
-          role
-        ] =
-          Array.from(
-            map.entries()
-          )
-            .map(
-              ([
-                championId,
-                values,
-              ]) => {
-                const champion =
-                  championMap.get(
-                    championId
-                  );
-
-                return {
-                  championId,
-
-                  name:
-                    champion
-                      ?.name ??
-                    championId,
-
-                  image:
-                    champion
-                      ?.image ??
-                    null,
-
-                  role,
-
-                  picks:
-                    values.picks,
-
-                  wins:
-                    values.wins,
-
-                  losses:
-                    values.picks -
-                    values.wins,
-
-                  pickRate:
-                    total > 0
-                      ? round2(
-                          (
-                            values.picks /
-                            total
                           ) *
                             100
                         )
