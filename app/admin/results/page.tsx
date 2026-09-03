@@ -1413,115 +1413,101 @@ export default function AdminResultsPage() {
               const importedPlayer
               of importedGame.players
             ) {
-              const playerName =
-                importedPlayer.player ??
-                importedPlayer.riotId;
-
               const isSub =
-                importedPlayer.sub ===
-                true;
+  importedPlayer.sub === true;
 
-              /*
-                IMPORTANT :
+/*
+  SUB :
+  on ignore complètement
+  ses statistiques.
+*/
+if (isSub) {
+  continue;
+}
 
-                Les subs sont ignorés
-                pour toutes les stats.
+/*
+  L'équipe devient la donnée
+  principale pour retrouver le joueur.
 
-                Ils n'ont pas besoin
-                d'exister dans players,
-                ni dans le roster.
-              */
-              if (
-                isSub
-              ) {
-                continue;
-              }
+  Le pseudo Riot n'est PLUS obligatoire.
+*/
+let playerTeam:
+  | Team
+  | undefined;
 
-              const rosterPlayer =
-                findPlayer(
-                  playerName,
-                  availablePlayers
-                );
+if (importedPlayer.team) {
+  playerTeam =
+    findTeam(
+      importedPlayer.team,
+      [
+        importedTeam1,
+        importedTeam2,
+      ]
+    );
+}
 
-              if (
-                !rosterPlayer
-              ) {
-                throw new Error(
-                  `Joueur "${playerName ?? '?'}" non reconnu dans le roster pour la Game ${gameNumber}.`
-                );
-              }
+if (!playerTeam) {
+  throw new Error(
+    `Équipe non reconnue dans la Game ${gameNumber}.`
+  );
+}
 
-              let playerTeam:
-                | Team
-                | undefined;
+/*
+  Le rôle vient du JSON.
+*/
+const role =
+  normalizeRole(
+    importedPlayer.role
+  );
 
-              if (
-                importedPlayer.team
-              ) {
-                playerTeam =
-                  findTeam(
-                    importedPlayer.team,
-                    [
-                      importedTeam1,
-                      importedTeam2,
-                    ]
-                  );
-              }
+if (!role) {
+  throw new Error(
+    `Rôle non reconnu dans la Game ${gameNumber}.`
+  );
+}
 
-              /*
-                Si l'équipe n'est pas
-                précisée dans le JSON,
-                on la déduit du roster.
-              */
-              if (
-                !playerTeam
-              ) {
-                if (
-                  importedTeam1.roster.some(
-                    (
-                      p
-                    ) =>
-                      p.id ===
-                      rosterPlayer.id
-                  )
-                ) {
-                  playerTeam =
-                    importedTeam1;
-                } else if (
-                  importedTeam2.roster.some(
-                    (
-                      p
-                    ) =>
-                      p.id ===
-                      rosterPlayer.id
-                  )
-                ) {
-                  playerTeam =
-                    importedTeam2;
-                }
-              }
+/*
+  On essaie D'ABORD le pseudo si le JSON
+  en contient encore un.
 
-              if (
-                !playerTeam
-              ) {
-                throw new Error(
-                  `Équipe impossible à déterminer pour ${rosterPlayer.riotId}.`
-                );
-              }
+  Ça permet de garder la compatibilité
+  avec tous tes anciens JSON.
+*/
+const playerName =
+  importedPlayer.player ??
+  importedPlayer.riotId;
 
-              const role =
-                normalizeRole(
-                  importedPlayer.role ??
-                    rosterPlayer.role
-                );
+let rosterPlayer =
+  playerName
+    ? findPlayer(
+        playerName,
+        playerTeam.roster
+      )
+    : undefined;
 
-              if (
-                !role
-              ) {
-                throw new Error(
-                  `Rôle non reconnu pour ${rosterPlayer.riotId} dans la Game ${gameNumber}.`
-                );
-              }
+/*
+  Si le pseudo n'existe plus / a rename /
+  ou n'est carrément pas présent dans le JSON :
+
+  on prend automatiquement le joueur
+  actuellement enregistré à ce rôle
+  dans cette équipe.
+*/
+if (!rosterPlayer) {
+  rosterPlayer =
+    playerTeam.roster.find(
+      (player) =>
+        normalizeRole(
+          player.role
+        ) === role
+    );
+}
+
+if (!rosterPlayer) {
+  throw new Error(
+    `Aucun joueur ${role} trouvé dans le roster de ${playerTeam.name}, Game ${gameNumber}.`
+  );
+}
 
               const championValue =
                 importedPlayer.championId ??
