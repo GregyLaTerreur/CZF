@@ -1702,24 +1702,269 @@ export async function GET(
         });
       }
 
+            /*
+        PICK RATE FEARLESS
+
+        Le Pick Rate est calculé PAR BO :
+
+        nombre de BO dans lesquels
+        le champion a été joué
+        /
+        nombre total de BO joués
+        dans la division.
+
+        Un champion joué plusieurs
+        fois dans le même BO ne
+        compte donc qu'une fois
+        pour son Pick Rate.
+
+        Les picks et le Win Rate
+        restent calculés par game.
+      */
+
+      const totalBos =
+        divisionMatchIds.size;
+
       for (
         const role
         of ROLES
       ) {
+        const roleRows =
+          allStats.filter(
+            (
+              stat
+            ) =>
+              divisionGameIds.has(
+                Number(
+                  stat.game_id
+                )
+              ) &&
+              normalizeRole(
+                stat.role
+              ) ===
+                role
+          );
+
+        const map =
+          new Map<
+            string,
+            {
+              picks: number;
+              wins: number;
+
+              /*
+                Liste des BO
+                dans lesquels
+                ce champion
+                a été joué.
+              */
+              matchIds:
+                Set<number>;
+            }
+          >();
+
+        for (
+          const row
+          of roleRows
+        ) {
+          const championId =
+            String(
+              row.champion_id ??
+                ''
+            );
+
+          if (
+            !championId
+          ) {
+            continue;
+          }
+
+          const game =
+            gameMap.get(
+              Number(
+                row.game_id
+              )
+            );
+
+          if (
+            !game
+          ) {
+            continue;
+          }
+
+          const matchId =
+            Number(
+              game.match_id
+            );
+
+          const current =
+            map.get(
+              championId
+            ) ?? {
+              picks: 0,
+              wins: 0,
+              matchIds:
+                new Set<number>(),
+            };
+
+          /*
+            Nombre réel de picks :
+            toujours par game.
+          */
+
+          current.picks +=
+            1;
+
+          /*
+            Victoires :
+            toujours par game,
+            pour calculer le
+            Win Rate normalement.
+          */
+
+          if (
+            Number(
+              game.winner_team_id
+            ) ===
+            Number(
+              row.team_id
+            )
+          ) {
+            current.wins +=
+              1;
+          }
+
+          /*
+            Pour le Pick Rate,
+            le BO ne peut être
+            ajouté qu'une seule fois.
+          */
+
+          if (
+            Number.isFinite(
+              matchId
+            )
+          ) {
+            current
+              .matchIds
+              .add(
+                matchId
+              );
+          }
+
+          map.set(
+            championId,
+            current
+          );
+        }
+
         result[
           role
-        ].sort(
-          (
-            a,
-            b
-          ) =>
-            b.kda -
-            a.kda
-        );
-      }
+        ] =
+          Array.from(
+            map.entries()
+          )
+            .map(
+              ([
+                championId,
+                values,
+              ]) => {
+                const champion =
+                  championMap.get(
+                    championId
+                  );
 
-      return result;
-    }
+                const bosPicked =
+                  values
+                    .matchIds
+                    .size;
+
+                return {
+                  championId,
+
+                  name:
+                    champion
+                      ?.name ??
+                    championId,
+
+                  image:
+                    champion
+                      ?.image ??
+                    null,
+
+                  role,
+
+                  /*
+                    Toujours le
+                    nombre de games
+                    où il a été pick.
+                  */
+                  picks:
+                    values.picks,
+
+                  wins:
+                    values.wins,
+
+                  losses:
+                    values.picks -
+                    values.wins,
+
+                  /*
+                    PICK RATE PAR BO
+                  */
+                  pickRate:
+                    totalBos > 0
+                      ? round2(
+                          (
+                            bosPicked /
+                            totalBos
+                          ) *
+                            100
+                        )
+                      : 0,
+
+                  /*
+                    WIN RATE PAR GAME
+                  */
+                  winRate:
+                    values.picks > 0
+                      ? round2(
+                          (
+                            values.wins /
+                            values.picks
+                          ) *
+                            100
+                        )
+                      : 0,
+                };
+              }
+            )
+            .sort(
+              (
+                a,
+                b
+              ) => {
+                if (
+                  b.picks !==
+                  a.picks
+                ) {
+                  return (
+                    b.picks -
+                    a.picks
+                  );
+                }
+
+                return (
+                  b.winRate -
+                  a.winRate
+                );
+              }
+            )
+            .slice(
+              0,
+              5
+            );
+      }
 
     /* =====================================================
        CHAMPIONS

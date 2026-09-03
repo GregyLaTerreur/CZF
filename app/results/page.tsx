@@ -2482,7 +2482,7 @@ function MvpRanking({
 .mvpTop b {
   font-size: 12px;
   font-weight: 900;
-} }
+}  }
 
         .mvpTrack {
           height: 6px;
