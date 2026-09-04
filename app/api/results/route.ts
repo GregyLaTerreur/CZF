@@ -1680,16 +1680,48 @@ const avgVision =
   par zéro.
 */
 const kda =
-  round2(
-    (
-      kills +
-      assists
-    ) /
-      Math.max(
-        1,
-        deaths
+  gamesPlayed > 0
+    ? round2(
+        rows.reduce(
+          (
+            total,
+            row
+          ) => {
+            const gameKills =
+              Number(
+                row.kills
+              ) || 0;
+
+            const gameDeaths =
+              Number(
+                row.deaths
+              ) || 0;
+
+            const gameAssists =
+              Number(
+                row.assists
+              ) || 0;
+
+            const gameKda =
+              (
+                gameKills +
+                gameAssists
+              ) /
+              Math.max(
+                1,
+                gameDeaths
+              );
+
+            return (
+              total +
+              gameKda
+            );
+          },
+          0
+        ) /
+          gamesPlayed
       )
-  );
+    : 0;
 
 result[
   role
