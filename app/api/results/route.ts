@@ -1603,103 +1603,207 @@ export async function GET(
           }
         }
 
-        const minutes =
-          duration /
-          60;
+  const gamesPlayed =
+  rows.length;
 
-        const kda =
-          deaths > 0
-            ? round2(
-                (
-                  kills +
-                  assists
-                ) /
-                  deaths
-              )
-            : round2(
-                kills +
-                  assists
-              );
+const minutes =
+  duration /
+  60;
 
-        result[
-          role
-        ].push({
-          playerId,
+/*
+  MOYENNES PAR GAME
+*/
+const avgKills =
+  gamesPlayed > 0
+    ? round2(
+        kills /
+          gamesPlayed
+      )
+    : 0;
 
-          riotId:
-            String(
-              getValue(
-                rawPlayer,
-                [
-                  'riot_id',
-                  'riotId',
-                ]
-              ) ??
-                `Joueur ${playerId}`
-            ),
+const avgDeaths =
+  gamesPlayed > 0
+    ? round2(
+        deaths /
+          gamesPlayed
+      )
+    : 0;
 
-          teamId,
+const avgAssists =
+  gamesPlayed > 0
+    ? round2(
+        assists /
+          gamesPlayed
+      )
+    : 0;
 
-          teamName:
-            team.name,
+const avgCs =
+  gamesPlayed > 0
+    ? round2(
+        cs /
+          gamesPlayed
+      )
+    : 0;
 
-          teamShortName:
-            team.shortName,
+const avgGold =
+  gamesPlayed > 0
+    ? Math.round(
+        gold /
+          gamesPlayed
+      )
+    : 0;
 
-          teamLogo:
-            team.logo,
+const avgDamage =
+  gamesPlayed > 0
+    ? Math.round(
+        damage /
+          gamesPlayed
+      )
+    : 0;
 
-          role,
+const avgVision =
+  gamesPlayed > 0
+    ? round2(
+        visionScore /
+          gamesPlayed
+      )
+    : 0;
 
-          games:
-            rows.length,
+/*
+  KDA
 
-          wins,
-          losses,
+  On garde le ratio sur l'ensemble
+  des games.
 
-          kills,
-          deaths,
-          assists,
+  0 mort = même traitement que
+  1 mort pour éviter une division
+  par zéro.
+*/
+const kda =
+  round2(
+    (
+      kills +
+      assists
+    ) /
+      Math.max(
+        1,
+        deaths
+      )
+  );
 
-          kda,
+result[
+  role
+].push({
+  playerId,
 
-          cs,
+  riotId:
+    String(
+      getValue(
+        rawPlayer,
+        [
+          'riot_id',
+          'riotId',
+        ]
+      ) ??
+        `Joueur ${playerId}`
+    ),
 
-          csPerMin:
-            minutes > 0
-              ? round2(
-                  cs /
-                    minutes
-                )
-              : 0,
+  teamId,
 
-          gold,
+  teamName:
+    team.name,
 
-          goldPerMin:
-            minutes > 0
-              ? round2(
-                  gold /
-                    minutes
-                )
-              : 0,
+  teamShortName:
+    team.shortName,
 
-          damage,
+  teamLogo:
+    team.logo,
 
-          dpm:
-            minutes > 0
-              ? round2(
-                  damage /
-                    minutes
-                )
-              : 0,
+  role,
 
-          visionScore,
+  games:
+    gamesPlayed,
 
-          mvp,
+  wins,
+  losses,
 
-          totalDurationSeconds:
-            duration,
-        });
+  /*
+    Maintenant ce sont
+    les moyennes par game.
+  */
+  kills:
+    avgKills,
+
+  deaths:
+    avgDeaths,
+
+  assists:
+    avgAssists,
+
+  kda,
+
+  cs:
+    avgCs,
+
+  /*
+    Déjà une moyenne
+    rapportée au temps joué.
+  */
+  csPerMin:
+    minutes > 0
+      ? round2(
+          cs /
+            minutes
+        )
+      : 0,
+
+  /*
+    Gold moyen par game.
+  */
+  gold:
+    avgGold,
+
+  /*
+    Gold/min reste calculé
+    à partir des valeurs totales.
+  */
+  goldPerMin:
+    minutes > 0
+      ? round2(
+          gold /
+            minutes
+        )
+      : 0,
+
+  /*
+    Damage moyen par game.
+  */
+  damage:
+    avgDamage,
+
+  /*
+    DPM reste calculé
+    sur le temps total joué.
+  */
+  dpm:
+    minutes > 0
+      ? round2(
+          damage /
+            minutes
+        )
+      : 0,
+
+  /*
+    Vision moyenne par game.
+  */
+  visionScore:
+    avgVision,
+
+  mvp,
+
+  totalDurationSeconds:
+    duration,
+});
       }
 
                   for (
