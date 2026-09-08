@@ -7,8 +7,7 @@ import {
   createClient,
 } from '@supabase/supabase-js';
 
-export const dynamic =
-  'force-dynamic';
+export const dynamic = 'force-dynamic';
 
 type Division =
   | 'Yordle'
@@ -40,6 +39,28 @@ type PlayerStatInput = {
   visionScore: number;
 };
 
+/*
+  Un sub n'a PAS de playerId.
+
+  On conserve uniquement ce
+  qui est nécessaire pour
+  l'afficher dans l'historique.
+
+  Ces données ne seront jamais
+  ajoutées à czf_game_player_stats.
+*/
+type SubstituteStatInput = {
+  teamId: number;
+
+  role: Role;
+
+  championId: string;
+
+  kills: number;
+  deaths: number;
+  assists: number;
+};
+
 type GameInput = {
   gameNumber: number;
 
@@ -48,16 +69,26 @@ type GameInput = {
   winnerTeamId: number;
 
   /*
-    Il peut y avoir moins
-    de 10 lignes ici si
-    un ou plusieurs subs
-    ont joué.
+    Joueurs officiels uniquement.
 
-    Les subs ne sont pas
-    enregistrés dans les stats.
+    Il peut donc y avoir moins
+    de 10 lignes lorsqu'un sub
+    a joué.
   */
-  players:
-    PlayerStatInput[];
+  players: PlayerStatInput[];
+
+  /*
+    Subs de la game.
+
+    Ils seront stockés uniquement
+    dans czf_games.substitute_stats
+    pour pouvoir les afficher
+    dans l'historique.
+
+    Ils ne comptent PAS dans
+    les statistiques joueurs.
+  */
+  substitutes?: SubstituteStatInput[];
 };
 
 type MatchInput = {
@@ -495,18 +526,9 @@ export async function POST(
     }
 
     /* =====================================================
-       IDS JOUEURS
+       IDS JOUEURS OFFICIELS
     ===================================================== */
 
-    /*
-      Les subs ne sont pas
-      présents ici.
-
-      On récupère uniquement
-      les IDs des joueurs dont
-      on veut enregistrer
-      les statistiques.
-    */
     const allPlayerIds =
       games.flatMap(
         (game) =>
@@ -530,7 +552,7 @@ export async function POST(
       0
     ) {
       throw new Error(
-        'Aucun joueur reçu.'
+        'Aucun joueur officiel reçu.'
       );
     }
 
@@ -575,18 +597,6 @@ export async function POST(
        ROSTERS
     ===================================================== */
 
-    /*
-      On récupère uniquement
-      les rosters des 2 équipes
-      du match.
-
-      Tous les joueurs reçus
-      par cette API doivent être
-      des joueurs officiels.
-
-      Les subs ont déjà été
-      supprimés côté front.
-    */
     const {
       data: teamMembers,
       error:
@@ -690,6 +700,13 @@ export async function POST(
       const game
       of games
     ) {
+      const substitutes =
+        Array.isArray(
+          game.substitutes
+        )
+          ? game.substitutes
+          : [];
+
       if (
         !game.gameNumber ||
         Number(
@@ -749,11 +766,9 @@ export async function POST(
       }
 
       /*
-        Il peut y avoir moins
-        de 10 joueurs dans
-        game.players si un ou
-        plusieurs subs ont joué.
+        Joueurs officiels.
       */
+
       if (
         !Array.isArray(
           game.players
@@ -764,12 +779,28 @@ export async function POST(
           10
       ) {
         throw new Error(
-          `Nombre de joueurs invalide dans la Game ${game.gameNumber}.`
+          `Nombre de joueurs officiels invalide dans la Game ${game.gameNumber}.`
+        );
+      }
+
+      /*
+        Le total :
+        officiels + subs
+        ne peut pas dépasser 10.
+      */
+
+      if (
+        game.players.length +
+          substitutes.length >
+        10
+      ) {
+        throw new Error(
+          `Plus de 10 participants détectés dans la Game ${game.gameNumber}.`
         );
       }
 
       /* ===================================================
-         PAS DE JOUEUR EN DOUBLE
+         PAS DE JOUEUR OFFICIEL EN DOUBLE
       =================================================== */
 
       const gamePlayerIds =
@@ -817,15 +848,34 @@ export async function POST(
             )
         );
 
-      /*
-        Tous les joueurs reçus
-        doivent appartenir à
-        l'une des 2 équipes.
+      const team1Subs =
+        substitutes.filter(
+          (sub) =>
+            Number(
+              sub.teamId
+            ) ===
+            Number(
+              team1Id
+            )
+        );
 
-        Le total peut être inférieur
-        à 10 uniquement à cause
-        des subs ignorés.
+      const team2Subs =
+        substitutes.filter(
+          (sub) =>
+            Number(
+              sub.teamId
+            ) ===
+            Number(
+              team2Id
+            )
+        );
+
+      /*
+        Vérifie qu'aucun joueur
+        officiel n'a une équipe
+        qui n'est pas dans le match.
       */
+
       if (
         team1Players.length +
           team2Players.length !==
@@ -836,19 +886,41 @@ export async function POST(
         );
       }
 
+      /*
+        Vérifie pareil pour
+        les subs.
+      */
+
       if (
-        team1Players.length >
+        team1Subs.length +
+          team2Subs.length !==
+        substitutes.length
+      ) {
+        throw new Error(
+          `Un sub possède une équipe invalide dans la Game ${game.gameNumber}.`
+        );
+      }
+
+      /*
+        Officiels + subs :
+        maximum 5 par équipe.
+      */
+
+      if (
+        team1Players.length +
+          team1Subs.length >
           5 ||
-        team2Players.length >
+        team2Players.length +
+          team2Subs.length >
           5
       ) {
         throw new Error(
-          `Une équipe contient plus de 5 joueurs enregistrés dans la Game ${game.gameNumber}.`
+          `Une équipe contient plus de 5 participants dans la Game ${game.gameNumber}.`
         );
       }
 
       /* ===================================================
-         VALIDATION JOUEURS
+         VALIDATION JOUEURS OFFICIELS
       =================================================== */
 
       for (
@@ -917,12 +989,6 @@ export async function POST(
           );
         }
 
-        /*
-          Comme les subs n'arrivent
-          jamais ici, chaque joueur
-          reçu doit appartenir au
-          roster officiel de son équipe.
-        */
         const realTeamId =
           memberTeamByRiotId.get(
             normalizeRiotId(
@@ -953,46 +1019,136 @@ export async function POST(
       }
 
       /* ===================================================
+         VALIDATION SUBS
+      =================================================== */
+
+      for (
+        const sub
+        of substitutes
+      ) {
+        if (
+          Number(
+            sub.teamId
+          ) !==
+            Number(
+              team1Id
+            ) &&
+          Number(
+            sub.teamId
+          ) !==
+            Number(
+              team2Id
+            )
+        ) {
+          throw new Error(
+            `Équipe du sub invalide dans la Game ${game.gameNumber}.`
+          );
+        }
+
+        if (
+          !allowedRoles.includes(
+            sub.role
+          )
+        ) {
+          throw new Error(
+            `Rôle du sub invalide dans la Game ${game.gameNumber}.`
+          );
+        }
+
+        if (
+          !sub.championId
+        ) {
+          throw new Error(
+            `Champion du sub manquant dans la Game ${game.gameNumber}.`
+          );
+        }
+
+        const numericSubStats =
+          [
+            sub.kills,
+            sub.deaths,
+            sub.assists,
+          ];
+
+        if (
+          numericSubStats.some(
+            (value) =>
+              !Number.isFinite(
+                Number(
+                  value
+                )
+              ) ||
+              Number(
+                value
+              ) < 0
+          )
+        ) {
+          throw new Error(
+            `KDA invalide pour un sub dans la Game ${game.gameNumber}.`
+          );
+        }
+      }
+
+      /* ===================================================
          ROLES
       =================================================== */
 
       /*
-        Un rôle peut manquer.
+        On vérifie maintenant
+        les rôles avec les subs.
 
         Exemple :
-        le Top était un sub,
-        donc aucune stat Top
-        n'est enregistrée pour
-        cette équipe.
+        Top officiel absent
+        + Top SUB présent = OK.
 
-        En revanche, on interdit
-        deux fois le même rôle
-        dans une équipe.
+        Mais Top officiel
+        + Top SUB = interdit.
       */
 
-      for (
-        const teamPlayers
-        of [
-          team1Players,
-          team2Players,
-        ]
-      ) {
-        const roles =
-          teamPlayers.map(
-            (player) =>
-              player.role
-          );
+      const team1Roles = [
+        ...team1Players.map(
+          (player) =>
+            player.role
+        ),
 
-        if (
-          new Set(
-            roles
-          ).size !==
-          roles.length
-        ) {
-          throw new Error(
-            `Un rôle est présent plusieurs fois dans la même équipe pour la Game ${game.gameNumber}.`
-          );
-        }
+        ...team1Subs.map(
+          (sub) =>
+            sub.role
+        ),
+      ];
+
+      const team2Roles = [
+        ...team2Players.map(
+          (player) =>
+            player.role
+        ),
+
+        ...team2Subs.map(
+          (sub) =>
+            sub.role
+        ),
+      ];
+
+      if (
+        new Set(
+          team1Roles
+        ).size !==
+        team1Roles.length
+      ) {
+        throw new Error(
+          `Un rôle est présent plusieurs fois pour l'équipe 1 dans la Game ${game.gameNumber}.`
+        );
+      }
+
+      if (
+        new Set(
+          team2Roles
+        ).size !==
+        team2Roles.length
+      ) {
+        throw new Error(
+          `Un rôle est présent plusieurs fois pour l'équipe 2 dans la Game ${game.gameNumber}.`
+        );
       }
     }
 
@@ -1014,13 +1170,14 @@ export async function POST(
       );
 
     /*
-      Le MVP doit faire partie
-      des joueurs effectivement
-      enregistrés dans les stats.
+      Le MVP doit être
+      un joueur officiel.
 
-      Donc un sub ignoré ne peut
-      pas être MVP.
+      Un sub n'a pas de playerId
+      ici et ne peut donc jamais
+      être MVP.
     */
+
     if (
       !uniquePlayerIds.includes(
         mvpNumericId
@@ -1088,13 +1245,6 @@ export async function POST(
       stage ===
       'pool'
     ) {
-      /*
-        2-0
-        1-1
-        0-2
-        autorisés
-      */
-
       if (
         winsTeam1 +
           winsTeam2 !==
@@ -1104,11 +1254,6 @@ export async function POST(
           'Un match de poule doit contenir exactement deux résultats de game.'
         );
       }
-
-      /*
-        Si 1-1 :
-        winnerTeamId doit être NULL.
-      */
 
       if (
         winsTeam1 ===
@@ -1214,15 +1359,9 @@ export async function POST(
               team2Id
             ),
 
-          /*
-            NULL si 1-1
-          */
           winner_team_id:
             calculatedWinner,
 
-          /*
-            MVP UNIQUE DU BO
-          */
           mvp_player_id:
             mvpNumericId,
 
@@ -1284,6 +1423,56 @@ export async function POST(
       const game
       of games
     ) {
+      /*
+        On prépare les subs
+        AVANT de créer la game.
+
+        Ces données seront stockées
+        uniquement dans le JSONB
+        substitute_stats.
+      */
+
+      const substituteStats =
+        (
+          Array.isArray(
+            game.substitutes
+          )
+            ? game.substitutes
+            : []
+        ).map(
+          (
+            sub
+          ) => ({
+            teamId:
+              Number(
+                sub.teamId
+              ),
+
+            role:
+              sub.role,
+
+            championId:
+              String(
+                sub.championId
+              ),
+
+            kills:
+              Number(
+                sub.kills
+              ) || 0,
+
+            deaths:
+              Number(
+                sub.deaths
+              ) || 0,
+
+            assists:
+              Number(
+                sub.assists
+              ) || 0,
+          })
+        );
+
       const {
         data: createdGame,
         error: gameError,
@@ -1310,6 +1499,16 @@ export async function POST(
               Number(
                 game.winnerTeamId
               ),
+
+            /*
+              NOUVEAU :
+
+              Les subs restent
+              uniquement sur la game
+              pour l'historique.
+            */
+            substitute_stats:
+              substituteStats,
           })
           .select('*')
           .single();
@@ -1327,18 +1526,26 @@ export async function POST(
       }
 
       /* ===================================================
-         STATS JOUEURS
+         STATS JOUEURS OFFICIELS
       =================================================== */
 
       /*
-        game.players contient
-        uniquement les joueurs
-        officiels dont on veut
-        conserver les stats.
+        IMPORTANT :
 
-        Les subs n'arrivent
-        jamais jusqu'ici.
+        Seuls les joueurs officiels
+        arrivent dans cette table.
+
+        Les subs restent complètement
+        exclus des statistiques :
+        - KDA classement
+        - DPM
+        - Gold
+        - Vision
+        - Pick Rate
+        - Win Rate champions
+        - MVP
       */
+
       const stats =
         game.players.map(
           (player) => ({
@@ -1428,6 +1635,25 @@ export async function POST(
        SUCCESS
     ===================================================== */
 
+    const substitutesSaved =
+      games.reduce(
+        (
+          total,
+          game
+        ) =>
+          total +
+          (
+            Array.isArray(
+              game.substitutes
+            )
+              ? game
+                  .substitutes
+                  .length
+              : 0
+          ),
+        0
+      );
+
     return NextResponse.json(
       {
         success: true,
@@ -1437,6 +1663,8 @@ export async function POST(
 
         gamesCreated:
           games.length,
+
+        substitutesSaved,
 
         score: {
           team1:
@@ -1483,6 +1711,7 @@ export async function POST(
       être supprimées avec les FK
       CASCADE si configurées.
     */
+
     if (
       createdMatchId !==
       null

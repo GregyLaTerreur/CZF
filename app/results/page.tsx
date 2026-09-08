@@ -61,9 +61,13 @@ type HistoryTeam = {
 };
 
 type HistoryGamePlayer = {
-  playerId: number;
+  playerId:
+    | number
+    | null;
 
   riotId: string;
+
+  isSub?: boolean;
 
   teamId: number;
 
@@ -3101,9 +3105,9 @@ function HistoryCard({
                               player
                             ) => (
                               <HistoryGamePlayerCard
-                                key={
-                                  `${game.id}-${player.playerId}`
-                                }
+key={
+  `${game.id}-${player.teamId}-${player.role}-${player.playerId ?? 'sub'}`
+}
                                 player={
                                   player
                                 }
@@ -3138,9 +3142,9 @@ function HistoryCard({
                               player
                             ) => (
                               <HistoryGamePlayerCard
-                                key={
-                                  `${game.id}-${player.playerId}`
-                                }
+key={
+  `${game.id}-${player.teamId}-${player.role}-${player.playerId ?? 'sub'}`
+}
                                 player={
                                   player
                                 }
@@ -3406,11 +3410,17 @@ function HistoryGamePlayerCard({
         )}
       </div>
 
-      <strong>
-        {
-          player.riotId
-        }
-      </strong>
+{player.isSub ? (
+  <strong className="subPlayer">
+    SUB
+  </strong>
+) : (
+  <strong>
+    {
+      player.riotId
+    }
+  </strong>
+)}
 
       <span className="gameChampionName">
         {
@@ -3467,6 +3477,16 @@ function HistoryGamePlayerCard({
           white-space: nowrap;
           text-overflow: ellipsis;
         }
+
+        .gamePlayerCard > strong.subPlayer {
+  color: var(--division-color);
+  font-size: 10px;
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  letter-spacing: 0.08em;
+}
 
         .gameChampionName {
           width: 100%;

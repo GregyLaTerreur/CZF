@@ -63,6 +63,18 @@ type GamePlayer = {
   visionScore: number;
 };
 
+type GameSubstitute = {
+  teamId: number;
+
+  role: Role;
+
+  championId: string;
+
+  kills: number;
+  deaths: number;
+  assists: number;
+};
+
 type GameForm = {
   gameNumber: number;
 
@@ -74,6 +86,15 @@ type GameForm = {
     | null;
 
   players: GamePlayer[];
+
+  /*
+    Subs conservés uniquement
+    pour l'historique.
+
+    Ils ne seront jamais ajoutés
+    aux stats officielles.
+  */
+  substitutes: GameSubstitute[];
 };
 
 type ImportPlayer = {
@@ -88,8 +109,8 @@ type ImportPlayer = {
     Si true :
     le joueur est un sub.
 
-    Ses stats ne seront PAS
-    enregistrées.
+    Champion + KDA sont conservés
+    pour l'historique.
   */
   sub?: boolean;
 
@@ -349,11 +370,6 @@ export default function AdminResultsPage() {
   ] =
     useState('');
 
-  /*
-    IMPORTANT :
-    en poules = 2 games fixes.
-    En playoffs = BO1 / BO3 / BO5.
-  */
   const [
     bestOf,
     setBestOf,
@@ -368,9 +384,6 @@ export default function AdminResultsPage() {
       GameForm[]
     >([]);
 
-  /*
-    MVP UNIQUE DU MATCH / BO
-  */
   const [
     matchMvpPlayerId,
     setMatchMvpPlayerId,
@@ -380,9 +393,6 @@ export default function AdminResultsPage() {
       null
     >(null);
 
-  /*
-    IMPORT JSON
-  */
   const [
     importJson,
     setImportJson,
@@ -457,7 +467,7 @@ export default function AdminResultsPage() {
   }, []);
 
   /* =========================================================
-     SI ON PASSE EN POULES => BO2 OBLIGATOIRE
+     SI ON PASSE EN POULES => BO2
   ========================================================= */
 
   useEffect(() => {
@@ -896,6 +906,8 @@ export default function AdminResultsPage() {
           secondTeam
         ),
       ],
+
+      substitutes: [],
     };
   }
 
@@ -947,14 +959,6 @@ export default function AdminResultsPage() {
       return;
     }
 
-    /*
-      POULES :
-      exactement 2 games.
-
-      PLAYOFFS :
-      on prépare le nombre maximum
-      de games du BO.
-    */
     const gameCount =
       stage ===
       'pool'
@@ -1105,10 +1109,6 @@ export default function AdminResultsPage() {
         importJson
           .trim();
 
-      /*
-        Permet également de coller
-        un JSON entouré de ```json
-      */
       cleanJson =
         cleanJson
           .replace(
@@ -1389,10 +1389,11 @@ export default function AdminResultsPage() {
             }
 
             /*
-              Le JSON doit toujours décrire
-              les 10 joueurs de la vraie game,
-              même si certains sont des subs.
+              Le JSON décrit toujours
+              les 10 participants réels,
+              subs compris.
             */
+
             if (
               !Array.isArray(
                 importedGame.players
@@ -1409,105 +1410,63 @@ export default function AdminResultsPage() {
               GamePlayer[] =
               [];
 
+            const gameSubstitutes:
+              GameSubstitute[] =
+              [];
+
             for (
               const importedPlayer
               of importedGame.players
             ) {
-              const isSub =
-  importedPlayer.sub === true;
+              /* =================================================
+                 TEAM
+              ================================================= */
 
-/*
-  SUB :
-  on ignore complètement
-  ses statistiques.
-*/
-if (isSub) {
-  continue;
-}
+              let playerTeam:
+                | Team
+                | undefined;
 
-/*
-  L'équipe devient la donnée
-  principale pour retrouver le joueur.
+              if (
+                importedPlayer.team
+              ) {
+                playerTeam =
+                  findTeam(
+                    importedPlayer.team,
+                    [
+                      importedTeam1,
+                      importedTeam2,
+                    ]
+                  );
+              }
 
-  Le pseudo Riot n'est PLUS obligatoire.
-*/
-let playerTeam:
-  | Team
-  | undefined;
+              if (
+                !playerTeam
+              ) {
+                throw new Error(
+                  `Équipe non reconnue dans la Game ${gameNumber}.`
+                );
+              }
 
-if (importedPlayer.team) {
-  playerTeam =
-    findTeam(
-      importedPlayer.team,
-      [
-        importedTeam1,
-        importedTeam2,
-      ]
-    );
-}
+              /* =================================================
+                 ROLE
+              ================================================= */
 
-if (!playerTeam) {
-  throw new Error(
-    `Équipe non reconnue dans la Game ${gameNumber}.`
-  );
-}
+              const role =
+                normalizeRole(
+                  importedPlayer.role
+                );
 
-/*
-  Le rôle vient du JSON.
-*/
-const role =
-  normalizeRole(
-    importedPlayer.role
-  );
+              if (
+                !role
+              ) {
+                throw new Error(
+                  `Rôle non reconnu dans la Game ${gameNumber}.`
+                );
+              }
 
-if (!role) {
-  throw new Error(
-    `Rôle non reconnu dans la Game ${gameNumber}.`
-  );
-}
-
-/*
-  On essaie D'ABORD le pseudo si le JSON
-  en contient encore un.
-
-  Ça permet de garder la compatibilité
-  avec tous tes anciens JSON.
-*/
-const playerName =
-  importedPlayer.player ??
-  importedPlayer.riotId;
-
-let rosterPlayer =
-  playerName
-    ? findPlayer(
-        playerName,
-        playerTeam.roster
-      )
-    : undefined;
-
-/*
-  Si le pseudo n'existe plus / a rename /
-  ou n'est carrément pas présent dans le JSON :
-
-  on prend automatiquement le joueur
-  actuellement enregistré à ce rôle
-  dans cette équipe.
-*/
-if (!rosterPlayer) {
-  rosterPlayer =
-    playerTeam.roster.find(
-      (player) =>
-        normalizeRole(
-          player.role
-        ) === role
-    );
-}
-
-if (!rosterPlayer) {
-  throw new Error(
-    `Aucun joueur ${role} trouvé dans le roster de ${playerTeam.name}, Game ${gameNumber}.`
-  );
-}
+              /* =================================================
+                 CHAMPION
+              ================================================= */
 
               const championValue =
                 importedPlayer.championId ??
@@ -1522,7 +1481,99 @@ if (!rosterPlayer) {
                 !champion
               ) {
                 throw new Error(
-                  `Champion "${championValue ?? '?'}" non reconnu pour ${rosterPlayer.riotId}, Game ${gameNumber}.`
+                  `Champion "${championValue ?? '?'}" non reconnu, Game ${gameNumber}.`
+                );
+              }
+
+              /* =================================================
+                 SUB
+              ================================================= */
+
+              const isSub =
+                importedPlayer.sub ===
+                true;
+
+              if (
+                isSub
+              ) {
+                gameSubstitutes.push(
+                  {
+                    teamId:
+                      playerTeam.id,
+
+                    role,
+
+                    championId:
+                      champion.id,
+
+                    kills:
+                      Number(
+                        importedPlayer.kills ??
+                          0
+                      ) ||
+                      0,
+
+                    deaths:
+                      Number(
+                        importedPlayer.deaths ??
+                          0
+                      ) ||
+                      0,
+
+                    assists:
+                      Number(
+                        importedPlayer.assists ??
+                          0
+                      ) ||
+                      0,
+                  }
+                );
+
+                /*
+                  IMPORTANT :
+                  on ne l'ajoute PAS
+                  à gamePlayers.
+                */
+
+                continue;
+              }
+
+              /* =================================================
+                 JOUEUR OFFICIEL
+              ================================================= */
+
+              const playerName =
+                importedPlayer.player ??
+                importedPlayer.riotId;
+
+              let rosterPlayer =
+                playerName
+                  ? findPlayer(
+                      playerName,
+                      playerTeam.roster
+                    )
+                  : undefined;
+
+              if (
+                !rosterPlayer
+              ) {
+                rosterPlayer =
+                  playerTeam.roster.find(
+                    (
+                      player
+                    ) =>
+                      normalizeRole(
+                        player.role
+                      ) ===
+                      role
+                  );
+              }
+
+              if (
+                !rosterPlayer
+              ) {
+                throw new Error(
+                  `Aucun joueur ${role} trouvé dans le roster de ${playerTeam.name}, Game ${gameNumber}.`
                 );
               }
 
@@ -1603,6 +1654,9 @@ if (!rosterPlayer) {
 
               players:
                 gamePlayers,
+
+              substitutes:
+                gameSubstitutes,
             };
           }
         );
@@ -1645,10 +1699,6 @@ if (!rosterPlayer) {
           );
         }
 
-        /*
-          On vérifie aussi que le MVP
-          n'a pas été ignoré comme sub.
-        */
         const mvpPlayed =
           importedGames.some(
             (
@@ -1717,8 +1767,21 @@ if (!rosterPlayer) {
         importedMvpId
       );
 
+      const totalSubs =
+        importedGames.reduce(
+          (
+            total,
+            game
+          ) =>
+            total +
+            game.substitutes.length,
+          0
+        );
+
       setMessage(
-        `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Les subs ont été ignorés pour les statistiques. Vérifie les données puis enregistre le match.`
+        totalSubs > 0
+          ? `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. ${totalSubs} sub(s) conservé(s) pour l'historique mais ignoré(s) dans les statistiques. Vérifie puis enregistre le match.`
+          : `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Vérifie les données puis enregistre le match.`
       );
     } catch (
       error: any
@@ -1765,10 +1828,6 @@ if (!rosterPlayer) {
             null
         );
 
-      /* =====================================================
-         POULES = EXACTEMENT 2 GAMES
-      ===================================================== */
-
       if (
         stage ===
           'pool' &&
@@ -1811,21 +1870,16 @@ if (!rosterPlayer) {
           );
         }
 
-        /*
-          Normalement 10.
+        const totalParticipants =
+          game.players.length +
+          game.substitutes.length;
 
-          Mais s'il y a un ou plusieurs
-          subs, ceux-ci sont ignorés
-          dans les statistiques.
-        */
         if (
-          game.players.length ===
-            0 ||
-          game.players.length >
-            10
+          totalParticipants !==
+          10
         ) {
           throw new Error(
-            `Nombre de joueurs invalide dans la Game ${game.gameNumber}.`
+            `La Game ${game.gameNumber} doit contenir exactement 10 participants avec les subs. Actuellement : ${totalParticipants}.`
           );
         }
 
@@ -1838,6 +1892,19 @@ if (!rosterPlayer) {
           ) {
             throw new Error(
               `Champion manquant dans la Game ${game.gameNumber}.`
+            );
+          }
+        }
+
+        for (
+          const sub
+          of game.substitutes
+        ) {
+          if (
+            !sub.championId
+          ) {
+            throw new Error(
+              `Champion du sub manquant dans la Game ${game.gameNumber}.`
             );
           }
         }
@@ -1878,7 +1945,7 @@ if (!rosterPlayer) {
       }
 
       /* =====================================================
-         SCORE MATCH
+         SCORE
       ===================================================== */
 
       const winsTeam1 =
@@ -1898,14 +1965,6 @@ if (!rosterPlayer) {
             game.winnerTeamId ===
             team2Id
         ).length;
-
-      /*
-        EN POULES :
-        2-0 / 1-1 / 0-2 sont autorisés.
-
-        EN PLAYOFFS :
-        égalité impossible.
-      */
 
       let winnerTeamId:
         | number
@@ -1971,15 +2030,8 @@ if (!rosterPlayer) {
         team1Id,
         team2Id,
 
-        /*
-          null = match nul 1-1
-          en poules
-        */
         winnerTeamId,
 
-        /*
-          MVP UNIQUE DU BO
-        */
         mvpPlayerId:
           matchMvpPlayerId,
 
@@ -1997,9 +2049,6 @@ if (!rosterPlayer) {
             ? round
             : null,
 
-        /*
-          Poules = 2
-        */
         bestOf:
           stage ===
           'pool'
@@ -2023,9 +2072,9 @@ if (!rosterPlayer) {
                 game.winnerTeamId,
 
               /*
-                Ici il n'y a déjà
-                plus les subs.
+                JOUEURS OFFICIELS
               */
+
               players:
                 game.players.map(
                   (
@@ -2086,6 +2135,47 @@ if (!rosterPlayer) {
                       0,
                   })
                 ),
+
+              /*
+                SUBS
+
+                Seulement champion +
+                rôle + équipe + KDA.
+              */
+
+              substitutes:
+                game.substitutes.map(
+                  (
+                    sub
+                  ) => ({
+                    teamId:
+                      sub.teamId,
+
+                    role:
+                      sub.role,
+
+                    championId:
+                      sub.championId,
+
+                    kills:
+                      Number(
+                        sub.kills
+                      ) ||
+                      0,
+
+                    deaths:
+                      Number(
+                        sub.deaths
+                      ) ||
+                      0,
+
+                    assists:
+                      Number(
+                        sub.assists
+                      ) ||
+                      0,
+                  })
+                ),
             })
           ),
       };
@@ -2125,8 +2215,21 @@ if (!rosterPlayer) {
         );
       }
 
+      const subCount =
+        playedGames.reduce(
+          (
+            total,
+            game
+          ) =>
+            total +
+            game.substitutes.length,
+          0
+        );
+
       setMessage(
-        `Match enregistré ! ID ${data.matchId} — Score ${winsTeam1}-${winsTeam2}`
+        subCount > 0
+          ? `Match enregistré ! ID ${data.matchId} — Score ${winsTeam1}-${winsTeam2} — ${subCount} sub(s) conservé(s) pour l'historique.`
+          : `Match enregistré ! ID ${data.matchId} — Score ${winsTeam1}-${winsTeam2}`
       );
 
       setGames(
@@ -2637,12 +2740,40 @@ if (!rosterPlayer) {
               className="card gameCard"
             >
               <div className="gameHeader">
-                <h3>
-                  Game{' '}
-                  {
-                    game.gameNumber
-                  }
-                </h3>
+                <div>
+                  <h3>
+                    Game{' '}
+                    {
+                      game.gameNumber
+                    }
+                  </h3>
+
+                  {game.substitutes.length >
+                    0 && (
+                    <span className="subNotice">
+                      {
+                        game
+                          .substitutes
+                          .length
+                      }{' '}
+                      SUB
+                      {game
+                        .substitutes
+                        .length >
+                      1
+                        ? 'S'
+                        : ''}{' '}
+                      — conservé
+                      {game
+                        .substitutes
+                        .length >
+                      1
+                        ? 's'
+                        : ''}{' '}
+                      uniquement pour l'historique
+                    </span>
+                  )}
+                </div>
 
                 <div className="gameOptions">
                   <label>
@@ -3156,6 +3287,18 @@ if (!rosterPlayer) {
             gap: 20px;
             margin-bottom:
               22px;
+          }
+
+          .subNotice {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            background: rgba(255, 126, 42, 0.1);
+            color: var(--orange);
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
           }
 
           .gameOptions {

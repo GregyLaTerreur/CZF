@@ -1228,143 +1228,307 @@ export async function GET(
           )
         );
 
-      const gameStats =
-        allStats
-          .filter(
-            (
-              stat
-            ) =>
-              Number(
-                stat.game_id
-              ) ===
-              Number(
-                game.id
-              )
-          )
-          .map(
-            (
-              stat
-            ) => {
-              const player =
-                playerMap.get(
-                  Number(
-                    stat.player_id
-                  )
-                );
+      /*
+  =========================================================
+  JOUEURS OFFICIELS
 
-              const team =
-                teamMap.get(
-                  Number(
-                    stat.team_id
-                  )
-                );
+  Ceux-ci viennent de czf_game_player_stats.
+  Ils continuent donc à alimenter les vraies stats joueurs.
+  =========================================================
+*/
 
-              const championId =
-                String(
-                  stat.champion_id ??
-                    ''
-                );
-
-              const champion =
-                championMap.get(
-                  championId
-                );
-
-              const role =
-                normalizeRole(
-                  stat.role
-                );
-
-              return {
-                playerId:
-                  Number(
-                    stat.player_id
-                  ),
-
-                riotId:
-                  player
-                    ? String(
-                        getValue(
-                          player,
-                          [
-                            'riot_id',
-                            'riotId',
-                          ]
-                        ) ??
-                          `Joueur ${stat.player_id}`
-                      )
-                    : `Joueur ${stat.player_id}`,
-
-                teamId:
-                  Number(
-                    stat.team_id
-                  ),
-
-                teamName:
-                  team?.name ??
-                  '',
-
-                teamShortName:
-                  team?.shortName ??
-                  '',
-
-                role,
-
-                championId,
-
-                championName:
-                  champion
-                    ?.name ??
-                  championId,
-
-                championImage:
-                  champion
-                    ?.image ??
-                  null,
-
-                kills:
-                  Number(
-                    stat.kills
-                  ) || 0,
-
-                deaths:
-                  Number(
-                    stat.deaths
-                  ) || 0,
-
-                assists:
-                  Number(
-                    stat.assists
-                  ) || 0,
-              };
-            }
-          )
-          .sort(
-            (
-              a,
-              b
-            ) => {
-              if (
-                a.teamId !==
-                b.teamId
-              ) {
-                return (
-                  a.teamId -
-                  b.teamId
-                );
-              }
-
-              return (
-                roleOrder(
-                  a.role
-                ) -
-                roleOrder(
-                  b.role
-                )
-              );
-            }
+const officialGameStats =
+  allStats
+    .filter(
+      (stat) =>
+        Number(
+          stat.game_id
+        ) ===
+        Number(
+          game.id
+        )
+    )
+    .map(
+      (stat) => {
+        const player =
+          playerMap.get(
+            Number(
+              stat.player_id
+            )
           );
 
+        const team =
+          teamMap.get(
+            Number(
+              stat.team_id
+            )
+          );
+
+        const championId =
+          String(
+            stat.champion_id ??
+              ''
+          );
+
+        const champion =
+          championMap.get(
+            championId
+          );
+
+        const role =
+          normalizeRole(
+            stat.role
+          );
+
+        return {
+          playerId:
+            Number(
+              stat.player_id
+            ),
+
+          riotId:
+            player
+              ? String(
+                  getValue(
+                    player,
+                    [
+                      'riot_id',
+                      'riotId',
+                    ]
+                  ) ??
+                    `Joueur ${stat.player_id}`
+                )
+              : `Joueur ${stat.player_id}`,
+
+          /*
+            Permettra au front de distinguer
+            un joueur normal d'un SUB.
+          */
+          isSub: false,
+
+          teamId:
+            Number(
+              stat.team_id
+            ),
+
+          teamName:
+            team?.name ??
+            '',
+
+          teamShortName:
+            team?.shortName ??
+            '',
+
+          role,
+
+          championId,
+
+          championName:
+            champion?.name ??
+            championId,
+
+          championImage:
+            champion?.image ??
+            null,
+
+          kills:
+            Number(
+              stat.kills
+            ) || 0,
+
+          deaths:
+            Number(
+              stat.deaths
+            ) || 0,
+
+          assists:
+            Number(
+              stat.assists
+            ) || 0,
+        };
+      }
+    );
+
+/*
+  =========================================================
+  SUBS
+
+  Ils sont stockés directement dans czf_games.substitute_stats.
+
+  Ils sont utilisés UNIQUEMENT ici, dans l'historique.
+
+  Ils ne rentrent donc toujours PAS dans :
+  - les stats joueurs
+  - les KDA rankings
+  - le DPM
+  - le Gold
+  - la Vision
+  - les champions les plus joués
+  - le Pick Rate
+  - le Win Rate
+  - les MVP
+  =========================================================
+*/
+
+const rawSubstitutes =
+  Array.isArray(
+    game.substitute_stats
+  )
+    ? game.substitute_stats
+    : [];
+
+const substituteGameStats =
+  rawSubstitutes
+    .map(
+      (sub: AnyObject) => {
+        /*
+          On accepte les 2 écritures
+          au cas où :
+          teamId / team_id
+          championId / champion_id
+        */
+
+        const teamId =
+          Number(
+            sub.teamId ??
+              sub.team_id
+          );
+
+        const team =
+          teamMap.get(
+            teamId
+          );
+
+        const role =
+          normalizeRole(
+            sub.role
+          );
+
+        const championId =
+          String(
+            sub.championId ??
+              sub.champion_id ??
+              ''
+          );
+
+        const champion =
+          championMap.get(
+            championId
+          );
+
+        return {
+          /*
+            Un SUB n'a volontairement
+            aucun playerId officiel.
+          */
+          playerId: null,
+
+          /*
+            Le front affichera SUB
+            à la place du pseudo.
+          */
+          riotId: 'SUB',
+
+          isSub: true,
+
+          teamId,
+
+          teamName:
+            team?.name ??
+            '',
+
+          teamShortName:
+            team?.shortName ??
+            '',
+
+          role,
+
+          championId,
+
+          championName:
+            champion?.name ??
+            championId,
+
+          championImage:
+            champion?.image ??
+            null,
+
+          kills:
+            Number(
+              sub.kills
+            ) || 0,
+
+          deaths:
+            Number(
+              sub.deaths
+            ) || 0,
+
+          assists:
+            Number(
+              sub.assists
+            ) || 0,
+        };
+      }
+    )
+    /*
+      Si jamais une vieille donnée
+      JSONB est cassée, on ne fait pas
+      planter toute la page Résultats.
+    */
+    .filter(
+      (sub) =>
+        Number.isFinite(
+          sub.teamId
+        ) &&
+        sub.role !==
+          null &&
+        sub.championId !==
+          ''
+    );
+
+/*
+  =========================================================
+  HISTORIQUE COMPLET DE LA GAME
+
+  Joueurs officiels + SUBS.
+
+  Puis tri :
+  équipe -> Top/Jungle/Mid/ADC/Support
+
+  Le SUB prend donc automatiquement
+  la place du rôle qu'il a joué.
+  =========================================================
+*/
+
+const gameStats =
+  [
+    ...officialGameStats,
+    ...substituteGameStats,
+  ].sort(
+    (
+      a,
+      b
+    ) => {
+      if (
+        a.teamId !==
+        b.teamId
+      ) {
+        return (
+          a.teamId -
+          b.teamId
+        );
+      }
+
+      return (
+        roleOrder(
+          a.role
+        ) -
+        roleOrder(
+          b.role
+        )
+      );
+    }
+  );
       return {
         id:
           Number(
