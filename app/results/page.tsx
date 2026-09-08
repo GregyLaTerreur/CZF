@@ -1119,78 +1119,61 @@ export default function ResultsPage() {
         </h3>
       </div>
 
-      <div className="historyHeaderActions">
-        <span>
-          {history.length}{' '}
-          MATCH
-          {history.length ===
-          1
-            ? ''
-            : 'S'}
-        </span>
-
-        {history.length >
-          0 && (
-          <button
-            type="button"
-            onClick={() =>
-              setHistoryOpen(
-                true
-              )
-            }
-          >
-            OUVRIR L'HISTORIQUE
-          </button>
-        )}
-      </div>
+      <span className="historyCount">
+        {history.length}{' '}
+        MATCH
+        {history.length === 1
+          ? ''
+          : 'S'}
+      </span>
     </div>
   </div>
 
-  {history.length ===
-  0 ? (
+  {history.length === 0 ? (
     <div className="emptySection">
       Aucun match enregistré pour le moment.
     </div>
   ) : (
-    <div className="historyList">
-      {history
-        .slice(
-          0,
-          6
-        )
-        .map(
-          (
-            match
-          ) => (
-            <HistoryCard
-              key={
-                match.id
-              }
-              match={
-                match
-              }
-              compact
-            />
-          )
-        )}
-    </div>
-  )}
+    <>
+      <div className="historyList">
+        {history
+          .slice(0, 3)
+          .map(
+            (
+              match
+            ) => (
+              <HistoryCard
+                key={
+                  match.id
+                }
+                match={
+                  match
+                }
+              />
+            )
+          )}
+      </div>
 
-  {history.length >
-    6 && (
-    <button
-      type="button"
-      className="historySeeAll"
-      onClick={() =>
-        setHistoryOpen(
-          true
-        )
-      }
-    >
-      VOIR LES{' '}
-      {history.length}{' '}
-      MATCHS
-    </button>
+      {history.length > 3 && (
+        <button
+          type="button"
+          className="historyMoreBar"
+          onClick={() =>
+            setHistoryOpen(
+              true
+            )
+          }
+        >
+          <span>
+            PLUS DE MATCHS
+          </span>
+
+          <strong>
+            ↓
+          </strong>
+        </button>
+      )}
+    </>
   )}
 </section>
 
@@ -1218,8 +1201,16 @@ export default function ResultsPage() {
           </span>
 
           <h2>
-            Historique des matchs
+            Tous les matchs
           </h2>
+
+          <small>
+            {history.length}{' '}
+            MATCH
+            {history.length === 1
+              ? ''
+              : 'S'}
+          </small>
         </div>
 
         <button
@@ -1837,13 +1828,7 @@ export default function ResultsPage() {
   text-transform: uppercase;
 }
 
-.historyHeaderActions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.historyHeaderActions > span {
+.historyCount {
   padding: 7px 10px;
   border-radius: 6px;
   background: var(--division-soft);
@@ -1852,26 +1837,45 @@ export default function ResultsPage() {
   font-weight: 900;
 }
 
-.historyHeaderActions button,
-.historySeeAll {
-  border: 1px solid var(--division-color);
-  border-radius: 6px;
+.historyMoreBar {
+  width: 100%;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border: 0;
+  border-top: 1px solid rgba(9, 42, 63, 0.14);
   background: var(--division-soft);
   color: var(--division-color);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    gap 0.15s ease;
+}
+
+.historyMoreBar:hover {
+  background: rgba(9, 42, 63, 0.06);
+  gap: 21px;
+}
+
+.historyMoreBar span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.historyMoreBar strong {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.historyModalTop small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
   font-size: 8px;
   font-weight: 900;
-  cursor: pointer;
-}
-
-.historyHeaderActions button {
-  min-height: 31px;
-  padding: 0 12px;
-}
-
-.historySeeAll {
-  width: calc(100% - 40px);
-  min-height: 38px;
-  margin: 12px 20px 18px;
 }
 
 .historyOverlay {
@@ -2932,11 +2936,6 @@ function HistoryCard({
         type="button"
         className="historySummary"
         onClick={() => {
-          if (
-            compact
-          ) {
-            return;
-          }
 
           setOpen(
             (
@@ -2995,11 +2994,19 @@ function HistoryCard({
         </div>
 
         {!compact && (
-          <span className="historyOpen">
-            {open
-              ? 'Réduire'
-              : 'Voir le match'}
-          </span>
+         <div className="historyDetailsButton">
+  <span>
+    {open
+      ? 'FERMER'
+      : 'DÉTAILS'}
+  </span>
+
+  <strong>
+    {open
+      ? '↑'
+      : '→'}
+  </strong>
+</div>
         )}
       </button>
 
@@ -3226,13 +3233,27 @@ function HistoryCard({
           opacity: 0.35;
         }
 
-        .historyOpen {
-          color: var(--division-color);
-          font-size: 8px;
-          font-weight: 900;
-          text-align: right;
-          text-transform: uppercase;
-        }
+        .historyDetailsButton {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: 0 15px;
+  border-left: 1px solid rgba(9, 42, 63, 0.12);
+  color: var(--division-color);
+}
+
+.historyDetailsButton span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.historyDetailsButton strong {
+  font-size: 22px;
+  line-height: 1;
+}
 
         .historyDetails {
           padding: 6px 20px 22px;
