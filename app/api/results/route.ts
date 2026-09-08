@@ -1217,45 +1217,185 @@ export async function GET(
                 : null,
 
             games:
-              matchGames.map(
-                (
-                  game
-                ) => {
-                  const gameWinner =
-                    teamMap.get(
-                      Number(
-                        game.winner_team_id
+  matchGames.map(
+    (
+      game
+    ) => {
+      const gameWinner =
+        teamMap.get(
+          Number(
+            game.winner_team_id
+          )
+        );
+
+      const gameStats =
+        allStats
+          .filter(
+            (
+              stat
+            ) =>
+              Number(
+                stat.game_id
+              ) ===
+              Number(
+                game.id
+              )
+          )
+          .map(
+            (
+              stat
+            ) => {
+              const player =
+                playerMap.get(
+                  Number(
+                    stat.player_id
+                  )
+                );
+
+              const team =
+                teamMap.get(
+                  Number(
+                    stat.team_id
+                  )
+                );
+
+              const championId =
+                String(
+                  stat.champion_id ??
+                    ''
+                );
+
+              const champion =
+                championMap.get(
+                  championId
+                );
+
+              const role =
+                normalizeRole(
+                  stat.role
+                );
+
+              return {
+                playerId:
+                  Number(
+                    stat.player_id
+                  ),
+
+                riotId:
+                  player
+                    ? String(
+                        getValue(
+                          player,
+                          [
+                            'riot_id',
+                            'riotId',
+                          ]
+                        ) ??
+                          `Joueur ${stat.player_id}`
                       )
-                    );
+                    : `Joueur ${stat.player_id}`,
 
-                  return {
-                    id:
-                      Number(
-                        game.id
-                      ),
+                teamId:
+                  Number(
+                    stat.team_id
+                  ),
 
-                    gameNumber:
-                      Number(
-                        game.game_number
-                      ),
+                teamName:
+                  team?.name ??
+                  '',
 
-                    durationSeconds:
-                      Number(
-                        game.duration_seconds
-                      ),
+                teamShortName:
+                  team?.shortName ??
+                  '',
 
-                    winnerTeamId:
-                      Number(
-                        game.winner_team_id
-                      ),
+                role,
 
-                    winnerName:
-                      gameWinner
-                        ?.name ??
-                      null,
-                  };
-                }
-              ),
+                championId,
+
+                championName:
+                  champion
+                    ?.name ??
+                  championId,
+
+                championImage:
+                  champion
+                    ?.image ??
+                  null,
+
+                kills:
+                  Number(
+                    stat.kills
+                  ) || 0,
+
+                deaths:
+                  Number(
+                    stat.deaths
+                  ) || 0,
+
+                assists:
+                  Number(
+                    stat.assists
+                  ) || 0,
+              };
+            }
+          )
+          .sort(
+            (
+              a,
+              b
+            ) => {
+              if (
+                a.teamId !==
+                b.teamId
+              ) {
+                return (
+                  a.teamId -
+                  b.teamId
+                );
+              }
+
+              return (
+                roleOrder(
+                  a.role
+                ) -
+                roleOrder(
+                  b.role
+                )
+              );
+            }
+          );
+
+      return {
+        id:
+          Number(
+            game.id
+          ),
+
+        gameNumber:
+          Number(
+            game.game_number
+          ),
+
+        durationSeconds:
+          Number(
+            game.duration_seconds
+          ),
+
+        winnerTeamId:
+          Number(
+            game.winner_team_id
+          ),
+
+        winnerName:
+          gameWinner
+            ?.name ??
+          null,
+
+        players:
+          gameStats,
+      };
+    }
+  ),
           };
         }
       );

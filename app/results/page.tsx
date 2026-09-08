@@ -60,6 +60,36 @@ type HistoryTeam = {
   score: number;
 };
 
+type HistoryGamePlayer = {
+  playerId: number;
+
+  riotId: string;
+
+  teamId: number;
+
+  teamName: string;
+
+  teamShortName: string;
+
+  role:
+    | string
+    | null;
+
+  championId: string;
+
+  championName: string;
+
+  championImage:
+    | string
+    | null;
+
+  kills: number;
+
+  deaths: number;
+
+  assists: number;
+};
+
 type HistoryGame = {
   id: number;
 
@@ -72,6 +102,9 @@ type HistoryGame = {
   winnerName:
     | string
     | null;
+
+  players:
+    HistoryGamePlayer[];
 };
 
 type HistoryMatch = {
@@ -400,6 +433,13 @@ export default function ResultsPage() {
   ] =
     useState('');
 
+    const [
+  historyOpen,
+  setHistoryOpen,
+] =
+  useState(
+    false
+  );
   /* ======================================================
      LOAD
   ====================================================== */
@@ -1062,46 +1102,157 @@ export default function ResultsPage() {
           </section>
         </div>
 
-        {/* =================================================
-            HISTORIQUE
-        ================================================= */}
+       {/* =================================================
+    HISTORIQUE
+================================================= */}
 
-        <section className="resultsCard historyCard">
-          <CardHeader
-            eyebrow="MATCHS TERMINÉS"
-            title="Historique des matchs"
-            badge={`${history.length} MATCH${
-              history.length ===
-              1
-                ? ''
-                : 'S'
-            }`}
-          />
+<section className="resultsCard historyCard">
+  <div className="historyMainHeader">
+    <div className="historyHeaderContent">
+      <div>
+        <p>
+          MATCHS TERMINÉS
+        </p>
 
+        <h3>
+          Historique des matchs
+        </h3>
+      </div>
+
+      <div className="historyHeaderActions">
+        <span>
+          {history.length}{' '}
+          MATCH
           {history.length ===
-          0 ? (
-            <div className="emptySection">
-              Aucun match enregistré pour le moment.
-            </div>
-          ) : (
-            <div className="historyList">
-              {history.map(
-                (
-                  match
-                ) => (
-                  <HistoryCard
-                    key={
-                      match.id
-                    }
-                    match={
-                      match
-                    }
-                  />
-                )
-              )}
-            </div>
-          )}
-        </section>
+          1
+            ? ''
+            : 'S'}
+        </span>
+
+        {history.length >
+          0 && (
+          <button
+            type="button"
+            onClick={() =>
+              setHistoryOpen(
+                true
+              )
+            }
+          >
+            OUVRIR L'HISTORIQUE
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {history.length ===
+  0 ? (
+    <div className="emptySection">
+      Aucun match enregistré pour le moment.
+    </div>
+  ) : (
+    <div className="historyList">
+      {history
+        .slice(
+          0,
+          6
+        )
+        .map(
+          (
+            match
+          ) => (
+            <HistoryCard
+              key={
+                match.id
+              }
+              match={
+                match
+              }
+              compact
+            />
+          )
+        )}
+    </div>
+  )}
+
+  {history.length >
+    6 && (
+    <button
+      type="button"
+      className="historySeeAll"
+      onClick={() =>
+        setHistoryOpen(
+          true
+        )
+      }
+    >
+      VOIR LES{' '}
+      {history.length}{' '}
+      MATCHS
+    </button>
+  )}
+</section>
+
+{historyOpen && (
+  <div
+    className="historyOverlay"
+    onClick={() =>
+      setHistoryOpen(
+        false
+      )
+    }
+  >
+    <div
+      className="historyModal"
+      onClick={(
+        event
+      ) =>
+        event.stopPropagation()
+      }
+    >
+      <div className="historyModalTop">
+        <div>
+          <span>
+            {division}
+          </span>
+
+          <h2>
+            Historique des matchs
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            setHistoryOpen(
+              false
+            )
+          }
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="historyModalList">
+        {history.map(
+          (
+            match
+          ) => (
+            <HistoryCard
+              key={
+                match.id
+              }
+              match={
+                match
+              }
+            />
+          )
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
         {/* =================================================
             STATS
@@ -1656,6 +1807,133 @@ export default function ResultsPage() {
             display: flex;
             flex-direction: column;
           }
+
+          .historyMainHeader {
+  border-bottom: 1px solid rgba(9, 42, 63, 0.1);
+}
+
+.historyHeaderContent {
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 21px;
+}
+
+.historyHeaderContent p {
+  margin: 0 0 3px;
+  color: var(--orange);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.historyHeaderContent h3 {
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 27px;
+  text-transform: uppercase;
+}
+
+.historyHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.historyHeaderActions > span {
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--division-soft);
+  color: var(--division-color);
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.historyHeaderActions button,
+.historySeeAll {
+  border: 1px solid var(--division-color);
+  border-radius: 6px;
+  background: var(--division-soft);
+  color: var(--division-color);
+  font-size: 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.historyHeaderActions button {
+  min-height: 31px;
+  padding: 0 12px;
+}
+
+.historySeeAll {
+  width: calc(100% - 40px);
+  min-height: 38px;
+  margin: 12px 20px 18px;
+}
+
+.historyOverlay {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 25px;
+  background: rgba(4, 19, 29, 0.72);
+  backdrop-filter: blur(7px);
+}
+
+.historyModal {
+  width: min(1600px, 96vw);
+  max-height: 92vh;
+  overflow: hidden;
+  border: 1px solid rgba(9, 42, 63, 0.7);
+  border-radius: 15px;
+  background: #fff6e5;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+}
+
+.historyModalTop {
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(9, 42, 63, 0.12);
+}
+
+.historyModalTop span {
+  color: var(--division-color);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.historyModalTop h2 {
+  margin: 3px 0 0;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 30px;
+  text-transform: uppercase;
+}
+
+.historyModalTop button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(9, 42, 63, 0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--navy);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.historyModalList {
+  max-height: calc(92vh - 90px);
+  overflow-y: auto;
+}
 
           .roleTabs {
             display: grid;
@@ -2625,9 +2903,13 @@ function BracketMatch({
 
 function HistoryCard({
   match,
+  compact = false,
 }: {
   match:
     HistoryMatch;
+
+  compact?:
+    boolean;
 }) {
   const [
     open,
@@ -2649,14 +2931,20 @@ function HistoryCard({
       <button
         type="button"
         className="historySummary"
-        onClick={() =>
+        onClick={() => {
+          if (
+            compact
+          ) {
+            return;
+          }
+
           setOpen(
             (
               value
             ) =>
               !value
-          )
-        }
+          );
+        }}
       >
         <div className="historyMeta">
           <span>
@@ -2706,16 +2994,162 @@ function HistoryCard({
           />
         </div>
 
-        <span className="historyOpen">
-          {open
-            ? 'Réduire'
-            : 'Voir le match'}
-        </span>
+        {!compact && (
+          <span className="historyOpen">
+            {open
+              ? 'Réduire'
+              : 'Voir le match'}
+          </span>
+        )}
       </button>
 
       {open && (
         <div className="historyDetails">
-          <div className="historyMvp">
+          <div className="historyGamesDetailed">
+            {match.games.map(
+              (
+                game
+              ) => {
+                const team1Players =
+                  game.players
+                    .filter(
+                      (
+                        player
+                      ) =>
+                        player.teamId ===
+                        match.team1!.id
+                    )
+                    .sort(
+                      (
+                        a,
+                        b
+                      ) =>
+                        roleOrderClient(
+                          a.role
+                        ) -
+                        roleOrderClient(
+                          b.role
+                        )
+                    );
+
+                const team2Players =
+                  game.players
+                    .filter(
+                      (
+                        player
+                      ) =>
+                        player.teamId ===
+                        match.team2!.id
+                    )
+                    .sort(
+                      (
+                        a,
+                        b
+                      ) =>
+                        roleOrderClient(
+                          a.role
+                        ) -
+                        roleOrderClient(
+                          b.role
+                        )
+                    );
+
+                return (
+                  <div
+                    key={
+                      game.id
+                    }
+                    className="historyDetailedGame"
+                  >
+                    <div className="gameTitle">
+                      <strong>
+                        GAME{' '}
+                        {
+                          game.gameNumber
+                        }
+                      </strong>
+
+                      <span>
+                        {
+                          formatDuration(
+                            game.durationSeconds
+                          )
+                        }
+                      </span>
+
+                      <b>
+                        VICTOIRE{' '}
+                        {
+                          game.winnerName ??
+                          '-'
+                        }
+                      </b>
+                    </div>
+
+                    <div className="gamePlayersScroller">
+                      <div className="gamePlayersLine">
+                        <div className="gameTeamPlayers">
+                          {team1Players.map(
+                            (
+                              player
+                            ) => (
+                              <HistoryGamePlayerCard
+                                key={
+                                  `${game.id}-${player.playerId}`
+                                }
+                                player={
+                                  player
+                                }
+                              />
+                            )
+                          )}
+                        </div>
+
+                        <div className="gameVersus">
+                          <span>
+                            {
+                              match.team1
+                                ?.shortName
+                            }
+                          </span>
+
+                          <strong>
+                            VS
+                          </strong>
+
+                          <span>
+                            {
+                              match.team2
+                                ?.shortName
+                            }
+                          </span>
+                        </div>
+
+                        <div className="gameTeamPlayers">
+                          {team2Players.map(
+                            (
+                              player
+                            ) => (
+                              <HistoryGamePlayerCard
+                                key={
+                                  `${game.id}-${player.playerId}`
+                                }
+                                player={
+                                  player
+                                }
+                              />
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+
+          <div className="historyMvpLarge">
             <span>
               MVP DU BO
             </span>
@@ -2726,44 +3160,6 @@ function HistoryCard({
                 '-'
               }
             </strong>
-          </div>
-
-          <div className="historyGames">
-            {match.games.map(
-              (
-                game
-              ) => (
-                <div
-                  key={
-                    game.id
-                  }
-                  className="historyGame"
-                >
-                  <strong>
-                    GAME{' '}
-                    {
-                      game.gameNumber
-                    }
-                  </strong>
-
-                  <span>
-                    {
-                      formatDuration(
-                        game.durationSeconds
-                      )
-                    }
-                  </span>
-
-                  <span>
-                    Winner :{' '}
-                    {
-                      game.winnerName ??
-                      '-'
-                    }
-                  </span>
-                </div>
-              )
-            )}
           </div>
         </div>
       )}
@@ -2787,6 +3183,7 @@ function HistoryCard({
           border: 0;
           background: transparent;
           text-align: left;
+          cursor: pointer;
         }
 
         .historyMeta {
@@ -2797,10 +3194,7 @@ function HistoryCard({
         }
 
         .historyMeta span {
-          width: auto;
-          height: auto;
           padding: 4px 7px;
-          border: 0;
           border-radius: 5px;
           background: var(--division-soft);
           color: var(--division-color);
@@ -2828,80 +3222,247 @@ function HistoryCard({
         }
 
         .historyScore span {
-          width: auto;
-          height: auto;
           margin: 0 8px;
-          border: 0;
           opacity: 0.35;
         }
 
         .historyOpen {
-          width: auto;
-          height: auto;
-          border: 0;
           color: var(--division-color);
           font-size: 8px;
           font-weight: 900;
+          text-align: right;
           text-transform: uppercase;
         }
 
         .historyDetails {
-          padding: 0 20px 15px;
+          padding: 6px 20px 22px;
         }
 
-        .historyMvp {
-          display: inline-flex;
+        .historyGamesDetailed {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .historyDetailedGame {
+          overflow: hidden;
+          border: 1px solid rgba(9, 42, 63, 0.14);
+          border-radius: 10px;
+          background: rgba(255, 250, 241, 0.62);
+        }
+
+        .gameTitle {
+          min-height: 42px;
+          display: flex;
           align-items: center;
-          gap: 9px;
-          margin-bottom: 10px;
-          padding: 8px 11px;
-          border: 1px solid rgba(9, 42, 63, 0.13);
-          border-radius: 6px;
-          background: var(--division-soft);
+          gap: 12px;
+          padding: 0 14px;
+          border-bottom: 1px solid rgba(9, 42, 63, 0.08);
         }
 
-        .historyMvp span {
+        .gameTitle strong {
           color: var(--division-color);
-          font-size: 7px;
-          font-weight: 900;
-        }
-
-        .historyMvp strong {
-          color: var(--navy);
           font-size: 9px;
         }
 
-        .historyGames {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
+        .gameTitle span {
+          color: var(--navy);
+          font-size: 9px;
+          font-weight: 900;
         }
 
-        .historyGame {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 7px 9px;
-          border: 1px solid rgba(9, 42, 63, 0.13);
-          border-radius: 6px;
+        .gameTitle b {
+          margin-left: auto;
           color: var(--muted);
           font-size: 8px;
+          text-transform: uppercase;
         }
 
-        .historyGame strong {
+        .gamePlayersScroller {
+          overflow-x: auto;
+        }
+
+        .gamePlayersLine {
+          min-width: 1080px;
+          display: grid;
+          grid-template-columns:
+            minmax(460px, 1fr)
+            90px
+            minmax(460px, 1fr);
+          align-items: center;
+          gap: 12px;
+          padding: 16px;
+        }
+
+        .gameTeamPlayers {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(82px, 1fr));
+          gap: 8px;
+        }
+
+        .gameVersus {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          color: var(--muted);
+          text-align: center;
+        }
+
+        .gameVersus strong {
+          color: var(--navy);
+          font-family: var(--font-display);
+          font-size: 20px;
+        }
+
+        .gameVersus span {
+          max-width: 80px;
+          overflow: hidden;
+          font-size: 7px;
+          font-weight: 900;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        .historyMvpLarge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 14px;
+          padding: 9px 13px;
+          border: 1px solid var(--division-color);
+          border-radius: 7px;
+          background: var(--division-soft);
+        }
+
+        .historyMvpLarge span {
           color: var(--division-color);
+          font-size: 8px;
+          font-weight: 900;
+        }
+
+        .historyMvpLarge strong {
+          color: var(--navy);
+          font-size: 11px;
         }
 
         @media (max-width: 700px) {
           .historySummary {
             grid-template-columns: 1fr;
-            gap: 10px;
           }
 
-          .historyTeams {
-            grid-template-columns: 1fr 55px 1fr;
+          .historyOpen {
+            text-align: left;
           }
+        }
+      `}</style>
+    </div>
+  );
+} 
+
+function HistoryGamePlayerCard({
+  player,
+}: {
+  player:
+    HistoryGamePlayer;
+}) {
+  return (
+    <div className="gamePlayerCard">
+      <div className="gameChampion">
+        {player.championImage ? (
+          <img
+            src={
+              player.championImage
+            }
+            alt={
+              player.championName
+            }
+          />
+        ) : (
+          <span>
+            ?
+          </span>
+        )}
+      </div>
+
+      <strong>
+        {
+          player.riotId
+        }
+      </strong>
+
+      <span className="gameChampionName">
+        {
+          player.championName
+        }
+      </span>
+
+      <b>
+        {player.kills}
+        /
+        {player.deaths}
+        /
+        {player.assists}
+      </b>
+
+      <style jsx>{`
+        .gamePlayerCard {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+
+        .gameChampion {
+          width: 54px;
+          height: 54px;
+          overflow: hidden;
+          border: 2px solid rgba(9, 42, 63, 0.15);
+          border-radius: 10px;
+          background: rgba(9, 42, 63, 0.06);
+        }
+
+        .gameChampion img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .gameChampion span {
+          width: 100%;
+          height: 100%;
+          display: grid;
+          place-items: center;
+        }
+
+        .gamePlayerCard > strong {
+          width: 100%;
+          overflow: hidden;
+          margin-top: 6px;
+          color: var(--navy);
+          font-size: 8px;
+          font-weight: 900;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        .gameChampionName {
+          width: 100%;
+          overflow: hidden;
+          margin-top: 2px;
+          color: var(--muted);
+          font-size: 7px;
+          font-weight: 800;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        .gamePlayerCard > b {
+          margin-top: 4px;
+          color: var(--division-color);
+          font-size: 11px;
+          font-weight: 900;
         }
       `}</style>
     </div>
@@ -3015,6 +3576,34 @@ function HistoryTeam({
 /* =========================================================
    HELPERS
 ========================================================= */
+
+function roleOrderClient(
+  role:
+    | string
+    | null
+) {
+  switch (
+    role
+  ) {
+    case 'Top':
+      return 0;
+
+    case 'Jungle':
+      return 1;
+
+    case 'Mid':
+      return 2;
+
+    case 'ADC':
+      return 3;
+
+    case 'Support':
+      return 4;
+
+    default:
+      return 99;
+  }
+}
 
 function getSeedName(
   teams:
