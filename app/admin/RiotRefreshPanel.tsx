@@ -44,7 +44,7 @@ export default function RiotRefreshPanel() {
     }
 
     const res = await fetch(
-      '/api/admin/riot-sync-batch',
+      '/api/admin/refresh-riot',
       {
         method: 'PATCH',
 
