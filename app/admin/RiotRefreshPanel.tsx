@@ -24,7 +24,7 @@ export default function RiotRefreshPanel() {
 
   const [message, setMessage] = useState('');
 
-  const BATCH_SIZE = 20;
+  const BATCH_SIZE = 10;
 
   async function getToken() {
     const {

@@ -11,7 +11,7 @@ function wait(ms: number) {
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
-  timeoutMs = 20000
+  timeoutMs = 30000
 ) {
   const controller = new AbortController();
 
@@ -28,6 +28,26 @@ async function fetchWithTimeout(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function getRetryDelay(response: Response) {
+  const retryAfter = response.headers.get('retry-after');
+
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+
+    if (
+      Number.isFinite(seconds) &&
+      seconds > 0
+    ) {
+      return Math.max(
+        seconds * 1000,
+        10000
+      );
+    }
+  }
+
+  return 15000;
 }
 
 export async function PATCH(request: Request) {
@@ -95,7 +115,7 @@ export async function PATCH(request: Request) {
     }
 
     /* =====================================================
-       PARAMÈTRES
+       PARAMÈTRES DU LOT
     ===================================================== */
 
     const body = await request.json();
@@ -104,11 +124,11 @@ export async function PATCH(request: Request) {
       Number(body.offset) || 0;
 
     const requestedLimit =
-      Number(body.limit) || 20;
+      Number(body.limit) || 10;
 
     const limit = Math.min(
       Math.max(requestedLimit, 1),
-      25
+      10
     );
 
     const playerIds: number[] =
@@ -121,7 +141,7 @@ export async function PATCH(request: Request) {
         : [];
 
     /* =====================================================
-       NOMBRE TOTAL
+       TOTAL JOUEURS
     ===================================================== */
 
     const {
@@ -138,6 +158,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           success: false,
+          message:
+            'Impossible de compter les joueurs.',
           error: countError,
         },
         { status: 500 }
@@ -179,6 +201,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           success: false,
+          message:
+            'Impossible de récupérer les joueurs.',
           error: playersError,
         },
         { status: 500 }
@@ -187,10 +211,6 @@ export async function PATCH(request: Request) {
 
     const origin =
       new URL(request.url).origin;
-
-    /* =====================================================
-       RÉSULTATS
-    ===================================================== */
 
     const results: any[] = [];
 
@@ -218,7 +238,7 @@ export async function PATCH(request: Request) {
             oldRiotId;
 
           /* ===============================================
-             RETROUVER LE PSEUDO ACTUEL VIA PUUID
+             1. PSEUDO ACTUEL VIA PUUID
           =============================================== */
 
           if (player.puuid) {
@@ -234,15 +254,35 @@ export async function PATCH(request: Request) {
                         .RIOT_API_KEY!,
                   },
                 },
-                15000
+                20000
               );
 
             if (
               accountRes.status === 429
             ) {
-              throw new Error(
-                'Riot rate limit'
+              const delay =
+                getRetryDelay(
+                  accountRes
+                );
+
+              console.log(
+                `Rate limit Riot pour ${oldRiotId}. Attente ${Math.round(
+                  delay / 1000
+                )} secondes.`
               );
+
+              if (
+                attempt ===
+                maxAttempts
+              ) {
+                throw new Error(
+                  'Riot rate limit'
+                );
+              }
+
+              await wait(delay);
+
+              continue;
             }
 
             if (
@@ -274,7 +314,7 @@ export async function PATCH(request: Request) {
           }
 
           /* ===============================================
-             DONNÉES LOL
+             2. RANK / LP / WR / POINTS
           =============================================== */
 
           const riotRes =
@@ -306,11 +346,50 @@ export async function PATCH(request: Request) {
                       true,
                   }),
               },
-              25000
+              30000
             );
 
-          const riotData =
-            await riotRes.json();
+          if (
+            riotRes.status === 429
+          ) {
+            const delay =
+              getRetryDelay(
+                riotRes
+              );
+
+            console.log(
+              `Rate limit Riot pendant le refresh de ${currentRiotId}. Attente ${Math.round(
+                delay / 1000
+              )} secondes.`
+            );
+
+            if (
+              attempt ===
+              maxAttempts
+            ) {
+              throw new Error(
+                'Riot rate limit'
+              );
+            }
+
+            await wait(delay);
+
+            continue;
+          }
+
+          const raw =
+            await riotRes.text();
+
+          let riotData: any;
+
+          try {
+            riotData =
+              JSON.parse(raw);
+          } catch {
+            throw new Error(
+              `Réponse Riot invalide (${riotRes.status})`
+            );
+          }
 
           if (
             !riotRes.ok ||
@@ -318,6 +397,7 @@ export async function PATCH(request: Request) {
           ) {
             throw new Error(
               riotData.message ||
+                riotData.error ||
                 `Erreur Riot (${riotRes.status})`
             );
           }
@@ -326,7 +406,7 @@ export async function PATCH(request: Request) {
             riotData.data;
 
           /* ===============================================
-             UPDATE PLAYERS
+             3. UPDATE PLAYERS
           =============================================== */
 
           const {
@@ -393,7 +473,7 @@ export async function PATCH(request: Request) {
           }
 
           /* ===============================================
-             SI PSEUDO CHANGÉ
+             4. CHANGEMENT DE PSEUDO
           =============================================== */
 
           const renamed =
@@ -404,8 +484,6 @@ export async function PATCH(request: Request) {
             renamed &&
             oldRiotId
           ) {
-            /* TEAM MEMBERS */
-
             const {
               error:
                 memberError,
@@ -430,8 +508,6 @@ export async function PATCH(request: Request) {
               );
             }
 
-            /* CAPITAINE */
-
             const {
               error:
                 captainError,
@@ -447,25 +523,13 @@ export async function PATCH(request: Request) {
                   player.id
                 );
 
-            if (
-              captainError
-            ) {
+            if (captainError) {
               console.error(
                 'CAPTAIN UPDATE:',
                 captainError
               );
             }
           }
-
-          /*
-            IMPORTANT :
-
-            czf_game_player_stats
-            n'est JAMAIS modifié.
-
-            Les anciennes stats restent
-            reliées à player.id.
-          */
 
           return {
             success: true,
@@ -513,11 +577,12 @@ export async function PATCH(request: Request) {
           }
 
           /*
-            Attente avant nouvelle tentative
+            Petite attente pour les erreurs normales.
+            Les 429 sont déjà gérés plus haut.
           */
 
           await wait(
-            attempt * 1500
+            attempt * 3000
           );
         }
       }
@@ -534,47 +599,44 @@ export async function PATCH(request: Request) {
     }
 
     /* =====================================================
-       SOUS-LOTS DE 3
-       Pour ne pas envoyer trop de requêtes Riot en même temps.
-    ===================================================== */
+       TRAITEMENT
 
-    const concurrency = 3;
+       IMPORTANT :
+       1 seul joueur à la fois.
+    ===================================================== */
 
     for (
       let i = 0;
       i < (players || []).length;
-      i += concurrency
+      i++
     ) {
-      const miniBatch =
-        (players || []).slice(
-          i,
-          i + concurrency
+      const player =
+        players![i];
+
+      const result =
+        await updateOnePlayer(
+          player
         );
 
-      const miniResults =
-        await Promise.all(
-          miniBatch.map(
-            (player) =>
-              updateOnePlayer(
-                player
-              )
-          )
-        );
+      results.push(result);
 
-      results.push(
-        ...miniResults
-      );
+      /*
+        On laisse Riot respirer entre deux joueurs.
+
+        5 secondes volontairement.
+      */
 
       if (
-        i + concurrency <
-        (players || []).length
+        i <
+        (players || []).length -
+          1
       ) {
-        await wait(500);
+        await wait(5000);
       }
     }
 
     /* =====================================================
-       RÉSUMÉ
+       RÉSUMÉ DU LOT
     ===================================================== */
 
     const successful =
@@ -622,7 +684,7 @@ export async function PATCH(request: Request) {
     });
   } catch (error: any) {
     console.error(
-      'RIOT SYNC BATCH ERROR:',
+      'ADMIN REFRESH RIOT ERROR:',
       error
     );
 
