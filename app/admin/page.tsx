@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Nav from '../components/Nav';
 import { supabase } from '@/lib/supabase';
+import RiotRefreshPanel from './RiotRefreshPanel';
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
@@ -15,9 +16,12 @@ export default function AdminPage() {
   const [teamSearch, setTeamSearch] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
 
-  const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
+  const [editingTeamId, setEditingTeamId] =
+    useState<number | null>(null);
+
   const [editTeamName, setEditTeamName] = useState('');
-  const [editTeamDescription, setEditTeamDescription] = useState('');
+  const [editTeamDescription, setEditTeamDescription] =
+    useState('');
   const [editTeamLogo, setEditTeamLogo] = useState('');
   const [editTeamMultiGG, setEditTeamMultiGG] = useState('');
 
@@ -70,23 +74,6 @@ export default function AdminPage() {
     }
   }
 
-  async function refreshAllRiot() {
-    setMessage('Actualisation Riot en cours...');
-
-    const res = await fetch('/api/admin/refresh-riot', {
-      method: 'PATCH',
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      setMessage('Tous les joueurs ont été actualisés ✅');
-      await loadData();
-    } else {
-      setMessage('Erreur actualisation Riot ❌');
-    }
-  }
-
   function getTeamMembers(teamId: number) {
     return teamMembers.filter(
       (member) => member.team_id === teamId
@@ -108,6 +95,7 @@ export default function AdminPage() {
   function getDivisionFromPoints(points: number) {
     if (points >= 6101) return 'Targon';
     if (points >= 3901) return 'Ixtal';
+
     return 'Yordle';
   }
 
@@ -150,14 +138,14 @@ export default function AdminPage() {
     if (data.success) {
       setMessage(
         validated
-          ? `Équipe validée ✅ ${points} points — ${division}`
-          : 'Équipe dévalidée ✅'
+          ? `Équipe validée — ${points} points — ${division}`
+          : 'Équipe dévalidée'
       );
 
       await loadData();
     } else {
       setMessage(
-        data.message || 'Erreur validation ❌'
+        data.message || 'Erreur validation'
       );
     }
   }
@@ -185,27 +173,45 @@ export default function AdminPage() {
     const data = await res.json();
 
     if (data.success) {
-      setMessage(`Équipe "${teamName}" supprimée ✅`);
+      setMessage(
+        `Équipe "${teamName}" supprimée`
+      );
+
       setTeamSearch('');
       setEditingTeamId(null);
+
       await loadData();
     } else {
       setMessage(
-        data.message || 'Erreur suppression équipe ❌'
+        data.message ||
+          'Erreur suppression équipe'
       );
     }
   }
 
   function startEditingTeam(team: any) {
     setEditingTeamId(team.id);
-    setEditTeamName(team.name || '');
-    setEditTeamDescription(team.description || '');
-    setEditTeamLogo(team.logo_url || '');
-    setEditTeamMultiGG(team.multigg_url || '');
+
+    setEditTeamName(
+      team.name || ''
+    );
+
+    setEditTeamDescription(
+      team.description || ''
+    );
+
+    setEditTeamLogo(
+      team.logo_url || ''
+    );
+
+    setEditTeamMultiGG(
+      team.multigg_url || ''
+    );
   }
 
   function cancelEditingTeam() {
     setEditingTeamId(null);
+
     setEditTeamName('');
     setEditTeamDescription('');
     setEditTeamLogo('');
@@ -230,12 +236,15 @@ export default function AdminPage() {
     const data = await res.json();
 
     if (data.success) {
-      setMessage('Équipe modifiée ✅');
+      setMessage('Équipe modifiée');
+
       setEditingTeamId(null);
+
       await loadData();
     } else {
       setMessage(
-        data.message || 'Erreur modification équipe ❌'
+        data.message ||
+          'Erreur modification équipe'
       );
     }
   }
@@ -245,7 +254,9 @@ export default function AdminPage() {
         .filter((team) =>
           team.name
             ?.toLowerCase()
-            .includes(teamSearch.toLowerCase())
+            .includes(
+              teamSearch.toLowerCase()
+            )
         )
         .slice(0, 10)
     : [];
@@ -255,21 +266,28 @@ export default function AdminPage() {
         .filter((player) =>
           player.riot_id
             ?.toLowerCase()
-            .includes(playerSearch.toLowerCase())
+            .includes(
+              playerSearch.toLowerCase()
+            )
         )
         .slice(0, 10)
     : [];
 
-  const validatedTeamsCount = teams.filter(
-    (team) => team.validated_by_admin === true
-  ).length;
+  const validatedTeamsCount =
+    teams.filter(
+      (team) =>
+        team.validated_by_admin === true
+    ).length;
 
   if (loading) {
     return (
       <>
         <Nav />
+
         <main className="section">
-          <div className="card">Chargement...</div>
+          <div className="card">
+            Chargement...
+          </div>
         </main>
       </>
     );
@@ -279,10 +297,14 @@ export default function AdminPage() {
     return (
       <>
         <Nav />
+
         <main className="section">
           <div className="card">
             <h2>Accès refusé</h2>
-            <p>Tu n’as pas les droits admin.</p>
+
+            <p>
+              Tu n’as pas les droits admin.
+            </p>
           </div>
         </main>
       </>
@@ -294,42 +316,49 @@ export default function AdminPage() {
       <Nav />
 
       <main className="section">
+
         <div className="sectionTitle">
           <span></span>
           <h2>Admin CZF</h2>
         </div>
 
-<div className="card">
-  <h3>Actions rapides</h3>
 
-  <div
-    style={{
-      display: 'flex',
-      gap: '12px',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-    }}
-  >
-    <button
-      className="joinTeamBtn"
-      onClick={refreshAllRiot}
-    >
-      🔄 Actualiser tous les joueurs Riot
-    </button>
+        {/* =================================================
+            ACTUALISATION RIOT
+        ================================================= */}
 
-    <a
-      href="/admin/results"
-      className="joinTeamBtn"
-      style={{
-        textDecoration: 'none',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      🏆 Gérer les résultats
-    </a>
-  </div>
+        <RiotRefreshPanel />
+
+
+        {/* =================================================
+            ACTIONS RAPIDES
+        ================================================= */}
+
+        <div className="card">
+
+          <h3>Actions rapides</h3>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            <a
+              href="/admin/results"
+              className="joinTeamBtn"
+              style={{
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              Gérer les résultats
+            </a>
+          </div>
 
           {message && (
             <p
@@ -341,11 +370,19 @@ export default function AdminPage() {
               {message}
             </p>
           )}
+
         </div>
+
 
         <br />
 
+
+        {/* =================================================
+            STATISTIQUES
+        ================================================= */}
+
         <div className="card">
+
           <h3>Statistiques</h3>
 
           <div
@@ -355,6 +392,7 @@ export default function AdminPage() {
               flexWrap: 'wrap',
             }}
           >
+
             <div
               style={{
                 border: '2px solid #0b1f4d',
@@ -364,10 +402,16 @@ export default function AdminPage() {
               }}
             >
               <strong>Joueurs</strong>
-              <div style={{ fontSize: '24px' }}>
+
+              <div
+                style={{
+                  fontSize: '24px',
+                }}
+              >
                 {players.length}
               </div>
             </div>
+
 
             <div
               style={{
@@ -378,10 +422,16 @@ export default function AdminPage() {
               }}
             >
               <strong>Équipes</strong>
-              <div style={{ fontSize: '24px' }}>
+
+              <div
+                style={{
+                  fontSize: '24px',
+                }}
+              >
                 {teams.length}
               </div>
             </div>
+
 
             <div
               style={{
@@ -391,11 +441,19 @@ export default function AdminPage() {
                 minWidth: '130px',
               }}
             >
-              <strong>Participantes</strong>
-              <div style={{ fontSize: '24px' }}>
+              <strong>
+                Participantes
+              </strong>
+
+              <div
+                style={{
+                  fontSize: '24px',
+                }}
+              >
                 {validatedTeamsCount}
               </div>
             </div>
+
 
             <div
               style={{
@@ -406,16 +464,34 @@ export default function AdminPage() {
               }}
             >
               <strong>LFT</strong>
-              <div style={{ fontSize: '24px' }}>
-                {players.filter((p) => p.lft).length}
+
+              <div
+                style={{
+                  fontSize: '24px',
+                }}
+              >
+                {
+                  players.filter(
+                    (p) => p.lft
+                  ).length
+                }
               </div>
             </div>
+
           </div>
+
         </div>
+
 
         <br />
 
+
+        {/* =================================================
+            GESTION ÉQUIPES
+        ================================================= */}
+
         <div className="card">
+
           <h3>Gestion des équipes</h3>
 
           <div
@@ -424,32 +500,25 @@ export default function AdminPage() {
               marginBottom: '20px',
             }}
           >
-            <span
-              style={{
-                position: 'absolute',
-                left: '18px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-              }}
-            >
-              🔎
-            </span>
-
             <input
               type="text"
               placeholder="Rechercher une équipe..."
               value={teamSearch}
               onChange={(e) =>
-                setTeamSearch(e.target.value)
+                setTeamSearch(
+                  e.target.value
+                )
               }
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
-                padding: '14px 18px 14px 52px',
+                padding:
+                  '14px 18px',
                 borderRadius: '10px',
-                border: '2px solid #0b1f4d',
-                background: 'transparent',
+                border:
+                  '2px solid #0b1f4d',
+                background:
+                  'transparent',
                 color: '#0b1f4d',
                 fontSize: '16px',
                 fontWeight: '600',
@@ -459,11 +528,13 @@ export default function AdminPage() {
             />
           </div>
 
+
           {!teamSearch.trim() && (
             <p className="muted">
               Recherche une équipe pour la gérer.
             </p>
           )}
+
 
           {teamSearch.trim() &&
             searchedTeams.length === 0 && (
@@ -472,16 +543,22 @@ export default function AdminPage() {
               </p>
             )}
 
+
           {searchedTeams.map((team) => {
-            const members = getTeamMembers(team.id);
+            const members =
+              getTeamMembers(team.id);
+
             const currentPoints =
               getTeamPoints(team.id);
 
             const currentDivision =
-              getDivisionFromPoints(currentPoints);
+              getDivisionFromPoints(
+                currentPoints
+              );
 
             const isEditing =
-              editingTeamId === team.id;
+              editingTeamId ===
+              team.id;
 
             return (
               <div
@@ -489,75 +566,106 @@ export default function AdminPage() {
                 style={{
                   border:
                     '2px solid rgba(11,31,77,.18)',
-                  borderRadius: '12px',
+                  borderRadius:
+                    '12px',
                   padding: '20px',
-                  marginBottom: '15px',
+                  marginBottom:
+                    '15px',
                 }}
               >
+
                 {isEditing ? (
                   <>
-                    <h3>Modifier l'équipe</h3>
+                    <h3>
+                      Modifier l'équipe
+                    </h3>
 
                     <input
                       type="text"
                       placeholder="Nom de l'équipe"
-                      value={editTeamName}
+                      value={
+                        editTeamName
+                      }
                       onChange={(e) =>
-                        setEditTeamName(e.target.value)
+                        setEditTeamName(
+                          e.target.value
+                        )
                       }
                       style={{
                         width: '100%',
-                        boxSizing: 'border-box',
+                        boxSizing:
+                          'border-box',
                         padding: '12px',
-                        borderRadius: '8px',
+                        borderRadius:
+                          '8px',
                         border:
                           '2px solid #0b1f4d',
-                        marginBottom: '10px',
-                        fontFamily: 'inherit',
+                        marginBottom:
+                          '10px',
+                        fontFamily:
+                          'inherit',
                       }}
                     />
 
                     <input
                       type="text"
                       placeholder="URL du logo"
-                      value={editTeamLogo}
+                      value={
+                        editTeamLogo
+                      }
                       onChange={(e) =>
-                        setEditTeamLogo(e.target.value)
+                        setEditTeamLogo(
+                          e.target.value
+                        )
                       }
                       style={{
                         width: '100%',
-                        boxSizing: 'border-box',
+                        boxSizing:
+                          'border-box',
                         padding: '12px',
-                        borderRadius: '8px',
+                        borderRadius:
+                          '8px',
                         border:
                           '2px solid #0b1f4d',
-                        marginBottom: '10px',
-                        fontFamily: 'inherit',
+                        marginBottom:
+                          '10px',
+                        fontFamily:
+                          'inherit',
                       }}
                     />
 
                     <input
                       type="text"
                       placeholder="Lien MultiGG"
-                      value={editTeamMultiGG}
+                      value={
+                        editTeamMultiGG
+                      }
                       onChange={(e) =>
-                        setEditTeamMultiGG(e.target.value)
+                        setEditTeamMultiGG(
+                          e.target.value
+                        )
                       }
                       style={{
                         width: '100%',
-                        boxSizing: 'border-box',
+                        boxSizing:
+                          'border-box',
                         padding: '12px',
-                        borderRadius: '8px',
+                        borderRadius:
+                          '8px',
                         border:
                           '2px solid #0b1f4d',
-                        marginBottom: '10px',
-                        fontFamily: 'inherit',
+                        marginBottom:
+                          '10px',
+                        fontFamily:
+                          'inherit',
                       }}
                     />
 
                     <textarea
                       placeholder="Description"
-                      value={editTeamDescription}
+                      value={
+                        editTeamDescription
+                      }
                       onChange={(e) =>
                         setEditTeamDescription(
                           e.target.value
@@ -565,88 +673,129 @@ export default function AdminPage() {
                       }
                       style={{
                         width: '100%',
-                        boxSizing: 'border-box',
+                        boxSizing:
+                          'border-box',
                         padding: '12px',
-                        borderRadius: '8px',
+                        borderRadius:
+                          '8px',
                         border:
                           '2px solid #0b1f4d',
-                        marginBottom: '10px',
-                        minHeight: '100px',
-                        fontFamily: 'inherit',
+                        marginBottom:
+                          '10px',
+                        minHeight:
+                          '100px',
+                        fontFamily:
+                          'inherit',
                       }}
                     />
 
                     <div
                       style={{
-                        display: 'flex',
+                        display:
+                          'flex',
                         gap: '10px',
-                        flexWrap: 'wrap',
+                        flexWrap:
+                          'wrap',
                       }}
                     >
+
                       <button
                         className="joinTeamBtn"
                         onClick={() =>
-                          saveTeam(team.id)
+                          saveTeam(
+                            team.id
+                          )
                         }
                       >
-                        💾 Enregistrer
+                        Enregistrer
                       </button>
 
                       <button
                         className="joinTeamBtn"
-                        onClick={cancelEditingTeam}
+                        onClick={
+                          cancelEditingTeam
+                        }
                       >
                         Annuler
                       </button>
+
                     </div>
                   </>
                 ) : (
                   <>
+
                     <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                        display:
+                          'flex',
+                        alignItems:
+                          'center',
                         gap: '12px',
-                        flexWrap: 'wrap',
+                        flexWrap:
+                          'wrap',
                       }}
                     >
+
                       {team.logo_url && (
                         <img
-                          src={team.logo_url}
-                          alt={team.name}
+                          src={
+                            team.logo_url
+                          }
+                          alt={
+                            team.name
+                          }
                           style={{
-                            width: '45px',
-                            height: '45px',
-                            objectFit: 'contain',
-                            borderRadius: '8px',
+                            width:
+                              '45px',
+                            height:
+                              '45px',
+                            objectFit:
+                              'contain',
+                            borderRadius:
+                              '8px',
                           }}
                         />
                       )}
 
-                      <h3 style={{ margin: 0 }}>
+                      <h3
+                        style={{
+                          margin: 0,
+                        }}
+                      >
                         {team.name}
                       </h3>
 
                       <span
-                        style={{
-                          fontWeight: '700',
-                        }}
+                        className={
+                          team.validated_by_admin
+                            ? 'teamStatus teamStatusComplete'
+                            : 'teamStatus teamStatusIncomplete'
+                        }
                       >
                         {team.validated_by_admin
-                          ? '🟢 Participante'
-                          : '🔴 Non validée'}
+                          ? 'Participante'
+                          : 'Non validée'}
                       </span>
+
                     </div>
 
-                    <p>
-                      <strong>Capitaine :</strong>{' '}
-                      {team.captain_riot_id || '-'}
-                    </p>
 
                     <p>
-                      <strong>Joueurs :</strong>{' '}
+                      <strong>
+                        Capitaine :
+                      </strong>{' '}
+                      {team.captain_riot_id ||
+                        '-'}
+                    </p>
+
+
+                    <p>
+                      <strong>
+                        Joueurs :
+                      </strong>{' '}
                       {members.length} / 5
                     </p>
+
 
                     <p>
                       <strong>
@@ -655,13 +804,17 @@ export default function AdminPage() {
                       {currentPoints}
                     </p>
 
+
                     <p>
-                      <strong>Division :</strong>{' '}
+                      <strong>
+                        Division :
+                      </strong>{' '}
                       {team.validated_by_admin
                         ? team.division ||
                           currentDivision
                         : currentDivision}
                     </p>
+
 
                     {team.validated_by_admin &&
                       team.validated_points !==
@@ -670,51 +823,77 @@ export default function AdminPage() {
                           <strong>
                             Points figés :
                           </strong>{' '}
-                          {team.validated_points}
+                          {
+                            team.validated_points
+                          }
                         </p>
                       )}
 
+
                     <div
                       style={{
-                        marginTop: '14px',
-                        marginBottom: '14px',
+                        marginTop:
+                          '14px',
+                        marginBottom:
+                          '14px',
                       }}
                     >
-                      <strong>Membres :</strong>
+                      <strong>
+                        Membres :
+                      </strong>
 
-                      {members.length === 0 && (
+                      {members.length ===
+                        0 && (
                         <p className="muted">
                           Aucun membre.
                         </p>
                       )}
 
-                      {members.map((member) => {
-                        const foundPlayer =
-                          players.find(
-                            (p) =>
-                              p.riot_id ===
-                              member.riot_id
-                          );
+                      {members.map(
+                        (member) => {
+                          const foundPlayer =
+                            players.find(
+                              (p) =>
+                                p.riot_id ===
+                                member.riot_id
+                            );
 
-                        return (
-                          <p key={member.id}>
-                            {member.role} —{' '}
-                            {member.riot_id} —{' '}
-                            {foundPlayer?.czf_points ||
-                              0}{' '}
-                            pts
-                          </p>
-                        );
-                      })}
+                          return (
+                            <p
+                              key={
+                                member.id
+                              }
+                            >
+                              {
+                                member.role
+                              }{' '}
+                              —{' '}
+                              {
+                                member.riot_id
+                              }{' '}
+                              —{' '}
+                              {
+                                foundPlayer?.czf_points ||
+                                0
+                              }{' '}
+                              pts
+                            </p>
+                          );
+                        }
+                      )}
                     </div>
+
 
                     <div
                       style={{
-                        display: 'flex',
+                        display:
+                          'flex',
                         gap: '10px',
-                        flexWrap: 'wrap',
+                        flexWrap:
+                          'wrap',
                       }}
                     >
+
                       <button
                         className="joinTeamBtn"
                         onClick={() =>
@@ -725,23 +904,26 @@ export default function AdminPage() {
                         }
                       >
                         {team.validated_by_admin
-                          ? '❌ Dévalider'
-                          : '✅ Valider'}
+                          ? 'Dévalider'
+                          : 'Valider'}
                       </button>
 
                       <button
                         className="joinTeamBtn"
                         onClick={() =>
-                          startEditingTeam(team)
+                          startEditingTeam(
+                            team
+                          )
                         }
                       >
-                        ✏️ Modifier
+                        Modifier
                       </button>
 
                       <button
                         className="joinTeamBtn"
                         style={{
-                          background: '#d32f2f',
+                          background:
+                            '#d32f2f',
                         }}
                         onClick={() =>
                           deleteTeam(
@@ -750,32 +932,47 @@ export default function AdminPage() {
                           )
                         }
                       >
-                        🗑️ Supprimer l'équipe
+                        Supprimer l'équipe
                       </button>
 
                       <a
                         href={`/teams?team=${team.id}`}
                         className="joinTeamBtn"
                         style={{
-                          textDecoration: 'none',
-                          display: 'inline-flex',
-                          alignItems: 'center',
+                          textDecoration:
+                            'none',
+                          display:
+                            'inline-flex',
+                          alignItems:
+                            'center',
                         }}
                       >
-                        👁️ Voir la fiche
+                        Voir la fiche
                       </a>
+
                     </div>
                   </>
                 )}
+
               </div>
             );
           })}
+
         </div>
+
 
         <br />
 
+
+        {/* =================================================
+            GESTION JOUEURS
+        ================================================= */}
+
         <div className="card">
-          <h3>Gestion des joueurs</h3>
+
+          <h3>
+            Gestion des joueurs
+          </h3>
 
           <div
             style={{
@@ -783,40 +980,37 @@ export default function AdminPage() {
               marginBottom: '20px',
             }}
           >
-            <span
-              style={{
-                position: 'absolute',
-                left: '18px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-              }}
-            >
-              🔎
-            </span>
-
             <input
               type="text"
               placeholder="Rechercher un joueur..."
               value={playerSearch}
               onChange={(e) =>
-                setPlayerSearch(e.target.value)
+                setPlayerSearch(
+                  e.target.value
+                )
               }
               style={{
                 width: '100%',
-                boxSizing: 'border-box',
-                padding: '14px 18px 14px 52px',
-                borderRadius: '10px',
-                border: '2px solid #0b1f4d',
-                background: 'transparent',
+                boxSizing:
+                  'border-box',
+                padding:
+                  '14px 18px',
+                borderRadius:
+                  '10px',
+                border:
+                  '2px solid #0b1f4d',
+                background:
+                  'transparent',
                 color: '#0b1f4d',
                 fontSize: '16px',
                 fontWeight: '600',
                 outline: 'none',
-                fontFamily: 'inherit',
+                fontFamily:
+                  'inherit',
               }}
             />
           </div>
+
 
           {!playerSearch.trim() && (
             <p className="muted">
@@ -824,102 +1018,155 @@ export default function AdminPage() {
             </p>
           )}
 
+
           {playerSearch.trim() &&
-            searchedPlayers.length === 0 && (
+            searchedPlayers.length ===
+              0 && (
               <p className="muted">
                 Aucun joueur trouvé.
               </p>
             )}
 
-          {searchedPlayers.map((player) => {
-            const team = getPlayerTeam(player);
 
-            return (
-              <div
-                key={player.id}
-                style={{
-                  border:
-                    '2px solid rgba(11,31,77,.18)',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  marginBottom: '15px',
-                }}
-              >
-                <h3>{player.riot_id}</h3>
+          {searchedPlayers.map(
+            (player) => {
+              const team =
+                getPlayerTeam(
+                  player
+                );
 
-                {player.profiles
-                  ?.discord_name && (
-                  <p
-                    style={{
-                      color: '#5865F2',
-                      fontWeight: '700',
-                    }}
-                  >
-                    💬{' '}
-                    {
-                      player.profiles
-                        .discord_name
-                    }
+              return (
+                <div
+                  key={player.id}
+                  style={{
+                    border:
+                      '2px solid rgba(11,31,77,.18)',
+                    borderRadius:
+                      '12px',
+                    padding:
+                      '20px',
+                    marginBottom:
+                      '15px',
+                  }}
+                >
+
+                  <h3>
+                    {player.riot_id}
+                  </h3>
+
+
+                  {player.profiles
+                    ?.discord_name && (
+                    <p
+                      className="discordPlayerName"
+                    >
+                      {
+                        player
+                          .profiles
+                          .discord_name
+                      }
+                    </p>
+                  )}
+
+
+                  <p>
+                    <strong>
+                      Rôle principal :
+                    </strong>{' '}
+                    {player.main_role ||
+                      '-'}
                   </p>
-                )}
 
-                <p>
-                  <strong>
-                    Rôle principal :
-                  </strong>{' '}
-                  {player.main_role || '-'}
-                </p>
 
-                <p>
-                  <strong>
-                    Rôle secondaire :
-                  </strong>{' '}
-                  {player.secondary_role || '-'}
-                </p>
+                  <p>
+                    <strong>
+                      Rôle secondaire :
+                    </strong>{' '}
+                    {player.secondary_role ||
+                      '-'}
+                  </p>
 
-                <p>
-                  <strong>
-                    Points CZF :
-                  </strong>{' '}
-                  {player.czf_points ?? '-'}
-                </p>
 
-                <p>
-                  <strong>Équipe :</strong>{' '}
-                  {team?.name || 'Aucune'}
-                </p>
+                  <p>
+                    <strong>
+                      Points CZF :
+                    </strong>{' '}
+                    {player.czf_points ??
+                      '-'}
+                  </p>
 
-                <p>
-                  <strong>Participant :</strong>{' '}
-                  {team?.validated_by_admin
-                    ? '🟢 Oui'
-                    : '🔴 Non'}
-                </p>
 
-                <p>
-                  <strong>LFT :</strong>{' '}
-                  {player.lft
-                    ? '🟢 Oui'
-                    : 'Non'}
-                </p>
+                  <p>
+                    <strong>
+                      Équipe :
+                    </strong>{' '}
+                    {team?.name ||
+                      'Aucune'}
+                  </p>
 
-                {team && (
-                  <a
-                    href={`/teams?team=${team.id}`}
-                    className="joinTeamBtn"
-                    style={{
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    👁️ Voir son équipe
-                  </a>
-                )}
-              </div>
-            );
-          })}
+
+                  <p>
+                    <strong>
+                      Participant :
+                    </strong>{' '}
+
+                    <span
+                      className={
+                        team?.validated_by_admin
+                          ? 'teamStatus teamStatusComplete'
+                          : 'teamStatus teamStatusIncomplete'
+                      }
+                    >
+                      {team?.validated_by_admin
+                        ? 'Oui'
+                        : 'Non'}
+                    </span>
+                  </p>
+
+
+                  <p>
+                    <strong>
+                      LFT :
+                    </strong>{' '}
+
+                    <span
+                      className={
+                        player.lft
+                          ? 'statusOn'
+                          : 'statusOff'
+                      }
+                    >
+                      {player.lft
+                        ? 'Oui'
+                        : 'Non'}
+                    </span>
+                  </p>
+
+
+                  {team && (
+                    <a
+                      href={`/teams?team=${team.id}`}
+                      className="joinTeamBtn"
+                      style={{
+                        textDecoration:
+                          'none',
+                        display:
+                          'inline-flex',
+                        alignItems:
+                          'center',
+                      }}
+                    >
+                      Voir son équipe
+                    </a>
+                  )}
+
+                </div>
+              );
+            }
+          )}
+
         </div>
+
       </main>
     </>
   );
