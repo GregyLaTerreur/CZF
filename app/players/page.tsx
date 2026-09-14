@@ -427,21 +427,39 @@ export default function PlayersPage() {
     );
   }
 
-  function getPlayerTeam(player: any) {
-    const member = teamMembers.find(
-      (m) => m.riot_id === player.riot_id
-    );
+function getPlayerTeam(player: any) {
+  const normalizedRiotId = String(
+    player.riot_id || ''
+  )
+    .trim()
+    .toLowerCase();
 
-    if (!member) {
-      return null;
+  const member = teamMembers.find((m) => {
+    if (
+      m.player_id !== null &&
+      m.player_id !== undefined
+    ) {
+      return Number(m.player_id) === Number(player.id);
     }
 
     return (
-      teams.find(
-        (team) => team.id === member.team_id
-      ) || null
+      String(m.riot_id || '')
+        .trim()
+        .toLowerCase() === normalizedRiotId
     );
+  });
+
+  if (!member) {
+    return null;
   }
+
+  return (
+    teams.find(
+      (team) =>
+        Number(team.id) === Number(member.team_id)
+    ) || null
+  );
+}
 
   function getDpmUrl(riotId: string) {
     return `https://dpm.lol/${riotId.replace(

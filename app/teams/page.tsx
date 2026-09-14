@@ -28,7 +28,9 @@ export default function TeamsPage() {
   const [profile, setProfile] = useState<any>(null);
   const [player, setPlayer] = useState<any>(null);
 
-  const [editingTeam, setEditingTeam] = useState<number | null>(null);
+  const [editingTeam, setEditingTeam] = useState<number | null>(
+    null
+  );
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editLogo, setEditLogo] = useState('');
@@ -42,7 +44,10 @@ export default function TeamsPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
     const teamId = params.get('team');
 
     if (!teamId) return;
@@ -138,7 +143,8 @@ export default function TeamsPage() {
 
   function getTeamMembers(teamId: number) {
     return teamMembers.filter(
-      (member) => member.team_id === teamId
+      (member) =>
+        Number(member.team_id) === Number(teamId)
     );
   }
 
@@ -147,8 +153,41 @@ export default function TeamsPage() {
   }
 
   function getPlayerByRiotId(riotId: string) {
+    const normalizedRiotId = String(
+      riotId || ''
+    )
+      .trim()
+      .toLowerCase();
+
     return players.find(
-      (p) => p.riot_id === riotId
+      (p) =>
+        String(p.riot_id || '')
+          .trim()
+          .toLowerCase() === normalizedRiotId
+    );
+  }
+
+  function getPlayerFromMember(member: any) {
+    if (!member) {
+      return null;
+    }
+
+    if (
+      member.player_id !== null &&
+      member.player_id !== undefined
+    ) {
+      const playerById = players.find(
+        (p) =>
+          Number(p.id) === Number(member.player_id)
+      );
+
+      if (playerById) {
+        return playerById;
+      }
+    }
+
+    return (
+      getPlayerByRiotId(member.riot_id) || null
     );
   }
 
@@ -156,9 +195,8 @@ export default function TeamsPage() {
     const members = getTeamMembers(teamId);
 
     return members.reduce((total, member) => {
-      const foundPlayer = getPlayerByRiotId(
-        member.riot_id
-      );
+      const foundPlayer =
+        getPlayerFromMember(member);
 
       return total + (foundPlayer?.czf_points || 0);
     }, 0);
@@ -180,9 +218,30 @@ export default function TeamsPage() {
   function getPlayerTeam() {
     if (!player) return null;
 
-    return teamMembers.find(
-      (member) =>
-        member.riot_id === player.riot_id
+    const normalizedRiotId = String(
+      player.riot_id || ''
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      teamMembers.find((member) => {
+        if (
+          member.player_id !== null &&
+          member.player_id !== undefined
+        ) {
+          return (
+            Number(member.player_id) ===
+            Number(player.id)
+          );
+        }
+
+        return (
+          String(member.riot_id || '')
+            .trim()
+            .toLowerCase() === normalizedRiotId
+        );
+      }) || null
     );
   }
 
@@ -191,8 +250,8 @@ export default function TeamsPage() {
 
     return joinRequests.some(
       (request) =>
-        request.team_id === teamId &&
-        request.player_id === player.id &&
+        Number(request.team_id) === Number(teamId) &&
+        Number(request.player_id) === Number(player.id) &&
         request.status === 'pending'
     );
   }
@@ -203,7 +262,7 @@ export default function TeamsPage() {
   ) {
     return teamMembers.some(
       (member) =>
-        member.team_id === teamId &&
+        Number(member.team_id) === Number(teamId) &&
         member.role === role
     );
   }
@@ -216,7 +275,10 @@ export default function TeamsPage() {
     const currentTeam = getPlayerTeam();
 
     if (currentTeam) {
-      if (currentTeam.team_id === teamId) {
+      if (
+        Number(currentTeam.team_id) ===
+        Number(teamId)
+      ) {
         return 'Tu es déjà dans cette équipe.';
       }
 
@@ -450,10 +512,9 @@ export default function TeamsPage() {
     }
   }
 
-  function renderChampionPool(riotId: string) {
-    const foundPlayer = players.find(
-      (p) => p.riot_id === riotId
-    );
+  function renderChampionPool(member: any) {
+    const foundPlayer =
+      getPlayerFromMember(member);
 
     if (!foundPlayer?.top_champions?.length) {
       return null;
@@ -643,11 +704,7 @@ export default function TeamsPage() {
           </h3>
 
 
-          {/* FILTRES */}
-
           <div className="teamsFilters">
-
-            {/* RECHERCHE */}
 
             <div className="teamsSearch">
 
@@ -664,8 +721,6 @@ export default function TeamsPage() {
 
             </div>
 
-
-            {/* PARTICIPANTS UNIQUEMENT */}
 
             <label className="teamsParticipantsCheck">
 
@@ -687,8 +742,6 @@ export default function TeamsPage() {
 
             </label>
 
-
-            {/* DIVISION */}
 
             <select
               className="teamsFilterSelect"
@@ -721,8 +774,6 @@ export default function TeamsPage() {
             </select>
 
 
-            {/* STATUT */}
-
             <select
               className="teamsFilterSelect"
               value={statusFilter}
@@ -748,10 +799,6 @@ export default function TeamsPage() {
           </div>
 
 
-          {/* =========================================
-              TABLE
-          ========================================== */}
-
           <div className="playersTable">
 
             <div className="teamsHeader">
@@ -772,8 +819,8 @@ export default function TeamsPage() {
               const teamRequests =
                 joinRequests.filter(
                   (request) =>
-                    request.team_id ===
-                      team.id &&
+                    Number(request.team_id) ===
+                      Number(team.id) &&
                     request.status ===
                       'pending'
                 );
@@ -796,8 +843,6 @@ export default function TeamsPage() {
 
                   <div className="teamRow">
 
-                    {/* OUVRIR */}
-
                     <div
                       className={`teamArrow ${
                         openTeam === team.id
@@ -815,8 +860,6 @@ export default function TeamsPage() {
                       <span></span>
                     </div>
 
-
-                    {/* NOM */}
 
                     <div className="teamNameCell">
 
@@ -837,15 +880,11 @@ export default function TeamsPage() {
                     </div>
 
 
-                    {/* CAPITAINE */}
-
                     <div>
                       {team.captain_riot_id ||
                         '-'}
                     </div>
 
-
-                    {/* DIVISION */}
 
                     <div>
 
@@ -869,14 +908,10 @@ export default function TeamsPage() {
                     </div>
 
 
-                    {/* JOUEURS */}
-
                     <div>
                       {count} / 5
                     </div>
 
-
-                    {/* STATUT */}
 
                     <div>
 
@@ -896,10 +931,6 @@ export default function TeamsPage() {
 
                   </div>
 
-
-                  {/* =====================================
-                      DETAILS
-                  ====================================== */}
 
                   {openTeam === team.id && (
                     <div className="teamDetails">
@@ -1115,8 +1146,6 @@ export default function TeamsPage() {
                               )}
 
 
-                            {/* DEMANDES */}
-
                             {isCaptain && (
                               <div className="teamRequests">
 
@@ -1191,8 +1220,6 @@ export default function TeamsPage() {
                             )}
 
 
-                            {/* JOUEURS */}
-
                             <h4>Joueurs</h4>
 
                             <div className="teamRoster">
@@ -1202,18 +1229,20 @@ export default function TeamsPage() {
                                   const member =
                                     teamMembers.find(
                                       (m) =>
-                                        m.team_id ===
-                                          team.id &&
+                                        Number(
+                                          m.team_id
+                                        ) ===
+                                          Number(
+                                            team.id
+                                          ) &&
                                         m.role ===
                                           role
                                     );
 
                                   const memberPlayer =
                                     member
-                                      ? players.find(
-                                          (p) =>
-                                            p.riot_id ===
-                                            member.riot_id
+                                      ? getPlayerFromMember(
+                                          member
                                         )
                                       : null;
 
@@ -1227,24 +1256,22 @@ export default function TeamsPage() {
                                         {role} :
                                       </strong>
 
-                                      {member && (
+
+                                      {member &&
+                                        memberPlayer && (
                                         <img
                                           src={getRankIcon(
-                                            players.find(
-                                              (
-                                                p
-                                              ) =>
-                                                p.riot_id ===
-                                                member.riot_id
-                                            )
+                                            memberPlayer
                                           )}
                                           className="rankIcon"
                                           alt=""
                                         />
                                       )}
 
+
                                       <span>
-                                        {member?.riot_id ||
+                                        {memberPlayer?.riot_id ||
+                                          member?.riot_id ||
                                           '-'}
                                       </span>
 
@@ -1264,7 +1291,7 @@ export default function TeamsPage() {
 
                                       {member &&
                                         renderChampionPool(
-                                          member.riot_id
+                                          member
                                         )}
 
 
@@ -1275,7 +1302,8 @@ export default function TeamsPage() {
                                             onClick={() =>
                                               removeMember(
                                                 team.id,
-                                                member.riot_id
+                                                memberPlayer?.riot_id ||
+                                                  member.riot_id
                                               )
                                             }
                                           >
@@ -1295,8 +1323,6 @@ export default function TeamsPage() {
 
                       </div>
 
-
-                      {/* LOGO */}
 
                       <div className="teamLogoBigContainer">
 
