@@ -11,6 +11,7 @@ export default function MyTeamPage() {
   const [player, setPlayer] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
 
   useEffect(() => {
     loadMyTeam();
@@ -25,24 +26,52 @@ export default function MyTeamPage() {
 
     if (!user) return;
 
-    const { data: players } = await supabase
+    const { data: allPlayers } = await supabase
       .from('players')
       .select('*');
 
-    const linkedPlayer = players?.find(
+    setPlayers(allPlayers || []);
+
+    const linkedPlayer = allPlayers?.find(
       (p: any) => p.profile_id === user.id
     );
 
     setPlayer(linkedPlayer || null);
 
-    if (!linkedPlayer) return;
+    if (!linkedPlayer) {
+      setTeam(null);
+      setMembers([]);
+      return;
+    }
 
     const { data: allMembers } = await supabase
       .from('team_members')
       .select('*');
 
+    const normalizedRiotId = String(
+      linkedPlayer.riot_id || ''
+    )
+      .trim()
+      .toLowerCase();
+
     const myMemberLine = allMembers?.find(
-      (m: any) => m.riot_id === linkedPlayer.riot_id
+      (m: any) => {
+        if (
+          m.player_id !== null &&
+          m.player_id !== undefined
+        ) {
+          return (
+            Number(m.player_id) ===
+            Number(linkedPlayer.id)
+          );
+        }
+
+        return (
+          String(m.riot_id || '')
+            .trim()
+            .toLowerCase() === normalizedRiotId
+        );
+      }
     );
 
     const { data: allTeams } = await supabase
@@ -50,21 +79,28 @@ export default function MyTeamPage() {
       .select('*');
 
     const captainTeam = allTeams?.find(
-      (t: any) => t.captain_player_id === linkedPlayer.id
+      (t: any) =>
+        Number(t.captain_player_id) ===
+        Number(linkedPlayer.id)
     );
 
     const memberTeam = allTeams?.find(
-      (t: any) => t.id === myMemberLine?.team_id
+      (t: any) =>
+        Number(t.id) ===
+        Number(myMemberLine?.team_id)
     );
 
-    const foundTeam = captainTeam || memberTeam || null;
+    const foundTeam =
+      captainTeam || memberTeam || null;
 
     setTeam(foundTeam);
 
     if (foundTeam) {
       const currentMembers =
         allMembers?.filter(
-          (m: any) => m.team_id === foundTeam.id
+          (m: any) =>
+            Number(m.team_id) ===
+            Number(foundTeam.id)
         ) || [];
 
       setMembers(currentMembers);
@@ -73,15 +109,66 @@ export default function MyTeamPage() {
     }
   }
 
+  function getPlayerFromMember(member: any) {
+    if (!member) return null;
+
+    if (
+      member.player_id !== null &&
+      member.player_id !== undefined
+    ) {
+      const found = players.find(
+        (p) =>
+          Number(p.id) ===
+          Number(member.player_id)
+      );
+
+      if (found) {
+        return found;
+      }
+    }
+
+    const normalizedRiotId = String(
+      member.riot_id || ''
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      players.find(
+        (p) =>
+          String(p.riot_id || '')
+            .trim()
+            .toLowerCase() === normalizedRiotId
+      ) || null
+    );
+  }
+
   function getRolePlayer(role: string) {
-    const member = members.find((m) => m.role === role);
-    return member?.riot_id || '-';
+    const member = members.find(
+      (m) => m.role === role
+    );
+
+    if (!member) {
+      return '-';
+    }
+
+    const foundPlayer =
+      getPlayerFromMember(member);
+
+    return (
+      foundPlayer?.riot_id ||
+      member.riot_id ||
+      '-'
+    );
   }
 
   async function leaveTeam() {
     if (!team || !player) return;
 
-    if (team.captain_player_id === player.id) {
+    if (
+      Number(team.captain_player_id) ===
+      Number(player.id)
+    ) {
       alert(
         "Le capitaine ne peut pas quitter son équipe pour l'instant."
       );
@@ -102,10 +189,10 @@ export default function MyTeamPage() {
     const data = await res.json();
 
     if (data.success) {
-      alert("Tu as quitté l'équipe ✅");
+      alert("Tu as quitté l'équipe");
       await loadMyTeam();
     } else {
-      alert('Erreur ❌');
+      alert('Erreur');
     }
   }
 
@@ -122,8 +209,15 @@ export default function MyTeamPage() {
         {!user && (
           <div className="card">
             <h3>Non connecté</h3>
-            <p>Connecte-toi avec Discord.</p>
-            <a href="/login" className="rulebookButton">
+
+            <p>
+              Connecte-toi avec Discord.
+            </p>
+
+            <a
+              href="/login"
+              className="rulebookButton"
+            >
               Connexion Discord
             </a>
           </div>
@@ -132,8 +226,15 @@ export default function MyTeamPage() {
         {user && !player && (
           <div className="card">
             <h3>Aucun profil joueur</h3>
-            <p>Crée d'abord ton profil joueur CZF.</p>
-            <a href="/players" className="rulebookButton">
+
+            <p>
+              Crée d'abord ton profil joueur CZF.
+            </p>
+
+            <a
+              href="/players"
+              className="rulebookButton"
+            >
               Créer mon profil joueur
             </a>
           </div>
@@ -142,8 +243,15 @@ export default function MyTeamPage() {
         {user && player && !team && (
           <div className="card">
             <h3>Aucune équipe</h3>
-            <p>Tu n'es dans aucune équipe pour le moment.</p>
-            <a href="/teams" className="rulebookButton">
+
+            <p>
+              Tu n'es dans aucune équipe pour le moment.
+            </p>
+
+            <a
+              href="/teams"
+              className="rulebookButton"
+            >
               Voir les équipes
             </a>
           </div>

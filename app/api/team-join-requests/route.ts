@@ -11,7 +11,10 @@ export async function GET() {
 
   if (error) {
     return NextResponse.json(
-      { success: false, error },
+      {
+        success: false,
+        error,
+      },
       { status: 500 }
     );
   }
@@ -21,6 +24,11 @@ export async function GET() {
     data,
   });
 }
+
+
+/* =========================================================
+   CRÉER UNE DEMANDE
+========================================================= */
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -33,18 +41,59 @@ export async function POST(request: Request) {
     player_id,
   } = body;
 
-  const { data: existingMember } = await supabase
-    .from('team_members')
-    .select('*')
-    .eq('riot_id', riot_id)
-    .maybeSingle();
+  if (!player_id) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Profil joueur introuvable.',
+      },
+      { status: 400 }
+    );
+  }
 
-  if (existingMember) {
+  /* =====================================================
+     VÉRIFIER SI LE JOUEUR EST DÉJÀ DANS UNE ÉQUIPE
+
+     Nouveau système :
+     on vérifie d'abord avec player_id.
+  ===================================================== */
+
+  const { data: existingMemberByPlayerId } =
+    await supabase
+      .from('team_members')
+      .select('*')
+      .eq('player_id', player_id)
+      .maybeSingle();
+
+  if (existingMemberByPlayerId) {
     return NextResponse.json({
       success: false,
       message: 'Tu es déjà dans une équipe.',
     });
   }
+
+  /*
+    Fallback ancien système pour d'éventuelles
+    anciennes lignes sans player_id.
+  */
+
+  const { data: existingMemberByRiotId } =
+    await supabase
+      .from('team_members')
+      .select('*')
+      .eq('riot_id', riot_id)
+      .maybeSingle();
+
+  if (existingMemberByRiotId) {
+    return NextResponse.json({
+      success: false,
+      message: 'Tu es déjà dans une équipe.',
+    });
+  }
+
+  /* =====================================================
+     POSTE DÉJÀ PRIS
+  ===================================================== */
 
   const { data: roleTaken } = await supabase
     .from('team_members')
@@ -60,17 +109,28 @@ export async function POST(request: Request) {
     });
   }
 
+  /* =====================================================
+     ÉQUIPE COMPLÈTE
+  ===================================================== */
+
   const { data: members } = await supabase
     .from('team_members')
     .select('*')
     .eq('team_id', team_id);
 
-  if (members && members.length >= 5) {
+  if (
+    members &&
+    members.length >= 5
+  ) {
     return NextResponse.json({
       success: false,
       message: "L'équipe est déjà complète.",
     });
   }
+
+  /* =====================================================
+     DEMANDE DÉJÀ EXISTANTE
+  ===================================================== */
 
   const { data: existingRequest } = await supabase
     .from('team_join_requests')
@@ -86,6 +146,10 @@ export async function POST(request: Request) {
       message: 'Tu as déjà postulé à cette équipe.',
     });
   }
+
+  /* =====================================================
+     CRÉER LA DEMANDE
+  ===================================================== */
 
   const { data, error } = await supabase
     .from('team_join_requests')
@@ -103,7 +167,10 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { success: false, error },
+      {
+        success: false,
+        error,
+      },
       { status: 500 }
     );
   }
@@ -114,19 +181,36 @@ export async function POST(request: Request) {
   });
 }
 
+
+/* =========================================================
+   ACCEPTER / REFUSER UNE DEMANDE
+========================================================= */
+
 export async function PATCH(request: Request) {
   const body = await request.json();
 
-  const { request_id, action } = body;
+  const {
+    request_id,
+    action,
+  } = body;
 
-  const { data: joinRequest, error: requestError } =
-    await supabase
-      .from('team_join_requests')
-      .select('*')
-      .eq('id', request_id)
-      .single();
+  /* =====================================================
+     RÉCUPÉRER LA DEMANDE
+  ===================================================== */
 
-  if (requestError || !joinRequest) {
+  const {
+    data: joinRequest,
+    error: requestError,
+  } = await supabase
+    .from('team_join_requests')
+    .select('*')
+    .eq('id', request_id)
+    .single();
+
+  if (
+    requestError ||
+    !joinRequest
+  ) {
     return NextResponse.json(
       {
         success: false,
@@ -136,15 +220,24 @@ export async function PATCH(request: Request) {
     );
   }
 
+  /* =====================================================
+     REFUSER
+  ===================================================== */
+
   if (action === 'reject') {
     const { error } = await supabase
       .from('team_join_requests')
-      .update({ status: 'rejected' })
+      .update({
+        status: 'rejected',
+      })
       .eq('id', request_id);
 
     if (error) {
       return NextResponse.json(
-        { success: false, error },
+        {
+          success: false,
+          error,
+        },
         { status: 500 }
       );
     }
@@ -155,79 +248,246 @@ export async function PATCH(request: Request) {
     });
   }
 
+  /* =====================================================
+     ACCEPTER
+  ===================================================== */
+
   if (action === 'accept') {
-    const { data: alreadyInTeam } = await supabase
+    if (!joinRequest.player_id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Cette demande ne possède pas de player_id.',
+        },
+        { status: 400 }
+      );
+    }
+
+    /* ===================================================
+       RÉCUPÉRER LE JOUEUR ACTUEL
+
+       Comme ça, même s'il a changé de Riot ID
+       depuis sa demande, on utilise son pseudo actuel.
+    =================================================== */
+
+    const {
+      data: currentPlayer,
+      error: playerError,
+    } = await supabase
+      .from('players')
+      .select('id, riot_id')
+      .eq(
+        'id',
+        joinRequest.player_id
+      )
+      .single();
+
+    if (
+      playerError ||
+      !currentPlayer
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Profil joueur introuvable.',
+        },
+        { status: 404 }
+      );
+    }
+
+    /* ===================================================
+       DÉJÀ DANS UNE ÉQUIPE
+    =================================================== */
+
+    const {
+      data:
+        alreadyInTeamByPlayerId,
+    } = await supabase
       .from('team_members')
       .select('*')
-      .eq('riot_id', joinRequest.riot_id)
+      .eq(
+        'player_id',
+        joinRequest.player_id
+      )
       .maybeSingle();
 
-    if (alreadyInTeam) {
+    if (
+      alreadyInTeamByPlayerId
+    ) {
       return NextResponse.json({
         success: false,
-        message: 'Ce joueur est déjà dans une équipe.',
+        message:
+          'Ce joueur est déjà dans une équipe.',
       });
     }
 
-    const { data: roleTaken } = await supabase
+    /*
+      Fallback ancien système.
+    */
+
+    const {
+      data:
+        alreadyInTeamByRiotId,
+    } = await supabase
       .from('team_members')
       .select('*')
-      .eq('team_id', joinRequest.team_id)
-      .eq('role', joinRequest.role)
+      .eq(
+        'riot_id',
+        currentPlayer.riot_id
+      )
+      .maybeSingle();
+
+    if (
+      alreadyInTeamByRiotId
+    ) {
+      return NextResponse.json({
+        success: false,
+        message:
+          'Ce joueur est déjà dans une équipe.',
+      });
+    }
+
+    /* ===================================================
+       POSTE DÉJÀ PRIS
+    =================================================== */
+
+    const {
+      data: roleTaken,
+    } = await supabase
+      .from('team_members')
+      .select('*')
+      .eq(
+        'team_id',
+        joinRequest.team_id
+      )
+      .eq(
+        'role',
+        joinRequest.role
+      )
       .maybeSingle();
 
     if (roleTaken) {
       return NextResponse.json({
         success: false,
-        message: `Le poste ${joinRequest.role} est déjà occupé.`,
+        message:
+          `Le poste ${joinRequest.role} est déjà occupé.`,
       });
     }
 
-    const { data: members } = await supabase
+    /* ===================================================
+       ÉQUIPE COMPLÈTE
+    =================================================== */
+
+    const {
+      data: members,
+    } = await supabase
       .from('team_members')
       .select('*')
-      .eq('team_id', joinRequest.team_id);
+      .eq(
+        'team_id',
+        joinRequest.team_id
+      );
 
-    if (members && members.length >= 5) {
+    if (
+      members &&
+      members.length >= 5
+    ) {
       return NextResponse.json({
         success: false,
-        message: "L'équipe est déjà complète.",
+        message:
+          "L'équipe est déjà complète.",
       });
     }
 
-    const { error: insertError } = await supabase
+    /* ===================================================
+       AJOUTER LE JOUEUR
+
+       IMPORTANT :
+       player_id est maintenant enregistré.
+    =================================================== */
+
+    const {
+      error: insertError,
+    } = await supabase
       .from('team_members')
       .insert([
         {
-          team_id: joinRequest.team_id,
-          riot_id: joinRequest.riot_id,
-          role: joinRequest.role,
+          team_id:
+            joinRequest.team_id,
+
+          player_id:
+            joinRequest.player_id,
+
+          riot_id:
+            currentPlayer.riot_id,
+
+          role:
+            joinRequest.role,
         },
       ]);
 
     if (insertError) {
       return NextResponse.json(
-        { success: false, error: insertError },
+        {
+          success: false,
+          error: insertError,
+        },
         { status: 500 }
       );
     }
 
-    await supabase
+    /* ===================================================
+       MARQUER COMME ACCEPTÉE
+    =================================================== */
+
+    const {
+      error: acceptError,
+    } = await supabase
       .from('team_join_requests')
-      .update({ status: 'accepted' })
-      .eq('id', request_id);
+      .update({
+        status: 'accepted',
+        riot_id:
+          currentPlayer.riot_id,
+      })
+      .eq(
+        'id',
+        request_id
+      );
+
+    if (acceptError) {
+      console.error(
+        'Erreur update request:',
+        acceptError
+      );
+    }
+
+    /* ===================================================
+       SUPPRIMER LES AUTRES DEMANDES DU JOUEUR
+    =================================================== */
 
     await supabase
       .from('team_join_requests')
       .delete()
-      .eq('player_id', joinRequest.player_id)
-      .neq('id', request_id);
+      .eq(
+        'player_id',
+        joinRequest.player_id
+      )
+      .neq(
+        'id',
+        request_id
+      );
 
     return NextResponse.json({
       success: true,
       message: 'Joueur accepté.',
     });
   }
+
+  /* =====================================================
+     ACTION INCONNUE
+  ===================================================== */
 
   return NextResponse.json(
     {
@@ -236,4 +496,4 @@ export async function PATCH(request: Request) {
     },
     { status: 400 }
   );
-}
+}                     
