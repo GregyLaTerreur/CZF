@@ -844,32 +844,14 @@ export async function POST(
             `Joueur ${player.playerId} introuvable.`
           );
         }
-        const realTeamId =
-          memberTeamByRiotId.get(
-            normalizeRiotId(
-              dbPlayer.riot_id
-            )
-          );
         if (
-          !realTeamId
-        ) {
-          throw new Error(
-            `${dbPlayer.riot_id} n'est dans aucun roster du match.`
-          );
-        }
-        if (
-          Number(
-            realTeamId
-          ) !==
-          Number(
-            player.teamId
-          )
-        ) {
-          throw new Error(
-            `${dbPlayer.riot_id} n'appartient pas à l'équipe indiquée.`
-          );
-        }
-      }
+  Number(player.teamId) !== Number(team1Id) &&
+  Number(player.teamId) !== Number(team2Id)
+) {
+  throw new Error(
+    `${dbPlayer.riot_id} possède une équipe invalide.`
+  );
+}
       /* ===================================================
          VALIDATION SUBS
       =================================================== */
