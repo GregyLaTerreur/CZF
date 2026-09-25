@@ -852,6 +852,7 @@ export async function POST(
     `${dbPlayer.riot_id} possède une équipe invalide.`
   );
 }
+}
       /* ===================================================
          VALIDATION SUBS
       =================================================== */
