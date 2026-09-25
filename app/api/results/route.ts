@@ -339,19 +339,19 @@ export async function GET(
                       null,
 
                     riotId:
-                      riotId ||
-                      String(
-                        getValue(
-                          player,
-                          [
-                            'riot_id',
-                            'riotId',
-                            'summoner_name',
-                            'summonerName',
-                          ]
-                        ) ??
-                          'Joueur'
-                      ),
+  String(
+    getValue(
+      player,
+      [
+        'riot_id',
+        'riotId',
+        'summoner_name',
+        'summonerName',
+      ]
+    ) ??
+      riotId ??
+      'Joueur'
+  ),
 
                     discordName:
                       stringOrNull(
