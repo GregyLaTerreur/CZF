@@ -1354,19 +1354,13 @@ export default function ResultsPage() {
             {selectedRole ===
             'Support' ? (
               <RankingCard
-                title="VISION"
-                players={
-                  roleStats
-                }
-                valueKey="visionScore"
-                formatter={(
-                  value
-                ) =>
-                  Math.round(
-                    value
-                  ).toString()
-                }
-              />
+  title="VISION / MIN"
+  players={roleStats}
+  valueKey="visionScore"
+  formatter={(value) =>
+    `${value.toFixed(2)} VPM`
+  }
+/>
             ) : (
               <RankingCard
                 title="CS / MIN"

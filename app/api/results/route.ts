@@ -1965,11 +1965,10 @@ const avgDamage =
       )
     : 0;
 
-const avgVision =
-  gamesPlayed > 0
+const visionPerMin =
+  minutes > 0
     ? round2(
-        visionScore /
-          gamesPlayed
+        visionScore / minutes
       )
     : 0;
 
@@ -2132,8 +2131,7 @@ result[
   /*
     Vision moyenne par game.
   */
-  visionScore:
-    avgVision,
+ visionScore: visionPerMin,
 
   mvp,
 
