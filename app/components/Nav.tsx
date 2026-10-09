@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -120,6 +121,14 @@ export default function Nav() {
           className={isActive('/divisions') ? 'active' : ''}
         >
           Divisions
+        </Link>
+
+        {/* NOUVEAU : PLANNING */}
+        <Link
+          href="/planning"
+          className={isActive('/planning') ? 'active' : ''}
+        >
+          Planning
         </Link>
 
         <Link

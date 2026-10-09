@@ -43,11 +43,46 @@ type GameSlot = {
   needsReview?: boolean;
 };
 
+type MvpCandidate = {
+  id: number;
+  name: string;
+  teamId: number;
+};
+
+type MvpFixture = {
+  fixtureId: number;
+  matchId: number;
+  bestOf: number;
+  team1: { id: number; name: string };
+  team2: { id: number; name: string };
+  candidates: MvpCandidate[];
+  officialMvpId: number | null;
+  proposal: {
+    playerId: number;
+    status: string;
+    finalPlayerId: number | null;
+  } | null;
+  canPropose: boolean;
+};
+
+const GAME_STATUSES: Record<string, string> = {
+  pending: 'EN ATTENTE',
+  code_ready: 'CODE PRÊT',
+  in_progress: 'EN COURS',
+  processing: 'ANALYSE',
+  pending_review: 'À VÉRIFIER',
+  completed: 'TERMINÉE',
+  cancelled: 'ANNULÉE',
+};
+
 function formatDate(value: string | null) {
   if (!value) return 'À définir';
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'À définir';
+
+  if (Number.isNaN(date.getTime())) {
+    return 'À définir';
+  }
 
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
@@ -62,10 +97,10 @@ function toLocalInput(value: string | null) {
   if (!value) return '';
 
   const date = new Date(value);
+
   if (Number.isNaN(date.getTime())) return '';
 
-  const pad = (number: number) =>
-    String(number).padStart(2, '0');
+  const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
     `${date.getFullYear()}-` +
@@ -75,6 +110,10 @@ function toLocalInput(value: string | null) {
     `${pad(date.getMinutes())}`
   );
 }
+
+/* =========================================================
+   LOGOS DES ÉQUIPES
+========================================================= */
 
 function TeamBadge({ team }: { team: FixtureTeam }) {
   return (
@@ -98,7 +137,9 @@ function TeamBadge({ team }: { team: FixtureTeam }) {
             }}
           />
         ) : (
-          <span>{team.name.slice(0, 2).toUpperCase()}</span>
+          <span>
+            {team.name.slice(0, 2).toUpperCase()}
+          </span>
         )}
       </div>
 
@@ -109,35 +150,319 @@ function TeamBadge({ team }: { team: FixtureTeam }) {
   );
 }
 
-const GAME_STATUSES: Record<string, string> = {
-  pending: 'EN ATTENTE',
-  code_ready: 'CODE PRÊT',
-  in_progress: 'EN COURS',
-  processing: 'ANALYSE',
-  pending_review: 'À VÉRIFIER',
-  completed: 'TERMINÉE',
-  cancelled: 'ANNULÉE',
-};
+/* =========================================================
+   NOUVEAU : MVP DU BO
+========================================================= */
+
+function MvpSection({
+  mvp,
+  loading,
+  canManage,
+  onChanged,
+}: {
+  mvp: MvpFixture | null;
+  loading: boolean;
+  canManage: boolean;
+  onChanged: () => Promise<void>;
+}) {
+  const [choice, setChoice] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (!mvp) {
+      setChoice(0);
+      return;
+    }
+
+    setChoice(
+      mvp.proposal?.playerId ||
+      mvp.candidates[0]?.id ||
+      0
+    );
+  }, [mvp]);
+
+  if (loading) {
+    return (
+      <div className="czfMvpArea">
+        <div className="czfMvpTitle">
+          MVP DU BO
+        </div>
+        <p className="czfMvpHelp">
+          Chargement du MVP...
+        </p>
+      </div>
+    );
+  }
+
+  if (!mvp) {
+    return (
+      <div className="czfMvpArea">
+        <div className="czfMvpTitle">
+          MVP DU BO
+        </div>
+        <p className="czfMvpHelp">
+          Informations MVP indisponibles pour
+          cette rencontre.
+        </p>
+      </div>
+    );
+  }
+
+  const official = mvp.candidates.find(
+    (candidate) =>
+      candidate.id === mvp.officialMvpId
+  );
+
+  const proposed = mvp.candidates.find(
+    (candidate) =>
+      candidate.id === mvp.proposal?.playerId
+  );
+
+  const hasOfficialMvp =
+    mvp.officialMvpId !== null;
+
+  const pendingApproval =
+    mvp.proposal?.status === 'pending';
+
+  const canSubmit =
+    canManage &&
+    mvp.canPropose &&
+    !hasOfficialMvp &&
+    !mvp.proposal &&
+    mvp.candidates.length > 0;
+
+  async function submitMvp() {
+    if (!canSubmit || !choice || saving) return;
+
+    const candidate = mvp!.candidates.find(
+      (player) => player.id === choice
+    );
+
+    if (!candidate) {
+      setError('Sélectionne un joueur valide.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Confirmer ${candidate.name} comme MVP élu pendant le cast ?\n\n` +
+      `Cette proposition sera envoyée aux admins CZF.`
+    );
+
+    if (!confirmed) return;
+
+    setSaving(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error(
+          'Session expirée. Reconnecte-toi.'
+        );
+      }
+
+      const res = await fetch('/api/mvp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          fixtureId: mvp!.fixtureId,
+          playerId: choice,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(
+          json.error ||
+          'Impossible de soumettre le MVP.'
+        );
+      }
+
+      setMessage(
+        'MVP envoyé aux admins avec succès.'
+      );
+
+      await onChanged();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Erreur lors de la proposition.'
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="czfMvpArea">
+      <div className="czfMvpHeader">
+        <span className="czfMvpTitle">
+          MVP DU BO
+        </span>
+
+        <span
+          className={
+            hasOfficialMvp
+              ? 'czfMvpStatus czfMvpApproved'
+              : pendingApproval
+                ? 'czfMvpStatus czfMvpPending'
+                : 'czfMvpStatus'
+          }
+        >
+          {hasOfficialMvp
+            ? 'VALIDÉ'
+            : pendingApproval
+              ? 'EN ATTENTE ADMIN'
+              : 'À RENSEIGNER'}
+        </span>
+      </div>
+
+      {hasOfficialMvp ? (
+        <div className="czfMvpOfficial">
+          <span>🏆 MVP OFFICIEL</span>
+
+          <strong>
+            {official?.name || 'MVP attribué'}
+          </strong>
+
+          {official && (
+            <p>
+              {official.teamId === mvp.team1.id
+                ? mvp.team1.name
+                : mvp.team2.name}
+            </p>
+          )}
+        </div>
+      ) : pendingApproval ? (
+        <div className="czfMvpProposed">
+          <span>
+            MVP proposé après le cast
+          </span>
+
+          <strong>
+            {proposed?.name || 'Joueur proposé'}
+          </strong>
+
+          <p>
+            Les admins CZF doivent encore
+            valider ou corriger ce choix.
+          </p>
+        </div>
+      ) : canSubmit ? (
+        <div className="czfMvpForm">
+          <p className="czfMvpHelp">
+            Le MVP a été élu pendant le cast ?
+            Un seul des deux capitaines doit
+            renseigner le joueur ici.
+          </p>
+
+          <label
+            htmlFor={`mvp-choice-${mvp.fixtureId}`}
+          >
+            Joueur élu MVP
+          </label>
+
+          <select
+            id={`mvp-choice-${mvp.fixtureId}`}
+            value={choice}
+            disabled={saving}
+            onChange={(event) =>
+              setChoice(Number(event.target.value))
+            }
+          >
+            {mvp.candidates.map((candidate) => {
+              const teamName =
+                candidate.teamId === mvp.team1.id
+                  ? mvp.team1.name
+                  : mvp.team2.name;
+
+              return (
+                <option
+                  key={candidate.id}
+                  value={candidate.id}
+                >
+                  {candidate.name} — {teamName}
+                </option>
+              );
+            })}
+          </select>
+
+          <button
+            type="button"
+            className="czfMvpSubmit"
+            onClick={() => void submitMvp()}
+            disabled={saving || !choice}
+          >
+            {saving
+              ? 'Envoi en cours...'
+              : 'Soumettre le MVP aux admins'}
+          </button>
+        </div>
+      ) : (
+        <p className="czfMvpHelp">
+          {mvp.candidates.length === 0
+            ? 'Les statistiques officielles des joueurs ne sont pas encore disponibles.'
+            : 'En attente de la proposition d’un capitaine.'}
+        </p>
+      )}
+
+      {error && (
+        <p className="czfScheduleError">
+          {error}
+        </p>
+      )}
+
+      {message && (
+        <p className="czfScheduleSuccess">
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================
+   CARTE D'UNE RENCONTRE
+========================================================= */
 
 function FixtureCard({
   fixture,
   canManage,
   slots,
   gamesLoading,
+  mvp,
+  mvpLoading,
   onSaved,
   onPrepare,
+  onMvpChanged,
 }: {
   fixture: Fixture;
   canManage: boolean;
   slots: GameSlot[];
   gamesLoading: boolean;
+  mvp: MvpFixture | null;
+  mvpLoading: boolean;
   onSaved: () => Promise<void>;
   onPrepare: (fixtureId: number) => Promise<void>;
+  onMvpChanged: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
+
   const [dateInput, setDateInput] = useState(
     toLocalInput(fixture.scheduledAt)
   );
+
   const [saving, setSaving] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState('');
@@ -157,7 +482,9 @@ function FixtureCard({
   const editable =
     canManage &&
     fixture.matchId === null &&
-    ['pending', 'scheduled'].includes(fixture.status);
+    ['pending', 'scheduled'].includes(
+      fixture.status
+    );
 
   const canPrepare =
     editable &&
@@ -169,7 +496,10 @@ function FixtureCard({
     : 'VS';
 
   function openEditor() {
-    setDateInput(toLocalInput(fixture.scheduledAt));
+    setDateInput(
+      toLocalInput(fixture.scheduledAt)
+    );
+
     setError('');
     setSuccess('');
     setEditing(true);
@@ -183,7 +513,9 @@ function FixtureCard({
 
     if (!removeDate) {
       if (!dateInput) {
-        setError('Choisis une date et une heure.');
+        setError(
+          'Choisis une date et une heure.'
+        );
         return;
       }
 
@@ -195,7 +527,9 @@ function FixtureCard({
       }
 
       if (parsed.getTime() < Date.now()) {
-        setError('Choisis une date dans le futur.');
+        setError(
+          'Choisis une date dans le futur.'
+        );
         return;
       }
 
@@ -210,32 +544,42 @@ function FixtureCard({
       } = await supabase.auth.getSession();
 
       if (!session?.access_token) {
-        throw new Error('Session expirée. Reconnecte-toi.');
+        throw new Error(
+          'Session expirée. Reconnecte-toi.'
+        );
       }
 
-      const res = await fetch('/api/my-fixtures/schedule', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          fixtureId: fixture.id,
-          scheduledAt: isoDate,
-        }),
-      });
+      const res = await fetch(
+        '/api/my-fixtures/schedule',
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization:
+              `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            fixtureId: fixture.id,
+            scheduledAt: isoDate,
+          }),
+        }
+      );
 
       const json = await res.json();
 
       if (!res.ok || !json.success) {
         throw new Error(
-          json.error || 'Impossible de modifier la date.'
+          json.error ||
+          'Impossible de modifier la date.'
         );
       }
 
       await onSaved();
+
       setEditing(false);
-      setSuccess(json.message || 'Date enregistrée.');
+      setSuccess(
+        json.message || 'Date enregistrée.'
+      );
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -254,7 +598,10 @@ function FixtureCard({
 
     try {
       await onPrepare(fixture.id);
-      setSuccess('Les games sont prêtes dans CZF.');
+
+      setSuccess(
+        'Les games sont prêtes dans CZF.'
+      );
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -286,14 +633,17 @@ function FixtureCard({
                 : 'czfMatchStatus'
           }
         >
-          {statusLabels[fixture.status] ?? fixture.status}
+          {statusLabels[fixture.status] ??
+            fixture.status}
         </span>
       </div>
 
       <div className="czfMatchVersus">
         <TeamBadge team={fixture.team1} />
 
-        <div className="czfMatchScore">{score}</div>
+        <div className="czfMatchScore">
+          {score}
+        </div>
 
         <TeamBadge team={fixture.team2} />
       </div>
@@ -302,11 +652,15 @@ function FixtureCard({
         <span>
           {finished
             ? 'Résultat enregistré'
-            : `Date : ${formatDate(fixture.scheduledAt)}`}
+            : `Date : ${formatDate(
+                fixture.scheduledAt
+              )}`}
         </span>
 
         <strong>{fixture.division}</strong>
       </div>
+
+      {/* PROGRAMMATION EXISTANTE */}
 
       {editable && !editing && (
         <button
@@ -329,11 +683,14 @@ function FixtureCard({
           </h4>
 
           <p>
-            Mettez-vous d'accord sur Discord. Un seul
-            capitaine doit renseigner la date.
+            Mettez-vous d'accord sur Discord.
+            Un seul capitaine doit renseigner
+            la date.
           </p>
 
-          <label htmlFor={`fixture-date-${fixture.id}`}>
+          <label
+            htmlFor={`fixture-date-${fixture.id}`}
+          >
             Date et heure du match
           </label>
 
@@ -354,14 +711,18 @@ function FixtureCard({
               onClick={() => void saveDate()}
               disabled={saving}
             >
-              {saving ? 'Enregistrement...' : 'Enregistrer'}
+              {saving
+                ? 'Enregistrement...'
+                : 'Enregistrer'}
             </button>
 
             {fixture.scheduledAt && (
               <button
                 type="button"
                 className="czfScheduleRemove"
-                onClick={() => void saveDate(true)}
+                onClick={() =>
+                  void saveDate(true)
+                }
                 disabled={saving}
               >
                 Remettre à définir
@@ -383,10 +744,15 @@ function FixtureCard({
         </div>
       )}
 
+      {/* PRÉPARATION DES GAMES EXISTANTE */}
+
       {!cancelled && !finished && (
         <div className="czfGamesArea">
           <div className="czfGamesTitle">
-            <span>GAMES DU BO{fixture.bestOf}</span>
+            <span>
+              GAMES DU BO{fixture.bestOf}
+            </span>
+
             <span>
               {slots.length > 0
                 ? `${slots.length} PRÉPARÉES`
@@ -404,8 +770,10 @@ function FixtureCard({
                 { length: fixture.bestOf },
                 (_, index) => {
                   const number = index + 1;
+
                   const slot = slots.find(
-                    (item) => item.gameNumber === number
+                    (item) =>
+                      item.gameNumber === number
                   );
 
                   return (
@@ -418,11 +786,15 @@ function FixtureCard({
                       </div>
 
                       <div className="czfGameText">
-                        <strong>Game {number}</strong>
+                        <strong>
+                          Game {number}
+                        </strong>
+
                         <span>
                           {slot
-                            ? GAME_STATUSES[slot.status] ??
-                              slot.status
+                            ? GAME_STATUSES[
+                                slot.status
+                              ] ?? slot.status
                             : 'À préparer'}
                         </span>
                       </div>
@@ -441,7 +813,9 @@ function FixtureCard({
             <button
               type="button"
               className="czfPrepareButton"
-              onClick={() => void prepareGames()}
+              onClick={() =>
+                void prepareGames()
+              }
               disabled={preparing}
             >
               {preparing
@@ -462,39 +836,76 @@ function FixtureCard({
             !gamesLoading &&
             slots.length === 0 && (
               <p className="czfGamesHint">
-                En attente de préparation par un capitaine.
+                En attente de préparation
+                par un capitaine.
               </p>
             )}
         </div>
       )}
 
+      {/* NOUVEAU : MVP SUR LES BO TERMINÉS */}
+
+      {finished && (
+        <MvpSection
+          mvp={mvp}
+          loading={mvpLoading}
+          canManage={canManage}
+          onChanged={onMvpChanged}
+        />
+      )}
+
       {error && (
-        <p className="czfScheduleError">{error}</p>
+        <p className="czfScheduleError">
+          {error}
+        </p>
       )}
 
       {success && (
-        <p className="czfScheduleSuccess">{success}</p>
+        <p className="czfScheduleSuccess">
+          {success}
+        </p>
       )}
     </article>
   );
 }
 
+/* =========================================================
+   PAGE MON ÉQUIPE
+========================================================= */
+
 export default function MyTeamPage() {
   const [user, setUser] = useState<any>(null);
   const [player, setPlayer] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
+
   const [members, setMembers] = useState<any[]>([]);
   const [players, setPlayers] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [fixturesLoading, setFixturesLoading] = useState(false);
-  const [gamesLoading, setGamesLoading] = useState(false);
-  const [fixturesError, setFixturesError] = useState('');
+  const [fixturesLoading, setFixturesLoading] =
+    useState(false);
+  const [gamesLoading, setGamesLoading] =
+    useState(false);
+  const [mvpLoading, setMvpLoading] =
+    useState(false);
 
-  const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [gameSlots, setGameSlots] = useState<GameSlot[]>([]);
-  const [season, setSeason] = useState<Season | null>(null);
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [fixturesError, setFixturesError] =
+    useState('');
+  const [mvpError, setMvpError] =
+    useState('');
+
+  const [fixtures, setFixtures] =
+    useState<Fixture[]>([]);
+  const [gameSlots, setGameSlots] =
+    useState<GameSlot[]>([]);
+  const [mvpFixtures, setMvpFixtures] =
+    useState<MvpFixture[]>([]);
+
+  const [season, setSeason] =
+    useState<Season | null>(null);
+
+  const [showCompleted, setShowCompleted] =
+    useState(false);
 
   useEffect(() => {
     void loadMyTeam();
@@ -528,18 +939,25 @@ export default function MyTeamPage() {
         setMembers([]);
         setFixtures([]);
         setGameSlots([]);
+        setMvpFixtures([]);
+        setSeason(null);
         return;
       }
 
-      const { data: allPlayers, error: playersError } =
-        await supabase.from('players').select('*');
+      const {
+        data: allPlayers,
+        error: playersError,
+      } = await supabase
+        .from('players')
+        .select('*');
 
       if (playersError) throw playersError;
 
       setPlayers(allPlayers || []);
 
       const linkedPlayer = allPlayers?.find(
-        (p: any) => p.profile_id === currentUser.id
+        (p: any) =>
+          p.profile_id === currentUser.id
       );
 
       setPlayer(linkedPlayer || null);
@@ -549,11 +967,17 @@ export default function MyTeamPage() {
         setMembers([]);
         setFixtures([]);
         setGameSlots([]);
+        setMvpFixtures([]);
+        setSeason(null);
         return;
       }
 
-      const { data: allMembers, error: membersError } =
-        await supabase.from('team_members').select('*');
+      const {
+        data: allMembers,
+        error: membersError,
+      } = await supabase
+        .from('team_members')
+        .select('*');
 
       if (membersError) throw membersError;
 
@@ -561,25 +985,32 @@ export default function MyTeamPage() {
         linkedPlayer.riot_id || ''
       ).trim().toLowerCase();
 
-      const myMemberLine = allMembers?.find((m: any) => {
-        if (
-          m.player_id !== null &&
-          m.player_id !== undefined
-        ) {
+      const myMemberLine =
+        allMembers?.find((m: any) => {
+          if (
+            m.player_id !== null &&
+            m.player_id !== undefined
+          ) {
+            return (
+              Number(m.player_id) ===
+              Number(linkedPlayer.id)
+            );
+          }
+
           return (
-            Number(m.player_id) ===
-            Number(linkedPlayer.id)
+            String(m.riot_id || '')
+              .trim()
+              .toLowerCase() ===
+            normalizedRiotId
           );
-        }
+        });
 
-        return (
-          String(m.riot_id || '').trim().toLowerCase() ===
-          normalizedRiotId
-        );
-      });
-
-      const { data: allTeams, error: teamsError } =
-        await supabase.from('teams').select('*');
+      const {
+        data: allTeams,
+        error: teamsError,
+      } = await supabase
+        .from('teams')
+        .select('*');
 
       if (teamsError) throw teamsError;
 
@@ -591,10 +1022,12 @@ export default function MyTeamPage() {
 
       const memberTeam = allTeams?.find(
         (t: any) =>
-          Number(t.id) === Number(myMemberLine?.team_id)
+          Number(t.id) ===
+          Number(myMemberLine?.team_id)
       );
 
-      const foundTeam = captainTeam || memberTeam || null;
+      const foundTeam =
+        captainTeam || memberTeam || null;
 
       setTeam(foundTeam);
 
@@ -610,11 +1043,13 @@ export default function MyTeamPage() {
         await Promise.all([
           loadFixtures(),
           loadGames(),
+          loadMvp(),
         ]);
       } else {
         setMembers([]);
         setFixtures([]);
         setGameSlots([]);
+        setMvpFixtures([]);
         setSeason(null);
       }
     } catch (error) {
@@ -624,6 +1059,10 @@ export default function MyTeamPage() {
     }
   }
 
+  /* =======================================================
+     RENCONTRES
+  ======================================================= */
+
   async function loadFixtures() {
     setFixturesLoading(true);
     setFixturesError('');
@@ -631,20 +1070,23 @@ export default function MyTeamPage() {
     try {
       const token = await getToken();
 
-      const res = await fetch('/api/my-fixtures', {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        '/api/my-fixtures',
+        {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const json = await res.json();
 
       if (!res.ok || !json.success) {
         throw new Error(
           json.error ||
-            'Impossible de charger les rencontres.'
+          'Impossible de charger les rencontres.'
         );
       }
 
@@ -652,13 +1094,19 @@ export default function MyTeamPage() {
       setSeason(json.season || null);
     } catch (error: any) {
       setFixturesError(
-        error?.message || 'Erreur des rencontres.'
+        error?.message ||
+        'Erreur des rencontres.'
       );
+
       setFixtures([]);
     } finally {
       setFixturesLoading(false);
     }
   }
+
+  /* =======================================================
+     GAMES
+  ======================================================= */
 
   async function loadGames() {
     setGamesLoading(true);
@@ -666,19 +1114,23 @@ export default function MyTeamPage() {
     try {
       const token = await getToken();
 
-      const res = await fetch('/api/my-fixtures/games', {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        '/api/my-fixtures/games',
+        {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const json = await res.json();
 
       if (!res.ok || !json.success) {
         throw new Error(
-          json.error || 'Impossible de charger les games.'
+          json.error ||
+          'Impossible de charger les games.'
         );
       }
 
@@ -691,28 +1143,90 @@ export default function MyTeamPage() {
     }
   }
 
-  async function prepareGames(fixtureId: number) {
+  async function prepareGames(
+    fixtureId: number
+  ) {
     const token = await getToken();
 
-    const res = await fetch('/api/my-fixtures/games', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ fixtureId }),
-    });
+    const res = await fetch(
+      '/api/my-fixtures/games',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type':
+            'application/json',
+          Authorization:
+            `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fixtureId,
+        }),
+      }
+    );
 
     const json = await res.json();
 
     if (!res.ok || !json.success) {
       throw new Error(
-        json.error || 'Impossible de préparer les games.'
+        json.error ||
+        'Impossible de préparer les games.'
       );
     }
 
     await loadGames();
   }
+
+  /* =======================================================
+     NOUVEAU : CHARGEMENT MVP
+  ======================================================= */
+
+  async function loadMvp() {
+    setMvpLoading(true);
+    setMvpError('');
+
+    try {
+      const token = await getToken();
+
+      const res = await fetch('/api/mvp', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(
+          json.error ||
+          'Impossible de charger les MVP.'
+        );
+      }
+
+      setMvpFixtures(
+        Array.isArray(json.fixtures)
+          ? json.fixtures
+          : []
+      );
+    } catch (error) {
+      console.error('[MY TEAM MVP]', error);
+
+      setMvpError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur MVP.'
+      );
+
+      setMvpFixtures([]);
+    } finally {
+      setMvpLoading(false);
+    }
+  }
+
+  /* =======================================================
+     ROSTER EXISTANT
+  ======================================================= */
 
   function getPlayerFromMember(member: any) {
     if (!member) return null;
@@ -723,7 +1237,8 @@ export default function MyTeamPage() {
     ) {
       const found = players.find(
         (p) =>
-          Number(p.id) === Number(member.player_id)
+          Number(p.id) ===
+          Number(member.player_id)
       );
 
       if (found) return found;
@@ -738,7 +1253,8 @@ export default function MyTeamPage() {
         (p) =>
           String(p.riot_id || '')
             .trim()
-            .toLowerCase() === normalizedRiotId
+            .toLowerCase() ===
+          normalizedRiotId
       ) || null
     );
   }
@@ -774,16 +1290,20 @@ export default function MyTeamPage() {
     }
 
     try {
-      const res = await fetch('/api/team-members', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          team_id: team.id,
-          riot_id: player.riot_id,
-        }),
-      });
+      const res = await fetch(
+        '/api/team-members',
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+          body: JSON.stringify({
+            team_id: team.id,
+            riot_id: player.riot_id,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -802,6 +1322,10 @@ export default function MyTeamPage() {
     }
   }
 
+  /* =======================================================
+     TRI DES RENCONTRES
+  ======================================================= */
+
   const isCaptain =
     !!team &&
     !!player &&
@@ -815,7 +1339,10 @@ export default function MyTeamPage() {
         fixture.status !== 'cancelled'
     )
     .sort((a, b) => {
-      if (a.scheduledAt && b.scheduledAt) {
+      if (
+        a.scheduledAt &&
+        b.scheduledAt
+      ) {
         return (
           new Date(a.scheduledAt).getTime() -
           new Date(b.scheduledAt).getTime()
@@ -830,11 +1357,28 @@ export default function MyTeamPage() {
 
   const completedFixtures = fixtures
     .filter(
-      (fixture) => fixture.status === 'completed'
+      (fixture) =>
+        fixture.status === 'completed'
     )
     .sort((a, b) => b.id - a.id);
 
   function renderCard(fixture: Fixture) {
+    const canManage =
+      isCaptain &&
+      (
+        Number(team.id) ===
+          Number(fixture.team1.id) ||
+        Number(team.id) ===
+          Number(fixture.team2.id)
+      );
+
+    const mvp =
+      mvpFixtures.find(
+        (item) =>
+          Number(item.fixtureId) ===
+          Number(fixture.id)
+      ) || null;
+
     return (
       <FixtureCard
         key={fixture.id}
@@ -845,20 +1389,19 @@ export default function MyTeamPage() {
             Number(fixture.id)
         )}
         gamesLoading={gamesLoading}
-        canManage={
-          isCaptain &&
-          (
-            Number(team.id) ===
-              Number(fixture.team1.id) ||
-            Number(team.id) ===
-              Number(fixture.team2.id)
-          )
-        }
+        mvp={mvp}
+        mvpLoading={mvpLoading}
+        canManage={canManage}
         onSaved={loadFixtures}
         onPrepare={prepareGames}
+        onMvpChanged={loadMvp}
       />
     );
   }
+
+  /* =======================================================
+     AFFICHAGE
+  ======================================================= */
 
   return (
     <>
@@ -872,16 +1415,20 @@ export default function MyTeamPage() {
 
         {loading ? (
           <div className="card">
-            <p>Chargement de ton équipe...</p>
+            <p>
+              Chargement de ton équipe...
+            </p>
           </div>
         ) : (
           <>
             {!user && (
               <div className="card">
                 <h3>Non connecté</h3>
+
                 <p>
                   Connecte-toi avec Discord.
                 </p>
+
                 <a
                   href="/login"
                   className="rulebookButton"
@@ -893,10 +1440,15 @@ export default function MyTeamPage() {
 
             {user && !player && (
               <div className="card">
-                <h3>Aucun profil joueur</h3>
+                <h3>
+                  Aucun profil joueur
+                </h3>
+
                 <p>
-                  Crée d'abord ton profil joueur CZF.
+                  Crée d'abord ton profil
+                  joueur CZF.
                 </p>
+
                 <a
                   href="/players"
                   className="rulebookButton"
@@ -909,10 +1461,12 @@ export default function MyTeamPage() {
             {user && player && !team && (
               <div className="card">
                 <h3>Aucune équipe</h3>
+
                 <p>
                   Tu n'es dans aucune équipe
                   pour le moment.
                 </p>
+
                 <a
                   href="/teams"
                   className="rulebookButton"
@@ -924,6 +1478,8 @@ export default function MyTeamPage() {
 
             {user && player && team && (
               <>
+                {/* ÉQUIPE EXISTANTE */}
+
                 <div className="card">
                   <h3>{team.name}</h3>
 
@@ -936,17 +1492,23 @@ export default function MyTeamPage() {
                   )}
 
                   <p>
-                    <strong>Capitaine :</strong>{' '}
+                    <strong>
+                      Capitaine :
+                    </strong>{' '}
                     {team.captain_riot_id || '-'}
                   </p>
 
                   <p>
-                    <strong>Division :</strong>{' '}
+                    <strong>
+                      Division :
+                    </strong>{' '}
                     {team.division || '-'}
                   </p>
 
                   <p>
-                    <strong>Description :</strong>{' '}
+                    <strong>
+                      Description :
+                    </strong>{' '}
                     {team.description || '-'}
                   </p>
 
@@ -958,7 +1520,8 @@ export default function MyTeamPage() {
                         rel="noreferrer"
                         className="multiggLink"
                       >
-                        Cliquez pour ouvrir la page MultiGG →
+                        Cliquez pour ouvrir
+                        la page MultiGG →
                       </a>
                     </p>
                   )}
@@ -967,7 +1530,8 @@ export default function MyTeamPage() {
 
                   {ROLES.map((role) => (
                     <p key={role}>
-                      {role} : {getRolePlayer(role)}
+                      {role} :{' '}
+                      {getRolePlayer(role)}
                     </p>
                   ))}
 
@@ -979,17 +1543,23 @@ export default function MyTeamPage() {
                   </button>
                 </div>
 
+                {/* RENCONTRES EXISTANTES */}
+
                 <section className="czfFixturesSection">
                   <div className="czfFixturesHeading">
                     <div>
                       <p className="czfFixturesEyebrow">
                         {season?.name || 'CZF'}
                       </p>
-                      <h3>Mes rencontres</h3>
+
+                      <h3>
+                        Mes rencontres
+                      </h3>
                     </div>
 
                     <span className="czfFixturesCounter">
-                      {pendingFixtures.length} À JOUER
+                      {pendingFixtures.length}
+                      {' '}À JOUER
                     </span>
                   </div>
 
@@ -1011,7 +1581,9 @@ export default function MyTeamPage() {
                         </div>
                       ) : (
                         <div className="czfFixturesGrid">
-                          {pendingFixtures.map(renderCard)}
+                          {pendingFixtures.map(
+                            renderCard
+                          )}
                         </div>
                       )}
 
@@ -1032,16 +1604,29 @@ export default function MyTeamPage() {
                             </span>
 
                             <span>
-                              {showCompleted ? '−' : '+'}
+                              {showCompleted
+                                ? '−'
+                                : '+'}
                             </span>
                           </button>
 
                           {showCompleted && (
-                            <div className="czfFixturesGrid">
-                              {completedFixtures.map(
-                                renderCard
+                            <>
+                              {mvpError && (
+                                <div className="czfFixturesError">
+                                  Impossible de charger
+                                  les informations MVP :
+                                  {' '}
+                                  {mvpError}
+                                </div>
                               )}
-                            </div>
+
+                              <div className="czfFixturesGrid">
+                                {completedFixtures.map(
+                                  renderCard
+                                )}
+                              </div>
+                            </>
                           )}
                         </div>
                       )}
@@ -1052,6 +1637,8 @@ export default function MyTeamPage() {
             )}
           </>
         )}
+
+        {/* STYLES DE LA PAGE */}
 
         <style jsx global>{`
           .czfFixturesSection {
@@ -1220,6 +1807,8 @@ export default function MyTeamPage() {
             border-top: 1px solid rgba(9, 42, 63, 0.1);
           }
 
+          /* PROGRAMMATION DES DATES */
+
           .czfScheduleButton {
             display: block;
             width: 100%;
@@ -1317,6 +1906,8 @@ export default function MyTeamPage() {
             opacity: 0.5;
             cursor: not-allowed;
           }
+
+          /* GAMES */
 
           .czfGamesArea {
             margin-top: 16px;
@@ -1418,6 +2009,138 @@ export default function MyTeamPage() {
             font-size: 10px;
             line-height: 1.5;
           }
+
+          /* NOUVEAU : MVP */
+
+          .czfMvpArea {
+            margin-top: 16px;
+            padding: 16px;
+            border: 1px solid rgba(9, 42, 63, 0.14);
+            border-radius: 9px;
+            background: #f6edda;
+          }
+
+          .czfMvpHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 12px;
+          }
+
+          .czfMvpTitle {
+            display: block;
+            color: #092a3f;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.6px;
+          }
+
+          .czfMvpStatus {
+            padding: 6px 8px;
+            border-radius: 6px;
+            background: #e9dfce;
+            color: #826d4c;
+            font-size: 10px;
+            font-weight: 900;
+          }
+
+          .czfMvpPending {
+            background: #f4dfb9;
+            color: #92601c;
+          }
+
+          .czfMvpApproved {
+            background: #e1efe2;
+            color: #277248;
+          }
+
+          .czfMvpHelp {
+            margin: 0 0 12px;
+            color: #657381;
+            font-size: 11px;
+            line-height: 1.6;
+          }
+
+          .czfMvpForm label {
+            display: block;
+            margin-bottom: 8px;
+            color: #092a3f;
+            font-size: 12px;
+            font-weight: 900;
+          }
+
+          .czfMvpForm select {
+            box-sizing: border-box;
+            display: block;
+            width: 100%;
+            min-height: 43px;
+            padding: 10px 12px;
+            border: 1px solid rgba(9, 42, 63, 0.3);
+            border-radius: 8px;
+            background: #fffdfa;
+            color: #092a3f;
+            font-size: 12px;
+          }
+
+          .czfMvpSubmit {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #092a3f;
+            color: #fff3df;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 900;
+          }
+
+          .czfMvpSubmit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          .czfMvpOfficial,
+          .czfMvpProposed {
+            padding: 13px;
+            border-radius: 8px;
+            background: #eee1c9;
+          }
+
+          .czfMvpOfficial {
+            background: #e3f0df;
+          }
+
+          .czfMvpOfficial span,
+          .czfMvpProposed span {
+            display: block;
+            margin-bottom: 7px;
+            color: #687681;
+            font-size: 10px;
+            font-weight: 900;
+          }
+
+          .czfMvpOfficial strong,
+          .czfMvpProposed strong {
+            display: block;
+            color: #092a3f;
+            font-size: 15px;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+          }
+
+          .czfMvpOfficial p,
+          .czfMvpProposed p {
+            margin: 6px 0 0;
+            color: #657381;
+            font-size: 11px;
+            line-height: 1.5;
+          }
+
+          /* MESSAGES */
 
           .czfScheduleError {
             margin: 10px 0 0;
