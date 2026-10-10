@@ -95,6 +95,42 @@ const supabaseAdmin = createClient(
   }
 );
 
+/*
+ Enable fetchAll to not get query limited to its max pagination
+*/
+async function fetchAll<T = AnyObject>(
+  buildQuery: (
+    from: number,
+    to: number
+  ) => PromiseLike<{
+    data: T[] | null;
+    error: any;
+  }>,
+  pageSize = 1000
+): Promise<{ data: T[]; error: any }> {
+  const all: T[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await buildQuery(
+      from,
+      from + pageSize - 1
+    );
+
+    if (error) {
+      return { data: [], error };
+    }
+
+    all.push(...(data ?? []));
+
+    if (!data || data.length < pageSize) break;
+
+    from += pageSize;
+  }
+
+  return { data: all, error: null };
+}
+
 function getValue(
   object: AnyObject | null | undefined,
   keys: string[]
@@ -439,13 +475,29 @@ export async function GET(request: NextRequest) {
 
     const [matchesResult, gamesResult, statsResult] =
       await Promise.all([
-        supabaseAdmin
-          .from('czf_matches')
-          .select('*')
-          .eq('status', 'finished')
-          .order('played_at', { ascending: false }),
-        supabaseAdmin.from('czf_games').select('*'),
-        supabaseAdmin.from('czf_game_player_stats').select('*'),
+        fetchAll((from, to) =>
+          supabaseAdmin
+            .from('czf_matches')
+            .select('*')
+            .eq('status', 'finished')
+            .order('played_at', { ascending: false })
+            .order('id', { ascending: true })
+            .range(from, to)
+        ),
+        fetchAll((from, to) =>
+          supabaseAdmin
+            .from('czf_games')
+            .select('*')
+            .order('id', { ascending: true })
+            .range(from, to)
+        ),
+        fetchAll((from, to) =>
+          supabaseAdmin
+            .from('czf_game_player_stats')
+            .select('*')
+            .order('id', { ascending: true })
+            .range(from, to)
+        ),
       ]);
 
     if (matchesResult.error) throw matchesResult.error;
