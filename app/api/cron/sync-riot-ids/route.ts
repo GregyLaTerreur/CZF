@@ -3,6 +3,17 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET(request: Request) {
   try {
+    // Synchronisation Riot autorisée uniquement sur CZF PROD
+    if (process.env.CZF_ENABLE_RIOT_CRON !== 'true') {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Synchronisation Riot désactivée sur cet environnement.',
+        },
+        { status: 403 }
+      );
+    }
+
     /* =====================================================
        SÉCURITÉ CRON
     ===================================================== */
