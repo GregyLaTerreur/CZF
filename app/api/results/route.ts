@@ -1,36 +1,16 @@
-import {
-  NextRequest,
-  NextResponse,
-} from 'next/server';
 
-import {
-  createClient,
-} from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 type AnyObject = Record<string, any>;
+type Division = 'Yordle' | 'Ixtal' | 'Targon';
+type Role = 'Top' | 'Jungle' | 'Mid' | 'ADC' | 'Support';
 
-type Division =
-  | 'Yordle'
-  | 'Ixtal'
-  | 'Targon';
-
-type Role =
-  | 'Top'
-  | 'Jungle'
-  | 'Mid'
-  | 'ADC'
-  | 'Support';
-
-const ROLES: Role[] = [
-  'Top',
-  'Jungle',
-  'Mid',
-  'ADC',
-  'Support',
-];
+const ROLES: Role[] = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+const DIVISIONS: Division[] = ['Yordle', 'Ixtal', 'Targon'];
 
 type ResultPlayer = {
   id: string | number | null;
@@ -46,11 +26,9 @@ type ResultTeam = {
   shortName: string;
   logo: string | null;
   division: Division | null;
-
   wins: number;
   losses: number;
   gameDiff: number;
-
   roster: ResultPlayer[];
 };
 
@@ -64,36 +42,26 @@ type Champion = {
 type PlayerStats = {
   playerId: number;
   riotId: string;
-
   teamId: number;
   teamName: string;
   teamShortName: string;
   teamLogo: string | null;
-
   role: Role;
-
   games: number;
   wins: number;
   losses: number;
-
   kills: number;
   deaths: number;
   assists: number;
   kda: number;
-
   cs: number;
   csPerMin: number;
-
   gold: number;
   goldPerMin: number;
-
   damage: number;
   dpm: number;
-
   visionScore: number;
-
   mvp: number;
-
   totalDurationSeconds: number;
 };
 
@@ -101,55 +69,35 @@ type ChampionRoleStat = {
   championId: string;
   name: string;
   image: string | null;
-
   role: Role;
-
   picks: number;
   wins: number;
   losses: number;
-
   pickRate: number;
   winRate: number;
 };
 
-/* =========================================================
-   SUPABASE
-========================================================= */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl) {
-  throw new Error(
-    'NEXT_PUBLIC_SUPABASE_URL manquant'
-  );
+if (!supabaseUrl || !serviceRoleKey) {
+  throw new Error('Configuration Supabase manquante');
 }
 
-if (!serviceRoleKey) {
-  throw new Error(
-    'SUPABASE_SERVICE_ROLE_KEY manquant'
-  );
-}
+const supabaseAdmin = createClient(
+  supabaseUrl,
+  serviceRoleKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
-const supabaseAdmin =
-  createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
-
-/* =========================================================
-  FETCH ALL (contourne la limite de 1000 lignes de Supabase)
-========================================================= */
-
+/*
+ Enable fetchAll to not get query limited to its max pagination
+*/
 async function fetchAll<T = AnyObject>(
   buildQuery: (
     from: number,
@@ -159,2750 +107,38 @@ async function fetchAll<T = AnyObject>(
     error: any;
   }>,
   pageSize = 1000
-): Promise<T[]> {
+): Promise<{ data: T[]; error: any }> {
   const all: T[] = [];
   let from = 0;
 
   while (true) {
-    const { data, error } =
-      await buildQuery(
-        from,
-        from + pageSize - 1
-      );
+    const { data, error } = await buildQuery(
+      from,
+      from + pageSize - 1
+    );
 
     if (error) {
-      throw error;
+      return { data: [], error };
     }
 
     all.push(...(data ?? []));
 
-    if (
-      !data ||
-      data.length < pageSize
-    ) {
-      break;
-    }
+    if (!data || data.length < pageSize) break;
 
     from += pageSize;
   }
 
-  return all;
+  return { data: all, error: null };
 }
-
-/* =========================================================
-   GET
-========================================================= */
-
-export async function GET(
-  request: NextRequest
-) {
-  try {
-    const origin =
-      request.nextUrl.origin;
-
-    /* =====================================================
-       DONNEES EXISTANTES
-    ===================================================== */
-
-    const [
-      teamsResult,
-      membersResult,
-      playersResult,
-    ] = await Promise.allSettled([
-      fetch(
-        `${origin}/api/teams`,
-        {
-          cache: 'no-store',
-        }
-      ),
-
-      fetch(
-        `${origin}/api/team-members`,
-        {
-          cache: 'no-store',
-        }
-      ),
-
-      fetch(
-        `${origin}/api/players`,
-        {
-          cache: 'no-store',
-        }
-      ),
-    ]);
-
-    const teamsData =
-      await readSettledResponse(
-        teamsResult
-      );
-
-    const membersData =
-      await readSettledResponse(
-        membersResult
-      );
-
-    const playersData =
-      await readSettledResponse(
-        playersResult
-      );
-
-    const rawTeams =
-      extractArray(
-        teamsData,
-        [
-          'teams',
-          'data',
-        ]
-      );
-
-    const rawMembers =
-      extractArray(
-        membersData,
-        [
-          'members',
-          'teamMembers',
-          'team_members',
-          'data',
-        ]
-      );
-
-    const rawPlayers =
-      extractArray(
-        playersData,
-        [
-          'players',
-          'data',
-        ]
-      );
-
-    /* =====================================================
-       TEAMS VALIDEES
-    ===================================================== */
-
-    const validatedTeams =
-      rawTeams.filter(
-        (
-          team: AnyObject
-        ) =>
-          isValidated(
-            team
-          )
-      );
-
-    /* =====================================================
-       ROSTERS
-    ===================================================== */
-
-    let resultTeams:
-      ResultTeam[] =
-      validatedTeams.map(
-        (
-          team: AnyObject
-        ) => {
-          const teamId =
-            getValue(
-              team,
-              [
-                'id',
-                'team_id',
-                'teamId',
-              ]
-            );
-
-          const teamMembers =
-            rawMembers.filter(
-              (
-                member: AnyObject
-              ) => {
-                const memberTeamId =
-                  getValue(
-                    member,
-                    [
-                      'team_id',
-                      'teamId',
-                      'team',
-                    ]
-                  );
-
-                return (
-                  String(
-                    memberTeamId
-                  ) ===
-                  String(
-                    teamId
-                  )
-                );
-              }
-            );
-
-          const roster =
-            teamMembers
-              .map(
-                (
-                  member: AnyObject
-                ): ResultPlayer => {
-                  const riotId =
-                    String(
-                      getValue(
-                        member,
-                        [
-                          'riot_id',
-                          'riotId',
-                          'summoner_name',
-                          'summonerName',
-                        ]
-                      ) ?? ''
-                    );
-
-                  const player =
-                    findPlayer(
-                      rawPlayers,
-                      riotId,
-                      member
-                    );
-
-                  return {
-                    id:
-                      getValue(
-                        player,
-                        [
-                          'id',
-                          'player_id',
-                          'playerId',
-                        ]
-                      ) ??
-                      getValue(
-                        member,
-                        [
-                          'player_id',
-                          'playerId',
-                          'id',
-                        ]
-                      ) ??
-                      null,
-
-                    riotId:
-  String(
-    getValue(
-      player,
-      [
-        'riot_id',
-        'riotId',
-        'summoner_name',
-        'summonerName',
-      ]
-    ) ??
-      riotId ??
-      'Joueur'
-  ),
-
-                    discordName:
-                      stringOrNull(
-                        getValue(
-                          player,
-                          [
-                            'discord_name',
-                            'discordName',
-                            'discord_username',
-                            'discordUsername',
-                            'username',
-                          ]
-                        )
-                      ),
-
-                    role:
-                      normalizeRole(
-                        getValue(
-                          member,
-                          [
-                            'role',
-                            'position',
-                          ]
-                        ) ??
-                          getValue(
-                            player,
-                            [
-                              'role',
-                              'position',
-                            ]
-                          )
-                      ),
-
-                    avatar:
-                      stringOrNull(
-                        getValue(
-                          player,
-                          [
-                            'avatar',
-                            'avatar_url',
-                            'avatarUrl',
-                            'discord_avatar',
-                          ]
-                        )
-                      ),
-                  };
-                }
-              )
-              .sort(
-                (
-                  a,
-                  b
-                ) =>
-                  roleOrder(
-                    a.role
-                  ) -
-                  roleOrder(
-                    b.role
-                  )
-              );
-
-          return {
-            id: teamId,
-
-            name:
-              getTeamName(
-                team
-              ),
-
-            shortName:
-              getTeamShortName(
-                team
-              ),
-
-            logo:
-              getTeamLogo(
-                team
-              ),
-
-            division:
-              normalizeDivision(
-                getValue(
-                  team,
-                  [
-                    'division',
-                    'division_name',
-                    'divisionName',
-                  ]
-                )
-              ),
-
-            wins: 0,
-            losses: 0,
-            gameDiff: 0,
-
-            roster,
-          };
-        }
-      );
-
-    /* =====================================================
-       CHAMPIONS
-    ===================================================== */
-
-    const champions =
-      await getChampions();
-
-    const championMap =
-      new Map<
-        string,
-        Champion
-      >();
-
-    for (
-      const champion
-      of champions
-    ) {
-      championMap.set(
-        champion.id,
-        champion
-      );
-    }
-
-    /* =====================================================
-       MATCHS
-    ===================================================== */
-
-    const {
-      data: matches,
-      error: matchesError,
-    } =
-      await supabaseAdmin
-        .from(
-          'czf_matches'
-        )
-        .select('*')
-        .eq(
-          'status',
-          'finished'
-        )
-        .order(
-          'played_at',
-          {
-            ascending: false,
-          }
-        );
-
-    if (matchesError) {
-      throw matchesError;
-    }
-
-    /* =====================================================
-       GAMES
-    ===================================================== */
-
-    const games =
-      await fetchAll((from, to) =>
-        supabaseAdmin
-          .from('czf_games')
-          .select('*')
-          .order('id', { ascending: true })
-          .range(from, to)
-      );
-
-    /* =====================================================
-       PLAYER STATS
-    ===================================================== */
-
-  const playerStatsRows =
-    await fetchAll((from, to) =>
-      supabaseAdmin
-        .from('czf_game_player_stats')
-        .select('*')
-        .order('id', { ascending: true })
-        .range(from, to)
-    );
-
-    const allMatches =
-      matches ?? [];
-
-    const allGames =
-      games ?? [];
-
-    const allStats =
-      playerStatsRows ?? [];
-
-    /* =====================================================
-       MAP TEAMS
-    ===================================================== */
-
-    const teamMap =
-      new Map<
-        number,
-        ResultTeam
-      >();
-
-    for (
-      const team
-      of resultTeams
-    ) {
-      teamMap.set(
-        Number(
-          team.id
-        ),
-        team
-      );
-    }
-
-    /* =====================================================
-       MAP PLAYERS
-    ===================================================== */
-
-    const playerMap =
-      new Map<
-        number,
-        AnyObject
-      >();
-
-    for (
-      const player
-      of rawPlayers
-    ) {
-      const id =
-        Number(
-          getValue(
-            player,
-            [
-              'id',
-              'player_id',
-              'playerId',
-            ]
-          )
-        );
-
-      if (
-        Number.isFinite(
-          id
-        )
-      ) {
-        playerMap.set(
-          id,
-          player
-        );
-      }
-    }
-
-    /* =====================================================
-       MAP MATCHS
-    ===================================================== */
-
-    const matchMap =
-      new Map<
-        number,
-        AnyObject
-      >();
-
-    for (
-      const match
-      of allMatches
-    ) {
-      matchMap.set(
-        Number(
-          match.id
-        ),
-        match
-      );
-    }
-
-    /* =====================================================
-       MAP GAMES
-    ===================================================== */
-
-    const gameMap =
-      new Map<
-        number,
-        AnyObject
-      >();
-
-    for (
-      const game
-      of allGames
-    ) {
-      gameMap.set(
-        Number(
-          game.id
-        ),
-        game
-      );
-    }
-
-    /* =====================================================
-       MATCH -> GAMES
-    ===================================================== */
-
-    const gamesByMatch =
-      new Map<
-        number,
-        AnyObject[]
-      >();
-
-    for (
-      const game
-      of allGames
-    ) {
-      const matchId =
-        Number(
-          game.match_id
-        );
-
-      if (
-        !gamesByMatch.has(
-          matchId
-        )
-      ) {
-        gamesByMatch.set(
-          matchId,
-          []
-        );
-      }
-
-      gamesByMatch
-        .get(
-          matchId
-        )!
-        .push(
-          game
-        );
-    }
-
-    /* =====================================================
-       CLASSEMENT DES POULES
-
-       Chaque BO2 contient exactement 2 games.
-
-       2-0 :
-       équipe A = +2 wins
-       équipe B = +2 losses
-
-       1-1 :
-       chaque équipe = +1 win / +1 loss
-
-       0-2 :
-       inverse du 2-0
-    ===================================================== */
-
-    const poolMatches =
-      allMatches.filter(
-        (
-          match
-        ) =>
-          match.stage ===
-          'pool'
-      );
-
-    for (
-      const match
-      of poolMatches
-    ) {
-      const team1 =
-        teamMap.get(
-          Number(
-            match.team1_id
-          )
-        );
-
-      const team2 =
-        teamMap.get(
-          Number(
-            match.team2_id
-          )
-        );
-
-      if (
-        !team1 ||
-        !team2
-      ) {
-        continue;
-      }
-
-      const matchGames =
-        gamesByMatch.get(
-          Number(
-            match.id
-          )
-        ) ?? [];
-
-      for (
-        const game
-        of matchGames
-      ) {
-        const winnerId =
-          Number(
-            game.winner_team_id
-          );
-
-        if (
-          winnerId ===
-          Number(
-            team1.id
-          )
-        ) {
-          team1.wins += 1;
-          team2.losses += 1;
-        }
-
-        if (
-          winnerId ===
-          Number(
-            team2.id
-          )
-        ) {
-          team2.wins += 1;
-          team1.losses += 1;
-        }
-      }
-    }
-
-    /*
-      Différence de games.
-    */
-
-    for (
-      const team
-      of resultTeams
-    ) {
-      team.gameDiff =
-        team.wins -
-        team.losses;
-    }
-
-    /* =====================================================
-       CONFRONTATION DIRECTE
-
-       Renvoie :
-       - nombre positif si A doit passer devant B
-       - nombre négatif si B doit passer devant A
-       - 0 si leur confrontation est elle-même à égalité
-
-       On regarde uniquement les matchs de POULE.
-    ===================================================== */
-
-    function getHeadToHeadDifference(
-      teamAId: number,
-      teamBId: number
-    ) {
-      let winsA = 0;
-      let winsB = 0;
-
-      for (
-        const match
-        of poolMatches
-      ) {
-        const matchTeam1 =
-          Number(
-            match.team1_id
-          );
-
-        const matchTeam2 =
-          Number(
-            match.team2_id
-          );
-
-        const isDirectMatch =
-          (
-            matchTeam1 ===
-              teamAId &&
-            matchTeam2 ===
-              teamBId
-          ) ||
-          (
-            matchTeam1 ===
-              teamBId &&
-            matchTeam2 ===
-              teamAId
-          );
-
-        if (
-          !isDirectMatch
-        ) {
-          continue;
-        }
-
-        const matchGames =
-          gamesByMatch.get(
-            Number(
-              match.id
-            )
-          ) ?? [];
-
-        for (
-          const game
-          of matchGames
-        ) {
-          const winnerId =
-            Number(
-              game.winner_team_id
-            );
-
-          if (
-            winnerId ===
-            teamAId
-          ) {
-            winsA += 1;
-          }
-
-          if (
-            winnerId ===
-            teamBId
-          ) {
-            winsB += 1;
-          }
-        }
-      }
-
-      return (
-        winsA -
-        winsB
-      );
-    }
-
-    /* =====================================================
-       TRI DU CLASSEMENT
-
-       1. Nombre de victoires de games
-       2. Différence de games
-       3. Confrontation directe
-       4. Toujours égal = tiebreaker nécessaire
-
-       IMPORTANT :
-       Le tiebreaker n'est PAS inventé automatiquement.
-       On garde simplement un ordre stable en attendant
-       le résultat du tiebreaker.
-    ===================================================== */
-
-    resultTeams =
-      resultTeams.sort(
-        (
-          a,
-          b
-        ) => {
-          /*
-            1. Victoires
-          */
-
-          if (
-            b.wins !==
-            a.wins
-          ) {
-            return (
-              b.wins -
-              a.wins
-            );
-          }
-
-          /*
-            2. Différence
-            de games
-          */
-
-          if (
-            b.gameDiff !==
-            a.gameDiff
-          ) {
-            return (
-              b.gameDiff -
-              a.gameDiff
-            );
-          }
-
-          /*
-            3. Confrontation
-            directe
-          */
-
-          const headToHead =
-            getHeadToHeadDifference(
-              Number(
-                a.id
-              ),
-              Number(
-                b.id
-              )
-            );
-
-          if (
-            headToHead !==
-            0
-          ) {
-            /*
-              Si A a gagné plus
-              de games contre B,
-              A passe devant.
-            */
-
-            return (
-              -headToHead
-            );
-          }
-
-          /*
-            4. Toujours égal :
-            tiebreaker nécessaire.
-
-            On utilise seulement
-            le nom pour conserver
-            un affichage stable
-            avant que le tiebreaker
-            soit joué.
-          */
-
-          return a.name.localeCompare(
-            b.name,
-            'fr'
-          );
-        }
-      );
-
-    /* =====================================================
-       DIVISIONS
-    ===================================================== */
-
-    const divisions = {
-      Yordle:
-        resultTeams.filter(
-          (
-            team
-          ) =>
-            team.division ===
-            'Yordle'
-        ),
-
-      Ixtal:
-        resultTeams.filter(
-          (
-            team
-          ) =>
-            team.division ===
-            'Ixtal'
-        ),
-
-      Targon:
-        resultTeams.filter(
-          (
-            team
-          ) =>
-            team.division ===
-            'Targon'
-        ),
-    };
-
-    /* =====================================================
-       HISTORIQUE
-    ===================================================== */
-
-    const history =
-      allMatches.map(
-        (
-          match
-        ) => {
-          const team1 =
-            teamMap.get(
-              Number(
-                match.team1_id
-              )
-            );
-
-          const team2 =
-            teamMap.get(
-              Number(
-                match.team2_id
-              )
-            );
-
-          const winner =
-            match.winner_team_id !==
-              null &&
-            match.winner_team_id !==
-              undefined
-              ? teamMap.get(
-                  Number(
-                    match.winner_team_id
-                  )
-                )
-              : undefined;
-
-          const matchMvpPlayer =
-            match.mvp_player_id
-              ? playerMap.get(
-                  Number(
-                    match.mvp_player_id
-                  )
-                )
-              : null;
-
-          const matchGames =
-            (
-              gamesByMatch.get(
-                Number(
-                  match.id
-                )
-              ) ?? []
-            ).sort(
-              (
-                a,
-                b
-              ) =>
-                Number(
-                  a.game_number
-                ) -
-                Number(
-                  b.game_number
-                )
-            );
-
-          const team1Score =
-            matchGames.filter(
-              (
-                game
-              ) =>
-                Number(
-                  game.winner_team_id
-                ) ===
-                Number(
-                  match.team1_id
-                )
-            ).length;
-
-          const team2Score =
-            matchGames.filter(
-              (
-                game
-              ) =>
-                Number(
-                  game.winner_team_id
-                ) ===
-                Number(
-                  match.team2_id
-                )
-            ).length;
-
-          return {
-            id:
-              Number(
-                match.id
-              ),
-
-            division:
-              match.division as Division,
-
-            stage:
-              match.stage,
-
-            bracket:
-              match.bracket,
-
-            round:
-              match.round,
-
-            bestOf:
-              Number(
-                match.best_of
-              ),
-
-            playedAt:
-              match.played_at,
-
-            mvpPlayerId:
-              match.mvp_player_id
-                ? Number(
-                    match.mvp_player_id
-                  )
-                : null,
-
-            mvpRiotId:
-              matchMvpPlayer
-                ? String(
-                    getValue(
-                      matchMvpPlayer,
-                      [
-                        'riot_id',
-                        'riotId',
-                      ]
-                    ) ?? ''
-                  )
-                : null,
-
-            team1:
-              team1
-                ? {
-                    id:
-                      Number(
-                        team1.id
-                      ),
-
-                    name:
-                      team1.name,
-
-                    shortName:
-                      team1.shortName,
-
-                    logo:
-                      team1.logo,
-
-                    score:
-                      team1Score,
-                  }
-                : null,
-
-            team2:
-              team2
-                ? {
-                    id:
-                      Number(
-                        team2.id
-                      ),
-
-                    name:
-                      team2.name,
-
-                    shortName:
-                      team2.shortName,
-
-                    logo:
-                      team2.logo,
-
-                    score:
-                      team2Score,
-                  }
-                : null,
-
-            /*
-              Sur un 1-1 :
-              winner = null
-            */
-
-            winner:
-              winner
-                ? {
-                    id:
-                      Number(
-                        winner.id
-                      ),
-
-                    name:
-                      winner.name,
-
-                    shortName:
-                      winner.shortName,
-
-                    logo:
-                      winner.logo,
-                  }
-                : null,
-
-            games:
-  matchGames.map(
-    (
-      game
-    ) => {
-      const gameWinner =
-        teamMap.get(
-          Number(
-            game.winner_team_id
-          )
-        );
-
-      /*
-  =========================================================
-  JOUEURS OFFICIELS
-
-  Ceux-ci viennent de czf_game_player_stats.
-  Ils continuent donc à alimenter les vraies stats joueurs.
-  =========================================================
-*/
-
-const officialGameStats =
-  allStats
-    .filter(
-      (stat) =>
-        Number(
-          stat.game_id
-        ) ===
-        Number(
-          game.id
-        )
-    )
-    .map(
-      (stat) => {
-        const player =
-          playerMap.get(
-            Number(
-              stat.player_id
-            )
-          );
-
-        const team =
-          teamMap.get(
-            Number(
-              stat.team_id
-            )
-          );
-
-        const championId =
-          String(
-            stat.champion_id ??
-              ''
-          );
-
-        const champion =
-          championMap.get(
-            championId
-          );
-
-        const role =
-          normalizeRole(
-            stat.role
-          );
-
-        return {
-          playerId:
-            Number(
-              stat.player_id
-            ),
-
-          riotId:
-            player
-              ? String(
-                  getValue(
-                    player,
-                    [
-                      'riot_id',
-                      'riotId',
-                    ]
-                  ) ??
-                    `Joueur ${stat.player_id}`
-                )
-              : `Joueur ${stat.player_id}`,
-
-          /*
-            Permettra au front de distinguer
-            un joueur normal d'un SUB.
-          */
-          isSub: false,
-
-          teamId:
-            Number(
-              stat.team_id
-            ),
-
-          teamName:
-            team?.name ??
-            '',
-
-          teamShortName:
-            team?.shortName ??
-            '',
-
-          role,
-
-          championId,
-
-          championName:
-            champion?.name ??
-            championId,
-
-          championImage:
-            champion?.image ??
-            null,
-
-          kills:
-            Number(
-              stat.kills
-            ) || 0,
-
-          deaths:
-            Number(
-              stat.deaths
-            ) || 0,
-
-          assists:
-            Number(
-              stat.assists
-            ) || 0,
-        };
-      }
-    );
-
-/*
-  =========================================================
-  SUBS
-
-  Ils sont stockés directement dans czf_games.substitute_stats.
-
-  Ils sont utilisés UNIQUEMENT ici, dans l'historique.
-
-  Ils ne rentrent donc toujours PAS dans :
-  - les stats joueurs
-  - les KDA rankings
-  - le DPM
-  - le Gold
-  - la Vision
-  - les champions les plus joués
-  - le Pick Rate
-  - le Win Rate
-  - les MVP
-  =========================================================
-*/
-
-const rawSubstitutes =
-  Array.isArray(
-    game.substitute_stats
-  )
-    ? game.substitute_stats
-    : [];
-
-const substituteGameStats =
-  rawSubstitutes
-    .map(
-      (sub: AnyObject) => {
-        /*
-          On accepte les 2 écritures
-          au cas où :
-          teamId / team_id
-          championId / champion_id
-        */
-
-        const teamId =
-          Number(
-            sub.teamId ??
-              sub.team_id
-          );
-
-        const team =
-          teamMap.get(
-            teamId
-          );
-
-        const role =
-          normalizeRole(
-            sub.role
-          );
-
-        const championId =
-          String(
-            sub.championId ??
-              sub.champion_id ??
-              ''
-          );
-
-        const champion =
-          championMap.get(
-            championId
-          );
-
-        return {
-          /*
-            Un SUB n'a volontairement
-            aucun playerId officiel.
-          */
-          playerId: null,
-
-          /*
-            Le front affichera SUB
-            à la place du pseudo.
-          */
-          riotId: 'SUB',
-
-          isSub: true,
-
-          teamId,
-
-          teamName:
-            team?.name ??
-            '',
-
-          teamShortName:
-            team?.shortName ??
-            '',
-
-          role,
-
-          championId,
-
-          championName:
-            champion?.name ??
-            championId,
-
-          championImage:
-            champion?.image ??
-            null,
-
-          kills:
-            Number(
-              sub.kills
-            ) || 0,
-
-          deaths:
-            Number(
-              sub.deaths
-            ) || 0,
-
-          assists:
-            Number(
-              sub.assists
-            ) || 0,
-        };
-      }
-    )
-    /*
-      Si jamais une vieille donnée
-      JSONB est cassée, on ne fait pas
-      planter toute la page Résultats.
-    */
-    .filter(
-      (sub) =>
-        Number.isFinite(
-          sub.teamId
-        ) &&
-        sub.role !==
-          null &&
-        sub.championId !==
-          ''
-    );
-
-/*
-  =========================================================
-  HISTORIQUE COMPLET DE LA GAME
-
-  Joueurs officiels + SUBS.
-
-  Puis tri :
-  équipe -> Top/Jungle/Mid/ADC/Support
-
-  Le SUB prend donc automatiquement
-  la place du rôle qu'il a joué.
-  =========================================================
-*/
-
-const gameStats =
-  [
-    ...officialGameStats,
-    ...substituteGameStats,
-  ].sort(
-    (
-      a,
-      b
-    ) => {
-      if (
-        a.teamId !==
-        b.teamId
-      ) {
-        return (
-          a.teamId -
-          b.teamId
-        );
-      }
-
-      return (
-        roleOrder(
-          a.role
-        ) -
-        roleOrder(
-          b.role
-        )
-      );
-    }
-  );
-      return {
-        id:
-          Number(
-            game.id
-          ),
-
-        gameNumber:
-          Number(
-            game.game_number
-          ),
-
-        durationSeconds:
-          Number(
-            game.duration_seconds
-          ),
-
-        winnerTeamId:
-          Number(
-            game.winner_team_id
-          ),
-
-        winnerName:
-          gameWinner
-            ?.name ??
-          null,
-
-        players:
-          gameStats,
-      };
-    }
-  ),
-          };
-        }
-      );
-
-    /* =====================================================
-       HISTORIQUE PAR DIVISION
-    ===================================================== */
-
-    const historyByDivision = {
-      Yordle:
-        history.filter(
-          (
-            match
-          ) =>
-            match.division ===
-            'Yordle'
-        ),
-
-      Ixtal:
-        history.filter(
-          (
-            match
-          ) =>
-            match.division ===
-            'Ixtal'
-        ),
-
-      Targon:
-        history.filter(
-          (
-            match
-          ) =>
-            match.division ===
-            'Targon'
-        ),
-    };
-
-    /* =====================================================
-       STATS JOUEURS
-    ===================================================== */
-
-    function statsForDivision(
-      division: Division
-    ): Record<
-      Role,
-      PlayerStats[]
-    > {
-      const divisionMatchIds =
-        new Set<number>(
-          allMatches
-            .filter(
-              (
-                match
-              ) =>
-                match.division ===
-                division
-            )
-            .map(
-              (
-                match
-              ) =>
-                Number(
-                  match.id
-                )
-            )
-        );
-
-      const divisionGameIds =
-        new Set<number>(
-          allGames
-            .filter(
-              (
-                game
-              ) =>
-                divisionMatchIds.has(
-                  Number(
-                    game.match_id
-                  )
-                )
-            )
-            .map(
-              (
-                game
-              ) =>
-                Number(
-                  game.id
-                )
-            )
-        );
-
-      const result:
-        Record<
-          Role,
-          PlayerStats[]
-        > = {
-        Top: [],
-        Jungle: [],
-        Mid: [],
-        ADC: [],
-        Support: [],
-      };
-
-      const playerRoleKeys =
-        new Set<string>();
-
-      for (
-        const stat
-        of allStats
-      ) {
-        if (
-          !divisionGameIds.has(
-            Number(
-              stat.game_id
-            )
-          )
-        ) {
-          continue;
-        }
-
-        const role =
-          normalizeRole(
-            stat.role
-          ) as
-            | Role
-            | null;
-
-        if (
-          !role ||
-          !ROLES.includes(
-            role
-          )
-        ) {
-          continue;
-        }
-
-        playerRoleKeys.add(
-          `${Number(
-            stat.player_id
-          )}:${role}`
-        );
-      }
-
-      for (
-        const key
-        of playerRoleKeys
-      ) {
-        const [
-          playerIdRaw,
-          roleRaw,
-        ] =
-          key.split(':');
-
-        const playerId =
-          Number(
-            playerIdRaw
-          );
-
-        const role =
-          roleRaw as Role;
-
-        const rows =
-          allStats.filter(
-            (
-              stat
-            ) =>
-              Number(
-                stat.player_id
-              ) ===
-                playerId &&
-              normalizeRole(
-                stat.role
-              ) ===
-                role &&
-              divisionGameIds.has(
-                Number(
-                  stat.game_id
-                )
-              )
-          );
-
-        if (
-          rows.length ===
-          0
-        ) {
-          continue;
-        }
-
-        const first =
-          rows[0];
-
-        const teamId =
-          Number(
-            first.team_id
-          );
-
-        const team =
-          teamMap.get(
-            teamId
-          );
-
-        const rawPlayer =
-          playerMap.get(
-            playerId
-          );
-
-        if (
-          !team ||
-          !rawPlayer
-        ) {
-          continue;
-        }
-
-        let kills = 0;
-        let deaths = 0;
-        let assists = 0;
-
-        let cs = 0;
-        let gold = 0;
-        let damage = 0;
-        let visionScore = 0;
-
-        let wins = 0;
-        let losses = 0;
-
-        let duration = 0;
-
-        /*
-          1 MVP MAX PAR BO
-        */
-
-        let mvp = 0;
-
-        const playerMatchIds =
-          new Set<number>();
-
-        for (
-          const row
-          of rows
-        ) {
-          const game =
-            gameMap.get(
-              Number(
-                row.game_id
-              )
-            );
-
-          if (
-            !game
-          ) {
-            continue;
-          }
-
-          kills +=
-            Number(
-              row.kills
-            ) || 0;
-
-          deaths +=
-            Number(
-              row.deaths
-            ) || 0;
-
-          assists +=
-            Number(
-              row.assists
-            ) || 0;
-
-          cs +=
-            Number(
-              row.cs
-            ) || 0;
-
-          gold +=
-            Number(
-              row.gold
-            ) || 0;
-
-          damage +=
-            Number(
-              row.damage
-            ) || 0;
-
-          visionScore +=
-            Number(
-              row.vision_score
-            ) || 0;
-
-          duration +=
-            Number(
-              game.duration_seconds
-            ) || 0;
-
-          if (
-            Number(
-              game.winner_team_id
-            ) ===
-            Number(
-              row.team_id
-            )
-          ) {
-            wins += 1;
-          } else {
-            losses += 1;
-          }
-
-          const matchId =
-            Number(
-              game.match_id
-            );
-
-          if (
-            Number.isFinite(
-              matchId
-            )
-          ) {
-            playerMatchIds.add(
-              matchId
-            );
-          }
-        }
-
-        /*
-          On compte les MVP
-          sur les MATCHS et non
-          sur les games.
-        */
-
-        for (
-          const matchId
-          of playerMatchIds
-        ) {
-          const match =
-            matchMap.get(
-              matchId
-            );
-
-          if (
-            match &&
-            Number(
-              match.mvp_player_id
-            ) ===
-              playerId
-          ) {
-            mvp += 1;
-          }
-        }
-
-  const gamesPlayed =
-  rows.length;
-
-const minutes =
-  duration /
-  60;
-
-/*
-  MOYENNES PAR GAME
-*/
-const avgKills =
-  gamesPlayed > 0
-    ? round2(
-        kills /
-          gamesPlayed
-      )
-    : 0;
-
-const avgDeaths =
-  gamesPlayed > 0
-    ? round2(
-        deaths /
-          gamesPlayed
-      )
-    : 0;
-
-const avgAssists =
-  gamesPlayed > 0
-    ? round2(
-        assists /
-          gamesPlayed
-      )
-    : 0;
-
-const avgCs =
-  gamesPlayed > 0
-    ? round2(
-        cs /
-          gamesPlayed
-      )
-    : 0;
-
-const avgGold =
-  gamesPlayed > 0
-    ? Math.round(
-        gold /
-          gamesPlayed
-      )
-    : 0;
-
-const avgDamage =
-  gamesPlayed > 0
-    ? Math.round(
-        damage /
-          gamesPlayed
-      )
-    : 0;
-
-const visionPerMin =
-  minutes > 0
-    ? round2(
-        visionScore / minutes
-      )
-    : 0;
-
-/*
-  KDA
-
-  On garde le ratio sur l'ensemble
-  des games.
-
-  0 mort = même traitement que
-  1 mort pour éviter une division
-  par zéro.
-*/
-const kda =
-  gamesPlayed > 0
-    ? round2(
-        rows.reduce(
-          (
-            total,
-            row
-          ) => {
-            const gameKills =
-              Number(
-                row.kills
-              ) || 0;
-
-            const gameDeaths =
-              Number(
-                row.deaths
-              ) || 0;
-
-            const gameAssists =
-              Number(
-                row.assists
-              ) || 0;
-
-            const gameKda =
-              (
-                gameKills +
-                gameAssists
-              ) /
-              Math.max(
-                1,
-                gameDeaths
-              );
-
-            return (
-              total +
-              gameKda
-            );
-          },
-          0
-        ) /
-          gamesPlayed
-      )
-    : 0;
-
-result[
-  role
-].push({
-  playerId,
-
-  riotId:
-    String(
-      getValue(
-        rawPlayer,
-        [
-          'riot_id',
-          'riotId',
-        ]
-      ) ??
-        `Joueur ${playerId}`
-    ),
-
-  teamId,
-
-  teamName:
-    team.name,
-
-  teamShortName:
-    team.shortName,
-
-  teamLogo:
-    team.logo,
-
-  role,
-
-  games:
-    gamesPlayed,
-
-  wins,
-  losses,
-
-  /*
-    Maintenant ce sont
-    les moyennes par game.
-  */
-  kills:
-    avgKills,
-
-  deaths:
-    avgDeaths,
-
-  assists:
-    avgAssists,
-
-  kda,
-
-  cs:
-    avgCs,
-
-  /*
-    Déjà une moyenne
-    rapportée au temps joué.
-  */
-  csPerMin:
-    minutes > 0
-      ? round2(
-          cs /
-            minutes
-        )
-      : 0,
-
-  /*
-    Gold moyen par game.
-  */
-  gold:
-    avgGold,
-
-  /*
-    Gold/min reste calculé
-    à partir des valeurs totales.
-  */
-  goldPerMin:
-    minutes > 0
-      ? round2(
-          gold /
-            minutes
-        )
-      : 0,
-
-  /*
-    Damage moyen par game.
-  */
-  damage:
-    avgDamage,
-
-  /*
-    DPM reste calculé
-    sur le temps total joué.
-  */
-  dpm:
-    minutes > 0
-      ? round2(
-          damage /
-            minutes
-        )
-      : 0,
-
-  /*
-    Vision moyenne par game.
-  */
- visionScore: visionPerMin,
-
-  mvp,
-
-  totalDurationSeconds:
-    duration,
-});
-      }
-
-                  for (
-        const role
-        of ROLES
-      ) {
-        result[
-          role
-        ].sort(
-          (
-            a,
-            b
-          ) =>
-            b.kda -
-            a.kda
-        );
-      }
-
-      return result;
-    }
-
-    /* =====================================================
-       CHAMPIONS
-    ===================================================== */
-
-        function championsForDivision(
-      division: Division
-    ): Record<
-      Role,
-      ChampionRoleStat[]
-    > {
-      const divisionMatches =
-        allMatches.filter(
-          (
-            match
-          ) =>
-            match.division ===
-            division
-        );
-
-      const divisionMatchIds =
-        new Set<number>(
-          divisionMatches.map(
-            (
-              match
-            ) =>
-              Number(
-                match.id
-              )
-          )
-        );
-
-      const divisionGameIds =
-        new Set<number>(
-          allGames
-            .filter(
-              (
-                game
-              ) =>
-                divisionMatchIds.has(
-                  Number(
-                    game.match_id
-                  )
-                )
-            )
-            .map(
-              (
-                game
-              ) =>
-                Number(
-                  game.id
-                )
-            )
-        );
-
-      const totalBos =
-        divisionMatches.length;
-
-      const result:
-        Record<
-          Role,
-          ChampionRoleStat[]
-        > = {
-        Top: [],
-        Jungle: [],
-        Mid: [],
-        ADC: [],
-        Support: [],
-      };
-
-      for (
-        const role
-        of ROLES
-      ) {
-        const roleRows =
-          allStats.filter(
-            (
-              stat
-            ) =>
-              divisionGameIds.has(
-                Number(
-                  stat.game_id
-                )
-              ) &&
-              normalizeRole(
-                stat.role
-              ) ===
-                role
-          );
-
-        const map =
-          new Map<
-            string,
-            {
-              picks: number;
-              wins: number;
-              matchIds:
-                Set<number>;
-            }
-          >();
-
-        for (
-          const row
-          of roleRows
-        ) {
-          const championId =
-            String(
-              row.champion_id ??
-                ''
-            );
-
-          if (
-            !championId
-          ) {
-            continue;
-          }
-
-          const game =
-            gameMap.get(
-              Number(
-                row.game_id
-              )
-            );
-
-          if (
-            !game
-          ) {
-            continue;
-          }
-
-          const matchId =
-            Number(
-              game.match_id
-            );
-
-          const current =
-            map.get(
-              championId
-            ) ?? {
-              picks: 0,
-              wins: 0,
-              matchIds:
-                new Set<number>(),
-            };
-
-          current.picks +=
-            1;
-
-          if (
-            Number(
-              game.winner_team_id
-            ) ===
-            Number(
-              row.team_id
-            )
-          ) {
-            current.wins +=
-              1;
-          }
-
-          if (
-            Number.isFinite(
-              matchId
-            )
-          ) {
-            current
-              .matchIds
-              .add(
-                matchId
-              );
-          }
-
-          map.set(
-            championId,
-            current
-          );
-        }
-
-        result[
-          role
-        ] =
-          Array.from(
-            map.entries()
-          )
-            .map(
-              ([
-                championId,
-                values,
-              ]) => {
-                const champion =
-                  championMap.get(
-                    championId
-                  );
-
-                const bosPicked =
-                  values
-                    .matchIds
-                    .size;
-
-                return {
-                  championId,
-
-                  name:
-                    champion
-                      ?.name ??
-                    championId,
-
-                  image:
-                    champion
-                      ?.image ??
-                    null,
-
-                  role,
-
-                  picks:
-                    values.picks,
-
-                  wins:
-                    values.wins,
-
-                  losses:
-                    values.picks -
-                    values.wins,
-
-                  pickRate:
-                    totalBos > 0
-                      ? round2(
-                          (
-                            bosPicked /
-                            totalBos
-                          ) *
-                            100
-                        )
-                      : 0,
-
-                  winRate:
-                    values.picks > 0
-                      ? round2(
-                          (
-                            values.wins /
-                            values.picks
-                          ) *
-                            100
-                        )
-                      : 0,
-                };
-              }
-            )
-            .sort(
-              (
-                a,
-                b
-              ) => {
-                if (
-                  b.picks !==
-                  a.picks
-                ) {
-                  return (
-                    b.picks -
-                    a.picks
-                  );
-                }
-
-                return (
-                  b.winRate -
-                  a.winRate
-                );
-              }
-            )
-            .slice(
-              0,
-              5
-            );
-      }
-
-      return result;
-    }
-
-    /* =====================================================
-       RESULTATS PAR DIVISION
-    ===================================================== */
-
-    const playerStatsByDivision = {
-      Yordle:
-        statsForDivision(
-          'Yordle'
-        ),
-
-      Ixtal:
-        statsForDivision(
-          'Ixtal'
-        ),
-
-      Targon:
-        statsForDivision(
-          'Targon'
-        ),
-    };
-
-    const championsByDivision = {
-      Yordle:
-        championsForDivision(
-          'Yordle'
-        ),
-
-      Ixtal:
-        championsForDivision(
-          'Ixtal'
-        ),
-
-      Targon:
-        championsForDivision(
-          'Targon'
-        ),
-    };
-
-    /* =====================================================
-       RESPONSE
-    ===================================================== */
-
-    return NextResponse.json(
-      {
-        success: true,
-
-        divisions,
-
-        teams:
-          resultTeams,
-
-        champions,
-
-        history,
-
-        historyByDivision,
-
-        playerStatsByDivision,
-
-        championsByDivision,
-
-        divisionAssets: {
-          Yordle: {
-            color:
-              '#51a677',
-
-            logo:
-              '/assets/divisions/yordle.png',
-          },
-
-          Ixtal: {
-            color:
-              '#4387d8',
-
-            logo:
-              '/assets/divisions/ixtal.png',
-          },
-
-          Targon: {
-            color:
-              '#8f6bc7',
-
-            logo:
-              '/assets/divisions/targon.png',
-          },
-        },
-
-        roles: [
-          {
-            id: 'Top',
-            label: 'TOP',
-            icon:
-              '/assets/roles/top.png',
-          },
-
-          {
-            id: 'Jungle',
-            label: 'JGL',
-            icon:
-              '/assets/roles/jungle.png',
-          },
-
-          {
-            id: 'Mid',
-            label: 'MID',
-            icon:
-              '/assets/roles/mid.png',
-          },
-
-          {
-            id: 'ADC',
-            label: 'ADC',
-            icon:
-              '/assets/roles/adc.png',
-          },
-
-          {
-            id: 'Support',
-            label: 'SUP',
-            icon:
-              '/assets/roles/sup.png',
-          },
-        ],
-
-        debug: {
-          rawTeams:
-            rawTeams.length,
-
-          validatedTeams:
-            resultTeams.length,
-
-          members:
-            rawMembers.length,
-
-          players:
-            rawPlayers.length,
-
-          champions:
-            champions.length,
-
-          matches:
-            allMatches.length,
-
-          games:
-            allGames.length,
-
-          gamePlayerStats:
-            allStats.length,
-
-          yordle:
-            divisions
-              .Yordle
-              .length,
-
-          ixtal:
-            divisions
-              .Ixtal
-              .length,
-
-          targon:
-            divisions
-              .Targon
-              .length,
-        },
-      },
-      {
-        headers: {
-          'Cache-Control':
-            'no-store, no-cache, must-revalidate',
-        },
-      }
-    );
-  } catch (
-    error: any
-  ) {
-    console.error(
-      '[RESULTS API]',
-      error
-    );
-
-    return NextResponse.json(
-      {
-        success: false,
-
-        error:
-          error?.message ||
-          'Impossible de charger les données de la page Résultats.',
-
-        details:
-          error,
-
-        teams: [],
-
-        champions: [],
-
-        history: [],
-
-        historyByDivision: {
-          Yordle: [],
-          Ixtal: [],
-          Targon: [],
-        },
-
-        divisions: {
-          Yordle: [],
-          Ixtal: [],
-          Targon: [],
-        },
-
-        playerStatsByDivision: {
-          Yordle:
-            emptyRoleStats(),
-
-          Ixtal:
-            emptyRoleStats(),
-
-          Targon:
-            emptyRoleStats(),
-        },
-
-        championsByDivision: {
-          Yordle:
-            emptyRoleStats(),
-
-          Ixtal:
-            emptyRoleStats(),
-
-          Targon:
-            emptyRoleStats(),
-        },
-      },
-      {
-        status: 500,
-      }
-    );
-  }
-}
-
-/* =========================================================
-   CHAMPIONS RIOT
-========================================================= */
-
-async function getChampions(): Promise<
-  Champion[]
-> {
-  try {
-    const versionsResponse =
-      await fetch(
-        'https://ddragon.leagueoflegends.com/api/versions.json',
-        {
-          next: {
-            revalidate: 86400,
-          },
-        }
-      );
-
-    if (
-      !versionsResponse.ok
-    ) {
-      return [];
-    }
-
-    const versions =
-      await versionsResponse.json();
-
-    const version =
-      versions?.[0];
-
-    if (
-      !version
-    ) {
-      return [];
-    }
-
-    const championsResponse =
-      await fetch(
-        `https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`,
-        {
-          next: {
-            revalidate: 86400,
-          },
-        }
-      );
-
-    if (
-      !championsResponse.ok
-    ) {
-      return [];
-    }
-
-    const championsData =
-      await championsResponse.json();
-
-    const championsObject =
-      championsData?.data ??
-      {};
-
-    return Object.values(
-      championsObject
-    )
-      .map(
-        (
-          champion: any
-        ): Champion => ({
-          id:
-            champion.id,
-
-          key:
-            champion.key,
-
-          name:
-            champion.name,
-
-          image:
-            `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${champion.image.full}`,
-        })
-      )
-      .sort(
-        (
-          a,
-          b
-        ) =>
-          a.name.localeCompare(
-            b.name,
-            'fr'
-          )
-      );
-  } catch (
-    error
-  ) {
-    console.error(
-      '[RESULTS CHAMPIONS]',
-      error
-    );
-
-    return [];
-  }
-}
-
-/* =========================================================
-   HELPERS API
-========================================================= */
-
-async function readSettledResponse(
-  result:
-    PromiseSettledResult<Response>
-): Promise<any> {
-  if (
-    result.status !==
-    'fulfilled'
-  ) {
-    return null;
-  }
-
-  const response =
-    result.value;
-
-  if (
-    !response.ok
-  ) {
-    return null;
-  }
-
-  try {
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
-
-function extractArray(
-  data: any,
-  possibleKeys: string[]
-): AnyObject[] {
-  if (
-    Array.isArray(
-      data
-    )
-  ) {
-    return data;
-  }
-
-  if (
-    !data ||
-    typeof data !==
-      'object'
-  ) {
-    return [];
-  }
-
-  for (
-    const key
-    of possibleKeys
-  ) {
-    if (
-      Array.isArray(
-        data[key]
-      )
-    ) {
-      return data[key];
-    }
-  }
-
-  return [];
-}
-
-/* =========================================================
-   HELPERS GENERIQUES
-========================================================= */
 
 function getValue(
-  object:
-    | AnyObject
-    | null
-    | undefined,
-
+  object: AnyObject | null | undefined,
   keys: string[]
-) {
-  if (
-    !object
-  ) {
-    return undefined;
-  }
+): any {
+  if (!object) return undefined;
 
-  for (
-    const key
-    of keys
-  ) {
-    if (
-      object[key] !==
-        undefined &&
-      object[key] !==
-        null
-    ) {
+  for (const key of keys) {
+    if (object[key] !== undefined && object[key] !== null) {
       return object[key];
     }
   }
@@ -2910,35 +146,16 @@ function getValue(
   return undefined;
 }
 
-function stringOrNull(
-  value: any
-): string | null {
-  if (
-    value ===
-      undefined ||
-    value ===
-      null ||
-    value ===
-      ''
-  ) {
-    return null;
-  }
-
-  return String(
-    value
-  );
+function stringOrNull(value: any): string | null {
+  return value === undefined ||
+    value === null ||
+    value === ''
+    ? null
+    : String(value);
 }
 
-function round2(
-  value: number
-) {
-  return (
-    Math.round(
-      value *
-        100
-    ) /
-    100
-  );
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 function emptyRoleStats() {
@@ -2951,376 +168,1034 @@ function emptyRoleStats() {
   };
 }
 
-/* =========================================================
-   VALIDATION TEAM
-========================================================= */
+function normalizeDivision(value: any): Division | null {
+  const division = String(value || '').trim().toLowerCase();
 
-function isValidated(
-  team: AnyObject
-) {
-  const value =
-    getValue(
-      team,
-      [
-        'validated_by_admin',
-        'validatedByAdmin',
-      ]
-    );
+  if (division === 'yordle') return 'Yordle';
+  if (division === 'ixtal') return 'Ixtal';
+  if (division === 'targon') return 'Targon';
+
+  return null;
+}
+
+function normalizeRole(value: any): Role | null {
+  const role = String(value || '').trim().toLowerCase();
+
+  if (role === 'top' || role === 'toplane') return 'Top';
+  if (['jungle', 'jgl', 'jg'].includes(role)) return 'Jungle';
+  if (role === 'mid' || role === 'middle') return 'Mid';
+  if (['adc', 'bot', 'bottom'].includes(role)) return 'ADC';
+  if (role === 'support' || role === 'sup') return 'Support';
+
+  return null;
+}
+
+function roleOrder(role: string | null): number {
+  return role ? ROLES.indexOf(role as Role) === -1
+    ? 99
+    : ROLES.indexOf(role as Role) : 99;
+}
+
+function normalizeRiotId(value: any): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '');
+}
+
+function getTeamName(team: AnyObject): string {
+  return String(
+    getValue(team, ['name', 'team_name', 'teamName']) ?? 'Équipe'
+  );
+}
+
+function getTeamShortName(team: AnyObject): string {
+  const existing = getValue(team, [
+    'short_name',
+    'shortName',
+    'tag',
+    'acronym',
+  ]);
+
+  if (existing) return String(existing).toUpperCase();
+
+  const name = getTeamName(team);
+  const words = name.trim().split(/\s+/);
+
+  if (words.length > 1) {
+    return words
+      .map((word) => word.charAt(0))
+      .join('')
+      .slice(0, 4)
+      .toUpperCase();
+  }
+
+  return name.slice(0, 4).toUpperCase();
+}
+
+function getTeamLogo(team: AnyObject): string | null {
+  return stringOrNull(
+    getValue(team, [
+      'logo',
+      'logo_url',
+      'logoUrl',
+      'image',
+      'image_url',
+      'imageUrl',
+    ])
+  );
+}
+
+function isValidated(team: AnyObject): boolean {
+  const value = getValue(team, [
+    'validated_by_admin',
+    'validatedByAdmin',
+  ]);
 
   return (
     value === true ||
     value === 1 ||
     value === '1' ||
-    String(
-      value
-    ).toLowerCase() ===
-      'true'
+    String(value).toLowerCase() === 'true'
   );
-}
-
-/* =========================================================
-   TEAM
-========================================================= */
-
-function getTeamName(
-  team: AnyObject
-) {
-  return String(
-    getValue(
-      team,
-      [
-        'name',
-        'team_name',
-        'teamName',
-      ]
-    ) ??
-      'Équipe'
-  );
-}
-
-function getTeamShortName(
-  team: AnyObject
-) {
-  const existing =
-    getValue(
-      team,
-      [
-        'short_name',
-        'shortName',
-        'tag',
-        'acronym',
-      ]
-    );
-
-  if (
-    existing
-  ) {
-    return String(
-      existing
-    ).toUpperCase();
-  }
-
-  const name =
-    getTeamName(
-      team
-    );
-
-  const words =
-    name
-      .trim()
-      .split(
-        /\s+/
-      );
-
-  if (
-    words.length >
-    1
-  ) {
-    return words
-      .map(
-        (
-          word
-        ) =>
-          word.charAt(
-            0
-          )
-      )
-      .join('')
-      .slice(
-        0,
-        4
-      )
-      .toUpperCase();
-  }
-
-  return name
-    .slice(
-      0,
-      4
-    )
-    .toUpperCase();
-}
-
-function getTeamLogo(
-  team: AnyObject
-): string | null {
-  return stringOrNull(
-    getValue(
-      team,
-      [
-        'logo',
-        'logo_url',
-        'logoUrl',
-        'image',
-        'image_url',
-        'imageUrl',
-      ]
-    )
-  );
-}
-
-/* =========================================================
-   DIVISION
-========================================================= */
-
-function normalizeDivision(
-  value: any
-): Division | null {
-  if (
-    !value
-  ) {
-    return null;
-  }
-
-  const division =
-    String(
-      value
-    )
-      .trim()
-      .toLowerCase();
-
-  if (
-    division ===
-    'yordle'
-  ) {
-    return 'Yordle';
-  }
-
-  if (
-    division ===
-    'ixtal'
-  ) {
-    return 'Ixtal';
-  }
-
-  if (
-    division ===
-    'targon'
-  ) {
-    return 'Targon';
-  }
-
-  return null;
-}
-
-/* =========================================================
-   JOUEURS
-========================================================= */
-
-function normalizeRiotId(
-  value: any
-) {
-  return String(
-    value ?? ''
-  )
-    .trim()
-    .toLowerCase()
-    .replace(
-      /\s+/g,
-      ''
-    );
 }
 
 function findPlayer(
   players: AnyObject[],
-
   riotId: string,
-
   member: AnyObject
-) {
-  const memberPlayerId =
-    getValue(
-      member,
-      [
-        'player_id',
-        'playerId',
-      ]
+): AnyObject {
+  const memberPlayerId = getValue(member, [
+    'player_id',
+    'playerId',
+  ]);
+
+  if (memberPlayerId !== null && memberPlayerId !== undefined) {
+    const byId = players.find(
+      (player) =>
+        String(getValue(player, ['id', 'player_id', 'playerId'])) ===
+        String(memberPlayerId)
     );
 
-  if (
-    memberPlayerId !==
-      undefined &&
-    memberPlayerId !==
-      null
-  ) {
-    const byId =
-      players.find(
-        (
-          player
-        ) =>
-          String(
-            getValue(
-              player,
-              [
-                'id',
-                'player_id',
-                'playerId',
-              ]
-            )
-          ) ===
-          String(
-            memberPlayerId
-          )
-      );
-
-    if (
-      byId
-    ) {
-      return byId;
-    }
-  }
-
-  const normalized =
-    normalizeRiotId(
-      riotId
-    );
-
-  if (
-    !normalized
-  ) {
-    return {};
+    if (byId) return byId;
   }
 
   return (
     players.find(
-      (
-        player
-      ) =>
+      (player) =>
         normalizeRiotId(
-          getValue(
-            player,
-            [
+          getValue(player, [
+            'riot_id',
+            'riotId',
+            'summoner_name',
+            'summonerName',
+          ])
+        ) === normalizeRiotId(riotId)
+    ) || {}
+  );
+}
+
+async function readSettledResponse(
+  result: PromiseSettledResult<Response>
+): Promise<any> {
+  if (result.status !== 'fulfilled' || !result.value.ok) {
+    return null;
+  }
+
+  try {
+    return await result.value.json();
+  } catch {
+    return null;
+  }
+}
+
+function extractArray(
+  data: any,
+  possibleKeys: string[]
+): AnyObject[] {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return [];
+
+  for (const key of possibleKeys) {
+    if (Array.isArray(data[key])) return data[key];
+  }
+
+  return [];
+}
+
+async function getChampions(): Promise<Champion[]> {
+  try {
+    const versionsResponse = await fetch(
+      'https://ddragon.leagueoflegends.com/api/versions.json',
+      { next: { revalidate: 86400 } }
+    );
+
+    if (!versionsResponse.ok) return [];
+
+    const versions = await versionsResponse.json();
+    const version = versions?.[0];
+
+    if (!version) return [];
+
+    const response = await fetch(
+      `https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`,
+      { next: { revalidate: 86400 } }
+    );
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+
+    return Object.values(data?.data || {})
+      .map((champion: any): Champion => ({
+        id: champion.id,
+        key: champion.key,
+        name: champion.name,
+        image: `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${champion.image.full}`,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  } catch (error) {
+    console.error('[RESULTS CHAMPIONS]', error);
+    return [];
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const origin = request.nextUrl.origin;
+
+    const [teamsResult, membersResult, playersResult] =
+      await Promise.allSettled([
+        fetch(`${origin}/api/teams`, { cache: 'no-store' }),
+        fetch(`${origin}/api/team-members`, { cache: 'no-store' }),
+        fetch(`${origin}/api/players`, { cache: 'no-store' }),
+      ]);
+
+    const rawTeams = extractArray(
+      await readSettledResponse(teamsResult),
+      ['teams', 'data']
+    );
+
+    const rawMembers = extractArray(
+      await readSettledResponse(membersResult),
+      ['members', 'teamMembers', 'team_members', 'data']
+    );
+
+    const rawPlayers = extractArray(
+      await readSettledResponse(playersResult),
+      ['players', 'data']
+    );
+
+    const validatedTeams = rawTeams.filter(isValidated);
+
+    let resultTeams: ResultTeam[] = validatedTeams.map((team) => {
+      const teamId = getValue(team, ['id', 'team_id', 'teamId']);
+
+      const teamMembers = rawMembers.filter(
+        (member) =>
+          String(
+            getValue(member, ['team_id', 'teamId', 'team'])
+          ) === String(teamId)
+      );
+
+      const roster: ResultPlayer[] = teamMembers
+        .map((member): ResultPlayer => {
+          const riotId = String(
+            getValue(member, [
               'riot_id',
               'riotId',
               'summoner_name',
               'summonerName',
-            ]
+            ]) ?? ''
+          );
+
+          const player = findPlayer(rawPlayers, riotId, member);
+
+          return {
+            id:
+              getValue(player, ['id', 'player_id', 'playerId']) ??
+              getValue(member, ['player_id', 'playerId', 'id']) ??
+              null,
+            riotId: String(
+              getValue(player, [
+                'riot_id',
+                'riotId',
+                'summoner_name',
+                'summonerName',
+              ]) ?? riotId ?? 'Joueur'
+            ),
+            discordName: stringOrNull(
+              getValue(player, [
+                'discord_name',
+                'discordName',
+                'discord_username',
+                'discordUsername',
+                'username',
+              ])
+            ),
+            role: normalizeRole(
+              getValue(member, ['role', 'position']) ??
+                getValue(player, ['role', 'position'])
+            ),
+            avatar: stringOrNull(
+              getValue(player, [
+                'avatar',
+                'avatar_url',
+                'avatarUrl',
+                'discord_avatar',
+              ])
+            ),
+          };
+        })
+        .sort((a, b) => roleOrder(a.role) - roleOrder(b.role));
+
+      return {
+        id: teamId,
+        name: getTeamName(team),
+        shortName: getTeamShortName(team),
+        logo: getTeamLogo(team),
+        division: normalizeDivision(
+          getValue(team, [
+            'division',
+            'division_name',
+            'divisionName',
+          ])
+        ),
+        wins: 0,
+        losses: 0,
+        gameDiff: 0,
+        roster,
+      };
+    });
+
+    const champions = await getChampions();
+    const championMap = new Map(
+      champions.map((champion) => [champion.id, champion])
+    );
+
+    const [matchesResult, gamesResult, statsResult] =
+      await Promise.all([
+        fetchAll((from, to) =>
+          supabaseAdmin
+            .from('czf_matches')
+            .select('*')
+            .eq('status', 'finished')
+            .order('played_at', { ascending: false })
+            .order('id', { ascending: true })
+            .range(from, to)
+        ),
+        fetchAll((from, to) =>
+          supabaseAdmin
+            .from('czf_games')
+            .select('*')
+            .order('id', { ascending: true })
+            .range(from, to)
+        ),
+        fetchAll((from, to) =>
+          supabaseAdmin
+            .from('czf_game_player_stats')
+            .select('*')
+            .order('id', { ascending: true })
+            .range(from, to)
+        ),
+      ]);
+
+    if (matchesResult.error) throw matchesResult.error;
+    if (gamesResult.error) throw gamesResult.error;
+    if (statsResult.error) throw statsResult.error;
+
+    const allMatches = matchesResult.data || [];
+    const allGames = gamesResult.data || [];
+    const allStats = statsResult.data || [];
+
+    const teamMap = new Map<number, ResultTeam>(
+      resultTeams.map((team) => [Number(team.id), team])
+    );
+
+    const playerMap = new Map<number, AnyObject>();
+
+    for (const player of rawPlayers) {
+      const id = Number(
+        getValue(player, ['id', 'player_id', 'playerId'])
+      );
+
+      if (Number.isFinite(id)) playerMap.set(id, player);
+    }
+
+    const matchMap = new Map<number, AnyObject>(
+      allMatches.map((match) => [Number(match.id), match])
+    );
+
+    const gameMap = new Map<number, AnyObject>(
+      allGames.map((game) => [Number(game.id), game])
+    );
+
+    const gamesByMatch = new Map<number, AnyObject[]>();
+    const statsByGame = new Map<number, AnyObject[]>();
+
+    for (const game of allGames) {
+      const matchId = Number(game.match_id);
+      const rows = gamesByMatch.get(matchId) || [];
+      rows.push(game);
+      gamesByMatch.set(matchId, rows);
+    }
+
+    for (const stat of allStats) {
+      const gameId = Number(stat.game_id);
+      const rows = statsByGame.get(gameId) || [];
+      rows.push(stat);
+      statsByGame.set(gameId, rows);
+    }
+
+    // CLASSEMENTS : UNIQUEMENT LA PHASE DE POULES
+    const poolMatches = allMatches.filter(
+      (match) => match.stage === 'pool'
+    );
+
+    for (const match of poolMatches) {
+      const team1 = teamMap.get(Number(match.team1_id));
+      const team2 = teamMap.get(Number(match.team2_id));
+
+      if (!team1 || !team2) continue;
+
+      for (const game of gamesByMatch.get(Number(match.id)) || []) {
+        const winnerId = Number(game.winner_team_id);
+
+        if (winnerId === Number(team1.id)) {
+          team1.wins++;
+          team2.losses++;
+        } else if (winnerId === Number(team2.id)) {
+          team2.wins++;
+          team1.losses++;
+        }
+      }
+    }
+
+    for (const team of resultTeams) {
+      team.gameDiff = team.wins - team.losses;
+    }
+
+    function getHeadToHeadDifference(
+      teamAId: number,
+      teamBId: number
+    ): number {
+      let winsA = 0;
+      let winsB = 0;
+
+      for (const match of poolMatches) {
+        const a = Number(match.team1_id);
+        const b = Number(match.team2_id);
+
+        if (
+          !(
+            (a === teamAId && b === teamBId) ||
+            (a === teamBId && b === teamAId)
           )
-        ) ===
-        normalized
-    ) ??
-    {}
-  );
-}
+        ) {
+          continue;
+        }
 
-/* =========================================================
-   ROLES
-========================================================= */
+        for (const game of gamesByMatch.get(Number(match.id)) || []) {
+          if (Number(game.winner_team_id) === teamAId) winsA++;
+          if (Number(game.winner_team_id) === teamBId) winsB++;
+        }
+      }
 
-function normalizeRole(
-  value: any
-): string | null {
-  if (
-    !value
-  ) {
-    return null;
-  }
+      return winsA - winsB;
+    }
 
-  const role =
-    String(
-      value
-    )
-      .trim()
-      .toLowerCase();
+    resultTeams = resultTeams.sort((a, b) => {
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.gameDiff !== a.gameDiff) {
+        return b.gameDiff - a.gameDiff;
+      }
 
-  if (
-    role ===
-      'top' ||
-    role ===
-      'toplane'
-  ) {
-    return 'Top';
-  }
+      const headToHead = getHeadToHeadDifference(
+        Number(a.id),
+        Number(b.id)
+      );
 
-  if (
-    role ===
-      'jungle' ||
-    role ===
-      'jgl' ||
-    role ===
-      'jg'
-  ) {
-    return 'Jungle';
-  }
+      if (headToHead !== 0) return -headToHead;
 
-  if (
-    role ===
-      'mid' ||
-    role ===
-      'middle'
-  ) {
-    return 'Mid';
-  }
+      return a.name.localeCompare(b.name, 'fr');
+    });
 
-  if (
-    role ===
-      'adc' ||
-    role ===
-      'bot' ||
-    role ===
-      'bottom'
-  ) {
-    return 'ADC';
-  }
+    const divisions = {
+      Yordle: resultTeams.filter((t) => t.division === 'Yordle'),
+      Ixtal: resultTeams.filter((t) => t.division === 'Ixtal'),
+      Targon: resultTeams.filter((t) => t.division === 'Targon'),
+    };
 
-  if (
-    role ===
-      'support' ||
-    role ===
-      'sup'
-  ) {
-    return 'Support';
-  }
+    // HISTORIQUE DES BO + DÉTAILS DE CHAQUE GAME
+    const history = allMatches.map((match) => {
+      const team1 = teamMap.get(Number(match.team1_id));
+      const team2 = teamMap.get(Number(match.team2_id));
 
-  return String(
-    value
-  );
-}
+      const winner =
+        match.winner_team_id != null
+          ? teamMap.get(Number(match.winner_team_id))
+          : undefined;
 
-function roleOrder(
-  role:
-    | string
-    | null
-) {
-  switch (
-    role
-  ) {
-    case 'Top':
-      return 0;
+      const matchMvpPlayer = match.mvp_player_id
+        ? playerMap.get(Number(match.mvp_player_id))
+        : null;
 
-    case 'Jungle':
-      return 1;
+      const matchGames = [
+        ...(gamesByMatch.get(Number(match.id)) || []),
+      ].sort(
+        (a, b) => Number(a.game_number) - Number(b.game_number)
+      );
 
-    case 'Mid':
-      return 2;
+      const score1 = matchGames.filter(
+        (game) =>
+          Number(game.winner_team_id) === Number(match.team1_id)
+      ).length;
 
-    case 'ADC':
-      return 3;
+      const score2 = matchGames.filter(
+        (game) =>
+          Number(game.winner_team_id) === Number(match.team2_id)
+      ).length;
 
-    case 'Support':
-      return 4;
+      const formatTeam = (
+        team: ResultTeam | undefined,
+        score?: number
+      ) =>
+        team
+          ? {
+              id: Number(team.id),
+              name: team.name,
+              shortName: team.shortName,
+              logo: team.logo,
+              ...(score !== undefined ? { score } : {}),
+            }
+          : null;
 
-    default:
-      return 99;
+      return {
+        id: Number(match.id),
+        division: match.division as Division,
+        stage: match.stage,
+        bracket: match.bracket,
+        round: match.round,
+        bestOf: Number(match.best_of),
+        playedAt: match.played_at,
+        mvpPlayerId: match.mvp_player_id
+          ? Number(match.mvp_player_id)
+          : null,
+        mvpRiotId: matchMvpPlayer
+          ? String(
+              getValue(matchMvpPlayer, ['riot_id', 'riotId']) ?? ''
+            )
+          : null,
+        team1: formatTeam(team1, score1),
+        team2: formatTeam(team2, score2),
+        winner: formatTeam(winner),
+
+        games: matchGames.map((game) => {
+          const gameWinner = teamMap.get(
+            Number(game.winner_team_id)
+          );
+
+          // JOUEURS OFFICIELS
+          const officialGameStats = (
+            statsByGame.get(Number(game.id)) || []
+          ).map((stat) => {
+            const player = playerMap.get(Number(stat.player_id));
+            const team = teamMap.get(Number(stat.team_id));
+
+            const championId = String(stat.champion_id ?? '');
+            const champion = championMap.get(championId);
+
+            return {
+              playerId: Number(stat.player_id),
+              riotId: player
+                ? String(
+                    getValue(player, ['riot_id', 'riotId']) ??
+                      `Joueur ${stat.player_id}`
+                  )
+                : `Joueur ${stat.player_id}`,
+              isSub: false,
+              teamId: Number(stat.team_id),
+              teamName: team?.name ?? '',
+              teamShortName: team?.shortName ?? '',
+              role: normalizeRole(stat.role),
+              championId,
+              championName: champion?.name ?? championId,
+              championImage: champion?.image ?? null,
+              kills: Number(stat.kills) || 0,
+              deaths: Number(stat.deaths) || 0,
+              assists: Number(stat.assists) || 0,
+            };
+          });
+
+          // REMPLAÇANTS : HISTORIQUE UNIQUEMENT
+          const rawSubstitutes = Array.isArray(
+            game.substitute_stats
+          )
+            ? game.substitute_stats
+            : [];
+
+          const substituteGameStats = rawSubstitutes
+            .map((sub: AnyObject) => {
+              const teamId = Number(
+                sub.teamId ?? sub.team_id
+              );
+
+              const team = teamMap.get(teamId);
+              const championId = String(
+                sub.championId ?? sub.champion_id ?? ''
+              );
+
+              const champion = championMap.get(championId);
+
+              return {
+                playerId: null,
+                riotId: 'SUB',
+                isSub: true,
+                teamId,
+                teamName: team?.name ?? '',
+                teamShortName: team?.shortName ?? '',
+                role: normalizeRole(sub.role),
+                championId,
+                championName: champion?.name ?? championId,
+                championImage: champion?.image ?? null,
+                kills: Number(sub.kills) || 0,
+                deaths: Number(sub.deaths) || 0,
+                assists: Number(sub.assists) || 0,
+              };
+            })
+            .filter(
+              (sub) =>
+                Number.isFinite(sub.teamId) &&
+                sub.role !== null &&
+                sub.championId !== ''
+            );
+
+          const gameStats = [
+            ...officialGameStats,
+            ...substituteGameStats,
+          ].sort((a, b) => {
+            if (a.teamId !== b.teamId) {
+              return a.teamId - b.teamId;
+            }
+
+            return (
+              roleOrder(a.role) - roleOrder(b.role)
+            );
+          });
+
+          return {
+            id: Number(game.id),
+            gameNumber: Number(game.game_number),
+            durationSeconds: Number(game.duration_seconds),
+            winnerTeamId: Number(game.winner_team_id),
+            winnerName: gameWinner?.name ?? null,
+            players: gameStats,
+          };
+        }),
+      };
+    });
+
+    const historyByDivision = {
+      Yordle: history.filter((m) => m.division === 'Yordle'),
+      Ixtal: history.filter((m) => m.division === 'Ixtal'),
+      Targon: history.filter((m) => m.division === 'Targon'),
+    };
+
+    // STATISTIQUES DES JOUEURS
+    function statsForDivision(
+      division: Division
+    ): Record<Role, PlayerStats[]> {
+      const divisionMatchIds = new Set(
+        allMatches
+          .filter((m) => m.division === division)
+          .map((m) => Number(m.id))
+      );
+
+      const divisionGames = allGames.filter((g) =>
+        divisionMatchIds.has(Number(g.match_id))
+      );
+
+      const divisionGameIds = new Set(
+        divisionGames.map((g) => Number(g.id))
+      );
+
+      const result: Record<Role, PlayerStats[]> = {
+        Top: [],
+        Jungle: [],
+        Mid: [],
+        ADC: [],
+        Support: [],
+      };
+
+      const playerRoleKeys = new Set<string>();
+
+      for (const stat of allStats) {
+        if (!divisionGameIds.has(Number(stat.game_id))) continue;
+
+        const role = normalizeRole(stat.role);
+
+        if (!role) continue;
+
+        playerRoleKeys.add(`${Number(stat.player_id)}:${role}`);
+      }
+
+      for (const key of playerRoleKeys) {
+        const [playerIdRaw, roleRaw] = key.split(':');
+        const playerId = Number(playerIdRaw);
+        const role = roleRaw as Role;
+
+        const rows = allStats.filter(
+          (stat) =>
+            Number(stat.player_id) === playerId &&
+            normalizeRole(stat.role) === role &&
+            divisionGameIds.has(Number(stat.game_id))
+        );
+
+        if (!rows.length) continue;
+
+        const teamId = Number(rows[0].team_id);
+        const team = teamMap.get(teamId);
+        const rawPlayer = playerMap.get(playerId);
+
+        if (!team || !rawPlayer) continue;
+
+        let kills = 0;
+        let deaths = 0;
+        let assists = 0;
+        let cs = 0;
+        let gold = 0;
+        let damage = 0;
+        let visionScore = 0;
+        let wins = 0;
+        let losses = 0;
+        let duration = 0;
+
+        const playerMatchIds = new Set<number>();
+
+        for (const row of rows) {
+          const game = gameMap.get(Number(row.game_id));
+
+          if (!game) continue;
+
+          kills += Number(row.kills) || 0;
+          deaths += Number(row.deaths) || 0;
+          assists += Number(row.assists) || 0;
+          cs += Number(row.cs) || 0;
+          gold += Number(row.gold) || 0;
+          damage += Number(row.damage) || 0;
+          visionScore += Number(row.vision_score) || 0;
+          duration += Number(game.duration_seconds) || 0;
+
+          if (
+            Number(game.winner_team_id) === Number(row.team_id)
+          ) {
+            wins++;
+          } else {
+            losses++;
+          }
+
+          playerMatchIds.add(Number(game.match_id));
+        }
+
+        let mvp = 0;
+
+        for (const matchId of playerMatchIds) {
+          const match = matchMap.get(matchId);
+
+          if (
+            match &&
+            Number(match.mvp_player_id) === playerId
+          ) {
+            mvp++;
+          }
+        }
+
+        const gamesPlayed = rows.length;
+        const minutes = duration / 60;
+
+        // KDA : MOYENNE DES RATIOS PAR GAME
+        const kda = gamesPlayed
+          ? round2(
+              rows.reduce((total, row) => {
+                const k = Number(row.kills) || 0;
+                const d = Number(row.deaths) || 0;
+                const a = Number(row.assists) || 0;
+
+                return total + (k + a) / Math.max(1, d);
+              }, 0) / gamesPlayed
+            )
+          : 0;
+
+        result[role].push({
+          playerId,
+          riotId: String(
+            getValue(rawPlayer, ['riot_id', 'riotId']) ??
+              `Joueur ${playerId}`
+          ),
+          teamId,
+          teamName: team.name,
+          teamShortName: team.shortName,
+          teamLogo: team.logo,
+          role,
+          games: gamesPlayed,
+          wins,
+          losses,
+          kills: round2(kills / gamesPlayed),
+          deaths: round2(deaths / gamesPlayed),
+          assists: round2(assists / gamesPlayed),
+          kda,
+          cs: round2(cs / gamesPlayed),
+          csPerMin: minutes > 0 ? round2(cs / minutes) : 0,
+          gold: Math.round(gold / gamesPlayed),
+          goldPerMin: minutes > 0
+            ? round2(gold / minutes)
+            : 0,
+          damage: Math.round(damage / gamesPlayed),
+          dpm: minutes > 0 ? round2(damage / minutes) : 0,
+          visionScore: minutes > 0
+            ? round2(visionScore / minutes)
+            : 0,
+          mvp,
+          totalDurationSeconds: duration,
+        });
+      }
+
+      for (const role of ROLES) {
+        result[role].sort((a, b) => b.kda - a.kda);
+      }
+
+      return result;
+    }
+
+    // STATISTIQUES CHAMPIONS
+    function championsForDivision(
+      division: Division
+    ): Record<Role, ChampionRoleStat[]> {
+      const divisionMatches = allMatches.filter(
+        (m) => m.division === division
+      );
+
+      const divisionMatchIds = new Set(
+        divisionMatches.map((m) => Number(m.id))
+      );
+
+      const divisionGameIds = new Set(
+        allGames
+          .filter((g) =>
+            divisionMatchIds.has(Number(g.match_id))
+          )
+          .map((g) => Number(g.id))
+      );
+
+      const totalBos = divisionMatches.length;
+
+      const result: Record<Role, ChampionRoleStat[]> = {
+        Top: [],
+        Jungle: [],
+        Mid: [],
+        ADC: [],
+        Support: [],
+      };
+
+      for (const role of ROLES) {
+        const rows = allStats.filter(
+          (stat) =>
+            divisionGameIds.has(Number(stat.game_id)) &&
+            normalizeRole(stat.role) === role
+        );
+
+        const map = new Map<
+          string,
+          {
+            picks: number;
+            wins: number;
+            matchIds: Set<number>;
+          }
+        >();
+
+        for (const row of rows) {
+          const championId = String(row.champion_id ?? '');
+
+          if (!championId) continue;
+
+          const game = gameMap.get(Number(row.game_id));
+
+          if (!game) continue;
+
+          const current = map.get(championId) || {
+            picks: 0,
+            wins: 0,
+            matchIds: new Set<number>(),
+          };
+
+          current.picks++;
+
+          if (
+            Number(game.winner_team_id) ===
+            Number(row.team_id)
+          ) {
+            current.wins++;
+          }
+
+          current.matchIds.add(Number(game.match_id));
+          map.set(championId, current);
+        }
+
+        result[role] = [...map.entries()]
+          .map(([championId, values]) => {
+            const champion = championMap.get(championId);
+
+            return {
+              championId,
+              name: champion?.name ?? championId,
+              image: champion?.image ?? null,
+              role,
+              picks: values.picks,
+              wins: values.wins,
+              losses: values.picks - values.wins,
+              pickRate: totalBos > 0
+                ? round2(
+                    (values.matchIds.size / totalBos) * 100
+                  )
+                : 0,
+              winRate: values.picks > 0
+                ? round2(
+                    (values.wins / values.picks) * 100
+                  )
+                : 0,
+            };
+          })
+          .sort(
+            (a, b) =>
+              b.picks - a.picks ||
+              b.winRate - a.winRate
+          )
+          .slice(0, 5);
+      }
+
+      return result;
+    }
+
+    const playerStatsByDivision = {
+      Yordle: statsForDivision('Yordle'),
+      Ixtal: statsForDivision('Ixtal'),
+      Targon: statsForDivision('Targon'),
+    };
+
+    const championsByDivision = {
+      Yordle: championsForDivision('Yordle'),
+      Ixtal: championsForDivision('Ixtal'),
+      Targon: championsForDivision('Targon'),
+    };
+
+    return NextResponse.json(
+      {
+        success: true,
+        divisions,
+        teams: resultTeams,
+        champions,
+        history,
+        historyByDivision,
+        playerStatsByDivision,
+        championsByDivision,
+
+        divisionAssets: {
+          Yordle: {
+            color: '#51a677',
+            logo: '/assets/divisions/yordle.png',
+          },
+          Ixtal: {
+            color: '#4387d8',
+            logo: '/assets/divisions/ixtal.png',
+          },
+          Targon: {
+            color: '#8f6bc7',
+            logo: '/assets/divisions/targon.png',
+          },
+        },
+
+        roles: [
+          {
+            id: 'Top',
+            label: 'TOP',
+            icon: '/assets/roles/top.png',
+          },
+          {
+            id: 'Jungle',
+            label: 'JGL',
+            icon: '/assets/roles/jungle.png',
+          },
+          {
+            id: 'Mid',
+            label: 'MID',
+            icon: '/assets/roles/mid.png',
+          },
+          {
+            id: 'ADC',
+            label: 'ADC',
+            icon: '/assets/roles/adc.png',
+          },
+          {
+            id: 'Support',
+            label: 'SUP',
+            icon: '/assets/roles/sup.png',
+          },
+        ],
+
+        debug: {
+          rawTeams: rawTeams.length,
+          validatedTeams: resultTeams.length,
+          members: rawMembers.length,
+          players: rawPlayers.length,
+          champions: champions.length,
+          matches: allMatches.length,
+          games: allGames.length,
+          gamePlayerStats: allStats.length,
+          yordle: divisions.Yordle.length,
+          ixtal: divisions.Ixtal.length,
+          targon: divisions.Targon.length,
+        },
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
+  } catch (error: any) {
+    console.error('[RESULTS API]', error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error?.message ||
+          'Impossible de charger les données de la page Résultats.',
+        teams: [],
+        champions: [],
+        history: [],
+        historyByDivision: {
+          Yordle: [],
+          Ixtal: [],
+          Targon: [],
+        },
+        divisions: {
+          Yordle: [],
+          Ixtal: [],
+          Targon: [],
+        },
+        playerStatsByDivision: {
+          Yordle: emptyRoleStats(),
+          Ixtal: emptyRoleStats(),
+          Targon: emptyRoleStats(),
+        },
+        championsByDivision: {
+          Yordle: emptyRoleStats(),
+          Ixtal: emptyRoleStats(),
+          Targon: emptyRoleStats(),
+        },
+      },
+      { status: 500 }
+    );
   }
 }

@@ -338,6 +338,19 @@ export default function AdminPage() {
 
           <h3>Actions rapides</h3>
 
+          <a
+  href="/admin/riot"
+  className="joinTeamBtn"
+  style={{
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}
+>
+  Gérer les BO Riot
+</a>
+
           <div
             style={{
               display: 'flex',
