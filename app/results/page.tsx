@@ -393,6 +393,27 @@ const ROLE_ICONS:
     '/assets/roles/sup.png',
 };
 
+/* ---------- HELPER (new) ---------- */
+async function fetchAll<T>(
+  buildQuery: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>,
+  pageSize = 1000
+): Promise<T[]> {
+  const all: T[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await buildQuery(from, from + pageSize - 1);
+    if (error) throw error;
+
+    all.push(...(data ?? []));
+
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return all;
+}
+
 /* =========================================================
    PAGE
 ========================================================= */
@@ -2762,7 +2783,7 @@ function MvpRanking({
 .mvpTop b {
   font-size: 12px;
   font-weight: 900;
-}  }
+}
 
         .mvpTrack {
           height: 6px;

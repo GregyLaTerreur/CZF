@@ -147,6 +147,49 @@ const supabaseAdmin =
   );
 
 /* =========================================================
+  FETCH ALL (contourne la limite de 1000 lignes de Supabase)
+========================================================= */
+
+async function fetchAll<T = AnyObject>(
+  buildQuery: (
+    from: number,
+    to: number
+  ) => PromiseLike<{
+    data: T[] | null;
+    error: any;
+  }>,
+  pageSize = 1000
+): Promise<T[]> {
+  const all: T[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } =
+      await buildQuery(
+        from,
+        from + pageSize - 1
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    all.push(...(data ?? []));
+
+    if (
+      !data ||
+      data.length < pageSize
+    ) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return all;
+}
+
+/* =========================================================
    GET
 ========================================================= */
 
@@ -507,37 +550,27 @@ export async function GET(
        GAMES
     ===================================================== */
 
-    const {
-      data: games,
-      error: gamesError,
-    } =
-      await supabaseAdmin
-        .from(
-          'czf_games'
-        )
-        .select('*');
-
-    if (gamesError) {
-      throw gamesError;
-    }
+    const games =
+      await fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_games')
+          .select('*')
+          .order('id', { ascending: true })
+          .range(from, to)
+      );
 
     /* =====================================================
        PLAYER STATS
     ===================================================== */
 
-    const {
-      data: playerStatsRows,
-      error: playerStatsError,
-    } =
-      await supabaseAdmin
-        .from(
-          'czf_game_player_stats'
-        )
-        .select('*');
-
-    if (playerStatsError) {
-      throw playerStatsError;
-    }
+  const playerStatsRows =
+    await fetchAll((from, to) =>
+      supabaseAdmin
+        .from('czf_game_player_stats')
+        .select('*')
+        .order('id', { ascending: true })
+        .range(from, to)
+    );
 
     const allMatches =
       matches ?? [];
