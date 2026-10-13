@@ -95,9 +95,10 @@ const supabaseAdmin = createClient(
   }
 );
 
-/*
- Enable fetchAll to not get query limited to its max pagination
-*/
+/* =========================================================
+   PAGINATION SUPABASE
+========================================================= */
+
 async function fetchAll<T = AnyObject>(
   buildQuery: (
     from: number,
@@ -130,6 +131,10 @@ async function fetchAll<T = AnyObject>(
 
   return { data: all, error: null };
 }
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function getValue(
   object: AnyObject | null | undefined,
@@ -191,9 +196,10 @@ function normalizeRole(value: any): Role | null {
 }
 
 function roleOrder(role: string | null): number {
-  return role ? ROLES.indexOf(role as Role) === -1
-    ? 99
-    : ROLES.indexOf(role as Role) : 99;
+  if (!role) return 99;
+
+  const index = ROLES.indexOf(role as Role);
+  return index === -1 ? 99 : index;
 }
 
 function normalizeRiotId(value: any): string {
@@ -323,6 +329,10 @@ function extractArray(
   return [];
 }
 
+/* =========================================================
+   CHAMPIONS
+========================================================= */
+
 async function getChampions(): Promise<Champion[]> {
   try {
     const versionsResponse = await fetch(
@@ -360,6 +370,10 @@ async function getChampions(): Promise<Champion[]> {
   }
 }
 
+/* =========================================================
+   GET RESULTS
+========================================================= */
+
 export async function GET(request: NextRequest) {
   try {
     const origin = request.nextUrl.origin;
@@ -387,6 +401,10 @@ export async function GET(request: NextRequest) {
     );
 
     const validatedTeams = rawTeams.filter(isValidated);
+
+    /* =====================================================
+       EQUIPES ET ROSTERS
+    ===================================================== */
 
     let resultTeams: ResultTeam[] = validatedTeams.map((team) => {
       const teamId = getValue(team, ['id', 'team_id', 'teamId']);
@@ -469,44 +487,108 @@ export async function GET(request: NextRequest) {
     });
 
     const champions = await getChampions();
+
     const championMap = new Map(
       champions.map((champion) => [champion.id, champion])
     );
 
-    const [matchesResult, gamesResult, statsResult] =
-      await Promise.all([
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_matches')
-            .select('*')
-            .eq('status', 'finished')
-            .order('played_at', { ascending: false })
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_games')
-            .select('*')
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_game_player_stats')
-            .select('*')
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
-      ]);
+    /* =====================================================
+       SUPABASE : MATCHS, GAMES, STATS ET EXCLUSIONS
+    ===================================================== */
+
+    const [
+      matchesResult,
+      gamesResult,
+      statsResult,
+      exclusionsResult,
+    ] = await Promise.all([
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_matches')
+          .select('*')
+          .eq('status', 'finished')
+          .order('played_at', { ascending: false })
+          .order('id', { ascending: true })
+          .range(from, to)
+      ),
+
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_games')
+          .select('*')
+          .order('id', { ascending: true })
+          .range(from, to)
+      ),
+
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_game_player_stats')
+          .select('*')
+          .order('id', { ascending: true })
+          .range(from, to)
+      ),
+
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_stats_exclusions')
+          .select('player_id, role')
+          .order('player_id', { ascending: true })
+          .range(from, to)
+      ),
+    ]);
 
     if (matchesResult.error) throw matchesResult.error;
     if (gamesResult.error) throw gamesResult.error;
     if (statsResult.error) throw statsResult.error;
+    if (exclusionsResult.error) throw exclusionsResult.error;
 
     const allMatches = matchesResult.data || [];
     const allGames = gamesResult.data || [];
     const allStats = statsResult.data || [];
+
+    /* =====================================================
+       EXCLUSIONS DES CLASSEMENTS INDIVIDUELS
+
+       ALL = tous les rôles
+       ADC = ADC seulement
+       Support = Support seulement
+
+       Aucun impact sur les historiques et les champions.
+    ===================================================== */
+
+    const excludedPlayerRoles = new Set<string>();
+
+    for (const exclusion of exclusionsResult.data || []) {
+      const playerId = Number(exclusion.player_id);
+
+      if (!Number.isFinite(playerId)) continue;
+
+      const role = String(exclusion.role || '').trim();
+
+      if (role.toUpperCase() === 'ALL') {
+        excludedPlayerRoles.add(`${playerId}:ALL`);
+      } else {
+        const normalized = normalizeRole(role);
+
+        if (normalized) {
+          excludedPlayerRoles.add(`${playerId}:${normalized}`);
+        }
+      }
+    }
+
+    function isExcludedFromRanking(
+      playerId: number,
+      role: Role
+    ): boolean {
+      return (
+        excludedPlayerRoles.has(`${playerId}:ALL`) ||
+        excludedPlayerRoles.has(`${playerId}:${role}`)
+      );
+    }
+
+    /* =====================================================
+       INDEX DES DONNEES
+    ===================================================== */
 
     const teamMap = new Map<number, ResultTeam>(
       resultTeams.map((team) => [Number(team.id), team])
@@ -519,7 +601,9 @@ export async function GET(request: NextRequest) {
         getValue(player, ['id', 'player_id', 'playerId'])
       );
 
-      if (Number.isFinite(id)) playerMap.set(id, player);
+      if (Number.isFinite(id)) {
+        playerMap.set(id, player);
+      }
     }
 
     const matchMap = new Map<number, AnyObject>(
@@ -536,6 +620,7 @@ export async function GET(request: NextRequest) {
     for (const game of allGames) {
       const matchId = Number(game.match_id);
       const rows = gamesByMatch.get(matchId) || [];
+
       rows.push(game);
       gamesByMatch.set(matchId, rows);
     }
@@ -543,11 +628,15 @@ export async function GET(request: NextRequest) {
     for (const stat of allStats) {
       const gameId = Number(stat.game_id);
       const rows = statsByGame.get(gameId) || [];
+
       rows.push(stat);
       statsByGame.set(gameId, rows);
     }
 
-    // CLASSEMENTS : UNIQUEMENT LA PHASE DE POULES
+    /* =====================================================
+       CLASSEMENT DES EQUIPES : POULES UNIQUEMENT
+    ===================================================== */
+
     const poolMatches = allMatches.filter(
       (match) => match.stage === 'pool'
     );
@@ -596,8 +685,13 @@ export async function GET(request: NextRequest) {
         }
 
         for (const game of gamesByMatch.get(Number(match.id)) || []) {
-          if (Number(game.winner_team_id) === teamAId) winsA++;
-          if (Number(game.winner_team_id) === teamBId) winsB++;
+          if (Number(game.winner_team_id) === teamAId) {
+            winsA++;
+          }
+
+          if (Number(game.winner_team_id) === teamBId) {
+            winsB++;
+          }
         }
       }
 
@@ -606,6 +700,7 @@ export async function GET(request: NextRequest) {
 
     resultTeams = resultTeams.sort((a, b) => {
       if (b.wins !== a.wins) return b.wins - a.wins;
+
       if (b.gameDiff !== a.gameDiff) {
         return b.gameDiff - a.gameDiff;
       }
@@ -626,7 +721,12 @@ export async function GET(request: NextRequest) {
       Targon: resultTeams.filter((t) => t.division === 'Targon'),
     };
 
-    // HISTORIQUE DES BO + DÉTAILS DE CHAQUE GAME
+    /* =====================================================
+       HISTORIQUE DES BO ET DES GAMES
+
+       Aucun filtrage des joueurs exclus ici.
+    ===================================================== */
+
     const history = allMatches.map((match) => {
       const team1 = teamMap.get(Number(match.team1_id));
       const team2 = teamMap.get(Number(match.team2_id));
@@ -643,7 +743,8 @@ export async function GET(request: NextRequest) {
       const matchGames = [
         ...(gamesByMatch.get(Number(match.id)) || []),
       ].sort(
-        (a, b) => Number(a.game_number) - Number(b.game_number)
+        (a, b) =>
+          Number(a.game_number) - Number(b.game_number)
       );
 
       const score1 = matchGames.filter(
@@ -678,14 +779,17 @@ export async function GET(request: NextRequest) {
         round: match.round,
         bestOf: Number(match.best_of),
         playedAt: match.played_at,
+
         mvpPlayerId: match.mvp_player_id
           ? Number(match.mvp_player_id)
           : null,
+
         mvpRiotId: matchMvpPlayer
           ? String(
               getValue(matchMvpPlayer, ['riot_id', 'riotId']) ?? ''
             )
           : null,
+
         team1: formatTeam(team1, score1),
         team2: formatTeam(team2, score2),
         winner: formatTeam(winner),
@@ -695,7 +799,8 @@ export async function GET(request: NextRequest) {
             Number(game.winner_team_id)
           );
 
-          // JOUEURS OFFICIELS
+          /* JOUEURS OFFICIELS */
+
           const officialGameStats = (
             statsByGame.get(Number(game.id)) || []
           ).map((stat) => {
@@ -707,12 +812,14 @@ export async function GET(request: NextRequest) {
 
             return {
               playerId: Number(stat.player_id),
+
               riotId: player
                 ? String(
                     getValue(player, ['riot_id', 'riotId']) ??
                       `Joueur ${stat.player_id}`
                   )
                 : `Joueur ${stat.player_id}`,
+
               isSub: false,
               teamId: Number(stat.team_id),
               teamName: team?.name ?? '',
@@ -727,7 +834,8 @@ export async function GET(request: NextRequest) {
             };
           });
 
-          // REMPLAÇANTS : HISTORIQUE UNIQUEMENT
+          /* REMPLACANTS : HISTORIQUE UNIQUEMENT */
+
           const rawSubstitutes = Array.isArray(
             game.substitute_stats
           )
@@ -741,6 +849,7 @@ export async function GET(request: NextRequest) {
               );
 
               const team = teamMap.get(teamId);
+
               const championId = String(
                 sub.championId ?? sub.champion_id ?? ''
               );
@@ -778,9 +887,7 @@ export async function GET(request: NextRequest) {
               return a.teamId - b.teamId;
             }
 
-            return (
-              roleOrder(a.role) - roleOrder(b.role)
-            );
+            return roleOrder(a.role) - roleOrder(b.role);
           });
 
           return {
@@ -801,7 +908,12 @@ export async function GET(request: NextRequest) {
       Targon: history.filter((m) => m.division === 'Targon'),
     };
 
-    // STATISTIQUES DES JOUEURS
+    /* =====================================================
+       STATISTIQUES INDIVIDUELLES
+
+       Les exclusions Supabase s'appliquent ICI.
+    ===================================================== */
+
     function statsForDivision(
       division: Division
     ): Record<Role, PlayerStats[]> {
@@ -830,17 +942,38 @@ export async function GET(request: NextRequest) {
       const playerRoleKeys = new Set<string>();
 
       for (const stat of allStats) {
-        if (!divisionGameIds.has(Number(stat.game_id))) continue;
+        if (!divisionGameIds.has(Number(stat.game_id))) {
+          continue;
+        }
 
         const role = normalizeRole(stat.role);
 
         if (!role) continue;
 
-        playerRoleKeys.add(`${Number(stat.player_id)}:${role}`);
+        /*
+          EXCLUSION PAR JOUEUR ET PAR ROLE
+
+          KC Inty : ADC uniquement
+          SmokeCamel : Support uniquement
+          Les 6 autres : ALL
+        */
+        if (
+          isExcludedFromRanking(
+            Number(stat.player_id),
+            role
+          )
+        ) {
+          continue;
+        }
+
+        playerRoleKeys.add(
+          `${Number(stat.player_id)}:${role}`
+        );
       }
 
       for (const key of playerRoleKeys) {
         const [playerIdRaw, roleRaw] = key.split(':');
+
         const playerId = Number(playerIdRaw);
         const role = roleRaw as Role;
 
@@ -913,7 +1046,7 @@ export async function GET(request: NextRequest) {
         const gamesPlayed = rows.length;
         const minutes = duration / 60;
 
-        // KDA : MOYENNE DES RATIOS PAR GAME
+        // KDA : moyenne des ratios par game
         const kda = gamesPlayed
           ? round2(
               rows.reduce((total, row) => {
@@ -928,10 +1061,12 @@ export async function GET(request: NextRequest) {
 
         result[role].push({
           playerId,
+
           riotId: String(
             getValue(rawPlayer, ['riot_id', 'riotId']) ??
               `Joueur ${playerId}`
           ),
+
           teamId,
           teamName: team.name,
           teamShortName: team.shortName,
@@ -940,21 +1075,29 @@ export async function GET(request: NextRequest) {
           games: gamesPlayed,
           wins,
           losses,
+
           kills: round2(kills / gamesPlayed),
           deaths: round2(deaths / gamesPlayed),
           assists: round2(assists / gamesPlayed),
           kda,
+
           cs: round2(cs / gamesPlayed),
-          csPerMin: minutes > 0 ? round2(cs / minutes) : 0,
+          csPerMin:
+            minutes > 0 ? round2(cs / minutes) : 0,
+
           gold: Math.round(gold / gamesPlayed),
-          goldPerMin: minutes > 0
-            ? round2(gold / minutes)
-            : 0,
+          goldPerMin:
+            minutes > 0 ? round2(gold / minutes) : 0,
+
           damage: Math.round(damage / gamesPlayed),
-          dpm: minutes > 0 ? round2(damage / minutes) : 0,
-          visionScore: minutes > 0
-            ? round2(visionScore / minutes)
-            : 0,
+          dpm:
+            minutes > 0 ? round2(damage / minutes) : 0,
+
+          visionScore:
+            minutes > 0
+              ? round2(visionScore / minutes)
+              : 0,
+
           mvp,
           totalDurationSeconds: duration,
         });
@@ -967,7 +1110,12 @@ export async function GET(request: NextRequest) {
       return result;
     }
 
-    // STATISTIQUES CHAMPIONS
+    /* =====================================================
+       STATISTIQUES CHAMPIONS
+
+       AUCUNE EXCLUSION APPLIQUEE
+    ===================================================== */
+
     function championsForDivision(
       division: Division
     ): Record<Role, ChampionRoleStat[]> {
@@ -1053,16 +1201,20 @@ export async function GET(request: NextRequest) {
               picks: values.picks,
               wins: values.wins,
               losses: values.picks - values.wins,
-              pickRate: totalBos > 0
-                ? round2(
-                    (values.matchIds.size / totalBos) * 100
-                  )
-                : 0,
-              winRate: values.picks > 0
-                ? round2(
-                    (values.wins / values.picks) * 100
-                  )
-                : 0,
+
+              pickRate:
+                totalBos > 0
+                  ? round2(
+                      (values.matchIds.size / totalBos) * 100
+                    )
+                  : 0,
+
+              winRate:
+                values.picks > 0
+                  ? round2(
+                      (values.wins / values.picks) * 100
+                    )
+                  : 0,
             };
           })
           .sort(
@@ -1076,6 +1228,10 @@ export async function GET(request: NextRequest) {
       return result;
     }
 
+    /* =====================================================
+       STATS PAR DIVISION
+    ===================================================== */
+
     const playerStatsByDivision = {
       Yordle: statsForDivision('Yordle'),
       Ixtal: statsForDivision('Ixtal'),
@@ -1087,6 +1243,10 @@ export async function GET(request: NextRequest) {
       Ixtal: championsForDivision('Ixtal'),
       Targon: championsForDivision('Targon'),
     };
+
+    /* =====================================================
+       REPONSE API
+    ===================================================== */
 
     return NextResponse.json(
       {
@@ -1171,24 +1331,29 @@ export async function GET(request: NextRequest) {
         error:
           error?.message ||
           'Impossible de charger les données de la page Résultats.',
+
         teams: [],
         champions: [],
         history: [],
+
         historyByDivision: {
           Yordle: [],
           Ixtal: [],
           Targon: [],
         },
+
         divisions: {
           Yordle: [],
           Ixtal: [],
           Targon: [],
         },
+
         playerStatsByDivision: {
           Yordle: emptyRoleStats(),
           Ixtal: emptyRoleStats(),
           Targon: emptyRoleStats(),
         },
+
         championsByDivision: {
           Yordle: emptyRoleStats(),
           Ixtal: emptyRoleStats(),
