@@ -500,6 +500,7 @@ export async function GET(request: NextRequest) {
       matchesResult,
       gamesResult,
       statsResult,
+      currentStatsResult,
       exclusionsResult,
     ] = await Promise.all([
       fetchAll((from, to) =>
@@ -528,6 +529,15 @@ export async function GET(request: NextRequest) {
           .range(from, to)
       ),
 
+      // Vue des joueurs encore présents au même rôle.
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_current_player_stats')
+          .select('*')
+          .order('id', { ascending: true })
+          .range(from, to)
+      ),
+
       fetchAll((from, to) =>
         supabaseAdmin
           .from('czf_stats_exclusions')
@@ -540,11 +550,13 @@ export async function GET(request: NextRequest) {
     if (matchesResult.error) throw matchesResult.error;
     if (gamesResult.error) throw gamesResult.error;
     if (statsResult.error) throw statsResult.error;
+    if (currentStatsResult.error) throw currentStatsResult.error;
     if (exclusionsResult.error) throw exclusionsResult.error;
 
     const allMatches = matchesResult.data || [];
     const allGames = gamesResult.data || [];
     const allStats = statsResult.data || [];
+    const currentStats = currentStatsResult.data || [];
 
     /* =====================================================
        EXCLUSIONS DES CLASSEMENTS INDIVIDUELS
@@ -911,7 +923,8 @@ export async function GET(request: NextRequest) {
     /* =====================================================
        STATISTIQUES INDIVIDUELLES
 
-       Les exclusions Supabase s'appliquent ICI.
+       On utilise la VUE actuelle, pas la table historique.
+       Les exclusions manuelles restent également actives.
     ===================================================== */
 
     function statsForDivision(
@@ -941,7 +954,8 @@ export async function GET(request: NextRequest) {
 
       const playerRoleKeys = new Set<string>();
 
-      for (const stat of allStats) {
+      // Uniquement les performances encore éligibles.
+      for (const stat of currentStats) {
         if (!divisionGameIds.has(Number(stat.game_id))) {
           continue;
         }
@@ -950,13 +964,6 @@ export async function GET(request: NextRequest) {
 
         if (!role) continue;
 
-        /*
-          EXCLUSION PAR JOUEUR ET PAR ROLE
-
-          KC Inty : ADC uniquement
-          SmokeCamel : Support uniquement
-          Les 6 autres : ALL
-        */
         if (
           isExcludedFromRanking(
             Number(stat.player_id),
@@ -977,7 +984,7 @@ export async function GET(request: NextRequest) {
         const playerId = Number(playerIdRaw);
         const role = roleRaw as Role;
 
-        const rows = allStats.filter(
+        const rows = currentStats.filter(
           (stat) =>
             Number(stat.player_id) === playerId &&
             normalizeRole(stat.role) === role &&
@@ -1114,6 +1121,7 @@ export async function GET(request: NextRequest) {
        STATISTIQUES CHAMPIONS
 
        AUCUNE EXCLUSION APPLIQUEE
+       On continue à utiliser les données historiques.
     ===================================================== */
 
     function championsForDivision(
@@ -1311,6 +1319,7 @@ export async function GET(request: NextRequest) {
           matches: allMatches.length,
           games: allGames.length,
           gamePlayerStats: allStats.length,
+          currentPlayerStats: currentStats.length,
           yordle: divisions.Yordle.length,
           ixtal: divisions.Ixtal.length,
           targon: divisions.Targon.length,
