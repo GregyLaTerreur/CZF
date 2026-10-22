@@ -319,16 +319,6 @@
   justify-content: center;
 }
 
-.heroVisual::before {
-  content: '';
-  position: absolute;
-  inset: 8% 4%;
-  background: var(--cream);
-  border: 3px solid var(--dark);
-  transform: skewX(-8deg) rotate(-3deg);
-  box-shadow: 10px 10px 0 var(--dark);
-}
-
 .heroLogo {
   position: relative;
   width: 100%;
