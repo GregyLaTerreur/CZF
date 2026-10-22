@@ -2,6 +2,9 @@
 name: Deploy CZF PROD
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
