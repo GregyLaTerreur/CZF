@@ -323,7 +323,6 @@
   position: relative;
   width: 100%;
   max-width: 400px;
-  filter: drop-shadow(0 18px 30px rgba(4, 12, 24, 0.45));
 }
 
 .heroBolt {
