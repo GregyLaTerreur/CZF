@@ -82,7 +82,7 @@ export default function Home() {
           <div className={styles.heroVisual} aria-hidden="true">
             <img src="/assets/PNG CZF.png" alt="" className={styles.heroLogo} />
             <img
-              src="/assets/eclairs/eclair_czf_01.png"
+              src="/assets/eclairs/eclair_czf_03.png"
               alt=""
               className={`${styles.heroBolt} ${styles.heroBoltA}`}
             />
