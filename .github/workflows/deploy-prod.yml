@@ -23,6 +23,42 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Pull production configuration
+
+      
+      - name: Check Supabase configuration
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = '.vercel/.env.production.local';
+          if (!fs.existsSync(path)) {
+            console.error('Fichier environnement Vercel introuvable');
+            process.exit(1);
+          }
+          const content = fs.readFileSync(path, 'utf8');
+          for (const name of [
+            'NEXT_PUBLIC_SUPABASE_URL',
+            'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+            'SUPABASE_SERVICE_ROLE_KEY'
+          ]) {
+            const line = content.split(/\r?\n/).find(l => l.startsWith(name + '='));
+            if (!line) {
+              console.error(name + ' : ABSENTE');
+              continue;
+            }
+            const raw = line.slice(name.length + 1).trim();
+            let value = raw;
+            try {
+              if (raw.startsWith('"')) value = JSON.parse(raw);
+            } catch {}
+            const valid = name.endsWith('_URL')
+              ? /^https:\/\/[a-z0-9.-]+\.supabase\.co\/?$/.test(value)
+              : value.length > 10;
+            console.log(name + ' : ' + (valid ? 'OK' : 'INVALIDE'));
+          }
+          NODE
+
+
         run: vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
