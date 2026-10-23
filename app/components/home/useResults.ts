@@ -29,8 +29,9 @@ export type HistoryMatch = {
   bestOf: number;
   playedAt: string;
   mvpRiotId: string | null;
-  team1: MatchSide;
-  team2: MatchSide;
+  // null quand l'équipe n'est plus validée par un admin.
+  team1: MatchSide | null;
+  team2: MatchSide | null;
   winner: { id: number } | null;
 };
 

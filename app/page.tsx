@@ -104,13 +104,6 @@ export default function Home() {
       {/* Ids préfixés "home-" : globals.css stylise #resultats, #divisions… */}
       <section id="home-resultats" className={styles.darkSection}>
         <div className={styles.container}>
-          <div className={styles.sectionHead}>
-            <div>
-              <div className={styles.sectionLabel}>Saison 1 · Derniers matchs</div>
-              <h2 className={styles.h2}>Résultats</h2>
-            </div>
-          </div>
-
           <LatestResults />
 
           <div className={styles.darkActions}>

@@ -95,16 +95,31 @@ export function Ticker() {
    CLASSEMENT + TOP KDA
 ========================================================= */
 
-function DivisionTabs({
+type DivisionFilter = DivisionName | 'all';
+
+function DivisionTabs<T extends DivisionFilter>({
   value,
   onChange,
+  withAll = false,
 }: {
-  value: DivisionName;
-  onChange: (division: DivisionName) => void;
+  value: T;
+  onChange: (division: T) => void;
+  withAll?: boolean;
 }) {
   return (
     <div className={styles.tabs} role="tablist">
-      {DIVISIONS.map((division) => (
+      {withAll && (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={value === 'all'}
+          className={value === 'all' ? styles.tabActive : styles.tab}
+          onClick={() => onChange('all' as T)}
+        >
+          Toutes
+        </button>
+      )}
+      {(DIVISIONS as T[]).map((division) => (
         <button
           key={division}
           type="button"
@@ -113,7 +128,10 @@ function DivisionTabs({
           className={division === value ? styles.tabActive : styles.tab}
           onClick={() => onChange(division)}
         >
-          <span className={styles.dot} style={{ background: DIVISION_COLORS[division] }} />
+          <span
+            className={styles.dot}
+            style={{ background: DIVISION_COLORS[division as DivisionName] }}
+          />
           {division}
         </button>
       ))}
@@ -268,14 +286,23 @@ const dateFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'sh
 
 export function LatestResults() {
   const { data, error, loading } = useResults();
+  const [division, setDivision] = useState<DivisionFilter>('all');
 
   const matches = (data?.history || [])
-    .slice()
+    .filter((match) => division === 'all' || match.division === division)
     .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
     .slice(0, 6);
 
   return (
     <>
+      <div className={styles.sectionHead}>
+        <div>
+          <div className={styles.sectionLabel}>Saison 1 · Derniers matchs</div>
+          <h2 className={styles.h2}>Résultats</h2>
+        </div>
+        <DivisionTabs value={division} onChange={setDivision} withAll />
+      </div>
+
       {error && <div className={styles.empty}>{error}</div>}
       {loading && <div className={styles.empty}>Chargement des résultats…</div>}
       {data && matches.length === 0 && (
@@ -299,7 +326,16 @@ export function LatestResults() {
                   </span>
                 </div>
 
-                {[match.team1, match.team2].map((team) => {
+                {[match.team1, match.team2].map((team, side) => {
+                  if (!team) {
+                    return (
+                      <div key={`missing-${side}`} className={`${styles.matchTeam} ${styles.matchLoser}`}>
+                        <TeamLogo logo={null} shortName="?" />
+                        <span>Équipe retirée</span>
+                      </div>
+                    );
+                  }
+
                   const lost = winnerId !== null && winnerId !== team.id;
 
                   return (

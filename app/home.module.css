@@ -15,7 +15,6 @@
   --on-dark: #E0D8CC;
   --win: #2AAB5F;
   --loss: #E05050;
-  --logo-bg: #A9ABAF;
 
   font-family: var(--font-barlow), sans-serif;
   color: var(--dark);
@@ -437,6 +436,11 @@
   color: #fff;
 }
 
+/* L'onglet actif (dark) doit rester visible sur fond dark */
+.darkSection .tabActive {
+  outline: 1px solid rgba(224, 216, 204, 0.25);
+}
+
 .darkSection .body {
   color: rgba(224, 216, 204, 0.7);
 }
@@ -521,8 +525,7 @@
 .logo {
   width: 30px;
   height: 30px;
-  object-fit: cover;
-  background: var(--logo-bg);
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -531,8 +534,7 @@
   height: 30px;
   display: grid;
   place-items: center;
-  background: var(--logo-bg);
-  color: var(--dark);
+  color: inherit;
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 800;
   font-size: 0.6rem;
@@ -732,6 +734,7 @@
 .matchTeam span {
   flex: 1;
   min-width: 0;
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
