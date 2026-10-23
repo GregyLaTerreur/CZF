@@ -522,7 +522,6 @@
   width: 30px;
   height: 30px;
   object-fit: cover;
-  border: 2px solid var(--dark);
   background: var(--logo-bg);
   flex-shrink: 0;
 }
@@ -736,10 +735,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.matchTeam .logo {
-  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .matchLoser {
