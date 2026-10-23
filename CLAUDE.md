@@ -71,7 +71,9 @@ Les résultats peuvent aussi être saisis à la main par un admin (`/admin/resul
 
 - `app/<page>/page.tsx` : pages, presque toutes des composants client (`'use client'`) très longs et autonomes (`results` ~3700 l, `admin/results` ~3400 l, `my-team` ~2200 l). Elles appellent les routes `/api/*` avec `fetch` ; certaines lisent Supabase directement avec la clé anon.
 - `app/api/**/route.ts` : route handlers. Les routes protégées lisent `Authorization: Bearer <access_token>` (envoyé par le front via `supabase.auth.getSession()`), vérifient l'utilisateur avec `supabaseAdmin.auth.getUser(token)`, puis `profiles.is_admin` pour l'admin.
-- `app/api/results/route.ts` : **source principale des données publiques** (classements par division, historique, stats joueurs par division et par rôle, champions). Elle pagine avec `fetchAll` (limite de 1000 lignes de Supabase) et lit la vue `czf_current_player_stats`.
+- **Données publiques** : routes dédiées, toutes filtrables par `?division=` : `/api/classement` (classement des poules), `/api/historique` (liste des BO sans détail, `?limit=`), `/api/historique/[id]` (games d'un BO, chargées à l'ouverture), `/api/stats-joueurs` (stats par rôle, vue `czf_current_player_stats` + exclusions), `/api/stats-champions`. La homepage et `/results` n'utilisent qu'elles.
+- Les calculs sont dans `lib/results/core.ts` (fonctions pures) et les requêtes dans `lib/results/load.ts` (`fetchAll` gère la limite de 1000 lignes de Supabase, `fetchByIds` découpe les filtres `in`). Toute règle de classement ou de stats se modifie là.
+- `app/api/results/route.ts` : réponse complète historique (≈ 1 Mo), réutilise `lib/results/core.ts`. Encore utilisée par `/admin/results` pour les équipes avec roster et la liste des champions.
 - `lib/riot/build-czf-game.ts`, `lib/riot/build-czf-bo.ts` : transforment une partie Riot en game CZF / calculent le score d'un BO.
 - `app/components/Nav.tsx` : navigation commune (client ; affiche « Admin » si `is_admin`).
 - `lib/data.ts` : vestiges de la V1 (tableaux vides), ne pas s'en servir.
@@ -99,8 +101,8 @@ Les résultats peuvent aussi être saisis à la main par un admin (`/admin/resul
 
 ## Pièges connus
 
-- `/api/results` peut renvoyer `team1`/`team2` à `null` dans `history` quand une équipe n'est plus validée : toujours gérer ce cas.
+- `/api/historique` et `/api/results` peuvent renvoyer `team1`/`team2` à `null` quand une équipe n'est plus validée : toujours gérer ce cas.
 - En poules (BO2), `winner` peut être `null` (match nul 1-1).
-- Les compteurs `mvp` de `playerStatsByDivision` ne comptent que les joueurs encore dans leur roster (vue `czf_current_player_stats`), donc leur total peut être inférieur au nombre de matchs.
+- Les compteurs `mvp` de `/api/stats-joueurs` ne comptent que les joueurs encore dans leur roster (vue `czf_current_player_stats`), donc leur total peut être inférieur au nombre de matchs.
 - **Sécurité, existant à ne pas aggraver** : plusieurs routes modifient les données **sans authentification**, avec le client anon (`/api/teams` POST/PATCH, `/api/teams/delete`, `/api/admin/validate-team`, `/api/team-members`, `/api/team-join-requests`, `/api/players/riot-refresh`, `/api/players/champions-refresh`, `/api/riot/player`). Les policies RLS de `teams`, `team_members`, `team_join_requests` et `players` sont ouvertes à `anon`, et `profiles` accepte n'importe quel INSERT (dont `is_admin`). Toute nouvelle route d'écriture doit vérifier le token et utiliser `supabaseAdmin`, comme `/api/mvp` ou `/api/admin/riot-publish`.
 - En prod, `service_role` n'a pas le droit `SELECT` sur `team_join_requests`.

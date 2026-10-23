@@ -164,7 +164,8 @@ type HistoryMatch = {
       }
     | null;
 
-  games:
+  // Absent dans la liste : chargé via /api/historique/[id] à l'ouverture.
+  games?:
     HistoryGame[];
 };
 
@@ -253,54 +254,15 @@ type RoleChampions =
     ChampionRoleStat[]
   >;
 
-type ResultsApiData = {
-  success: boolean;
-
+// Données d'une division, chargées via les routes dédiées.
+type DivisionData = {
   teams: Team[];
 
-  divisions: {
-    Yordle:
-      Team[];
+  history: HistoryMatch[];
 
-    Ixtal:
-      Team[];
+  playerStats: RoleStats;
 
-    Targon:
-      Team[];
-  };
-
-  historyByDivision: {
-    Yordle:
-      HistoryMatch[];
-
-    Ixtal:
-      HistoryMatch[];
-
-    Targon:
-      HistoryMatch[];
-  };
-
-  playerStatsByDivision: {
-    Yordle:
-      RoleStats;
-
-    Ixtal:
-      RoleStats;
-
-    Targon:
-      RoleStats;
-  };
-
-  championsByDivision: {
-    Yordle:
-      RoleChampions;
-
-    Ixtal:
-      RoleChampions;
-
-    Targon:
-      RoleChampions;
-  };
+  champions: RoleChampions;
 };
 
 /* =========================================================
@@ -415,6 +377,117 @@ async function fetchAll<T>(
 }
 
 /* =========================================================
+   CHARGEMENT PAR DIVISION
+========================================================= */
+
+async function getJson(
+  url: string
+) {
+  const res =
+    await fetch(
+      url,
+      {
+        cache:
+          'no-store',
+      }
+    );
+
+  const json =
+    await res.json();
+
+  if (
+    !res.ok ||
+    !json.success
+  ) {
+    throw new Error(
+      json.error ||
+        'Impossible de charger les résultats.'
+    );
+  }
+
+  return json;
+}
+
+// Une seule requête par division, partagée entre chargement et préchargement.
+const divisionRequests =
+  new Map<
+    Division,
+    Promise<DivisionData>
+  >();
+
+function loadDivision(
+  division: Division
+): Promise<DivisionData> {
+  const existing =
+    divisionRequests.get(
+      division
+    );
+
+  if (
+    existing
+  ) {
+    return existing;
+  }
+
+  const query =
+    `division=${division}`;
+
+  const request =
+    Promise.all([
+      getJson(
+        `/api/classement?${query}`
+      ),
+      getJson(
+        `/api/historique?${query}`
+      ),
+      getJson(
+        `/api/stats-joueurs?${query}`
+      ),
+      getJson(
+        `/api/stats-champions?${query}`
+      ),
+    ])
+      .then(
+        ([
+          classement,
+          historique,
+          statsJoueurs,
+          statsChampions,
+        ]): DivisionData => ({
+          teams:
+            classement.teams,
+
+          history:
+            historique.matches,
+
+          playerStats:
+            statsJoueurs.roles,
+
+          champions:
+            statsChampions.roles,
+        })
+      )
+      .catch(
+        (
+          error
+        ) => {
+          divisionRequests.delete(
+            division
+          );
+
+          throw error;
+        }
+      );
+
+  divisionRequests.set(
+    division,
+    request
+  );
+
+  return request;
+}
+
+/* =========================================================
    PAGE
 ========================================================= */
 
@@ -436,27 +509,38 @@ export default function ResultsPage() {
     );
 
   const [
-    data,
-    setData,
+    cache,
+    setCache,
   ] =
     useState<
-      ResultsApiData |
-      null
-    >(null);
+      Partial<
+        Record<
+          Division,
+          DivisionData
+        >
+      >
+    >(() => {
+      // Données fraîches à chaque arrivée sur la page.
+      divisionRequests.clear();
 
-  const [
-    loading,
-    setLoading,
-  ] =
-    useState(
-      true
-    );
+      return {};
+    });
 
   const [
     error,
     setError,
   ] =
     useState('');
+
+  const data =
+    cache[
+      division
+    ] ??
+    null;
+
+  const loading =
+    !data &&
+    !error;
 
     const [
   historyOpen,
@@ -470,55 +554,98 @@ export default function ResultsPage() {
   ====================================================== */
 
   useEffect(() => {
-    async function load() {
-      try {
-        setLoading(
-          true
-        );
-
-        setError('');
-
-        const res =
-          await fetch(
-            '/api/results',
-            {
-              cache:
-                'no-store',
-            }
-          );
-
-        const json =
-          await res.json();
-
-        if (
-          !res.ok ||
-          !json.success
-        ) {
-          throw new Error(
-            json.error ||
-              'Impossible de charger les résultats.'
-          );
-        }
-
-        setData(
-          json
-        );
-      } catch (
-        error: any
-      ) {
-        setError(
-          error?.message ||
-            'Erreur de chargement.'
-        );
-      } finally {
-        setLoading(
-          false
-        );
-      }
+    if (
+      cache[
+        division
+      ]
+    ) {
+      return;
     }
 
-    load();
-  }, []);
+    let active =
+      true;
+
+    setError('');
+
+    loadDivision(
+      division
+    )
+      .then(
+        (
+          divisionData
+        ) => {
+          if (
+            !active
+          ) {
+            return;
+          }
+
+          setCache(
+            (
+              previous
+            ) => ({
+              ...previous,
+              [division]:
+                divisionData,
+            })
+          );
+
+          // Précharge les autres divisions pour un changement d'onglet instantané.
+          for (
+            const other
+            of DIVISIONS
+          ) {
+            if (
+              other.name !==
+              division
+            ) {
+              loadDivision(
+                other.name
+              )
+                .then(
+                  (
+                    otherData
+                  ) =>
+                    setCache(
+                      (
+                        previous
+                      ) => ({
+                        ...previous,
+                        [other.name]:
+                          otherData,
+                      })
+                    )
+                )
+                .catch(
+                  () => {}
+                );
+            }
+          }
+        }
+      )
+      .catch(
+        (
+          error: any
+        ) => {
+          if (
+            active
+          ) {
+            setError(
+              error?.message ||
+                'Erreur de chargement.'
+            );
+          }
+        }
+      );
+
+    return () => {
+      active =
+        false;
+    };
+  }, [
+    division,
+    cache,
+  ]);
 
   /* ======================================================
      DIVISION DATA
@@ -536,32 +663,24 @@ export default function ResultsPage() {
 
   const teams =
     data
-      ?.divisions?.[
-      division
-    ] ??
+      ?.teams ??
     [];
 
   const history =
     data
-      ?.historyByDivision?.[
-      division
-    ] ??
+      ?.history ??
     [];
 
   const roleStats =
     data
-      ?.playerStatsByDivision?.[
-      division
-    ]?.[
+      ?.playerStats[
       selectedRole
     ] ??
     [];
 
   const roleChampions =
     data
-      ?.championsByDivision?.[
-      division
-    ]?.[
+      ?.champions[
       selectedRole
     ] ??
     [];
@@ -581,9 +700,7 @@ export default function ResultsPage() {
 
         const divisionStats =
           data
-            .playerStatsByDivision?.[
-            division
-          ];
+            .playerStats;
 
         if (
           !divisionStats
@@ -2942,6 +3059,57 @@ function HistoryCard({
       false
     );
 
+  const [
+    games,
+    setGames,
+  ] =
+    useState<
+      HistoryGame[] |
+      null
+    >(
+      match.games ??
+        null
+    );
+
+  const [
+    detailsError,
+    setDetailsError,
+  ] =
+    useState('');
+
+  // Détail des games chargé à la première ouverture.
+  function loadGames() {
+    if (
+      games
+    ) {
+      return;
+    }
+
+    setDetailsError('');
+
+    getJson(
+      `/api/historique/${match.id}`
+    )
+      .then(
+        (
+          json
+        ) =>
+          setGames(
+            json.match
+              .games
+          )
+      )
+      .catch(
+        (
+          error: any
+        ) =>
+          setDetailsError(
+            error?.message ||
+              'Impossible de charger le match.'
+          )
+      );
+  }
+
   if (
     !match.team1 ||
     !match.team2
@@ -2955,6 +3123,7 @@ function HistoryCard({
         type="button"
         className="historySummary"
         onClick={() => {
+          loadGames();
 
           setOpen(
             (
@@ -3031,8 +3200,21 @@ function HistoryCard({
 
       {open && (
         <div className="historyDetails">
+          {detailsError && (
+            <div className="historyDetailsState">
+              {detailsError}
+            </div>
+          )}
+
+          {!games &&
+            !detailsError && (
+              <div className="historyDetailsState">
+                Chargement...
+              </div>
+            )}
+
           <div className="historyGamesDetailed">
-            {match.games.map(
+            {(games ?? []).map(
               (
                 game
               ) => {
@@ -3276,6 +3458,14 @@ key={
 
         .historyDetails {
           padding: 6px 20px 22px;
+        }
+
+        .historyDetailsState {
+          padding: 14px 0;
+          text-align: center;
+          font-size: 13px;
+          font-weight: 800;
+          opacity: 0.6;
         }
 
         .historyGamesDetailed {
