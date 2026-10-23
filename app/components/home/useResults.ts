@@ -46,20 +46,28 @@ export type PlayerStat = {
   mvp: number;
 };
 
-export type ResultsData = {
+export type ClassementData = {
+  totalTeams: number;
   divisions: Record<DivisionName, StandingTeam[]>;
-  teams: StandingTeam[];
-  history: HistoryMatch[];
-  playerStatsByDivision: Record<DivisionName, Record<string, PlayerStat[]>>;
-  roles: { id: string; label: string; icon: string }[];
 };
 
-// Une seule requête partagée par toutes les sections de la homepage.
-let request: Promise<ResultsData> | null = null;
+export type HistoriqueData = {
+  total: number;
+  matches: HistoryMatch[];
+};
 
-function loadResults() {
+export type StatsJoueursData = {
+  roles: Record<string, PlayerStat[]>;
+};
+
+// Une requête par URL, partagée par toutes les sections de la homepage.
+const requests = new Map<string, Promise<any>>();
+
+function load<T>(url: string): Promise<T> {
+  let request = requests.get(url);
+
   if (!request) {
-    request = fetch('/api/results', { cache: 'no-store' })
+    request = fetch(url, { cache: 'no-store' })
       .then(async (res) => {
         const json = await res.json();
 
@@ -67,32 +75,58 @@ function loadResults() {
           throw new Error(json.error || 'Impossible de charger les résultats.');
         }
 
-        return json as ResultsData;
+        return json;
       })
       .catch((error) => {
-        request = null;
+        requests.delete(url);
         throw error;
       });
+
+    requests.set(url, request);
   }
 
   return request;
 }
 
-export function useResults() {
-  const [data, setData] = useState<ResultsData | null>(null);
-  const [error, setError] = useState('');
+// keepPrevious : garde les données de l'URL précédente pendant le chargement
+// (évite que la section se vide quand on change de filtre).
+function useApi<T>(url: string, keepPrevious = false) {
+  const [state, setState] = useState<{ url: string; data: T | null; error: string }>({
+    url: '',
+    data: null,
+    error: '',
+  });
 
   useEffect(() => {
     let active = true;
 
-    loadResults()
-      .then((json) => active && setData(json))
-      .catch((err) => active && setError(err.message));
+    load<T>(url)
+      .then((data) => active && setState({ url, data, error: '' }))
+      .catch((err) => active && setState({ url, data: null, error: err.message }));
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [url]);
+
+  // Données d'une autre URL (changement d'onglet) = encore en chargement.
+  const current = state.url === url;
+  const data = current || keepPrevious ? state.data : null;
+  const error = current ? state.error : '';
 
   return { data, error, loading: !data && !error };
+}
+
+export function useClassement() {
+  return useApi<ClassementData>('/api/classement');
+}
+
+export function useHistorique(division: DivisionName | null, limit: number) {
+  const query = division ? `division=${division}&limit=${limit}` : `limit=${limit}`;
+
+  return useApi<HistoriqueData>(`/api/historique?${query}`, true);
+}
+
+export function useStatsJoueurs(division: DivisionName) {
+  return useApi<StatsJoueursData>(`/api/stats-joueurs?division=${division}`);
 }

@@ -5,7 +5,16 @@ import Link from 'next/link';
 import styles from '@/app/home.module.css';
 import BoltIcon from '@/app/components/icons/BoltIcon';
 import { DIVISION_COLORS, DIVISIONS, type DivisionName } from './divisions';
-import { type PlayerStat, type StandingTeam, useResults } from './useResults';
+import {
+  type PlayerStat,
+  type StandingTeam,
+  useClassement,
+  useHistorique,
+  useStatsJoueurs,
+} from './useResults';
+
+// Nombre de derniers matchs affichés (même requête pour le hero et les résultats).
+const LATEST_LIMIT = 6;
 
 const ROLE_LABELS: Record<string, string> = {
   Top: 'TOP',
@@ -33,11 +42,12 @@ function splitRiotId(riotId: string) {
 ========================================================= */
 
 export function HeroStats() {
-  const { data } = useResults();
+  const { data: classement } = useClassement();
+  const { data: historique } = useHistorique(null, LATEST_LIMIT);
 
   const stats = [
-    { value: data ? data.teams.length : '—', label: 'Équipes' },
-    { value: data ? data.history.length : '—', label: 'Matchs joués' },
+    { value: classement ? classement.totalTeams : '—', label: 'Équipes' },
+    { value: historique ? historique.total : '—', label: 'Matchs joués' },
     { value: DIVISIONS.length, label: 'Divisions' },
   ];
 
@@ -58,15 +68,16 @@ export function HeroStats() {
 ========================================================= */
 
 export function Ticker() {
-  const { data } = useResults();
+  const { data: classement } = useClassement();
+  const { data: historique } = useHistorique(null, LATEST_LIMIT);
 
   const items = ['Saison 1 en cours', 'Divisions Targon · Ixtal · Yordle'];
 
-  if (data) {
-    items.push(`${data.teams.length} équipes inscrites`, `${data.history.length} matchs joués`);
+  if (classement && historique) {
+    items.push(`${classement.totalTeams} équipes inscrites`, `${historique.total} matchs joués`);
 
     for (const division of DIVISIONS) {
-      const leader = data.divisions[division]?.[0];
+      const leader = classement.divisions[division]?.[0];
       if (leader) items.push(`Leader ${division} : ${leader.name}`);
     }
   }
@@ -229,14 +240,15 @@ function TopMvp({ players }: { players: PlayerStat[] }) {
 }
 
 export function Standings() {
-  const { data, error, loading } = useResults();
   const [division, setDivision] = useState<DivisionName>('Targon');
+  const { data, error, loading } = useClassement();
+  const { data: stats } = useStatsJoueurs(division);
 
   const teams = data?.divisions[division] || [];
 
   // À égalité de MVP, le joueur qui a le moins de games passe devant.
-  const topMvp = data
-    ? Object.values(data.playerStatsByDivision[division] || {})
+  const topMvp = stats
+    ? Object.values(stats.roles)
         .flat()
         .filter((player) => player.mvp > 0)
         .sort((a, b) => b.mvp - a.mvp || a.games - b.games || b.kda - a.kda)
@@ -271,7 +283,11 @@ export function Standings() {
                 Classement complet
               </Link>
             </div>
-            <TopMvp players={topMvp} />
+            {stats ? (
+              <TopMvp players={topMvp} />
+            ) : (
+              <div className={`${styles.statPanel} ${styles.skeleton}`} />
+            )}
           </div>
         )}
       </div>
@@ -286,13 +302,14 @@ export function Standings() {
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
 
 export function LatestResults() {
-  const { data, error, loading } = useResults();
   const [division, setDivision] = useState<DivisionFilter>('all');
+  const { data, error, loading } = useHistorique(
+    division === 'all' ? null : division,
+    LATEST_LIMIT
+  );
 
-  const matches = (data?.history || [])
-    .filter((match) => division === 'all' || match.division === division)
-    .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
-    .slice(0, 6);
+  // Déjà triés du plus récent au plus ancien par l'API.
+  const matches = data?.matches || [];
 
   return (
     <>
@@ -376,7 +393,7 @@ export function LatestResults() {
 ========================================================= */
 
 export function DivisionTeamCount({ division }: { division: DivisionName }) {
-  const { data } = useResults();
+  const { data } = useClassement();
 
   if (!data) return null;
 
