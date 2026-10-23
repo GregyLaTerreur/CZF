@@ -224,6 +224,91 @@ function normalizeRiotName(
   );
 }
 
+/*
+  Similarité entre 2 pseudos normalisés :
+  1 = identiques, 0 = rien en commun.
+  Basée sur la distance de Levenshtein.
+*/
+const FUZZY_PLAYER_THRESHOLD =
+  0.8;
+
+function nameSimilarity(
+  a: string,
+  b: string
+) {
+  if (
+    !a ||
+    !b
+  ) {
+    return 0;
+  }
+
+  if (
+    a === b
+  ) {
+    return 1;
+  }
+
+  let previous =
+    Array.from(
+      {
+        length:
+          b.length +
+          1,
+      },
+      (
+        _,
+        index
+      ) => index
+    );
+
+  for (
+    let i = 1;
+    i <= a.length;
+    i++
+  ) {
+    const current = [
+      i,
+    ];
+
+    for (
+      let j = 1;
+      j <= b.length;
+      j++
+    ) {
+      current[j] =
+        Math.min(
+          previous[j] +
+            1,
+          current[
+            j - 1
+          ] + 1,
+          previous[
+            j - 1
+          ] +
+            (a[i - 1] ===
+            b[j - 1]
+              ? 0
+              : 1)
+        );
+    }
+
+    previous =
+      current;
+  }
+
+  return (
+    1 -
+    previous[
+      b.length
+    ] /
+      Math.max(
+        a.length,
+        b.length
+      )
+  );
+}
+
 function normalizeRole(
   value:
     | string
@@ -725,50 +810,118 @@ export default function AdminResultsPage() {
         rawSearch
       );
 
-    return availablePlayers.find(
-      (
-        player
-      ) => {
-        const playerFull =
-          normalizeText(
-            player.riotId
-          );
+    const exactMatch =
+      availablePlayers.find(
+        (
+          player
+        ) => {
+          const playerFull =
+            normalizeText(
+              player.riotId
+            );
 
-        if (
-          playerFull ===
-          searchFull
-        ) {
-          return true;
-        }
-
-        const playerRiotName =
-          normalizeRiotName(
-            player.riotId
-          );
-
-        if (
-          playerRiotName ===
-          searchRiotName
-        ) {
-          return true;
-        }
-
-        const playerDiscord =
-          normalizeText(
-            player.discordName
-          );
-
-        if (
-          playerDiscord &&
-          playerDiscord ===
+          if (
+            playerFull ===
             searchFull
-        ) {
-          return true;
-        }
+          ) {
+            return true;
+          }
 
-        return false;
-      }
-    );
+          const playerRiotName =
+            normalizeRiotName(
+              player.riotId
+            );
+
+          if (
+            playerRiotName ===
+            searchRiotName
+          ) {
+            return true;
+          }
+
+          const playerDiscord =
+            normalizeText(
+              player.discordName
+            );
+
+          if (
+            playerDiscord &&
+            playerDiscord ===
+              searchFull
+          ) {
+            return true;
+          }
+
+          return false;
+        }
+      );
+
+    if (
+      exactMatch
+    ) {
+      return exactMatch;
+    }
+
+    /*
+      Pseudo approchant
+      (faute de frappe, lettre manquante).
+
+      On garde le joueur le plus proche
+      s'il est similaire à 80 % minimum
+      et qu'aucun autre joueur
+      n'est aussi proche.
+    */
+    const scored =
+      availablePlayers
+        .map(
+          (
+            player
+          ) => ({
+            player,
+            score:
+              Math.max(
+                nameSimilarity(
+                  searchRiotName,
+                  normalizeRiotName(
+                    player.riotId
+                  )
+                ),
+                nameSimilarity(
+                  searchFull,
+                  normalizeText(
+                    player.discordName
+                  )
+                )
+              ),
+          })
+        )
+        .sort(
+          (
+            a,
+            b
+          ) =>
+            b.score -
+            a.score
+        );
+
+    const best =
+      scored[0];
+
+    const second =
+      scored[1];
+
+    if (
+      !best ||
+      best.score <
+        FUZZY_PLAYER_THRESHOLD ||
+      (second &&
+        second.score ===
+          best.score)
+    ) {
+      return undefined;
+    }
+
+    return best.player;
   }
 
   /* =========================================================
@@ -1265,6 +1418,14 @@ export default function AdminResultsPage() {
           ...importedTeam2.roster,
         ];
 
+      /*
+        Pseudos corrigés automatiquement,
+        affichés dans le message final.
+      */
+      const playerCorrections:
+        string[] =
+        [];
+
       /* =====================================================
          GAMES
       ===================================================== */
@@ -1554,6 +1715,11 @@ export default function AdminResultsPage() {
                     )
                   : undefined;
 
+              const matchedByName =
+                Boolean(
+                  rosterPlayer
+                );
+
               if (
                 !rosterPlayer
               ) {
@@ -1574,6 +1740,33 @@ export default function AdminResultsPage() {
               ) {
                 throw new Error(
                   `Aucun joueur ${role} trouvé dans le roster de ${playerTeam.name}, Game ${gameNumber}.`
+                );
+              }
+
+              if (
+                playerName &&
+                !matchedByName
+              ) {
+                playerCorrections.push(
+                  `Game ${gameNumber} : "${playerName}" introuvable, remplacé par le ${role} du roster (${rosterPlayer.riotId})`
+                );
+              } else if (
+                playerName &&
+                normalizeRiotName(
+                  playerName
+                ) !==
+                  normalizeRiotName(
+                    rosterPlayer.riotId
+                  ) &&
+                normalizeText(
+                  playerName
+                ) !==
+                  normalizeText(
+                    rosterPlayer.discordName
+                  )
+              ) {
+                playerCorrections.push(
+                  `Game ${gameNumber} : "${playerName}" → ${rosterPlayer.riotId}`
                 );
               }
 
@@ -1778,10 +1971,16 @@ export default function AdminResultsPage() {
           0
         );
 
+      const correctionsText =
+        playerCorrections.length > 0
+          ? ` Pseudos corrigés : ${playerCorrections.join(' ; ')}.`
+          : '';
+
       setMessage(
-        totalSubs > 0
+        (totalSubs > 0
           ? `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. ${totalSubs} sub(s) conservé(s) pour l'historique mais ignoré(s) dans les statistiques. Vérifie puis enregistre le match.`
-          : `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Vérifie les données puis enregistre le match.`
+          : `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Vérifie les données puis enregistre le match.`) +
+          correctionsText
       );
     } catch (
       error: any
