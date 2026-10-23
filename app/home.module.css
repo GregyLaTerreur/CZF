@@ -569,7 +569,7 @@
 
 /* Stat panel */
 .statPanel {
-  background: var(--beige-l);
+  background: var(--cream);
   border: 2px solid var(--dark);
   border-radius: 3px;
   box-shadow: 6px 6px 0 var(--dark);
