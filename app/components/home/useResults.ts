@@ -39,6 +39,7 @@ export type PlayerStat = {
   playerId: number;
   riotId: string;
   teamShortName: string;
+  teamLogo: string | null;
   role: string;
   games: number;
   kda: number;

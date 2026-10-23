@@ -199,13 +199,14 @@ function TopMvp({ players }: { players: PlayerStat[] }) {
               <span className={`${styles.statRank} ${index === 0 ? styles.statRankTop : ''}`}>
                 #{index + 1}
               </span>
+              <TeamLogo logo={player.teamLogo} shortName={player.teamShortName} />
               <div className={styles.statWho}>
                 <div className={styles.statName}>
                   {name}
                   {tag && <small>#{tag}</small>}
                 </div>
                 <div className={styles.statSub}>
-                  {player.teamShortName} · {ROLE_LABELS[player.role] || player.role} · {player.games} games
+                  {ROLE_LABELS[player.role] || player.role} · {player.games} games
                 </div>
               </div>
               <div className={styles.statValue}>{player.mvp}</div>
