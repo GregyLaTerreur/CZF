@@ -1,292 +1,224 @@
+import Link from 'next/link';
+import { Barlow, Barlow_Condensed } from 'next/font/google';
 import Nav from './components/Nav';
-import Section from './components/Section';
-import { results } from '@/lib/data';
+import styles from './home.module.css';
+import {
+  DivisionTeamCount,
+  HeroStats,
+  LatestResults,
+  Standings,
+  Ticker,
+} from './components/home/HomeLive';
+import { DIVISION_COLORS, type DivisionName } from './components/home/divisions';
 
-function Empty({ text }: { text: string }) {
-  return <div className="empty">{text}</div>;
-}
+const barlow = Barlow({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-barlow',
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+  style: ['normal', 'italic'],
+  variable: '--font-barlow-condensed',
+});
+
+const DISCORD_URL = 'https://discord.gg/ZWSmEGrv2s';
+const RULEBOOK_URL =
+  'https://docs.google.com/document/d/1ASxjPHKffW-ZK9C55Gv57JjFJ6t8qiQhaKxbBzW8ohk/edit?usp=sharing';
+
+const DIVISION_INFO: { name: DivisionName; level: string; points: string }[] = [
+  { name: 'Targon', level: 'Division Élite', points: '6101 – 8000 pts CZF' },
+  { name: 'Ixtal', level: 'Division Intermédiaire', points: '3901 – 6100 pts CZF' },
+  { name: 'Yordle', level: 'Division Développement', points: '0 – 3900 pts CZF' },
+];
 
 export default function Home() {
   return (
-    <main>
+    <main className={`${styles.home} ${barlow.variable} ${barlowCondensed.variable}`}>
       <Nav />
 
-      <div className="czfPageLayout">
-        {/* =========================
-            CONTENU GAUCHE
-        ========================= */}
-        <div className="czfPageContent">
-          {/* HERO */}
-
-          <header id="accueil" className="hero homeHero">
-            <div className="heroText">
-              <p className="eyebrow">
-                League of Legends Tournament
-              </p>
-
-              <h1>
-                CLASH DES ZÉROS
-                <br />
-                DE LA FAILLE
-              </h1>
-
-              <p>
-                Une ligue communautaire structurée autour de trois
-                divisions : Yordle, Ixtal et Targon.
-              </p>
-
-              <div className="heroActions">
-                <a href="#equipes">
-                  Voir les équipes
-                </a>
-
-                <a href="#compte">
-                  Créer mon profil CZF
-                </a>
-              </div>
+      {/* HERO */}
+      <header id="home-accueil" className={styles.hero}>
+        <div className={`${styles.container} ${styles.heroGrid}`}>
+          <div>
+            <div className={styles.badge}>
+              <span className={styles.badgeLeft}>
+                <span className={styles.dot} style={{ background: 'var(--teal)' }} />
+                Saison en cours
+              </span>
+              <span className={styles.badgeRight}>League of Legends · Saison 1</span>
             </div>
-          </header>
 
-          {/* DISCORD */}
-
-          <Section id="discord" title="Discord">
-            <div className="card discordCard">
-              <h3>Rejoins la communauté CZF</h3>
-
-              <p>
-                Rejoindre le discord est obligatoire pour participer
-                au tournoi. Toutes les annonces, les inscriptions,
-                les résultats et le suivi du tournoi se font sur
-                notre serveur Discord.
-              </p>
-
+            <h1 className={styles.display}>
+              Clash des Zéros
               <br />
+              de la <em>Faille</em>
+            </h1>
 
+            <p className={`${styles.body} ${styles.heroText}`}>
+              La ligue communautaire où chaque équipe joue à son niveau. Trois divisions —
+              Targon, Ixtal et Yordle — des matchs serrés, et un Hall of Fame à écrire.
+            </p>
+
+            <div className={styles.heroActions}>
+              <Link href="/login" className={styles.btnPrimary}>
+                Rejoindre la ligue
+              </Link>
               <a
-                href="https://discord.gg/ZWSmEGrv2s"
+                href={RULEBOOK_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="joinTeamBtn"
+                className={styles.btnOutline}
               >
-                🚀 Rejoindre le Discord
+                Règlement
               </a>
             </div>
-          </Section>
 
-          {/* DIVISIONS */}
+            <HeroStats />
+          </div>
 
-          <Section id="divisions" title="Divisions">
-            <div className="grid three">
-              <article className="card">
-                <h3>Targon</h3>
-
-                <p>Division Élite</p>
-
-                <p>
-                  6101 à 8000 points CZF
-                </p>
-              </article>
-
-              <article className="card">
-                <h3>Ixtal</h3>
-
-                <p>Division Intermédiaire</p>
-
-                <p>
-                  3901 à 6100 points CZF
-                </p>
-              </article>
-
-              <article className="card">
-                <h3>Yordle</h3>
-
-                <p>Division Développement</p>
-
-                <p>
-                  0 à 3900 points CZF
-                </p>
-              </article>
-            </div>
-
-            <div
-              className="card"
-              style={{ marginTop: '24px' }}
-            >
-              <h3>
-                Comment fonctionnent les divisions ?
-              </h3>
-
-              <p>
-                Les divisions ne sont pas attribuées à un joueur,
-                mais à l&apos;équipe entière. Chaque joueur possède
-                un score CZF individuel calculé à partir de son
-                niveau.
-              </p>
-
-              <p>
-                Avant le début du tournoi, les points des 5 joueurs
-                sont additionnés afin d&apos;obtenir le total de
-                l&apos;équipe. C&apos;est ce total qui détermine la
-                division : Yordle, Ixtal ou Targon.
-              </p>
-
-              <p>
-                Ainsi, n&apos;importe quel joueur peut évoluer dans
-                n&apos;importe quelle division, selon la composition
-                de son équipe. L&apos;objectif n&apos;est pas de
-                classer les joueurs individuellement, mais de créer
-                des équipes équilibrées et des matchs compétitifs.
-              </p>
-            </div>
-
-            <br />
-
-            <a
-              href="/divisions"
-              className="rulebookButton"
-            >
-              Voir le système complet
-            </a>
-          </Section>
-
-          {/* TOP ÉQUIPES */}
-
-          <Section id="equipes" title="Top Équipes">
-            <div className="card">
-              <h3>Classement actuel</h3>
-
-              <p>🥇 À venir</p>
-              <p>🥈 À venir</p>
-              <p>🥉 À venir</p>
-
-              <br />
-
-              <a
-                href="/teams"
-                className="rulebookButton"
-              >
-                Voir toutes les équipes
-              </a>
-            </div>
-          </Section>
-
-          {/* COMPTE */}
-
-          <Section id="compte" title="Compte CZF">
-  <div className="importBox accountBox">
-    <div>
-      <h3>Créer votre compte CZF</h3>
-
-      <p>
-        Connectez-vous avec Discord pour créer votre compte, générer votre
-        profil joueur CZF et rejoindre une équipe.
-      </p>
-
-      <p>Une fois connecté, vous pourrez :</p>
-
-      <ul>
-        <li>Créer votre profil joueur</li>
-        <li>Rejoindre une équipe</li>
-        <li>Participer aux compétitions CZF</li>
-        <li>Suivre votre progression</li>
-      </ul>
-
-      <div className="accountAction">
-        <a href="/login" className="rulebookButton">
-          Créer mon profil CZF
-        </a>
-      </div>
-    </div>
-  </div>
-</Section>
-
-          {/* PROCHAIN MATCH */}
-
-
-          {/* RÉSULTATS */}
-
-          <Section
-            id="resultats"
-            title="Résultats"
-          >
-            {results.length === 0 ? (
-              <Empty text="Aucun résultat enregistré. Les scores, MVP de match et liens VOD apparaîtront ici." />
-            ) : null}
-          </Section>
-
-          {/* HALL OF FAME */}
-
-          <Section
-            id="hall-of-fame"
-            title="Hall Of Fame"
-          >
-            <div className="card">
-              <h3>Champion en titre</h3>
-
-              <p>À venir</p>
-
-              <br />
-
-              <h3>MVP du Split</h3>
-
-              <p>À venir</p>
-
-              <br />
-
-              <a
-                href="/hall-of-fame"
-                className="rulebookButton"
-              >
-                Voir le Hall Of Fame
-              </a>
-            </div>
-          </Section>
-
-          {/* RULEBOOK */}
-
-          <Section
-            id="rulebook"
-            title="Rulebook"
-          >
-            <div className="rulebook">
-              <h3>
-                Rulebook officiel CZF
-              </h3>
-
-              <p>
-                Retrouvez l&apos;ensemble des règles du Clash des
-                Zéros de la Faille : inscriptions, rosters, système
-                de points, calendrier, sanctions et playoffs.
-              </p>
-
-              <br />
-
-              <a
-                href="https://docs.google.com/document/d/1ASxjPHKffW-ZK9C55Gv57JjFJ6t8qiQhaKxbBzW8ohk/edit?usp=sharing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rulebookButton"
-              >
-                Consulter le Rulebook
-              </a>
-            </div>
-          </Section>
+          <div className={styles.heroVisual} aria-hidden="true">
+            <img src="/assets/PNG CZF.png" alt="" className={styles.heroLogo} />
+            <img
+              src="/assets/eclairs/eclair_czf_03.png"
+              alt=""
+              className={`${styles.heroBolt} ${styles.heroBoltA}`}
+            />
+            <img
+              src="/assets/eclairs/eclair_czf_02.png"
+              alt=""
+              className={`${styles.heroBolt} ${styles.heroBoltB}`}
+            />
+          </div>
         </div>
+      </header>
 
-        {/* =========================
-            LOGO CZF STICKY À DROITE
-        ========================= */}
+      <Ticker />
 
-        <aside className="czfPageBrand">
-          <img
-            src="/assets/PNG CZF.png"
-            alt="CZF"
-          />
-        </aside>
-      </div>
+      {/* CLASSEMENT */}
+      <Standings />
 
-      <footer>
-        © CZF — Clash des Zéros de la Faille
+      {/* DERNIERS RÉSULTATS */}
+      {/* Ids préfixés "home-" : globals.css stylise #resultats, #divisions… */}
+      <section id="home-resultats" className={styles.darkSection}>
+        <div className={styles.container}>
+          <LatestResults />
+
+          <div className={styles.darkActions}>
+            <Link href="/results" className={styles.btnDark}>
+              Tous les résultats
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* DIVISIONS */}
+      <section id="home-divisions" className={styles.section}>
+        <div className={styles.container}>
+          <div className={styles.sectionHead}>
+            <div>
+              <div className={styles.sectionLabel}>Le système CZF</div>
+              <h2 className={styles.h2}>Trois divisions</h2>
+            </div>
+          </div>
+
+          <div className={styles.divisions}>
+            {DIVISION_INFO.map((division) => (
+              <article
+                key={division.name}
+                className={styles.divisionCard}
+                style={{ '--division-color': DIVISION_COLORS[division.name] } as React.CSSProperties}
+              >
+                <div className={styles.divisionLevel}>{division.level}</div>
+                <div className={styles.divisionName}>
+                  {division.name}
+                  <span className={styles.divisionDot} aria-hidden="true" />
+                </div>
+                <div className={styles.divisionPoints}>{division.points}</div>
+                <DivisionTeamCount division={division.name} />
+              </article>
+            ))}
+          </div>
+
+          <div className={styles.divisionNote}>
+            <h3 className={styles.h3}>Comment ça marche ?</h3>
+            <p className={styles.body} style={{ marginTop: 12 }}>
+              La division n&apos;est pas attribuée à un joueur mais à l&apos;équipe entière.
+              Chaque joueur a un score CZF calculé à partir de son niveau ; les points des 5
+              titulaires sont additionnés et c&apos;est ce total qui place l&apos;équipe en
+              Yordle, Ixtal ou Targon.
+            </p>
+            <p className={styles.body}>
+              N&apos;importe quel joueur peut donc évoluer dans n&apos;importe quelle division :
+              l&apos;objectif est d&apos;avoir des équipes équilibrées et des matchs compétitifs.
+            </p>
+          </div>
+
+          <div className={styles.divisionActions}>
+            <Link href="/divisions" className={styles.btnOutline}>
+              Voir le système complet
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* REJOINDRE */}
+      <section id="home-rejoindre" className={styles.darkSection}>
+        <div className={styles.container}>
+          <div className={styles.sectionHead}>
+            <div>
+              <div className={styles.sectionLabel}>Participer</div>
+              <h2 className={styles.h2}>Entre dans la Faille</h2>
+            </div>
+          </div>
+
+          <div className={styles.joinGrid}>
+            <article className={styles.joinCard}>
+              <h3 className={styles.h3}>Le Discord CZF</h3>
+              <p className={styles.body}>
+                Obligatoire pour participer : annonces, inscriptions, résultats et suivi du
+                tournoi, tout passe par le serveur.
+              </p>
+              <a
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${styles.btnOutline} ${styles.btnCream}`}
+              >
+                Rejoindre le Discord
+              </a>
+            </article>
+
+            <article className={styles.joinCard}>
+              <h3 className={styles.h3}>Ton profil CZF</h3>
+              <ul className={styles.joinList}>
+                <li>Connexion avec Discord</li>
+                <li>Profil joueur et score CZF</li>
+                <li>Rejoindre ou créer une équipe</li>
+                <li>Suivre tes stats toute la saison</li>
+              </ul>
+              <Link href="/login" className={`${styles.btnOutline} ${styles.btnCream}`}>
+                Créer mon profil
+              </Link>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <footer className={styles.footer}>
+        <div className={`${styles.container} ${styles.footerInner}`}>
+          <span>© CZF — Clash des Zéros de la Faille</span>
+          <nav className={styles.footerLinks}>
+            <Link href="/teams">Équipes</Link>
+            <Link href="/players">Joueurs</Link>
+            <Link href="/hall-of-fame">Hall of Fame</Link>
+            <a href={RULEBOOK_URL} target="_blank" rel="noopener noreferrer">
+              Rulebook
+            </a>
+          </nav>
+        </div>
       </footer>
     </main>
   );
