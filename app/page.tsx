@@ -132,7 +132,10 @@ export default function Home() {
                 style={{ '--division-color': DIVISION_COLORS[division.name] } as React.CSSProperties}
               >
                 <div className={styles.divisionLevel}>{division.level}</div>
-                <div className={styles.divisionName}>{division.name}</div>
+                <div className={styles.divisionName}>
+                  {division.name}
+                  <span className={styles.divisionDot} aria-hidden="true" />
+                </div>
                 <div className={styles.divisionPoints}>{division.points}</div>
                 <DivisionTeamCount division={division.name} />
               </article>

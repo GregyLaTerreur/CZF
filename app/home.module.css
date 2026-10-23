@@ -786,21 +786,12 @@
   border-radius: 3px;
   box-shadow: 6px 6px 0 var(--dark);
   padding: 24px;
-  position: relative;
-  overflow: hidden;
-}
-
-.divisionCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: var(--division-color);
 }
 
 .divisionName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 800;
   font-style: italic;
@@ -808,6 +799,15 @@
   text-transform: uppercase;
   line-height: 1;
   margin: 8px 0 4px;
+}
+
+.divisionDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--division-color);
+  border: 2px solid var(--dark);
+  flex-shrink: 0;
 }
 
 .divisionLevel {
