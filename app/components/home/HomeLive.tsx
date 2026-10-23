@@ -14,9 +14,6 @@ const ROLE_LABELS: Record<string, string> = {
   Support: 'SUP',
 };
 
-// En dessous, un KDA n'est pas représentatif.
-const MIN_GAMES_FOR_KDA = 4;
-
 function TeamLogo({ logo, shortName }: { logo: string | null; shortName: string }) {
   if (!logo) {
     return <span className={styles.logoFallback}>{shortName}</span>;
@@ -92,7 +89,7 @@ export function Ticker() {
 }
 
 /* =========================================================
-   CLASSEMENT + TOP KDA
+   CLASSEMENT + TOP MVP
 ========================================================= */
 
 type DivisionFilter = DivisionName | 'all';
@@ -181,17 +178,17 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
   );
 }
 
-function TopKda({ players }: { players: PlayerStat[] }) {
-  const best = players[0]?.kda || 1;
+function TopMvp({ players }: { players: PlayerStat[] }) {
+  const best = players[0]?.mvp || 1;
 
   return (
     <div className={styles.statPanel}>
       <div className={styles.statHead}>
-        <div className={styles.statTitle}>KDA</div>
+        <div className={styles.statTitle}>MVP</div>
         <div className={styles.statTag}>TOP 5</div>
       </div>
 
-      {players.length === 0 && <div className={styles.empty}>Pas encore assez de games.</div>}
+      {players.length === 0 && <div className={styles.empty}>Aucun MVP désigné pour le moment.</div>}
 
       {players.map((player, index) => {
         const { name, tag } = splitRiotId(player.riotId);
@@ -211,11 +208,11 @@ function TopKda({ players }: { players: PlayerStat[] }) {
                   {player.teamShortName} · {ROLE_LABELS[player.role] || player.role} · {player.games} games
                 </div>
               </div>
-              <div className={styles.statValue}>{player.kda.toFixed(2)}</div>
+              <div className={styles.statValue}>{player.mvp}</div>
             </div>
             <div
               className={`${styles.statBar} ${index === 0 ? styles.statBarTop : ''}`}
-              style={{ width: `${Math.max(8, (player.kda / best) * 100)}%` }}
+              style={{ width: `${Math.max(8, (player.mvp / best) * 100)}%` }}
             />
           </div>
         );
@@ -234,11 +231,12 @@ export function Standings() {
 
   const teams = data?.divisions[division] || [];
 
-  const topKda = data
+  // À égalité de MVP, le joueur qui a le moins de games passe devant.
+  const topMvp = data
     ? Object.values(data.playerStatsByDivision[division] || {})
         .flat()
-        .filter((player) => player.games >= MIN_GAMES_FOR_KDA)
-        .sort((a, b) => b.kda - a.kda)
+        .filter((player) => player.mvp > 0)
+        .sort((a, b) => b.mvp - a.mvp || a.games - b.games || b.kda - a.kda)
         .slice(0, 5)
     : [];
 
@@ -270,7 +268,7 @@ export function Standings() {
                 Classement complet
               </Link>
             </div>
-            <TopKda players={topKda} />
+            <TopMvp players={topMvp} />
           </div>
         )}
       </div>

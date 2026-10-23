@@ -42,6 +42,7 @@ export type PlayerStat = {
   role: string;
   games: number;
   kda: number;
+  mvp: number;
 };
 
 export type ResultsData = {
