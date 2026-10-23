@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from '@/app/home.module.css';
+import BoltIcon from '@/app/components/icons/BoltIcon';
 import { DIVISION_COLORS, DIVISIONS, type DivisionName } from './divisions';
 import { type PlayerStat, type StandingTeam, useResults } from './useResults';
 
@@ -81,6 +82,7 @@ export function Ticker() {
         {loop.map((item, index) => (
           <span key={index} className={styles.tickerItem}>
             {item}
+            <BoltIcon className={styles.tickerSep} />
           </span>
         ))}
       </div>

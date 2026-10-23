@@ -376,11 +376,10 @@
   white-space: nowrap;
 }
 
-.tickerItem::after {
-  content: '⚡';
-  padding: 0 22px;
+.tickerSep {
+  margin: 0 22px;
   color: rgba(8, 20, 40, 0.5);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
 }
 
 @keyframes tickerScroll {
