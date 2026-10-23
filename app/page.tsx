@@ -185,8 +185,7 @@ export default function Home() {
                 href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.btnPrimary}
-                style={{ boxShadow: '6px 6px 0 var(--darker)' }}
+                className={`${styles.btnOutline} ${styles.btnCream}`}
               >
                 Rejoindre le Discord
               </a>
