@@ -15,6 +15,7 @@
   --on-dark: #E0D8CC;
   --win: #2AAB5F;
   --loss: #E05050;
+  --logo-bg: #A9ABAF;
 
   font-family: var(--font-barlow), sans-serif;
   color: var(--dark);
@@ -522,7 +523,7 @@
   height: 30px;
   object-fit: cover;
   border: 2px solid var(--dark);
-  background: var(--dark);
+  background: var(--logo-bg);
   flex-shrink: 0;
 }
 
@@ -531,8 +532,8 @@
   height: 30px;
   display: grid;
   place-items: center;
-  background: var(--dark);
-  color: var(--cream);
+  background: var(--logo-bg);
+  color: var(--dark);
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 800;
   font-size: 0.6rem;
