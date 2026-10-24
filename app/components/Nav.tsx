@@ -150,13 +150,14 @@ export default function Nav() {
           Divisions
         </Link>
 
-        {/* NOUVEAU : PLANNING */}
+        {/* Planning masqué pour le moment.
         <Link
           href="/planning"
           className={isActive('/planning') ? 'active' : ''}
         >
           Planning
         </Link>
+        */}
 
         <Link
           href="/results"
