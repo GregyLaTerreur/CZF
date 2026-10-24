@@ -31,6 +31,8 @@ const VISION_CARD = {
 export default function StatsView() {
   const { division, setDivision, data, error, loading } = useDivisionData();
   const [role, setRole] = useState<Role>('Top');
+  // Top 10 ouvert ou fermé pour toutes les colonnes à la fois.
+  const [expanded, setExpanded] = useState(false);
 
   const playerStats = data?.playerStats;
   const players = (playerStats?.[role] ?? []).filter((player) => player.qualified);
@@ -102,7 +104,13 @@ export default function StatsView() {
 
                 <div className={styles.rankingGrid}>
                   {cards.map((card) => (
-                    <RankingCard key={`${role}-${card.statKey}`} players={players} {...card} />
+                    <RankingCard
+                      key={`${role}-${card.statKey}`}
+                      players={players}
+                      expanded={expanded}
+                      onToggle={() => setExpanded(!expanded)}
+                      {...card}
+                    />
                   ))}
                 </div>
               </div>
@@ -190,13 +198,16 @@ function RankingCard({
   players,
   statKey,
   format,
+  expanded,
+  onToggle,
 }: {
   title: string;
   players: PlayerStats[];
   statKey: StatKey;
   format: (value: number) => string;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
 
   const ranking = useMemo(
     () =>
@@ -242,7 +253,7 @@ function RankingCard({
       )}
 
       {ranking.length > 5 && (
-        <button type="button" className={ds.cardFooter} onClick={() => setExpanded(!expanded)}>
+        <button type="button" className={ds.cardFooter} onClick={onToggle}>
           {expanded ? 'Réduire' : 'Voir le top 10'}
         </button>
       )}
