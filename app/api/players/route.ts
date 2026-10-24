@@ -225,16 +225,24 @@ if (!discordUserId) {
   );
 }
 
-const memberRes = await fetch(
-  `https://discord.com/api/guilds/${process.env.DISCORD_GUILD_ID}/members/${discordUserId}`,
-  {
-    headers: {
-      Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-    },
-  }
-);
+// En local, sans le vrai bot Discord, on peut sauter la vérification.
+// Jamais en production, même si la variable y est définie par erreur.
+const skipDiscordCheck =
+  process.env.NODE_ENV !== 'production' &&
+  process.env.CZF_SKIP_DISCORD_CHECK === 'true';
 
-if (!memberRes.ok) {
+const memberRes = skipDiscordCheck
+  ? null
+  : await fetch(
+      `https://discord.com/api/guilds/${process.env.DISCORD_GUILD_ID}/members/${discordUserId}`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        },
+      }
+    );
+
+if (memberRes && !memberRes.ok) {
   return NextResponse.json(
     {
       success: false,

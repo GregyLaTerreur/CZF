@@ -35,6 +35,7 @@ npx tsc --noEmit   # pas de tests automatisés dans le repo ; c'est la vérifica
 | `CRON_SECRET` | protège les routes cron / traitement Riot |
 | `CZF_ENABLE_RIOT_CRON` | `true` uniquement en PROD ; sinon `/api/cron/sync-riot-ids` répond 403 |
 | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` | vérifie qu'un joueur est sur le serveur Discord avant de créer son profil |
+| `CZF_SKIP_DISCORD_CHECK` | `true` en local seulement, sans le vrai bot : saute cette vérification (ignoré si `NODE_ENV=production`) |
 
 `lib/supabase.ts` crée le client au chargement : sans URL Supabase valide, tout le site plante.
 
