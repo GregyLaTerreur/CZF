@@ -115,14 +115,15 @@ export default function PlayersView() {
   const ddragonVersion = useDdragonVersion();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    // Session locale : pas d'appel réseau, les routes d'API vérifient le jeton.
+    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
     loadData();
   }, []);
 
   async function loadData() {
     try {
       const [playersRes, teamsRes, membersRes] = await Promise.all([
-        fetch('/api/players').then((res) => res.json()),
+        fetch('/api/players?view=list').then((res) => res.json()),
         fetch('/api/teams').then((res) => res.json()),
         fetch('/api/team-members').then((res) => res.json()),
       ]);

@@ -15,9 +15,13 @@ export default function Nav() {
   }, []);
 
   async function checkAdmin() {
+    // Session locale : pas d'appel réseau (l'affichage du lien Admin
+    // ne protège rien, les routes admin vérifient le jeton).
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const user = session?.user;
 
     if (!user) return;
 

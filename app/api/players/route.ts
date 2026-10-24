@@ -2,11 +2,26 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function GET() {
-  const { data: players, error: playersError } = await supabase
-    .from('players')
-    .select('*')
-    .order('id', { ascending: true });
+// Colonnes affichées par les pages Joueurs et Équipes (?view=list).
+const LIST_COLUMNS =
+  'id, riot_id, profile_id, main_role, secondary_role, description, lft, czf_points, summoner_level, profile_icon_id, soloq_tier, soloq_rank, soloq_lp, soloq_wins, soloq_losses, flex_tier, flex_rank, flex_lp, peak_tier, peak_rank, peak_lp, top_champions';
+
+export async function GET(request: Request) {
+  const listView =
+    new URL(request.url).searchParams.get('view') === 'list';
+
+  const [
+    { data: players, error: playersError },
+    { data: profiles, error: profilesError },
+  ] = await Promise.all([
+    supabase
+      .from('players')
+      .select(listView ? LIST_COLUMNS : '*')
+      .order('id', { ascending: true }),
+    supabase
+      .from('profiles')
+      .select('id, discord_name'),
+  ]);
 
   if (playersError) {
     return NextResponse.json(
@@ -15,10 +30,6 @@ export async function GET() {
     );
   }
 
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, discord_name');
-
   if (profilesError) {
     return NextResponse.json(
       { success: false, error: profilesError },
@@ -26,13 +37,33 @@ export async function GET() {
     );
   }
 
-const playersWithProfiles = players.map((player) => ({
-  ...player,
-  profiles:
-    profiles.find(
-      (profile) => String(profile.id) === String(player.profile_id)
-    ) || null,
-}));
+  const profileById = new Map(
+    (profiles || []).map((profile) => [String(profile.id), profile])
+  );
+
+  const playersWithProfiles = (players as any[]).map((player) => {
+    const profile =
+      profileById.get(String(player.profile_id)) || null;
+
+    if (!listView) {
+      return { ...player, profiles: profile };
+    }
+
+    // Vue allégée : pas de points de maîtrise ni d'id de profil en double.
+    return {
+      ...player,
+      top_champions: (player.top_champions || []).map(
+        (champion: any) => ({
+          champion_id: champion.champion_id,
+          champion_name: champion.champion_name,
+        })
+      ),
+      profiles: profile
+        ? { discord_name: profile.discord_name }
+        : null,
+    };
+  });
+
   return NextResponse.json({
     success: true,
     data: playersWithProfiles,
