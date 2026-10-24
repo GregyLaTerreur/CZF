@@ -68,40 +68,30 @@
   filter: none;
 }
 
-.copyButton,
-.copyButtonDone {
+.opggLink {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 4px 9px;
   border: 2px solid var(--dark);
   border-radius: 0;
+  background: #fff;
+  color: var(--dark);
   font-family: var(--condensed);
   font-weight: 800;
   font-style: italic;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
   transform: skewX(-8deg);
   box-shadow: 3px 3px 0 var(--dark);
   transition: box-shadow 0.15s, transform 0.15s, background 0.15s, color 0.15s;
 }
 
-.copyButton {
-  background: #fff;
-  color: var(--dark);
-}
-
-.copyButtonDone {
-  background: var(--teal);
-  color: var(--dark);
-}
-
-.copyButton:hover,
-.copyButton:active,
-.copyButtonDone:hover,
-.copyButtonDone:active {
+.opggLink:hover,
+.opggLink:active {
   background: var(--dark);
   color: #fff;
   box-shadow: 1px 1px 0 var(--dark);

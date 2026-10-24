@@ -480,7 +480,7 @@ function TeamCard({
           {view.count}/{TEAM_SIZE}
         </span>
 
-        {team.multigg_url && <CopyLinkButton url={team.multigg_url} />}
+        {team.multigg_url && <OpggLink url={team.multigg_url} />}
 
         {pendingCount > 0 && (
           <span className={styles.requestsBadge} title="Demandes en attente">
@@ -492,42 +492,29 @@ function TeamCard({
   );
 }
 
-function CopyIcon() {
+function ExternalIcon() {
   return (
-    <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
-      <rect x="4" y="4" width="8.5" height="8.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M2 9.5V1.5h8" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    <svg viewBox="0 0 14 14" width="11" height="11" aria-hidden="true">
+      <path d="M8 1.5h4.5V6M12.5 1.5 6 8" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M10.5 8.5v4h-9v-9h4" fill="none" stroke="currentColor" strokeWidth="1.7" />
     </svg>
   );
 }
 
-// Copie le lien OP.GG (multisearch) sans ouvrir la fiche.
-function CopyLinkButton({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy(event: React.MouseEvent) {
-    event.stopPropagation();
-
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Presse-papier indisponible : on ouvre le lien à la place.
-      window.open(url, '_blank', 'noopener');
-    }
-  }
-
+// Ouvre le multi OP.GG dans un nouvel onglet, sans ouvrir la fiche.
+function OpggLink({ url }: { url: string }) {
   return (
-    <button
-      type="button"
-      className={copied ? styles.copyButtonDone : styles.copyButton}
-      onClick={copy}
-      title="Copier le lien OP.GG"
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className={styles.opggLink}
+      onClick={(event) => event.stopPropagation()}
+      title="Ouvrir le multi OP.GG"
     >
-      <CopyIcon />
-      {copied ? 'Copié' : 'OP.GG'}
-    </button>
+      OP.GG
+      <ExternalIcon />
+    </a>
   );
 }
 
