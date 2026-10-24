@@ -84,7 +84,10 @@ export default function MatchManager() {
   return (
     <section className={`card ${styles.panel}`}>
       <div className={styles.head}>
-        <h3>Matchs enregistrés</h3>
+        <h3>
+          Matchs enregistrés
+          {matches && matches.length > 0 && <span className={styles.count}>{matches.length}</span>}
+        </h3>
 
         <div className={styles.tabs}>
           {DIVISIONS.map((item) => (

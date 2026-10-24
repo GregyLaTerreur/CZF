@@ -75,13 +75,24 @@
   color: #081428;
 }
 
+/* ~5 matchs visibles, le reste défile dans le bloc sans faire défiler la page */
 .list {
   margin: 14px 0 0;
   padding: 0;
   list-style: none;
-  max-height: 420px;
+  max-height: 250px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   border-top: 1px solid rgba(8, 20, 40, 0.15);
+  border-bottom: 1px solid rgba(8, 20, 40, 0.15);
+}
+
+.count {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.55;
 }
 
 .row {
