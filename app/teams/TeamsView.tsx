@@ -411,7 +411,10 @@ function TeamCard({
 
   return (
     // Toute la carte ouvre la fiche, sauf le bouton de copie du lien OP.GG.
-    <div className={`${ds.card} ${styles.teamCard}`} onClick={onOpen}>
+    <div
+      className={`${ds.card} ${styles.teamCard} ${view.validated ? '' : styles.teamCardPending}`}
+      onClick={onOpen}
+    >
       <button type="button" className={styles.teamCardMain}>
         <span className={styles.teamHead}>
           {team.logo_url ? (

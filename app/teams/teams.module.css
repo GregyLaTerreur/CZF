@@ -34,6 +34,19 @@
   filter: none;
 }
 
+/* Équipe non validée : grisée pour la distinguer des participants officiels */
+.teamCardPending {
+  opacity: 0.55;
+  filter: grayscale(0.85);
+  box-shadow: 6px 6px 0 rgba(8, 20, 40, 0.45);
+  transition: opacity 0.15s, filter 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.teamCardPending:hover {
+  opacity: 1;
+  filter: none;
+}
+
 .teamCardMain {
   display: flex;
   flex-direction: column;
