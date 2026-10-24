@@ -56,17 +56,6 @@ export default function StatsView() {
     return [...byPlayer.values()].filter((player) => player.mvp > 0).sort((a, b) => b.mvp - a.mvp);
   }, [playerStats]);
 
-  const counts = useMemo(() => {
-    const all = Object.values(playerStats ?? {}).flat();
-    const championIds = new Set(Object.values(data?.champions ?? {}).flat().map((c) => c.championId));
-
-    return {
-      players: new Set(all.map((player) => player.playerId)).size,
-      champions: championIds.size,
-      mvp: mvpRanking.reduce((total, player) => total + player.mvp, 0),
-    };
-  }, [playerStats, data, mvpRanking]);
-
   const roleLabel = ROLES.find((item) => item.name === role)?.label;
 
   return (
@@ -75,21 +64,6 @@ export default function StatsView() {
         <div className={ds.container}>
           <div className={ds.sectionLabel}>Saison 1 · Statistiques</div>
           <h1 className={ds.h1}>Stats</h1>
-
-          <div className={ds.counters}>
-            <div className={ds.counter}>
-              <strong>{loading ? '—' : counts.players}</strong>
-              <span>Joueurs</span>
-            </div>
-            <div className={ds.counter}>
-              <strong>{loading ? '—' : counts.champions}</strong>
-              <span>Champions joués</span>
-            </div>
-            <div className={ds.counter}>
-              <strong>{loading ? '—' : counts.mvp}</strong>
-              <span>MVP attribués</span>
-            </div>
-          </div>
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
@@ -28,41 +28,12 @@ const HISTORY_PREVIEW = 5;
 export default function ResultsView() {
   const { division, setDivision, data, error, loading } = useDivisionData();
 
-  const counts = useMemo(() => {
-    // Mêmes BO que l'historique : sans ceux d'une équipe qui n'est plus validée.
-    const history = (data?.history ?? []).filter((match) => match.team1 && match.team2);
-
-    return {
-      matches: history.length,
-      games: history.reduce(
-        (total, match) => total + (match.team1?.score ?? 0) + (match.team2?.score ?? 0),
-        0
-      ),
-      teams: data?.teams.length ?? 0,
-    };
-  }, [data]);
-
   return (
     <div style={{ '--division-color': DIVISION_COLORS[division] } as React.CSSProperties}>
       <header className={ds.header}>
         <div className={ds.container}>
           <div className={ds.sectionLabel}>Saison 1 · Résultats</div>
           <h1 className={ds.h1}>Résultats</h1>
-
-          <div className={ds.counters}>
-            <div className={ds.counter}>
-              <strong>{loading ? '—' : counts.matches}</strong>
-              <span>BO joués</span>
-            </div>
-            <div className={ds.counter}>
-              <strong>{loading ? '—' : counts.games}</strong>
-              <span>Games</span>
-            </div>
-            <div className={ds.counter}>
-              <strong>{loading ? '—' : counts.teams}</strong>
-              <span>Équipes</span>
-            </div>
-          </div>
         </div>
       </header>
 
