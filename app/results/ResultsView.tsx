@@ -300,7 +300,10 @@ export default function ResultsView() {
 
           {data && (
             <>
-              <Standings teams={data.teams} />
+              <div className={styles.mainGrid}>
+                <Standings teams={data.teams} />
+                <Bracket teams={data.teams} />
+              </div>
 
               <History key={division} history={data.history} />
 
@@ -382,6 +385,99 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
         </div>
       ))}
 
+    </div>
+  );
+});
+
+/* =========================================================
+   PHASE FINALE (double élimination, placeholders)
+========================================================= */
+
+function seed(teams: Team[], rank: number) {
+  return { seed: rank, name: teams[rank - 1]?.shortName ?? 'À définir' };
+}
+
+function BracketMatch({
+  top,
+  bottom,
+  final = false,
+}: {
+  top: { seed?: number; name: string };
+  bottom: { seed?: number; name: string };
+  final?: boolean;
+}) {
+  return (
+    <div className={`${styles.bracketMatch} ${final ? styles.bracketFinal : ''}`}>
+      {[top, bottom].map((side, index) => (
+        <div key={index} className={styles.bracketSide}>
+          <span className={styles.bracketSeed}>{side.seed ?? ''}</span>
+          <span className={styles.bracketName}>{side.name}</span>
+          <span className={styles.bracketScore}>-</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BracketRound({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className={styles.bracketRound}>
+      <h3>{title}</h3>
+      <div className={styles.bracketMatches}>{children}</div>
+    </div>
+  );
+}
+
+const TBD = { name: 'À définir' };
+
+const Bracket = memo(function Bracket({ teams }: { teams: Team[] }) {
+  return (
+    <div className={`${ds.card} ${styles.bracket}`}>
+      <BlockHead label="Phase finale" title="Double élimination" aside={`Top ${QUALIFIED}`} />
+
+      <div className={styles.bracketScroller}>
+        <div className={styles.bracketInner}>
+          <div className={styles.laneTitle}>Winner bracket</div>
+          <div className={styles.bracketLane}>
+            <BracketRound title="Quarts">
+              <BracketMatch top={seed(teams, 1)} bottom={seed(teams, 8)} />
+              <BracketMatch top={seed(teams, 4)} bottom={seed(teams, 5)} />
+              <BracketMatch top={seed(teams, 2)} bottom={seed(teams, 7)} />
+              <BracketMatch top={seed(teams, 3)} bottom={seed(teams, 6)} />
+            </BracketRound>
+            <BracketRound title="Demi-finales">
+              <BracketMatch top={TBD} bottom={TBD} />
+              <BracketMatch top={TBD} bottom={TBD} />
+            </BracketRound>
+            <BracketRound title="Finale winner">
+              <BracketMatch top={TBD} bottom={TBD} final />
+            </BracketRound>
+            <BracketRound title="Grande finale">
+              <BracketMatch top={{ name: 'Vainqueur WB' }} bottom={{ name: 'Vainqueur LB' }} final />
+            </BracketRound>
+          </div>
+
+          <div className={styles.bracketDrop}>Les perdants du winner bracket descendent dans le loser bracket</div>
+
+          <div className={`${styles.laneTitle} ${styles.laneLoser}`}>Loser bracket</div>
+          <div className={styles.bracketLane}>
+            <BracketRound title="Round 1">
+              <BracketMatch top={{ name: 'Perdant QF' }} bottom={{ name: 'Perdant QF' }} />
+              <BracketMatch top={{ name: 'Perdant QF' }} bottom={{ name: 'Perdant QF' }} />
+            </BracketRound>
+            <BracketRound title="Round 2">
+              <BracketMatch top={TBD} bottom={{ name: 'Perdant DF' }} />
+              <BracketMatch top={TBD} bottom={{ name: 'Perdant DF' }} />
+            </BracketRound>
+            <BracketRound title="Round 3">
+              <BracketMatch top={TBD} bottom={TBD} />
+            </BracketRound>
+            <BracketRound title="Finale loser">
+              <BracketMatch top={TBD} bottom={{ name: 'Perdant WB' }} final />
+            </BracketRound>
+          </div>
+        </div>
+      </div>
     </div>
   );
 });
