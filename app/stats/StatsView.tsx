@@ -37,16 +37,44 @@ function normalizeSearch(value: string) {
     .replace(/[^a-z0-9]/g, '');
 }
 
+function RoleTabs({
+  value,
+  onChange,
+  className,
+}: {
+  value: Role;
+  onChange: (role: Role) => void;
+  className: string;
+}) {
+  return (
+    <div className={`${ds.tabs} ${className}`}>
+      {ROLES.map((item) => (
+        <button
+          key={item.name}
+          type="button"
+          className={value === item.name ? ds.tabActive : ds.tab}
+          onClick={() => onChange(item.name as Role)}
+        >
+          <img src={item.image} alt="" className={ds.tabRoleIcon} />
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function StatsView() {
   const { division, setDivision, data, error, loading } = useDivisionData();
   const [role, setRole] = useState<Role>('Top');
   // Top 10 ouvert ou fermé pour toutes les colonnes à la fois.
   const [expanded, setExpanded] = useState(false);
   const [championQuery, setChampionQuery] = useState('');
+  // Rôle des champions indépendant de celui des stats joueurs.
+  const [championRole, setChampionRole] = useState<Role>('Top');
 
   const playerStats = data?.playerStats;
   const players = (playerStats?.[role] ?? []).filter((player) => player.qualified);
-  const champions = data?.champions[role] ?? [];
+  const champions = data?.champions[championRole] ?? [];
 
   // Top 10 par défaut ; la recherche porte sur tous les champions du rôle
   // et garde leur vrai rang.
@@ -81,7 +109,7 @@ export default function StatsView() {
     return [...byPlayer.values()].filter((player) => player.mvp > 0).sort((a, b) => b.mvp - a.mvp);
   }, [playerStats]);
 
-  const roleLabel = ROLES.find((item) => item.name === role)?.label;
+  const championRoleLabel = ROLES.find((item) => item.name === championRole)?.label;
 
   return (
     <div style={{ '--division-color': DIVISION_COLORS[division] } as React.CSSProperties}>
@@ -99,6 +127,7 @@ export default function StatsView() {
             onChange={(item) => {
               setDivision(item);
               setRole('Top');
+              setChampionRole('Top');
             }}
           />
 
@@ -111,19 +140,7 @@ export default function StatsView() {
               <div className={styles.playerSection}>
                 <BlockHead label="Performances" title="Statistiques joueurs" aside="Min. 45 % des games de l’équipe" />
 
-                <div className={`${ds.tabs} ${ds.filterRowLast}`}>
-                  {ROLES.map((item) => (
-                    <button
-                      key={item.name}
-                      type="button"
-                      className={role === item.name ? ds.tabActive : ds.tab}
-                      onClick={() => setRole(item.name as Role)}
-                    >
-                      <img src={item.image} alt="" className={ds.tabRoleIcon} />
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
+                <RoleTabs value={role} onChange={setRole} className={ds.filterRowLast} />
 
                 <div className={styles.rankingGrid}>
                   {cards.map((card) => (
@@ -140,15 +157,9 @@ export default function StatsView() {
 
               {/* CHAMPIONS */}
               <div className={`${styles.playerSection} ${styles.statsBlock}`}>
-                <BlockHead
-                  label="Draft"
-                  title="Statistiques champions"
-                  aside={
-                    championSearch
-                      ? `${roleLabel} · ${shownChampions.length} résultat${shownChampions.length > 1 ? 's' : ''}`
-                      : `${roleLabel} · Top 10 sur ${champions.length}`
-                  }
-                />
+                <BlockHead label="Draft" title="Statistiques champions" aside="Top 10 des champions" />
+
+                <RoleTabs value={championRole} onChange={setChampionRole} className={ds.filterRow} />
 
                 {champions.length > 0 && (
                   <input
@@ -164,7 +175,7 @@ export default function StatsView() {
                   <div className={`${ds.card} ${ds.empty}`}>Aucun champion enregistré pour le moment.</div>
                 ) : shownChampions.length === 0 ? (
                   <div className={`${ds.card} ${ds.empty}`}>
-                    Aucun champion « {championQuery.trim()} » joué en {roleLabel}.
+                    Aucun champion « {championQuery.trim()} » joué en {championRoleLabel}.
                   </div>
                 ) : (
                   <div className={styles.championGrid}>
