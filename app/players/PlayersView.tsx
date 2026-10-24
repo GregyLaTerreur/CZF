@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import {
@@ -229,25 +229,6 @@ export default function PlayersView() {
   }
 
   const visiblePlayers = filteredPlayers.slice(0, visibleCount);
-  const hasMore = filteredPlayers.length > visibleCount;
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  // Affiche les joueurs suivants quand le bas de la liste approche.
-  // Relancé après chaque ajout : si le bas est encore visible, on continue.
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!hasMore || !sentinel) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setVisibleCount((count) => count + PAGE_SIZE);
-      },
-      { rootMargin: '400px 0px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, visibleCount]);
 
   return (
     <>
@@ -485,7 +466,15 @@ export default function PlayersView() {
               );
             })}
 
-            {hasMore && <div ref={sentinelRef} className={ds.empty}>Chargement…</div>}
+            {filteredPlayers.length > visibleCount && (
+              <button
+                type="button"
+                className={ds.cardFooter}
+                onClick={() => setVisibleCount(visibleCount + PAGE_SIZE)}
+              >
+                Afficher plus · {filteredPlayers.length - visibleCount} restants
+              </button>
+            )}
           </div>
 
           {!loading && filteredPlayers.length > 0 && (
