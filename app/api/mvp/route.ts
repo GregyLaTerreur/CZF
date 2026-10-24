@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { invalidateResults } from '@/lib/results/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -673,6 +674,8 @@ export async function PATCH(request: NextRequest) {
         .maybeSingle();
 
     if (matchError) throw matchError;
+
+    if (updatedMatch) invalidateResults();
 
     if (!updatedMatch) {
       return reply(

@@ -9,6 +9,7 @@ import {
 } from '@/lib/riot/build-czf-game';
 
 import { buildCzfBo } from '@/lib/riot/build-czf-bo';
+import { invalidateResults } from '@/lib/results/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -429,6 +430,8 @@ export async function POST(request: NextRequest) {
     if (publishError) {
       throw publishError;
     }
+
+    invalidateResults();
 
     return NextResponse.json({
       success: true,

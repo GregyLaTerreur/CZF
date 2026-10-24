@@ -1,0 +1,464 @@
+/* =========================================================
+   CZF — PAGE JOUEURS
+   Le socle (couleurs, boutons, onglets, cartes…) est dans
+   app/components/ds/ds.module.css.
+========================================================= */
+
+/* =========================================================
+   TABLEAU DES JOUEURS
+========================================================= */
+
+.row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2.3fr)
+    72px
+    minmax(0, 1.4fr)
+    76px
+    86px
+    164px
+    74px;
+  gap: 14px;
+  align-items: center;
+  padding: 11px 18px;
+}
+
+.rowHead {
+  padding: 13px 18px 10px;
+  border-bottom: 2px solid var(--dark);
+}
+
+.sortButton,
+.headLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.45);
+  text-align: left;
+}
+
+.sortButton {
+  cursor: pointer;
+}
+
+.sortButton:hover,
+.sortButton:active {
+  color: var(--dark);
+  transform: none;
+  filter: none;
+}
+
+.sortActive {
+  color: var(--dark);
+}
+
+.sortIcon {
+  width: 7px;
+  height: 10px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.alignRight {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.entry {
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
+}
+
+.entry:last-of-type {
+  border-bottom: none;
+}
+
+.entryOpen {
+  background: rgba(8, 20, 40, 0.04);
+}
+
+.rowButton {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowButton:hover {
+  background: rgba(240, 80, 16, 0.07);
+}
+
+.rowButton:hover,
+.rowButton:active {
+  transform: none;
+  filter: none;
+}
+
+.playerCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.teamLogo,
+.teamLogoEmpty {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamLogoEmpty {
+  border: 2px dashed rgba(8, 20, 40, 0.18);
+  border-radius: 50%;
+}
+
+.playerText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.playerName {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerName small {
+  font-weight: 400;
+  color: rgba(8, 20, 40, 0.4);
+  margin-left: 1px;
+}
+
+.playerTeam {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rolesCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rolesCell .roleSecondary {
+  width: 17px;
+  height: 17px;
+  opacity: 0.4;
+}
+
+.rankCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.rankCell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.points {
+  display: flex;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
+.wr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--condensed);
+  line-height: 1.1;
+}
+
+.wr b {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.wr small {
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.4);
+}
+
+.endCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  color: rgba(8, 20, 40, 0.45);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--orange);
+}
+
+/* =========================================================
+   DÉTAIL D'UN JOUEUR (fond sombre via ds.onDark)
+========================================================= */
+
+.details {
+  margin: 0 18px 18px;
+  padding: 22px;
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.detailsHead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.profileIcon {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--orange);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(224, 216, 204, 0.08);
+}
+
+.detailsWho {
+  flex: 1;
+  min-width: 200px;
+}
+
+.detailsName {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.9rem;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.detailsName small {
+  font-weight: 400;
+  color: rgba(224, 216, 204, 0.45);
+  font-style: normal;
+  text-transform: none;
+  font-size: 1.1rem;
+  margin-left: 1px;
+}
+
+.detailsMeta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.65);
+}
+
+.detailsStats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  margin: 22px 0;
+  background: rgba(224, 216, 204, 0.12);
+  border: 1px solid rgba(224, 216, 204, 0.12);
+}
+
+.detailsStat {
+  padding: 12px 14px;
+  background: var(--dark);
+}
+
+.detailsStat span {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.detailsStat strong {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+.detailsBottom {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 36px;
+}
+
+.detailsLabel {
+  margin-bottom: 9px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.55);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--on-dark);
+  white-space: pre-line;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1080px) {
+  .hideTablet {
+    display: none !important;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 2.2fr) 64px minmax(0, 1.4fr) 70px 80px 60px;
+  }
+
+  .detailsStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .hideMobile {
+    display: none !important;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr) 30px 34px 48px 56px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  /* Sur mobile, on ne garde que l'icône de rang */
+  .rankCell span {
+    display: none;
+  }
+
+  .rolesCell .roleSecondary {
+    display: none;
+  }
+
+  .rowHead .sortButton:nth-child(3) {
+    font-size: 0;
+  }
+
+  .rowHead .sortButton:nth-child(3)::before {
+    content: 'Rang';
+    font-size: 0.68rem;
+  }
+
+  .details {
+    margin: 0 10px 12px;
+    padding: 16px;
+  }
+
+  .detailsStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detailsBottom {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* =========================================================
+   CARTE « MON PROFIL »
+========================================================= */
+
+.myRank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border-top: 1px solid rgba(8, 20, 40, 0.15);
+  border-bottom: 1px solid rgba(8, 20, 40, 0.15);
+}
+
+.myRankIcon {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.myRank strong {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.myRank small {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+.myPoints {
+  margin-left: auto;
+  text-align: right;
+}

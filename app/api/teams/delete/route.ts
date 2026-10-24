@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { invalidateResults } from '@/lib/results/cache';
 
 export async function DELETE(request: Request) {
   const { team_id } = await request.json();
@@ -30,6 +31,8 @@ export async function DELETE(request: Request) {
       }
     );
   }
+
+  invalidateResults();
 
   return NextResponse.json({
     success: true,

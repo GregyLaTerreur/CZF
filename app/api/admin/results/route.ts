@@ -5,6 +5,7 @@ import {
 import {
   createClient,
 } from '@supabase/supabase-js';
+import { invalidateResults } from '@/lib/results/cache';
 export const dynamic = 'force-dynamic';
 type Division =
   | 'Yordle'
@@ -1403,7 +1404,9 @@ export async function POST(
           ),
         0
       );
-    return NextResponse.json(
+    invalidateResults();
+
+    return NextResponse.json(
       {
         success: true,
         matchId:

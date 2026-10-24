@@ -7,6 +7,7 @@ import {
 } from 'react';
 
 import Nav from '../../components/Nav';
+import MatchManager from './MatchManager';
 
 import {
   supabase,
@@ -224,6 +225,91 @@ function normalizeRiotName(
   );
 }
 
+/*
+  Similarité entre 2 pseudos normalisés :
+  1 = identiques, 0 = rien en commun.
+  Basée sur la distance de Levenshtein.
+*/
+const FUZZY_PLAYER_THRESHOLD =
+  0.8;
+
+function nameSimilarity(
+  a: string,
+  b: string
+) {
+  if (
+    !a ||
+    !b
+  ) {
+    return 0;
+  }
+
+  if (
+    a === b
+  ) {
+    return 1;
+  }
+
+  let previous =
+    Array.from(
+      {
+        length:
+          b.length +
+          1,
+      },
+      (
+        _,
+        index
+      ) => index
+    );
+
+  for (
+    let i = 1;
+    i <= a.length;
+    i++
+  ) {
+    const current = [
+      i,
+    ];
+
+    for (
+      let j = 1;
+      j <= b.length;
+      j++
+    ) {
+      current[j] =
+        Math.min(
+          previous[j] +
+            1,
+          current[
+            j - 1
+          ] + 1,
+          previous[
+            j - 1
+          ] +
+            (a[i - 1] ===
+            b[j - 1]
+              ? 0
+              : 1)
+        );
+    }
+
+    previous =
+      current;
+  }
+
+  return (
+    1 -
+    previous[
+      b.length
+    ] /
+      Math.max(
+        a.length,
+        b.length
+      )
+  );
+}
+
 function normalizeRole(
   value:
     | string
@@ -398,6 +484,18 @@ export default function AdminResultsPage() {
     setImportJson,
   ] =
     useState('');
+
+  const [
+    importFileName,
+    setImportFileName,
+  ] =
+    useState('');
+
+  const [
+    dragOver,
+    setDragOver,
+  ] =
+    useState(false);
 
   const [
     saving,
@@ -725,50 +823,118 @@ export default function AdminResultsPage() {
         rawSearch
       );
 
-    return availablePlayers.find(
-      (
-        player
-      ) => {
-        const playerFull =
-          normalizeText(
-            player.riotId
-          );
+    const exactMatch =
+      availablePlayers.find(
+        (
+          player
+        ) => {
+          const playerFull =
+            normalizeText(
+              player.riotId
+            );
 
-        if (
-          playerFull ===
-          searchFull
-        ) {
-          return true;
-        }
-
-        const playerRiotName =
-          normalizeRiotName(
-            player.riotId
-          );
-
-        if (
-          playerRiotName ===
-          searchRiotName
-        ) {
-          return true;
-        }
-
-        const playerDiscord =
-          normalizeText(
-            player.discordName
-          );
-
-        if (
-          playerDiscord &&
-          playerDiscord ===
+          if (
+            playerFull ===
             searchFull
-        ) {
-          return true;
-        }
+          ) {
+            return true;
+          }
 
-        return false;
-      }
-    );
+          const playerRiotName =
+            normalizeRiotName(
+              player.riotId
+            );
+
+          if (
+            playerRiotName ===
+            searchRiotName
+          ) {
+            return true;
+          }
+
+          const playerDiscord =
+            normalizeText(
+              player.discordName
+            );
+
+          if (
+            playerDiscord &&
+            playerDiscord ===
+              searchFull
+          ) {
+            return true;
+          }
+
+          return false;
+        }
+      );
+
+    if (
+      exactMatch
+    ) {
+      return exactMatch;
+    }
+
+    /*
+      Pseudo approchant
+      (faute de frappe, lettre manquante).
+
+      On garde le joueur le plus proche
+      s'il est similaire à 80 % minimum
+      et qu'aucun autre joueur
+      n'est aussi proche.
+    */
+    const scored =
+      availablePlayers
+        .map(
+          (
+            player
+          ) => ({
+            player,
+            score:
+              Math.max(
+                nameSimilarity(
+                  searchRiotName,
+                  normalizeRiotName(
+                    player.riotId
+                  )
+                ),
+                nameSimilarity(
+                  searchFull,
+                  normalizeText(
+                    player.discordName
+                  )
+                )
+              ),
+          })
+        )
+        .sort(
+          (
+            a,
+            b
+          ) =>
+            b.score -
+            a.score
+        );
+
+    const best =
+      scored[0];
+
+    const second =
+      scored[1];
+
+    if (
+      !best ||
+      best.score <
+        FUZZY_PLAYER_THRESHOLD ||
+      (second &&
+        second.score ===
+          best.score)
+    ) {
+      return undefined;
+    }
+
+    return best.player;
   }
 
   /* =========================================================
@@ -1093,6 +1259,41 @@ export default function AdminResultsPage() {
      IMPORT JSON
   ========================================================= */
 
+  // Charge le contenu d'un fichier .json dans la zone de texte.
+  async function loadJsonFile(
+    file:
+      | File
+      | null
+      | undefined
+  ) {
+    if (
+      !file
+    ) {
+      return;
+    }
+
+    try {
+      const text =
+        await file.text();
+
+      setImportJson(
+        text
+      );
+
+      setImportFileName(
+        file.name
+      );
+
+      setMessage(
+        `Fichier "${file.name}" chargé. Clique sur Importer le JSON.`
+      );
+    } catch {
+      setMessage(
+        `Impossible de lire le fichier "${file.name}".`
+      );
+    }
+  }
+
   function importFromJson() {
     try {
       setMessage('');
@@ -1264,6 +1465,14 @@ export default function AdminResultsPage() {
           ...importedTeam1.roster,
           ...importedTeam2.roster,
         ];
+
+      /*
+        Pseudos corrigés automatiquement,
+        affichés dans le message final.
+      */
+      const playerCorrections:
+        string[] =
+        [];
 
       /* =====================================================
          GAMES
@@ -1554,6 +1763,11 @@ export default function AdminResultsPage() {
                     )
                   : undefined;
 
+              const matchedByName =
+                Boolean(
+                  rosterPlayer
+                );
+
               if (
                 !rosterPlayer
               ) {
@@ -1574,6 +1788,33 @@ export default function AdminResultsPage() {
               ) {
                 throw new Error(
                   `Aucun joueur ${role} trouvé dans le roster de ${playerTeam.name}, Game ${gameNumber}.`
+                );
+              }
+
+              if (
+                playerName &&
+                !matchedByName
+              ) {
+                playerCorrections.push(
+                  `Game ${gameNumber} : "${playerName}" introuvable, remplacé par le ${role} du roster (${rosterPlayer.riotId})`
+                );
+              } else if (
+                playerName &&
+                normalizeRiotName(
+                  playerName
+                ) !==
+                  normalizeRiotName(
+                    rosterPlayer.riotId
+                  ) &&
+                normalizeText(
+                  playerName
+                ) !==
+                  normalizeText(
+                    rosterPlayer.discordName
+                  )
+              ) {
+                playerCorrections.push(
+                  `Game ${gameNumber} : "${playerName}" → ${rosterPlayer.riotId}`
                 );
               }
 
@@ -1778,10 +2019,16 @@ export default function AdminResultsPage() {
           0
         );
 
+      const correctionsText =
+        playerCorrections.length > 0
+          ? ` Pseudos corrigés : ${playerCorrections.join(' ; ')}.`
+          : '';
+
       setMessage(
-        totalSubs > 0
+        (totalSubs > 0
           ? `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. ${totalSubs} sub(s) conservé(s) pour l'historique mais ignoré(s) dans les statistiques. Vérifie puis enregistre le match.`
-          : `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Vérifie les données puis enregistre le match.`
+          : `JSON importé : ${importedTeam1.name} vs ${importedTeam2.name}, ${importedGames.length} games. Vérifie les données puis enregistre le match.`) +
+          correctionsText
       );
     } catch (
       error: any
@@ -2243,6 +2490,10 @@ export default function AdminResultsPage() {
       setImportJson(
         ''
       );
+
+      setImportFileName(
+        ''
+      );
     } catch (
       error: any
     ) {
@@ -2279,6 +2530,8 @@ export default function AdminResultsPage() {
           </h2>
         </div>
 
+        <MatchManager />
+
         {/* =================================================
             IMPORT JSON
         ================================================= */}
@@ -2291,7 +2544,8 @@ export default function AdminResultsPage() {
               </h3>
 
               <p>
-                Colle ici le JSON que je te donne après les captures du match.
+                Colle ici le JSON que je te donne après les captures du match,
+                ou choisis / glisse le fichier .json.
                 Tout le formulaire sera rempli automatiquement.
               </p>
             </div>
@@ -2302,18 +2556,54 @@ export default function AdminResultsPage() {
           </div>
 
           <textarea
-            className="jsonTextarea"
+            className={`jsonTextarea ${
+              dragOver
+                ? 'jsonTextareaDrop'
+                : ''
+            }`}
             value={
               importJson
             }
             onChange={(
               e
-            ) =>
+            ) => {
               setImportJson(
                 e.target
                   .value
+              );
+
+              setImportFileName(
+                ''
+              );
+            }}
+            onDragOver={(
+              e
+            ) => {
+              e.preventDefault();
+
+              setDragOver(
+                true
+              );
+            }}
+            onDragLeave={() =>
+              setDragOver(
+                false
               )
             }
+            onDrop={(
+              e
+            ) => {
+              e.preventDefault();
+
+              setDragOver(
+                false
+              );
+
+              loadJsonFile(
+                e.dataTransfer
+                  .files[0]
+              );
+            }}
             placeholder={`{
   "division": "Ixtal",
   "team1": "Season's",
@@ -2324,15 +2614,44 @@ export default function AdminResultsPage() {
 }`}
           />
 
-          <button
-            className="importButton"
-            type="button"
-            onClick={
-              importFromJson
-            }
-          >
-            Importer le JSON
-          </button>
+          <div className="importActions">
+            <label className="importFileButton">
+              Choisir un fichier .json
+
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={(
+                  e
+                ) => {
+                  loadJsonFile(
+                    e.target
+                      .files?.[0]
+                  );
+
+                  // Permet de recharger le même fichier.
+                  e.target.value =
+                    '';
+                }}
+              />
+            </label>
+
+            {importFileName && (
+              <span className="importFileName">
+                {importFileName}
+              </span>
+            )}
+
+            <button
+              className="importButton"
+              type="button"
+              onClick={
+                importFromJson
+              }
+            >
+              Importer le JSON
+            </button>
+          </div>
         </section>
 
         {/* =================================================
@@ -3204,8 +3523,47 @@ export default function AdminResultsPage() {
             line-height: 1.5;
           }
 
-          .importButton {
+          .jsonTextareaDrop {
+            border: 2px dashed var(--orange);
+            background: rgba(255, 255, 255, 0.9);
+          }
+
+          .importActions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
             margin-top: 12px;
+          }
+
+          .importFileButton {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            min-height: 46px;
+            padding: 0 22px;
+            border: 2px solid var(--orange);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--orange);
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .importFileButton input {
+            display: none;
+          }
+
+          .importFileName {
+            color: var(--navy);
+            font-family: monospace;
+            font-size: 12px;
+            opacity: 0.75;
+          }
+
+          .importButton {
+            margin-left: auto;
             min-height: 46px;
             padding: 0 22px;
             border: 0;

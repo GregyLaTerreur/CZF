@@ -1,12 +1,93 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { invalidateResults } from '@/lib/results/cache';
 
-export async function GET() {
-  const { data: players, error: playersError } = await supabase
-    .from('players')
-    .select('*')
-    .order('id', { ascending: true });
+// Colonnes affichées par les pages Joueurs et Équipes (?view=list).
+const LIST_COLUMNS =
+  'id, riot_id, profile_id, main_role, secondary_role, description, lft, czf_points, summoner_level, profile_icon_id, soloq_tier, soloq_rank, soloq_lp, soloq_wins, soloq_losses, flex_tier, flex_rank, flex_lp, peak_tier, peak_rank, peak_lp, top_champions';
+
+const normalizeRiotId = (value: any) =>
+  String(value || '').trim().toLowerCase();
+
+async function loadTeamData() {
+  const [{ data: teams, error: teamsError }, { data: members, error: membersError }] =
+    await Promise.all([
+      supabase
+        .from('teams')
+        .select('id, name, logo_url, division, validated_by_admin'),
+      supabase
+        .from('team_members')
+        .select('team_id, player_id, riot_id')
+        .order('created_at', { ascending: true }),
+    ]);
+
+  if (teamsError) throw teamsError;
+  if (membersError) throw membersError;
+
+  return { teams: teams || [], members: members || [] };
+}
+
+// Équipe de chaque joueur (?include=team) : membre lié par player_id,
+// sinon par Riot ID ; le premier membre inscrit l'emporte.
+function buildTeamByPlayer(
+  players: any[],
+  { teams, members }: { teams: any[]; members: any[] }
+) {
+  const teamById = new Map((teams || []).map((team) => [Number(team.id), team]));
+  const byPlayerId = new Map<number, { index: number; member: any }>();
+  const byRiotId = new Map<string, { index: number; member: any }>();
+
+  (members || []).forEach((member, index) => {
+    if (member.player_id !== null && member.player_id !== undefined) {
+      const key = Number(member.player_id);
+      if (!byPlayerId.has(key)) byPlayerId.set(key, { index, member });
+    } else {
+      const key = normalizeRiotId(member.riot_id);
+      if (!byRiotId.has(key)) byRiotId.set(key, { index, member });
+    }
+  });
+
+  const result = new Map<number, any>();
+
+  for (const player of players) {
+    const candidates = [
+      byPlayerId.get(Number(player.id)),
+      byRiotId.get(normalizeRiotId(player.riot_id)),
+    ].filter(Boolean) as { index: number; member: any }[];
+
+    if (!candidates.length) continue;
+
+    const first = candidates.sort((a, b) => a.index - b.index)[0];
+    const team = teamById.get(Number(first.member.team_id));
+
+    if (team) result.set(Number(player.id), team);
+  }
+
+  return result;
+}
+
+export async function GET(request: Request) {
+  const params = new URL(request.url).searchParams;
+  const listView = params.get('view') === 'list';
+  const includeTeam = listView && params.get('include') === 'team';
+
+  // Lancé en parallèle des joueurs ; l'erreur éventuelle est gérée plus bas.
+  const teamData = includeTeam ? loadTeamData() : null;
+  teamData?.catch(() => {});
+
+  const [
+    { data: players, error: playersError },
+    { data: profiles, error: profilesError },
+  ] = await Promise.all([
+    supabase
+      .from('players')
+      .select(listView ? LIST_COLUMNS : '*')
+      .order('id', { ascending: true }),
+    supabase
+      .from('profiles')
+      .select('id, discord_name'),
+  ]);
 
   if (playersError) {
     return NextResponse.json(
@@ -15,10 +96,6 @@ export async function GET() {
     );
   }
 
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, discord_name');
-
   if (profilesError) {
     return NextResponse.json(
       { success: false, error: profilesError },
@@ -26,13 +103,49 @@ export async function GET() {
     );
   }
 
-const playersWithProfiles = players.map((player) => ({
-  ...player,
-  profiles:
-    profiles.find(
-      (profile) => String(profile.id) === String(player.profile_id)
-    ) || null,
-}));
+  const profileById = new Map(
+    (profiles || []).map((profile) => [String(profile.id), profile])
+  );
+
+  let teamByPlayer = new Map<number, any>();
+
+  if (teamData) {
+    try {
+      teamByPlayer = buildTeamByPlayer(players as any[], await teamData);
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error },
+        { status: 500 }
+      );
+    }
+  }
+
+  const playersWithProfiles = (players as any[]).map((player) => {
+    const profile =
+      profileById.get(String(player.profile_id)) || null;
+
+    if (!listView) {
+      return { ...player, profiles: profile };
+    }
+
+    // Vue allégée : pas de points de maîtrise ni d'id de profil en double.
+    return {
+      ...player,
+      top_champions: (player.top_champions || []).map(
+        (champion: any) => ({
+          champion_id: champion.champion_id,
+          champion_name: champion.champion_name,
+        })
+      ),
+      profiles: profile
+        ? { discord_name: profile.discord_name }
+        : null,
+      ...(includeTeam
+        ? { team: teamByPlayer.get(Number(player.id)) || null }
+        : {}),
+    };
+  });
+
   return NextResponse.json({
     success: true,
     data: playersWithProfiles,
@@ -113,16 +226,24 @@ if (!discordUserId) {
   );
 }
 
-const memberRes = await fetch(
-  `https://discord.com/api/guilds/${process.env.DISCORD_GUILD_ID}/members/${discordUserId}`,
-  {
-    headers: {
-      Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-    },
-  }
-);
+// En local, sans le vrai bot Discord, on peut sauter la vérification.
+// Jamais en production, même si la variable y est définie par erreur.
+const skipDiscordCheck =
+  process.env.NODE_ENV !== 'production' &&
+  process.env.CZF_SKIP_DISCORD_CHECK === 'true';
 
-if (!memberRes.ok) {
+const memberRes = skipDiscordCheck
+  ? null
+  : await fetch(
+      `https://discord.com/api/guilds/${process.env.DISCORD_GUILD_ID}/members/${discordUserId}`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        },
+      }
+    );
+
+if (memberRes && !memberRes.ok) {
   return NextResponse.json(
     {
       success: false,
@@ -289,6 +410,8 @@ export async function PATCH(request: Request) {
       { status: 500 }
     );
   }
+
+  invalidateResults();
 
   return NextResponse.json({
     success: true,
