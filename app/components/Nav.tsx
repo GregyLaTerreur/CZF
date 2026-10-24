@@ -143,13 +143,6 @@ export default function Nav() {
           Équipes
         </Link>
 
-        <Link
-          href="/divisions"
-          className={isActive('/divisions') ? 'active' : ''}
-        >
-          Divisions
-        </Link>
-
         {/* Planning masqué pour le moment.
         <Link
           href="/planning"
@@ -164,6 +157,13 @@ export default function Nav() {
           className={isActive('/results') ? 'active' : ''}
         >
           Résultats
+        </Link>
+
+        <Link
+          href="/stats"
+          className={isActive('/stats') ? 'active' : ''}
+        >
+          Stats
         </Link>
 
         {/* Hall of Fame masqué pour le moment (page encore vide).

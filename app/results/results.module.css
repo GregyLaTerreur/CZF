@@ -619,6 +619,10 @@
   margin-bottom: 22px;
 }
 
+.statsBlock {
+  margin-top: 56px;
+}
+
 .rankingGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
