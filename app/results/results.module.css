@@ -757,6 +757,13 @@
   color: rgba(8, 20, 40, 0.5);
 }
 
+.championSearch {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 0 26px;
+}
+
 .championGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

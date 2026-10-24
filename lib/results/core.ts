@@ -742,6 +742,8 @@ export function computePlayerStats(
 /* =========================================================
    STATISTIQUES CHAMPIONS D'UNE DIVISION
    Aucune exclusion : données historiques complètes.
+   Tous les champions joués, triés : la page affiche le top 10
+   et permet de rechercher les autres.
 ========================================================= */
 
 export function computeChampionStats(
@@ -831,8 +833,7 @@ export function computeChampionStats(
             values.picks > 0 ? round2((values.wins / values.picks) * 100) : 0,
         };
       })
-      .sort((a, b) => b.picks - a.picks || b.winRate - a.winRate)
-      .slice(0, 10);
+      .sort((a, b) => b.picks - a.picks || b.winRate - a.winRate);
   }
 
   return result;

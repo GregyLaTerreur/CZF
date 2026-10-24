@@ -28,15 +28,38 @@ const VISION_CARD = {
   format: (value: number) => value.toFixed(2),
 };
 
+// « kai sa », « Kaï'Sa » et « kaisa » trouvent tous Kai'Sa.
+function normalizeSearch(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
 export default function StatsView() {
   const { division, setDivision, data, error, loading } = useDivisionData();
   const [role, setRole] = useState<Role>('Top');
   // Top 10 ouvert ou fermé pour toutes les colonnes à la fois.
   const [expanded, setExpanded] = useState(false);
+  const [championQuery, setChampionQuery] = useState('');
 
   const playerStats = data?.playerStats;
   const players = (playerStats?.[role] ?? []).filter((player) => player.qualified);
   const champions = data?.champions[role] ?? [];
+
+  // Top 10 par défaut ; la recherche porte sur tous les champions du rôle
+  // et garde leur vrai rang.
+  const championSearch = normalizeSearch(championQuery);
+  const shownChampions = championSearch
+    ? champions
+        .map((champion, index) => ({ champion, rank: index + 1 }))
+        .filter(({ champion }) =>
+          [champion.name, champion.championId].some((value) =>
+            normalizeSearch(value).includes(championSearch)
+          )
+        )
+    : champions.slice(0, 10).map((champion, index) => ({ champion, rank: index + 1 }));
   // Le support est classé à la vision plutôt qu'aux CS.
   const cards = role === 'Support' ? [...STAT_CARDS.slice(0, 3), VISION_CARD] : STAT_CARDS;
 
@@ -117,15 +140,37 @@ export default function StatsView() {
 
               {/* CHAMPIONS */}
               <div className={`${styles.playerSection} ${styles.statsBlock}`}>
-                <BlockHead label="Draft" title="Statistiques champions" aside={`${roleLabel} · Top 10`} />
+                <BlockHead
+                  label="Draft"
+                  title="Statistiques champions"
+                  aside={
+                    championSearch
+                      ? `${roleLabel} · ${shownChampions.length} résultat${shownChampions.length > 1 ? 's' : ''}`
+                      : `${roleLabel} · Top 10 sur ${champions.length}`
+                  }
+                />
+
+                {champions.length > 0 && (
+                  <input
+                    type="search"
+                    className={`${ds.search} ${styles.championSearch}`}
+                    placeholder="Rechercher un champion…"
+                    value={championQuery}
+                    onChange={(event) => setChampionQuery(event.target.value)}
+                  />
+                )}
 
                 {champions.length === 0 ? (
                   <div className={`${ds.card} ${ds.empty}`}>Aucun champion enregistré pour le moment.</div>
+                ) : shownChampions.length === 0 ? (
+                  <div className={`${ds.card} ${ds.empty}`}>
+                    Aucun champion « {championQuery.trim()} » joué en {roleLabel}.
+                  </div>
                 ) : (
                   <div className={styles.championGrid}>
-                    {champions.slice(0, 10).map((champion, index) => (
+                    {shownChampions.map(({ champion, rank }) => (
                       <div key={champion.championId} className={`${ds.card} ${styles.championCard}`}>
-                        <span className={styles.championRank}>#{index + 1}</span>
+                        <span className={styles.championRank}>#{rank}</span>
                         {champion.image ? (
                           <img src={champion.image} alt="" loading="lazy" />
                         ) : (
