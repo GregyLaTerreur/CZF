@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Barlow, Barlow_Condensed } from 'next/font/google';
 import Nav from './components/Nav';
+import { fontVariables } from './fonts';
 import styles from './home.module.css';
 import {
   DivisionTeamCount,
@@ -10,19 +10,6 @@ import {
   Ticker,
 } from './components/home/HomeLive';
 import { DIVISION_COLORS, type DivisionName } from './components/home/divisions';
-
-const barlow = Barlow({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-barlow',
-});
-
-const barlowCondensed = Barlow_Condensed({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
-  style: ['normal', 'italic'],
-  variable: '--font-barlow-condensed',
-});
 
 const DISCORD_URL = 'https://discord.gg/ZWSmEGrv2s';
 const RULEBOOK_URL =
@@ -36,7 +23,7 @@ const DIVISION_INFO: { name: DivisionName; level: string; points: string }[] = [
 
 export default function Home() {
   return (
-    <main className={`${styles.home} ${barlow.variable} ${barlowCondensed.variable}`}>
+    <main className={`${styles.home} ${fontVariables}`}>
       <Nav />
 
       {/* HERO */}

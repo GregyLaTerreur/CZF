@@ -1,0 +1,1008 @@
+/* =========================================================
+   CZF — PAGE JOUEURS
+   Basée sur design-system_czf.html
+========================================================= */
+
+.page {
+  --cream: #F4E2C9;
+  --beige-l: #D4B896;
+  --dark: #081428;
+  --orange: #F05010;
+  --teal: #00C9A0;
+  --on-dark: #E0D8CC;
+  --win: #2AAB5F;
+  --loss: #E05050;
+  --condensed: var(--font-barlow-condensed), sans-serif;
+
+  min-height: 100vh;
+  font-family: var(--font-barlow), sans-serif;
+  color: var(--dark);
+  background-color: var(--beige-l);
+  background-image:
+    repeating-linear-gradient(-48deg, transparent 0px, transparent 90px, rgba(8, 20, 40, 0.025) 90px, rgba(8, 20, 40, 0.025) 150px),
+    repeating-linear-gradient(-38deg, transparent 0px, transparent 160px, rgba(8, 20, 40, 0.018) 160px, rgba(8, 20, 40, 0.018) 210px),
+    repeating-linear-gradient(-55deg, transparent 0px, transparent 60px, rgba(8, 20, 40, 0.014) 60px, rgba(8, 20, 40, 0.014) 80px),
+    repeating-linear-gradient(-42deg, transparent 0px, transparent 230px, rgba(8, 20, 40, 0.02) 230px, rgba(8, 20, 40, 0.02) 270px);
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* =========================================================
+   TYPOGRAPHIE
+========================================================= */
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.sectionLabel::before {
+  content: '';
+  width: 22px;
+  height: 3px;
+  background: var(--orange);
+  flex-shrink: 0;
+}
+
+.h1 {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: clamp(2.6rem, 6vw, 4.4rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+  margin: 12px 0 16px;
+}
+
+.body {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(8, 20, 40, 0.6);
+  margin: 0;
+  max-width: 560px;
+}
+
+.muted {
+  color: rgba(8, 20, 40, 0.35);
+}
+
+.teal {
+  color: var(--teal);
+}
+
+.win { color: var(--win); }
+.loss { color: var(--loss); }
+
+/* =========================================================
+   BOUTONS — skewX(-8deg) · shadow 6px · press 2px
+========================================================= */
+
+.btnPrimary,
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 13px 26px;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  transition: box-shadow 0.15s, transform 0.15s, background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btnPrimary {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+.btnOutline {
+  background: var(--cream);
+  color: var(--dark);
+  border: 2px solid var(--dark);
+  padding: 11px 22px;
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+/* globals.css anime tous les <button> : on impose l'effet du design system */
+.btnPrimary:hover,
+.btnPrimary:active,
+.btnOutline:hover,
+.btnOutline:active {
+  box-shadow: 2px 2px 0 var(--dark);
+  transform: skewX(-8deg) translate(4px, 4px);
+  filter: none;
+}
+
+.btnOutline:hover {
+  background: var(--dark);
+  color: #fff;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  transform: skewX(-8deg);
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+/* =========================================================
+   ONGLETS / FILTRES
+========================================================= */
+
+.tabs {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tab,
+.tabActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.85rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.tab {
+  background: var(--cream);
+  color: var(--dark);
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+.tab:hover,
+.tab:active {
+  box-shadow: 2px 2px 0 var(--dark);
+  transform: skewX(-8deg) translate(4px, 4px);
+  filter: none;
+}
+
+.tabActive {
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.tabActive:hover,
+.tabActive:active {
+  transform: skewX(-8deg);
+  filter: none;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  flex-shrink: 0;
+}
+
+.tabRoleIcon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0.15);
+}
+
+.tabActive .tabRoleIcon {
+  filter: brightness(0) invert(1);
+}
+
+/* =========================================================
+   EN-TÊTE
+========================================================= */
+
+.header {
+  padding: 64px 0 40px;
+}
+
+.headerGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 48px;
+  align-items: start;
+}
+
+.counters {
+  display: flex;
+  gap: 40px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.counter strong {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.counter span {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+/* =========================================================
+   CARTE PROFIL
+========================================================= */
+
+.card {
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  border-radius: 3px;
+  box-shadow: 6px 6px 0 var(--dark);
+  overflow: hidden;
+}
+
+.profileCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 22px 26px;
+}
+
+.cardTitle {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.myName {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.myName small,
+.playerName small,
+.detailsName small {
+  font-weight: 400;
+  color: rgba(8, 20, 40, 0.4);
+  margin-left: 1px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.field > span {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 2px solid var(--dark);
+  border-radius: 0;
+  background: #fff;
+  color: var(--dark);
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: none;
+}
+
+.rolePicker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rolePick,
+.rolePickActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  border: 2px solid var(--dark);
+  border-radius: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transform: skewX(-8deg);
+}
+
+.rolePick {
+  background: #fff;
+  color: var(--dark);
+}
+
+.rolePickActive {
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 3px 3px 0 var(--orange);
+}
+
+.rolePick:hover,
+.rolePick:active,
+.rolePickActive:hover,
+.rolePickActive:active {
+  transform: skewX(-8deg);
+  filter: none;
+}
+
+.rolePick img,
+.rolePickActive img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0.15);
+}
+
+.rolePickActive img {
+  filter: brightness(0) invert(1);
+}
+
+.formError,
+.formInfo {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.formError {
+  color: var(--loss);
+}
+
+.formInfo {
+  color: rgba(8, 20, 40, 0.65);
+}
+
+/* =========================================================
+   BARRE DE FILTRES
+========================================================= */
+
+.section {
+  padding: 16px 0 96px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.search {
+  flex: 1;
+  min-width: 260px;
+  max-width: 520px;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 2px solid var(--dark);
+  border-radius: 0;
+  background: var(--cream);
+  color: var(--dark);
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 0.95rem;
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+.search:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--dark);
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.roleTabs {
+  margin-bottom: 30px;
+}
+
+/* =========================================================
+   TABLEAU DES JOUEURS
+========================================================= */
+
+.row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 2.3fr)
+    72px
+    minmax(0, 1.4fr)
+    76px
+    86px
+    164px
+    74px;
+  gap: 14px;
+  align-items: center;
+  padding: 11px 18px;
+}
+
+.rowHead {
+  padding: 13px 18px 10px;
+  border-bottom: 2px solid var(--dark);
+}
+
+.sortButton,
+.headLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.45);
+  text-align: left;
+}
+
+.sortButton {
+  cursor: pointer;
+}
+
+.sortButton:hover,
+.sortButton:active {
+  color: var(--dark);
+  transform: none;
+  filter: none;
+}
+
+.sortActive {
+  color: var(--dark);
+}
+
+.sortIcon {
+  width: 7px;
+  height: 10px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.alignRight {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.entry {
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
+}
+
+.entry:last-of-type {
+  border-bottom: none;
+}
+
+.entryOpen {
+  background: rgba(8, 20, 40, 0.04);
+}
+
+.rowButton {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowButton:hover {
+  background: rgba(240, 80, 16, 0.07);
+}
+
+.rowButton:hover,
+.rowButton:active {
+  transform: none;
+  filter: none;
+}
+
+.playerCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.teamLogo,
+.teamLogoEmpty {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamLogoEmpty {
+  border: 2px dashed rgba(8, 20, 40, 0.18);
+  border-radius: 50%;
+}
+
+.playerText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.playerName {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerTeam {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meChip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  background: var(--orange);
+  color: #fff;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.rolesCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.roleIcon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: brightness(0.15);
+}
+
+.roleSecondary {
+  width: 17px;
+  height: 17px;
+  opacity: 0.4;
+}
+
+.rankCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.rankCell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankIcon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.points {
+  display: flex;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
+.wr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--condensed);
+  line-height: 1.1;
+}
+
+.wr b {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.wr small {
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.4);
+}
+
+.pool,
+.poolLarge {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pool img {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--dark);
+  object-fit: cover;
+}
+
+.poolLarge img {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--dark);
+  object-fit: cover;
+}
+
+.endCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.lftChip {
+  padding: 3px 8px;
+  background: var(--dark);
+  color: var(--teal);
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  color: rgba(8, 20, 40, 0.45);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--orange);
+}
+
+.empty {
+  padding: 40px 18px;
+  text-align: center;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.45);
+}
+
+.cardFooter {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-top: 2px solid var(--dark);
+  border-radius: 0;
+  background: none;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.6);
+  cursor: pointer;
+}
+
+.cardFooter:hover,
+.cardFooter:active {
+  background: var(--dark);
+  color: #fff;
+  transform: none;
+  filter: none;
+}
+
+.resultCount {
+  margin: 18px 0 0;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+/* =========================================================
+   DÉTAIL D'UN JOUEUR
+========================================================= */
+
+.details {
+  margin: 0 18px 18px;
+  padding: 22px;
+  background: var(--dark);
+  color: var(--on-dark);
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.detailsHead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.profileIcon {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--orange);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(224, 216, 204, 0.08);
+}
+
+.detailsWho {
+  flex: 1;
+  min-width: 200px;
+}
+
+.detailsName {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.9rem;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.detailsName small {
+  color: rgba(224, 216, 204, 0.45);
+  font-style: normal;
+  text-transform: none;
+  font-size: 1.1rem;
+}
+
+.detailsMeta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.65);
+}
+
+/* Sur fond sombre, l'ombre devient orange */
+.details .btnOutline {
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.details .btnOutline:hover,
+.details .btnOutline:active {
+  box-shadow: 2px 2px 0 var(--orange);
+}
+
+.detailsStats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  margin: 22px 0;
+  background: rgba(224, 216, 204, 0.12);
+  border: 1px solid rgba(224, 216, 204, 0.12);
+}
+
+.detailsStat {
+  padding: 12px 14px;
+  background: var(--dark);
+}
+
+.detailsStat span {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.detailsStat strong {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+.detailsBottom {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 36px;
+}
+
+.detailsLabel {
+  margin-bottom: 9px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.55);
+}
+
+.details .poolLarge img {
+  border-color: rgba(224, 216, 204, 0.3);
+}
+
+.details .muted {
+  color: rgba(224, 216, 204, 0.4);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--on-dark);
+  white-space: pre-line;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1080px) {
+  .hideTablet {
+    display: none !important;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 2.2fr) 64px minmax(0, 1.4fr) 70px 80px 60px;
+  }
+
+  .detailsStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .headerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .header {
+    padding: 40px 0 28px;
+  }
+
+  .hideMobile {
+    display: none !important;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr) 30px 34px 48px 56px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  /* Sur mobile, on ne garde que l'icône de rang */
+  .rankCell span {
+    display: none;
+  }
+
+  .roleSecondary {
+    display: none;
+  }
+
+  .rowHead .sortButton:nth-child(3) {
+    font-size: 0;
+  }
+
+  .rowHead .sortButton:nth-child(3)::before {
+    content: 'Rang';
+    font-size: 0.68rem;
+  }
+
+  .search {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .details {
+    margin: 0 10px 12px;
+    padding: 16px;
+  }
+
+  .detailsStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detailsBottom {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .counters {
+    gap: 26px;
+  }
+}
