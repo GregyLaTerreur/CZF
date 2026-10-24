@@ -84,7 +84,7 @@ export default function StatsView() {
             <>
               {/* JOUEURS */}
               <div className={styles.playerSection}>
-                <BlockHead label="Performances" title="Statistiques joueurs" aside="Min. 25 % des games de l’équipe" />
+                <BlockHead label="Performances" title="Statistiques joueurs" aside="Min. 50 % des games de l’équipe" />
 
                 <div className={`${ds.tabs} ${ds.filterRowLast}`}>
                   {ROLES.map((item) => (

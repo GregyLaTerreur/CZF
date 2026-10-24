@@ -548,7 +548,7 @@ export function buildMatchGames(
 
 // Part minimale des games de son équipe qu'un joueur doit avoir jouées
 // pour apparaître dans les classements de stats (pas dans le classement MVP).
-export const MIN_TEAM_GAMES_SHARE = 0.25;
+export const MIN_TEAM_GAMES_SHARE = 0.5;
 
 /* =========================================================
    STATISTIQUES INDIVIDUELLES D'UNE DIVISION
