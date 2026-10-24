@@ -9,6 +9,8 @@
   --dark: #081428;
   --orange: #F05010;
   --teal: #00C9A0;
+  --purple: #8B9FD4;
+  --yordle: #51A677;
   --on-dark: #E0D8CC;
   --win: #2AAB5F;
   --loss: #E05050;
@@ -446,6 +448,10 @@
   box-shadow: 6px 6px 0 var(--orange);
 }
 
+.divisionTabs {
+  margin-bottom: 18px;
+}
+
 .roleTabs {
   margin-bottom: 30px;
 }
@@ -597,6 +603,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.teamDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 1px;
 }
 
 .meChip {

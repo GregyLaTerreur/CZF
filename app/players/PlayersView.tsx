@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import {
+  DIVISION_COLORS,
+  DIVISIONS,
+  type DivisionName,
+} from '@/app/components/home/divisions';
 import styles from './players.module.css';
 
 /* =========================================================
@@ -77,6 +82,13 @@ function soloqGames(player: any) {
 function winRate(player: any): number | null {
   const games = soloqGames(player);
   return games ? Math.round(((player.soloq_wins || 0) / games) * 100) : null;
+}
+
+// Division d'un joueur = celle de son équipe, si elle est validée.
+function teamDivision(team: any): DivisionName | null {
+  if (team?.validated_by_admin !== true) return null;
+
+  return DIVISIONS.includes(team.division) ? team.division : null;
 }
 
 function dpmUrl(riotId: string) {
@@ -216,6 +228,7 @@ export default function PlayersView() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const [divisionFilter, setDivisionFilter] = useState<DivisionName | null>(null);
   const [participantsOnly, setParticipantsOnly] = useState(false);
   const [lftOnly, setLftOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('points');
@@ -310,6 +323,7 @@ export default function PlayersView() {
         return false;
       }
 
+      if (divisionFilter && teamDivision(team) !== divisionFilter) return false;
       if (participantsOnly && team?.validated_by_admin !== true) return false;
       if (lftOnly && !player.lft) return false;
 
@@ -341,12 +355,12 @@ export default function PlayersView() {
 
       return diff * factor;
     });
-  }, [players, teamByPlayer, searchQuery, roleFilter, participantsOnly, lftOnly, sortKey, sortDirection]);
+  }, [players, teamByPlayer, searchQuery, roleFilter, divisionFilter, participantsOnly, lftOnly, sortKey, sortDirection]);
 
   // Un changement de filtre repart de la première page.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchQuery, roleFilter, participantsOnly, lftOnly, sortKey, sortDirection]);
+  }, [searchQuery, roleFilter, divisionFilter, participantsOnly, lftOnly, sortKey, sortDirection]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -434,6 +448,28 @@ export default function PlayersView() {
             </div>
           </div>
 
+          <div className={`${styles.tabs} ${styles.divisionTabs}`}>
+            <button
+              type="button"
+              className={divisionFilter === null ? styles.tabActive : styles.tab}
+              onClick={() => setDivisionFilter(null)}
+            >
+              Toutes les divisions
+            </button>
+
+            {DIVISIONS.map((division) => (
+              <button
+                key={division}
+                type="button"
+                className={divisionFilter === division ? styles.tabActive : styles.tab}
+                onClick={() => setDivisionFilter(divisionFilter === division ? null : division)}
+              >
+                <span className={styles.dot} style={{ background: DIVISION_COLORS[division] }} />
+                {division}
+              </button>
+            ))}
+          </div>
+
           <div className={`${styles.tabs} ${styles.roleTabs}`}>
             <button
               type="button"
@@ -505,7 +541,16 @@ export default function PlayersView() {
                           {tag && <small>#{tag}</small>}
                           {isMe && <em className={styles.meChip}>Toi</em>}
                         </span>
-                        <span className={styles.playerTeam}>{team?.name || 'Sans équipe'}</span>
+                        <span className={styles.playerTeam}>
+                          {teamDivision(team) && (
+                            <span
+                              className={styles.teamDot}
+                              style={{ background: DIVISION_COLORS[teamDivision(team)!] }}
+                              title={teamDivision(team)!}
+                            />
+                          )}
+                          {team?.name || 'Sans équipe'}
+                        </span>
                       </span>
                     </span>
 
