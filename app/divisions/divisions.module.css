@@ -1,0 +1,254 @@
+/* =========================================================
+   CZF — PAGE DIVISIONS
+   Le socle (couleurs, boutons, onglets, cartes…) est dans
+   app/components/ds/ds.module.css.
+========================================================= */
+
+/* =========================================================
+   BARÈME (carte de droite)
+========================================================= */
+
+.scale {
+  display: flex;
+  width: 100%;
+  height: 34px;
+  border: 2px solid var(--dark);
+}
+
+.scaleSegment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-basis: 0;
+  min-width: 0;
+  color: var(--dark);
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scaleSegment + .scaleSegment {
+  border-left: 2px solid var(--dark);
+}
+
+.scaleTicks {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  margin-top: -8px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+.scaleTicks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.scaleTicks span:first-child {
+  left: 0;
+  transform: none;
+}
+
+.scaleTicks span:last-child {
+  right: 0;
+  transform: none;
+}
+
+.sideNote {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+/* =========================================================
+   BLOC DIVISION
+========================================================= */
+
+.division {
+  margin-bottom: 56px;
+}
+
+.division:last-child {
+  margin-bottom: 0;
+}
+
+.divisionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--dark);
+}
+
+.divisionLevel {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+.divisionName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 4px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 2.4rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.divisionDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--division-color);
+  border: 2px solid var(--dark);
+  flex-shrink: 0;
+}
+
+.divisionDesc {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+.divisionMeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.divisionRange {
+  padding: 4px 10px;
+  background: var(--dark);
+  color: var(--division-color);
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+}
+
+.divisionCount {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+/* =========================================================
+   TUILES D'ÉQUIPE
+========================================================= */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.teamTile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--dark);
+  text-decoration: none;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+/* Même effet « press » que les boutons du design system */
+.teamTile:hover,
+.teamTile:active {
+  box-shadow: 2px 2px 0 var(--dark);
+  transform: translate(4px, 4px);
+}
+
+.teamRank {
+  width: 22px;
+  flex-shrink: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1rem;
+  color: rgba(8, 20, 40, 0.35);
+}
+
+.teamLogo,
+.teamLogoEmpty {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamLogoEmpty {
+  border: 2px dashed rgba(8, 20, 40, 0.18);
+  border-radius: 50%;
+}
+
+.teamName {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamPoints {
+  flex-shrink: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.05rem;
+}
+
+.teamPoints small {
+  font-size: 0.7rem;
+  font-style: normal;
+  color: rgba(8, 20, 40, 0.45);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1080px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .divisionName {
+    font-size: 2rem;
+  }
+}
