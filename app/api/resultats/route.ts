@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import {
+  type AnyObject,
   buildMatchSummary,
   computeChampionStats,
   computePlayerStats,
@@ -11,21 +12,16 @@ import {
 import {
   jsonError,
   jsonNoStore,
-  loadExclusions,
-  loadFinishedMatches,
-  loadGames,
-  loadPlayerNames,
-  loadStats,
-  loadValidatedTeams,
+  loadResultsDataset,
   readDivisionParam,
   toTeamMap,
 } from '@/lib/results/load';
 
 export const dynamic = 'force-dynamic';
 
-// Tout ce qu'affiche la page Résultats pour une division, en une requête :
+// Tout ce qu'affichent les pages Résultats et Stats pour une division, en une requête :
 // classement, historique, stats joueurs et champions. ?division= obligatoire.
-// Les matchs, games et équipes ne sont lus qu'une fois au lieu de quatre.
+// Les données viennent du cache partagé (cf. loadResultsDataset).
 export async function GET(request: NextRequest) {
   const { division } = readDivisionParam(request);
 
@@ -37,37 +33,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [allMatches, teams, exclusionRows, champions] = await Promise.all([
-      loadFinishedMatches(),
-      loadValidatedTeams(),
-      loadExclusions(),
-      getChampions(),
-    ]);
-
-    const games = await loadGames(
-      allMatches.map((match) => Number(match.id)),
-      'id, match_id, duration_seconds, winner_team_id'
-    );
+    const [dataset, champions] = await Promise.all([loadResultsDataset(), getChampions()]);
+    const { matches: allMatches, teams, games, exclusions } = dataset;
 
     const matches = allMatches.filter((match) => match.division === division);
     const matchIds = new Set(matches.map((match) => Number(match.id)));
-    const divisionGameIds = games
-      .filter((game) => matchIds.has(Number(game.match_id)))
-      .map((game) => Number(game.id));
+    const divisionGameIds = new Set(
+      games.filter((game) => matchIds.has(Number(game.match_id))).map((game) => Number(game.id))
+    );
+    const inDivision = (stat: AnyObject) => divisionGameIds.has(Number(stat.game_id));
 
-    const [currentStats, stats] = await Promise.all([
-      loadStats('czf_current_player_stats', divisionGameIds),
-      loadStats('czf_game_player_stats', divisionGameIds),
-    ]);
-
-    // Noms des joueurs classés et des MVP en une seule lecture.
-    const playerNames = await loadPlayerNames([
-      ...currentStats.map((stat) => Number(stat.player_id)),
-      ...matches
-        .filter((match) => match.mvp_player_id)
-        .map((match) => Number(match.mvp_player_id)),
-    ]);
-
+    const currentIds = new Set(dataset.currentStatIds);
+    const playerNames = new Map(dataset.playerNames);
     const teamMap = toTeamMap(teams);
     const gamesByMatch = groupBy(games, (game) => Number(game.match_id));
 
@@ -93,15 +70,15 @@ export async function GET(request: NextRequest) {
       playerStats: computePlayerStats(division, {
         matches,
         games,
-        currentStats,
+        currentStats: dataset.stats.filter((stat) => inDivision(stat) && currentIds.has(Number(stat.id))),
         teamMap,
         playerNames,
-        exclusions: parseExclusions(exclusionRows),
+        exclusions: parseExclusions(exclusions),
       }),
       champions: computeChampionStats(division, {
         matches,
         games,
-        stats,
+        stats: dataset.stats.filter(inDivision),
         championMap: new Map(champions.map((champion) => [champion.id, champion])),
       }),
     });

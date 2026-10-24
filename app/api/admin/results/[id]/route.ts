@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { invalidateResults } from '@/lib/results/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,6 +109,8 @@ export async function DELETE(
       const { error } = await step();
       if (error) throw error;
     }
+
+    invalidateResults();
 
     return reply({ success: true, deleted: { matchId, games: gameIds.length } });
   } catch (error: any) {

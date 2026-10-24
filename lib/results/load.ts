@@ -1,7 +1,9 @@
 // Requêtes Supabase des routes de résultats : uniquement les colonnes utiles.
 
 import { type NextRequest, NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { RESULTS_TAG, RESULTS_TTL_SECONDS } from './cache';
 import {
   type AnyObject,
   type Division,
@@ -151,6 +153,101 @@ export async function loadExclusions(): Promise<AnyObject[]> {
       .range(from, to)
   );
 }
+
+/* =========================================================
+   JEU DE DONNÉES COMPLET (pages Résultats et Stats)
+========================================================= */
+
+// Comme fetchAll, mais en lisant plusieurs pages à la fois : un seul aller-retour
+// tant que la table tient dans `batch` pages.
+async function fetchAllPages(
+  buildQuery: (from: number, to: number) => QueryResult,
+  batch = 3,
+  pageSize = 1000
+): Promise<AnyObject[]> {
+  const all: AnyObject[] = [];
+
+  for (let start = 0; ; start += batch * pageSize) {
+    const pages = await Promise.all(
+      Array.from({ length: batch }, (_, index) => {
+        const from = start + index * pageSize;
+        return buildQuery(from, from + pageSize - 1);
+      })
+    );
+
+    for (const { data, error } of pages) {
+      if (error) throw error;
+      all.push(...(data ?? []));
+    }
+
+    if ((pages[batch - 1].data?.length ?? 0) < pageSize) return all;
+  }
+}
+
+export type ResultsDataset = {
+  matches: AnyObject[];
+  teams: TeamInfo[];
+  exclusions: AnyObject[];
+  games: AnyObject[];
+  stats: AnyObject[];
+  // La vue czf_current_player_stats filtre czf_game_player_stats : ses ids suffisent.
+  currentStatIds: number[];
+  // Paires [id, riot_id] : le cache n'accepte que du JSON.
+  playerNames: [number, string | null][];
+};
+
+// Toutes les tables lues en parallèle : quelques milliers de lignes au plus,
+// moins coûteux qu'une cascade de requêtes filtrées.
+async function fetchResultsDataset(): Promise<ResultsDataset> {
+  const [matches, teams, exclusions, games, currentStats, stats, players] = await Promise.all([
+    loadFinishedMatches(),
+    loadValidatedTeams(),
+    loadExclusions(),
+    fetchAllPages((from, to) =>
+      supabaseAdmin.from('czf_games').select(GAME_COLUMNS).order('id', { ascending: true }).range(from, to)
+    ),
+    fetchAllPages((from, to) =>
+      supabaseAdmin
+        .from('czf_current_player_stats')
+        .select('id, game_id')
+        .order('id', { ascending: true })
+        .range(from, to)
+    ),
+    fetchAllPages((from, to) =>
+      supabaseAdmin
+        .from('czf_game_player_stats')
+        .select(STAT_COLUMNS)
+        .order('id', { ascending: true })
+        .range(from, to)
+    ),
+    fetchAllPages((from, to) =>
+      supabaseAdmin.from('players').select('id, riot_id').order('id', { ascending: true }).range(from, to)
+    ),
+  ]);
+
+  // Seulement les games des BO terminés, comme loadGames(matchIds).
+  const matchIds = new Set(matches.map((match) => Number(match.id)));
+  const finishedGames = games.filter((game) => matchIds.has(Number(game.match_id)));
+  const gameIds = new Set(finishedGames.map((game) => Number(game.id)));
+  const inFinishedGame = (stat: AnyObject) => gameIds.has(Number(stat.game_id));
+
+  return {
+    matches,
+    teams,
+    exclusions,
+    games: finishedGames,
+    stats: stats.filter(inFinishedGame),
+    currentStatIds: currentStats.filter(inFinishedGame).map((stat) => Number(stat.id)),
+    playerNames: players.map((player) => [Number(player.id), player.riot_id ?? null]),
+  };
+}
+
+// Les résultats ne changent qu'à la publication d'un match : cache partagé
+// entre divisions et requêtes, invalidé par invalidateResults().
+export const loadResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v2'], {
+  revalidate: RESULTS_TTL_SECONDS,
+  tags: [RESULTS_TAG],
+});
 
 /* =========================================================
    REPONSES
