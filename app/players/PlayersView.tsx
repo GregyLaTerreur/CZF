@@ -472,7 +472,7 @@ export default function PlayersView() {
                 className={ds.cardFooter}
                 onClick={() => setVisibleCount(visibleCount + PAGE_SIZE)}
               >
-                Afficher plus · {filteredPlayers.length - visibleCount} restants
+                Afficher plus
               </button>
             )}
           </div>
