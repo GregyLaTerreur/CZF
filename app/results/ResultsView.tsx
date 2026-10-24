@@ -69,6 +69,7 @@ type Game = {
 
 type PlayerStats = {
   playerId: number;
+  role: Role;
   riotId: string;
   teamShortName: string;
   teamLogo: string | null;
@@ -698,13 +699,17 @@ function PlayerSection({
 
   // MVP tous rôles : un joueur peut apparaître dans plusieurs rôles.
   const mvpRanking = useMemo(() => {
-    const byPlayer = new Map<number, PlayerStats>();
+    const byPlayer = new Map<number, PlayerStats & { roles: Role[] }>();
 
     for (const player of Object.values(playerStats).flat()) {
       const existing = byPlayer.get(player.playerId);
 
-      if (existing) existing.mvp += player.mvp;
-      else byPlayer.set(player.playerId, { ...player });
+      if (existing) {
+        existing.mvp += player.mvp;
+        if (player.mvp > 0) existing.roles.push(player.role);
+      } else {
+        byPlayer.set(player.playerId, { ...player, roles: player.mvp > 0 ? [player.role] : [] });
+      }
     }
 
     return [...byPlayer.values()].filter((player) => player.mvp > 0).sort((a, b) => b.mvp - a.mvp);
@@ -786,6 +791,20 @@ function PlayerSection({
               <span className={styles.playerName}>
                 {splitRiotId(player.riotId).name}
                 <small>{player.teamShortName}</small>
+              </span>
+              <span className={styles.mvpRoles}>
+                {player.roles.map((playerRole) => {
+                  const info = ROLES.find((item) => item.name === playerRole);
+
+                  return (
+                    info && (
+                      <span key={playerRole} className={styles.mvpRole}>
+                        <img src={info.image} alt="" />
+                        {info.label}
+                      </span>
+                    )
+                  );
+                })}
               </span>
               <span className={styles.bar}>
                 <span style={{ width: `${(player.mvp / mvpRanking[0].mvp) * 100}%` }} />

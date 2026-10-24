@@ -852,7 +852,7 @@
 
 .mvpRow {
   display: grid;
-  grid-template-columns: 22px 28px minmax(0, 1fr) minmax(60px, 1fr) 24px;
+  grid-template-columns: 22px 28px minmax(0, 1fr) auto minmax(60px, 1fr) 24px;
   align-items: center;
   gap: 10px;
   padding: 9px 0;
@@ -861,6 +861,29 @@
 
 .mvpRow .rankValue {
   text-align: right;
+}
+
+.mvpRoles {
+  display: flex;
+  gap: 6px;
+}
+
+.mvpRole {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: rgba(8, 20, 40, 0.7);
+}
+
+.mvpRole img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0.15);
 }
 
 /* =========================================================
