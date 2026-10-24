@@ -417,3 +417,48 @@
     gap: 20px;
   }
 }
+
+/* =========================================================
+   CARTE « MON PROFIL »
+========================================================= */
+
+.myRank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border-top: 1px solid rgba(8, 20, 40, 0.15);
+  border-bottom: 1px solid rgba(8, 20, 40, 0.15);
+}
+
+.myRankIcon {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.myRank strong {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.myRank small {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+.myPoints {
+  margin-left: auto;
+  text-align: right;
+}

@@ -706,6 +706,7 @@ function ProfileCard({
 
   if (myPlayer) {
     const { name, tag } = splitRiotId(myPlayer.riot_id);
+    const rank = formatRank(myPlayer.soloq_tier, myPlayer.soloq_rank, myPlayer.soloq_lp);
 
     return (
       <div className={`${ds.card} ${ds.sideCard}`}>
@@ -714,7 +715,29 @@ function ProfileCard({
           {name}
           {tag && <small>#{tag}</small>}
         </div>
-        <p className={ds.body}>Ton profil joueur est créé.</p>
+
+        <div className={styles.myRank}>
+          {rank ? (
+            <>
+              <img src={TIERS[myPlayer.soloq_tier]?.icon} alt="" className={styles.myRankIcon} />
+              <span>
+                <strong>{rank}</strong>
+                <small>SoloQ</small>
+              </span>
+            </>
+          ) : (
+            <span>
+              <strong>Non classé</strong>
+              <small>SoloQ</small>
+            </span>
+          )}
+
+          <span className={styles.myPoints}>
+            <strong>{myPlayer.czf_points ?? '—'}</strong>
+            <small>Points CZF</small>
+          </span>
+        </div>
+
         <Link href="/profile" className={ds.btnOutline}>
           Voir mon profil
         </Link>
