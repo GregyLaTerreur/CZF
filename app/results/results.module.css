@@ -9,12 +9,6 @@
    BLOCS
 ========================================================= */
 
-.mainGrid {
-  display: grid;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-  gap: 30px;
-  margin-bottom: 30px;
-}
 
 .blockHead {
   display: flex;
@@ -125,9 +119,6 @@
   background: var(--loss);
 }
 
-.standingEmpty {
-  opacity: 0.35;
-}
 
 .standingRank {
   font-family: var(--condensed);
@@ -159,6 +150,10 @@
   text-transform: uppercase;
 }
 
+.standings {
+  margin-bottom: 30px;
+}
+
 .standingName small,
 .historyTeamName small {
   overflow: hidden;
@@ -179,157 +174,7 @@
   font-size: 1.05rem;
 }
 
-.standingLegend {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-top: 2px solid var(--dark);
-  font-family: var(--condensed);
-  font-weight: 700;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(8, 20, 40, 0.55);
-}
 
-.legendQualified {
-  width: 4px;
-  height: 14px;
-  background: var(--division-color);
-}
-
-/* =========================================================
-   PHASE FINALE
-========================================================= */
-
-.bracket {
-  min-width: 0;
-}
-
-.bracketScroller {
-  overflow-x: auto;
-  padding: 20px;
-}
-
-.bracketInner {
-  min-width: 620px;
-}
-
-.laneTitle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-family: var(--condensed);
-  font-weight: 800;
-  font-style: italic;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.laneTitle::before {
-  content: '';
-  width: 22px;
-  height: 3px;
-  background: var(--division-color);
-}
-
-.laneLoser::before {
-  background: var(--orange);
-}
-
-.bracketLane {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.bracketRound {
-  display: flex;
-  flex-direction: column;
-}
-
-.bracketRound h3 {
-  margin: 0 0 10px;
-  text-align: center;
-  font-family: var(--condensed);
-  font-weight: 700;
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(8, 20, 40, 0.45);
-}
-
-.bracketMatches {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  gap: 14px;
-  flex: 1;
-}
-
-.bracketMatch {
-  background: #fff;
-  border: 2px solid var(--dark);
-  box-shadow: 3px 3px 0 var(--dark);
-}
-
-.bracketFinal {
-  box-shadow: 3px 3px 0 var(--orange);
-}
-
-.bracketSide {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 14px;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-}
-
-.bracketSide + .bracketSide {
-  border-top: 1px solid rgba(8, 20, 40, 0.15);
-}
-
-.bracketSeed {
-  font-family: var(--condensed);
-  font-weight: 800;
-  font-size: 0.72rem;
-  color: rgba(8, 20, 40, 0.4);
-}
-
-.bracketName {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--condensed);
-  font-weight: 800;
-  font-style: italic;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-}
-
-.bracketScore {
-  text-align: right;
-  font-family: var(--condensed);
-  font-weight: 800;
-  color: rgba(8, 20, 40, 0.35);
-}
-
-.bracketDrop {
-  margin: 20px 0;
-  padding: 10px;
-  border-top: 1px dashed rgba(8, 20, 40, 0.25);
-  border-bottom: 1px dashed rgba(8, 20, 40, 0.25);
-  text-align: center;
-  font-family: var(--condensed);
-  font-weight: 700;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(8, 20, 40, 0.5);
-}
 
 /* =========================================================
    HISTORIQUE
@@ -889,10 +734,6 @@
 ========================================================= */
 
 @media (max-width: 1080px) {
-  .mainGrid {
-    grid-template-columns: 1fr;
-  }
-
   .rankingGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
