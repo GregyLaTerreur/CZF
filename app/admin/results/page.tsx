@@ -485,6 +485,18 @@ export default function AdminResultsPage() {
     useState('');
 
   const [
+    importFileName,
+    setImportFileName,
+  ] =
+    useState('');
+
+  const [
+    dragOver,
+    setDragOver,
+  ] =
+    useState(false);
+
+  const [
     saving,
     setSaving,
   ] =
@@ -1245,6 +1257,41 @@ export default function AdminResultsPage() {
   /* =========================================================
      IMPORT JSON
   ========================================================= */
+
+  // Charge le contenu d'un fichier .json dans la zone de texte.
+  async function loadJsonFile(
+    file:
+      | File
+      | null
+      | undefined
+  ) {
+    if (
+      !file
+    ) {
+      return;
+    }
+
+    try {
+      const text =
+        await file.text();
+
+      setImportJson(
+        text
+      );
+
+      setImportFileName(
+        file.name
+      );
+
+      setMessage(
+        `Fichier "${file.name}" chargé. Clique sur Importer le JSON.`
+      );
+    } catch {
+      setMessage(
+        `Impossible de lire le fichier "${file.name}".`
+      );
+    }
+  }
 
   function importFromJson() {
     try {
@@ -2442,6 +2489,10 @@ export default function AdminResultsPage() {
       setImportJson(
         ''
       );
+
+      setImportFileName(
+        ''
+      );
     } catch (
       error: any
     ) {
@@ -2490,7 +2541,8 @@ export default function AdminResultsPage() {
               </h3>
 
               <p>
-                Colle ici le JSON que je te donne après les captures du match.
+                Colle ici le JSON que je te donne après les captures du match,
+                ou choisis / glisse le fichier .json.
                 Tout le formulaire sera rempli automatiquement.
               </p>
             </div>
@@ -2501,18 +2553,54 @@ export default function AdminResultsPage() {
           </div>
 
           <textarea
-            className="jsonTextarea"
+            className={`jsonTextarea ${
+              dragOver
+                ? 'jsonTextareaDrop'
+                : ''
+            }`}
             value={
               importJson
             }
             onChange={(
               e
-            ) =>
+            ) => {
               setImportJson(
                 e.target
                   .value
+              );
+
+              setImportFileName(
+                ''
+              );
+            }}
+            onDragOver={(
+              e
+            ) => {
+              e.preventDefault();
+
+              setDragOver(
+                true
+              );
+            }}
+            onDragLeave={() =>
+              setDragOver(
+                false
               )
             }
+            onDrop={(
+              e
+            ) => {
+              e.preventDefault();
+
+              setDragOver(
+                false
+              );
+
+              loadJsonFile(
+                e.dataTransfer
+                  .files[0]
+              );
+            }}
             placeholder={`{
   "division": "Ixtal",
   "team1": "Season's",
@@ -2523,15 +2611,44 @@ export default function AdminResultsPage() {
 }`}
           />
 
-          <button
-            className="importButton"
-            type="button"
-            onClick={
-              importFromJson
-            }
-          >
-            Importer le JSON
-          </button>
+          <div className="importActions">
+            <label className="importFileButton">
+              Choisir un fichier .json
+
+              <input
+                type="file"
+                accept=".json,application/json"
+                onChange={(
+                  e
+                ) => {
+                  loadJsonFile(
+                    e.target
+                      .files?.[0]
+                  );
+
+                  // Permet de recharger le même fichier.
+                  e.target.value =
+                    '';
+                }}
+              />
+            </label>
+
+            {importFileName && (
+              <span className="importFileName">
+                {importFileName}
+              </span>
+            )}
+
+            <button
+              className="importButton"
+              type="button"
+              onClick={
+                importFromJson
+              }
+            >
+              Importer le JSON
+            </button>
+          </div>
         </section>
 
         {/* =================================================
@@ -3403,8 +3520,47 @@ export default function AdminResultsPage() {
             line-height: 1.5;
           }
 
-          .importButton {
+          .jsonTextareaDrop {
+            border: 2px dashed var(--orange);
+            background: rgba(255, 255, 255, 0.9);
+          }
+
+          .importActions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
             margin-top: 12px;
+          }
+
+          .importFileButton {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            min-height: 46px;
+            padding: 0 22px;
+            border: 2px solid var(--orange);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--orange);
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+          }
+
+          .importFileButton input {
+            display: none;
+          }
+
+          .importFileName {
+            color: var(--navy);
+            font-family: monospace;
+            font-size: 12px;
+            opacity: 0.75;
+          }
+
+          .importButton {
+            margin-left: auto;
             min-height: 46px;
             padding: 0 22px;
             border: 0;
