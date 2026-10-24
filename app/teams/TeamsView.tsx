@@ -409,58 +409,61 @@ function TeamCard({
   const { team } = view;
 
   return (
-    <button type="button" className={`${ds.card} ${styles.teamCard}`} onClick={onOpen}>
-      <span className={styles.teamHead}>
-        {team.logo_url ? (
-          <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
-        ) : (
-          <span className={styles.teamLogoEmpty} />
-        )}
+    // Toute la carte ouvre la fiche, sauf le bouton de copie du lien OP.GG.
+    <div className={`${ds.card} ${styles.teamCard}`} onClick={onOpen}>
+      <button type="button" className={styles.teamCardMain}>
+        <span className={styles.teamHead}>
+          {team.logo_url ? (
+            <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
+          ) : (
+            <span className={styles.teamLogoEmpty} />
+          )}
 
-        <span className={styles.teamTitle}>
-          <span className={styles.teamName}>
-            {team.name}
-            {isMine && <em className={ds.meChip}>Mon équipe</em>}
-          </span>
-          <span className={styles.teamCaptain}>
-            Cap. {splitRiotId(team.captain_riot_id || '').name || '—'}
-          </span>
-        </span>
-
-        <span className={view.validated ? styles.statusValidated : styles.statusPending}>
-          {view.validated ? 'Validée' : 'En attente'}
-        </span>
-      </span>
-
-      <span className={styles.roster}>
-        {view.slots.map(({ role, member, player }) => {
-          const { name, tag } = splitRiotId(player?.riot_id || member?.riot_id || '');
-
-          return (
-            <span key={role.name} className={styles.rosterRow}>
-              <span className={styles.roleLabel}>{role.label}</span>
-
-              {member ? (
-                <span className={styles.rosterName}>
-                  {name}
-                  {tag && <small>#{tag}</small>}
-                </span>
-              ) : (
-                <span className={`${styles.rosterName} ${styles.freeSlot}`}>Place libre</span>
-              )}
-
-              {player?.soloq_tier && (
-                <img
-                  src={TIERS[player.soloq_tier]?.icon}
-                  alt=""
-                  title={formatRank(player.soloq_tier, player.soloq_rank, player.soloq_lp) || ''}
-                  className={styles.rosterRank}
-                />
-              )}
+          <span className={styles.teamTitle}>
+            <span className={styles.teamName}>
+              {team.name}
+              {isMine && <em className={ds.meChip}>Mon équipe</em>}
             </span>
-          );
-        })}
-      </span>
+            <span className={styles.teamCaptain}>
+              Cap. {splitRiotId(team.captain_riot_id || '').name || '—'}
+            </span>
+          </span>
+
+          <span className={view.validated ? styles.statusValidated : styles.statusPending}>
+            {view.validated ? 'Validée' : 'En attente'}
+          </span>
+        </span>
+
+        <span className={styles.roster}>
+          {view.slots.map(({ role, member, player }) => {
+            const { name, tag } = splitRiotId(player?.riot_id || member?.riot_id || '');
+
+            return (
+              <span key={role.name} className={styles.rosterRow}>
+                <span className={styles.roleLabel}>{role.label}</span>
+
+                {member ? (
+                  <span className={styles.rosterName}>
+                    {name}
+                    {tag && <small>#{tag}</small>}
+                  </span>
+                ) : (
+                  <span className={`${styles.rosterName} ${styles.freeSlot}`}>Place libre</span>
+                )}
+
+                {player?.soloq_tier && (
+                  <img
+                    src={TIERS[player.soloq_tier]?.icon}
+                    alt=""
+                    title={formatRank(player.soloq_tier, player.soloq_rank, player.soloq_lp) || ''}
+                    className={styles.rosterRank}
+                  />
+                )}
+              </span>
+            );
+          })}
+        </span>
+      </button>
 
       <span className={styles.teamFoot}>
         <DivisionChip view={view} />
@@ -473,12 +476,53 @@ function TeamCard({
           {view.count}/{TEAM_SIZE}
         </span>
 
+        {team.multigg_url && <CopyLinkButton url={team.multigg_url} />}
+
         {pendingCount > 0 && (
           <span className={styles.requestsBadge} title="Demandes en attente">
             {pendingCount} demande{pendingCount > 1 ? 's' : ''}
           </span>
         )}
       </span>
+    </div>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+      <rect x="4" y="4" width="8.5" height="8.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M2 9.5V1.5h8" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+// Copie le lien OP.GG (multisearch) sans ouvrir la fiche.
+function CopyLinkButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy(event: React.MouseEvent) {
+    event.stopPropagation();
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Presse-papier indisponible : on ouvre le lien à la place.
+      window.open(url, '_blank', 'noopener');
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className={copied ? styles.copyButtonDone : styles.copyButton}
+      onClick={copy}
+      title="Copier le lien OP.GG"
+    >
+      <CopyIcon />
+      {copied ? 'Copié' : 'OP.GG'}
     </button>
   );
 }

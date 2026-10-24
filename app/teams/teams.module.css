@@ -34,6 +34,68 @@
   filter: none;
 }
 
+.teamCardMain {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.teamCardMain:hover,
+.teamCardMain:active {
+  transform: none;
+  filter: none;
+}
+
+.copyButton,
+.copyButtonDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 2px solid var(--dark);
+  border-radius: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 var(--dark);
+  transition: box-shadow 0.15s, transform 0.15s, background 0.15s, color 0.15s;
+}
+
+.copyButton {
+  background: #fff;
+  color: var(--dark);
+}
+
+.copyButtonDone {
+  background: var(--teal);
+  color: var(--dark);
+}
+
+.copyButton:hover,
+.copyButton:active,
+.copyButtonDone:hover,
+.copyButtonDone:active {
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 1px 1px 0 var(--dark);
+  transform: skewX(-8deg) translate(2px, 2px);
+  filter: none;
+}
+
 .teamHead {
   display: flex;
   align-items: center;
