@@ -236,7 +236,8 @@ export default function ResultsView() {
   const loading = !data && !error;
 
   const counts = useMemo(() => {
-    const history = data?.history ?? [];
+    // Mêmes BO que l'historique : sans ceux d'une équipe qui n'est plus validée.
+    const history = (data?.history ?? []).filter((match) => match.team1 && match.team2);
 
     return {
       matches: history.length,

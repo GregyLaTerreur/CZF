@@ -213,7 +213,7 @@
 }
 
 .bracketInner {
-  min-width: 760px;
+  min-width: 620px;
 }
 
 .laneTitle {
@@ -243,7 +243,7 @@
 .bracketLane {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px;
+  gap: 16px;
 }
 
 .bracketRound {
