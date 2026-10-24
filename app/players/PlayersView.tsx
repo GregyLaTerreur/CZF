@@ -98,8 +98,6 @@ function SortHeader({
 export default function PlayersView() {
   const [user, setUser] = useState<any>(null);
   const [players, setPlayers] = useState<any[]>([]);
-  const [teams, setTeams] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -122,17 +120,14 @@ export default function PlayersView() {
 
   async function loadData() {
     try {
-      const [playersRes, teamsRes, membersRes] = await Promise.all([
-        fetch('/api/players?view=list').then((res) => res.json()),
-        fetch('/api/teams').then((res) => res.json()),
-        fetch('/api/team-members').then((res) => res.json()),
-      ]);
+      // Une seule requête : l'équipe de chaque joueur est jointe côté serveur.
+      const playersRes = await fetch('/api/players?view=list&include=team').then((res) =>
+        res.json()
+      );
 
       if (!playersRes.success) throw new Error('Impossible de charger les joueurs.');
 
       setPlayers(playersRes.data || []);
-      setTeams(teamsRes.success ? teamsRes.data || [] : []);
-      setTeamMembers(membersRes.success ? membersRes.data || [] : []);
     } catch (error: any) {
       setLoadError(error?.message || 'Erreur de chargement.');
     } finally {
@@ -145,26 +140,13 @@ export default function PlayersView() {
     [players, user]
   );
 
-  // Équipe de chaque joueur : par player_id, sinon par Riot ID.
-  const teamByPlayer = useMemo(() => {
-    const teamMap = new Map(teams.map((team) => [Number(team.id), team]));
-    const result = new Map<number, any>();
-
-    for (const player of players) {
-      const riotId = String(player.riot_id || '').trim().toLowerCase();
-
-      const member = teamMembers.find((m) =>
-        m.player_id !== null && m.player_id !== undefined
-          ? Number(m.player_id) === Number(player.id)
-          : String(m.riot_id || '').trim().toLowerCase() === riotId
-      );
-
-      const team = member ? teamMap.get(Number(member.team_id)) : null;
-      if (team) result.set(Number(player.id), team);
-    }
-
-    return result;
-  }, [players, teams, teamMembers]);
+  const teamByPlayer = useMemo(
+    () =>
+      new Map<number, any>(
+        players.filter((player) => player.team).map((player) => [Number(player.id), player.team])
+      ),
+    [players]
+  );
 
   const counts = useMemo(
     () => ({

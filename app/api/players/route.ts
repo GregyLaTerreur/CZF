@@ -6,9 +6,74 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 const LIST_COLUMNS =
   'id, riot_id, profile_id, main_role, secondary_role, description, lft, czf_points, summoner_level, profile_icon_id, soloq_tier, soloq_rank, soloq_lp, soloq_wins, soloq_losses, flex_tier, flex_rank, flex_lp, peak_tier, peak_rank, peak_lp, top_champions';
 
+const normalizeRiotId = (value: any) =>
+  String(value || '').trim().toLowerCase();
+
+async function loadTeamData() {
+  const [{ data: teams, error: teamsError }, { data: members, error: membersError }] =
+    await Promise.all([
+      supabase
+        .from('teams')
+        .select('id, name, logo_url, division, validated_by_admin'),
+      supabase
+        .from('team_members')
+        .select('team_id, player_id, riot_id')
+        .order('created_at', { ascending: true }),
+    ]);
+
+  if (teamsError) throw teamsError;
+  if (membersError) throw membersError;
+
+  return { teams: teams || [], members: members || [] };
+}
+
+// Équipe de chaque joueur (?include=team) : membre lié par player_id,
+// sinon par Riot ID ; le premier membre inscrit l'emporte.
+function buildTeamByPlayer(
+  players: any[],
+  { teams, members }: { teams: any[]; members: any[] }
+) {
+  const teamById = new Map((teams || []).map((team) => [Number(team.id), team]));
+  const byPlayerId = new Map<number, { index: number; member: any }>();
+  const byRiotId = new Map<string, { index: number; member: any }>();
+
+  (members || []).forEach((member, index) => {
+    if (member.player_id !== null && member.player_id !== undefined) {
+      const key = Number(member.player_id);
+      if (!byPlayerId.has(key)) byPlayerId.set(key, { index, member });
+    } else {
+      const key = normalizeRiotId(member.riot_id);
+      if (!byRiotId.has(key)) byRiotId.set(key, { index, member });
+    }
+  });
+
+  const result = new Map<number, any>();
+
+  for (const player of players) {
+    const candidates = [
+      byPlayerId.get(Number(player.id)),
+      byRiotId.get(normalizeRiotId(player.riot_id)),
+    ].filter(Boolean) as { index: number; member: any }[];
+
+    if (!candidates.length) continue;
+
+    const first = candidates.sort((a, b) => a.index - b.index)[0];
+    const team = teamById.get(Number(first.member.team_id));
+
+    if (team) result.set(Number(player.id), team);
+  }
+
+  return result;
+}
+
 export async function GET(request: Request) {
-  const listView =
-    new URL(request.url).searchParams.get('view') === 'list';
+  const params = new URL(request.url).searchParams;
+  const listView = params.get('view') === 'list';
+  const includeTeam = listView && params.get('include') === 'team';
+
+  // Lancé en parallèle des joueurs ; l'erreur éventuelle est gérée plus bas.
+  const teamData = includeTeam ? loadTeamData() : null;
+  teamData?.catch(() => {});
 
   const [
     { data: players, error: playersError },
@@ -41,6 +106,19 @@ export async function GET(request: Request) {
     (profiles || []).map((profile) => [String(profile.id), profile])
   );
 
+  let teamByPlayer = new Map<number, any>();
+
+  if (teamData) {
+    try {
+      teamByPlayer = buildTeamByPlayer(players as any[], await teamData);
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error },
+        { status: 500 }
+      );
+    }
+  }
+
   const playersWithProfiles = (players as any[]).map((player) => {
     const profile =
       profileById.get(String(player.profile_id)) || null;
@@ -61,6 +139,9 @@ export async function GET(request: Request) {
       profiles: profile
         ? { discord_name: profile.discord_name }
         : null,
+      ...(includeTeam
+        ? { team: teamByPlayer.get(Number(player.id)) || null }
+        : {}),
     };
   });
 
