@@ -8,6 +8,9 @@ Tout le produit est en **français** : UI, messages d'erreur, commentaires, mess
 
 ## Règles à respecter
 
+> **IMPORTANT — JAMAIS D'EMOJI. QUE DES SVG.**
+> Aucun emoji nulle part : UI, textes, boutons, titres, CSS (`content: …`), messages d'erreur, commentaires. Pas de ✅ ⏳ 🎉 🚀, ni de symboles décoratifs (→ ★ ✓…) à la place d'une icône. Chaque icône est un SVG (voir ci-dessous). Toute page touchée qui contient encore des emoji doit en ressortir sans.
+
 - **Design system obligatoire** : avant toute refonte ou tout ajout d'interface, lire `design-system_czf.html` (racine du repo) et l'appliquer : couleurs, typo, boutons, ombres, onglets, cartes. Voir la section « Styles & design system » plus bas.
 - **Pas d'emoji**, ni dans l'UI, ni dans le CSS (`content: …`), ni dans les textes. Toute icône est un **SVG** : composant dans `app/components/icons/` (ex. `BoltIcon.tsx`) ou fichier dans `public/assets/`. Le design system montre un éclair emoji comme séparateur de bandeau : utiliser `BoltIcon` à la place. Les anciennes pages contiennent encore des emoji (médailles, fusée…) : les remplacer par des SVG quand on y touche.
 - **Commentaires simples et courts** : une ligne qui dit le *pourquoi*, pas de pavé ni de commentaire qui répète le code.
