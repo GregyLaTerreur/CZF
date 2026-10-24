@@ -156,6 +156,9 @@ export default function OnboardingView() {
               <Link href="/teams" className={ds.btnPrimary}>
                 Créer mon équipe
               </Link>
+              <Link href="/teams" className={ds.btnOutline}>
+                Voir les équipes
+              </Link>
             </div>
           )}
         </div>
