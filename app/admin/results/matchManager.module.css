@@ -1,0 +1,158 @@
+/* Panneau « Matchs enregistrés » de l'admin résultats. */
+
+.panel {
+  margin-bottom: 20px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.head h3 {
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab,
+.tabActive {
+  padding: 7px 14px;
+  border: 2px solid #081428;
+  border-radius: 0;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tab {
+  background: #fff;
+  color: #081428;
+}
+
+.tabActive {
+  background: #081428;
+  color: #fff;
+}
+
+/* globals.css anime tous les <button> */
+.tab:hover,
+.tab:active,
+.tabActive:hover,
+.tabActive:active,
+.delete:hover,
+.delete:active,
+.danger:hover,
+.danger:active,
+.cancel:hover,
+.cancel:active {
+  transform: none;
+  filter: none;
+}
+
+.hint,
+.empty,
+.message {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
+.hint,
+.empty {
+  color: rgba(8, 20, 40, 0.6);
+}
+
+.message {
+  font-weight: 700;
+  color: #081428;
+}
+
+.list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 420px;
+  overflow-y: auto;
+  border-top: 1px solid rgba(8, 20, 40, 0.15);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 4px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
+}
+
+.meta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.teams {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.teams strong {
+  font-size: 1.05rem;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.delete,
+.danger,
+.cancel {
+  padding: 6px 12px;
+  border-radius: 0;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.delete {
+  border: 2px solid #E05050;
+  background: #fff;
+  color: #E05050;
+}
+
+.danger {
+  border: 2px solid #E05050;
+  background: #E05050;
+  color: #fff;
+}
+
+.danger:disabled {
+  opacity: 0.6;
+}
+
+.cancel {
+  border: 2px solid #081428;
+  background: #fff;
+  color: #081428;
+}
+
+@media (max-width: 680px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

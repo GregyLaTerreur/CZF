@@ -7,6 +7,7 @@ import {
 } from 'react';
 
 import Nav from '../../components/Nav';
+import MatchManager from './MatchManager';
 
 import {
   supabase,
@@ -2528,6 +2529,8 @@ export default function AdminResultsPage() {
             Admin résultats
           </h2>
         </div>
+
+        <MatchManager />
 
         {/* =================================================
             IMPORT JSON
