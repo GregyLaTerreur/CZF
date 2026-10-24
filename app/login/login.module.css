@@ -4,6 +4,16 @@
    app/components/ds/ds.module.css.
 ========================================================= */
 
+/* Page courte : le footer reste en bas de l'écran */
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.page > footer {
+  margin-top: auto;
+}
+
 .text {
   margin: 0;
   font-size: 0.95rem;

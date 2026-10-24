@@ -918,41 +918,6 @@
 }
 
 /* =========================================================
-   FOOTER
-========================================================= */
-
-.footer {
-  background: var(--darker);
-  color: rgba(224, 216, 204, 0.55);
-  padding: 40px 0;
-  margin-top: 36px;
-  text-align: left;
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.footerInner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.footerLinks {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.footerLinks a:hover {
-  color: var(--orange);
-}
-
-/* =========================================================
    ÉTATS
 ========================================================= */
 

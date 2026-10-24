@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import Nav from './components/Nav';
+import Footer from './components/Footer';
+import { DISCORD_URL, RULEBOOK_URL } from './components/links';
 import { fontVariables } from './fonts';
 import styles from './home.module.css';
 import {
@@ -11,9 +13,6 @@ import {
 } from './components/home/HomeLive';
 import { DIVISION_COLORS, type DivisionName } from './components/home/divisions';
 
-const DISCORD_URL = 'https://discord.gg/ZWSmEGrv2s';
-const RULEBOOK_URL =
-  'https://docs.google.com/document/d/1ASxjPHKffW-ZK9C55Gv57JjFJ6t8qiQhaKxbBzW8ohk/edit?usp=sharing';
 
 const DIVISION_INFO: { name: DivisionName; level: string; points: string }[] = [
   { name: 'Targon', level: 'Division Élite', points: '6101 – 8000 pts CZF' },
@@ -194,19 +193,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={`${styles.container} ${styles.footerInner}`}>
-          <span>© CZF — Clash des Zéros de la Faille</span>
-          <nav className={styles.footerLinks}>
-            <Link href="/teams">Équipes</Link>
-            <Link href="/players">Joueurs</Link>
-            <Link href="/hall-of-fame">Hall of Fame</Link>
-            <a href={RULEBOOK_URL} target="_blank" rel="noopener noreferrer">
-              Rulebook
-            </a>
-          </nav>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
