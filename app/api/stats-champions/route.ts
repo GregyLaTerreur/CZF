@@ -16,7 +16,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-// Top 5 champions par rôle : ?division=Ixtal ou toutes les divisions.
+// Top 10 champions par rôle : ?division=Ixtal ou toutes les divisions.
 export async function GET(request: NextRequest) {
   const { division, invalid } = readDivisionParam(request);
 

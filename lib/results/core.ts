@@ -832,7 +832,7 @@ export function computeChampionStats(
         };
       })
       .sort((a, b) => b.picks - a.picks || b.winRate - a.winRate)
-      .slice(0, 5);
+      .slice(0, 10);
   }
 
   return result;

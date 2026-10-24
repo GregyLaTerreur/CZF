@@ -109,13 +109,13 @@ export default function StatsView() {
 
               {/* CHAMPIONS */}
               <div className={`${styles.playerSection} ${styles.statsBlock}`}>
-                <BlockHead label="Draft" title="Statistiques champions" aside={`${roleLabel} · Top 5`} />
+                <BlockHead label="Draft" title="Statistiques champions" aside={`${roleLabel} · Top 10`} />
 
                 {champions.length === 0 ? (
                   <div className={`${ds.card} ${ds.empty}`}>Aucun champion enregistré pour le moment.</div>
                 ) : (
                   <div className={styles.championGrid}>
-                    {champions.slice(0, 5).map((champion, index) => (
+                    {champions.slice(0, 10).map((champion, index) => (
                       <div key={champion.championId} className={`${ds.card} ${styles.championCard}`}>
                         <span className={styles.championRank}>#{index + 1}</span>
                         {champion.image ? (
