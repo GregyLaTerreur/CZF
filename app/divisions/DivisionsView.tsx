@@ -40,7 +40,7 @@ const SCALE_ORDER: DivisionName[] = ['Yordle', 'Ixtal', 'Targon'];
 
 // Rangs SoloQ typiques d'une division, affichés au-dessus du barème.
 const DIVISION_TIERS: Record<DivisionName, string[]> = {
-  Yordle: ['SILVER', 'GOLD'],
+  Yordle: ['BRONZE', 'SILVER', 'GOLD'],
   Ixtal: ['PLATINUM', 'EMERALD'],
   Targon: ['DIAMOND', 'MASTER'],
 };
