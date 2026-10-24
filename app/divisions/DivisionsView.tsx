@@ -8,7 +8,7 @@ import {
   type DivisionName,
 } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
-import { teamDivision } from '@/app/components/ds/lol';
+import { TIERS, teamDivision } from '@/app/components/ds/lol';
 import styles from './divisions.module.css';
 
 // Barème de points d'équipe (cf. divisionFromPoints).
@@ -37,6 +37,13 @@ const DIVISION_INFO: Record<
 
 // Échelle affichée de bas en haut : Yordle → Ixtal → Targon.
 const SCALE_ORDER: DivisionName[] = ['Yordle', 'Ixtal', 'Targon'];
+
+// Rangs SoloQ typiques d'une division, affichés au-dessus du barème.
+const DIVISION_TIERS: Record<DivisionName, string[]> = {
+  Yordle: ['SILVER', 'GOLD'],
+  Ixtal: ['PLATINUM', 'EMERALD'],
+  Targon: ['DIAMOND', 'MASTER'],
+};
 
 export default function DivisionsView() {
   const [teams, setTeams] = useState<any[]>([]);
@@ -117,6 +124,20 @@ export default function DivisionsView() {
 
           <div className={`${ds.card} ${ds.sideCard}`}>
             <div className={ds.cardTitle}>Barème équipe</div>
+
+            <div className={styles.scaleTiers}>
+              {SCALE_ORDER.map((division) => {
+                const info = DIVISION_INFO[division];
+
+                return (
+                  <span key={division} style={{ flexGrow: info.max - info.min }}>
+                    {DIVISION_TIERS[division].map((tier) => (
+                      <img key={tier} src={TIERS[tier].icon} alt={TIERS[tier].label} title={TIERS[tier].label} />
+                    ))}
+                  </span>
+                );
+              })}
+            </div>
 
             <div className={styles.scale}>
               {SCALE_ORDER.map((division) => {
