@@ -244,10 +244,21 @@ async function fetchResultsDataset(): Promise<ResultsDataset> {
 
 // Les résultats ne changent qu'à la publication d'un match : cache partagé
 // entre divisions et requêtes, invalidé par invalidateResults().
-export const loadResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v2'], {
+const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v2'], {
   revalidate: RESULTS_TTL_SECONDS,
   tags: [RESULTS_TAG],
 });
+
+// Les appels simultanés (3 divisions préchargées) partagent le même chargement.
+let pendingDataset: Promise<ResultsDataset> | null = null;
+
+export function loadResultsDataset(): Promise<ResultsDataset> {
+  pendingDataset ??= cachedResultsDataset().finally(() => {
+    pendingDataset = null;
+  });
+
+  return pendingDataset;
+}
 
 /* =========================================================
    REPONSES

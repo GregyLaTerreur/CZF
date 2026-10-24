@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { invalidateResults } from '@/lib/results/cache';
 
 // Colonnes affichées par les pages Joueurs et Équipes (?view=list).
 const LIST_COLUMNS =
@@ -409,6 +410,8 @@ export async function PATCH(request: Request) {
       { status: 500 }
     );
   }
+
+  invalidateResults();
 
   return NextResponse.json({
     success: true,

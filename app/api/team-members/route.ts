@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { invalidateResults } from '@/lib/results/cache';
 
 export async function GET() {
   const { data, error } = await supabase
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error }, { status: 500 });
   }
 
+  invalidateResults();
+
   return NextResponse.json({ success: true, data });
 }
 
@@ -45,6 +48,8 @@ export async function DELETE(request: Request) {
   if (error) {
     return NextResponse.json({ success: false, error }, { status: 500 });
   }
+
+  invalidateResults();
 
   return NextResponse.json({ success: true });
 }

@@ -116,40 +116,39 @@ async function getJson(url: string) {
   return json;
 }
 
-// Une requête par division (et par BO ouvert), partagée entre chargement et préchargement.
-const divisionRequests = new Map<DivisionName, Promise<DivisionData>>();
-const gameRequests = new Map<number, Promise<Game[]>>();
+// Réponses gardées 60 s : passer de Résultats à Stats (ou revenir) ne refait pas d'appel.
+// Le serveur garde lui aussi les données en cache et les vide à chaque publication.
+const CLIENT_TTL_MS = 60_000;
+
+type Entry<T> = { promise: Promise<T>; at: number };
+
+const divisionRequests = new Map<DivisionName, Entry<DivisionData>>();
+const gameRequests = new Map<number, Entry<Game[]>>();
+
+// Une seule requête par clé, partagée entre chargement et préchargement.
+function remember<K, T>(store: Map<K, Entry<T>>, key: K, load: () => Promise<T>): Promise<T> {
+  const entry = store.get(key);
+
+  if (entry && Date.now() - entry.at < CLIENT_TTL_MS) return entry.promise;
+
+  const promise = load().catch((error) => {
+    store.delete(key);
+    throw error;
+  });
+
+  store.set(key, { promise, at: Date.now() });
+
+  return promise;
+}
 
 function loadDivision(division: DivisionName): Promise<DivisionData> {
-  let request = divisionRequests.get(division);
-
-  if (!request) {
-    request = getJson(`/api/resultats?division=${division}`).catch((error) => {
-      divisionRequests.delete(division);
-      throw error;
-    });
-
-    divisionRequests.set(division, request);
-  }
-
-  return request;
+  return remember(divisionRequests, division, () => getJson(`/api/resultats?division=${division}`));
 }
 
 export function loadGames(matchId: number): Promise<Game[]> {
-  let request = gameRequests.get(matchId);
-
-  if (!request) {
-    request = getJson(`/api/historique/${matchId}`)
-      .then((json) => json.match.games as Game[])
-      .catch((error) => {
-        gameRequests.delete(matchId);
-        throw error;
-      });
-
-    gameRequests.set(matchId, request);
-  }
-
-  return request;
+  return remember(gameRequests, matchId, () =>
+    getJson(`/api/historique/${matchId}`).then((json) => json.match.games as Game[])
+  );
 }
 
 function readDivisionFromUrl(): DivisionName {
@@ -161,39 +160,39 @@ function readDivisionFromUrl(): DivisionName {
 
 // Division choisie (synchronisée avec ?division=) et ses données, avec préchargement des autres.
 export function useDivisionData() {
-  const [division, setDivision] = useState<DivisionName>('Yordle');
+  // null tant que l'URL n'est pas lue : évite de charger Yordle pour rien.
+  const [selected, setSelected] = useState<DivisionName | null>(null);
   const [cache, setCache] = useState<Partial<Record<DivisionName, DivisionData>>>({});
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Données fraîches à chaque arrivée sur la page.
-    divisionRequests.clear();
-    gameRequests.clear();
-    setDivision(readDivisionFromUrl());
+    setSelected(readDivisionFromUrl());
   }, []);
 
   // Lien partageable : ?division=Ixtal.
   useEffect(() => {
+    if (!selected) return;
+
     const url = new URL(window.location.href);
-    url.searchParams.set('division', division);
+    url.searchParams.set('division', selected);
     window.history.replaceState(null, '', url.toString());
-  }, [division]);
+  }, [selected]);
 
   useEffect(() => {
-    if (cache[division]) return;
+    if (!selected || cache[selected]) return;
 
     let active = true;
     setError('');
 
-    loadDivision(division)
+    loadDivision(selected)
       .then((data) => {
         if (!active) return;
 
-        setCache((previous) => ({ ...previous, [division]: data }));
+        setCache((previous) => ({ ...previous, [selected]: data }));
 
         // Précharge les autres divisions pour un changement d'onglet instantané.
         for (const other of DIVISIONS) {
-          if (other === division) continue;
+          if (other === selected) continue;
 
           loadDivision(other)
             .then((otherData) => setCache((previous) => ({ ...previous, [other]: otherData })))
@@ -207,11 +206,12 @@ export function useDivisionData() {
     return () => {
       active = false;
     };
-  }, [division, cache]);
+  }, [selected, cache]);
 
-  const data = cache[division] ?? null;
+  const division = selected ?? 'Yordle';
+  const data = selected ? cache[selected] ?? null : null;
 
-  return { division, setDivision, data, error, loading: !data && !error };
+  return { division, setDivision: setSelected, data, error, loading: !data && !error };
 }
 
 export function DivisionTabs({

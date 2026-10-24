@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { invalidateResults } from '@/lib/results/cache';
 
 export async function GET() {
   const { data, error } = await supabase
@@ -478,6 +479,8 @@ export async function PATCH(request: Request) {
         'id',
         request_id
       );
+
+    invalidateResults();
 
     return NextResponse.json({
       success: true,
