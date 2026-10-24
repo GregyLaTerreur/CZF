@@ -81,7 +81,7 @@ export type PlayerStats = {
   csPerMin: number;
   visionScore: number;
   mvp: number;
-  // Au moins 50 % des games de son équipe : sinon absent des classements de stats.
+  // Au moins 45 % des games de son équipe : sinon absent des classements de stats.
   qualified: boolean;
 };
 
