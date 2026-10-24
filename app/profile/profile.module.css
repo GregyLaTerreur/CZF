@@ -1,0 +1,306 @@
+/* =========================================================
+   CZF — PAGE MON PROFIL
+   Le socle (couleurs, boutons, cartes…) est dans
+   app/components/ds/ds.module.css.
+========================================================= */
+
+/* Page parfois courte : le footer reste en bas de l'écran */
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.page > footer {
+  margin-top: auto;
+}
+
+.text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(8, 20, 40, 0.65);
+  white-space: pre-line;
+}
+
+/* =========================================================
+   EN-TÊTE : IDENTITÉ
+========================================================= */
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 14px;
+}
+
+.avatar {
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  border: 3px solid var(--dark);
+  box-shadow: 4px 4px 0 var(--orange);
+  object-fit: cover;
+}
+
+.identityText {
+  min-width: 0;
+}
+
+.name {
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.name small {
+  font-weight: 700;
+  font-size: 0.45em;
+  color: rgba(8, 20, 40, 0.4);
+  margin-left: 4px;
+}
+
+.discord {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.roleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--dark);
+  color: #fff;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  transform: skewX(-8deg);
+}
+
+.roleChip img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.roleChip small {
+  font-weight: 700;
+  font-style: normal;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+/* =========================================================
+   EN-TÊTE : CARTE POINTS / RANG
+========================================================= */
+
+.points strong {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 3.4rem;
+  line-height: 0.9;
+  color: var(--orange);
+}
+
+.points span,
+.stats span {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+.rank {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rankIcon {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.rank span {
+  display: flex;
+  flex-direction: column;
+}
+
+.rank strong {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.1;
+}
+
+.rank small {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.5);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  border-top: 2px solid var(--dark);
+  padding-top: 14px;
+  gap: 12px;
+}
+
+.stats strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+
+/* =========================================================
+   CONTENU
+========================================================= */
+
+.section {
+  padding-bottom: 72px;
+}
+
+.feedback {
+  margin-bottom: 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 22px 26px;
+}
+
+.description {
+  margin-top: 28px;
+}
+
+.blockLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.blockLabel::before {
+  content: '';
+  width: 22px;
+  height: 3px;
+  background: var(--orange);
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.teamLogo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.teamName {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.teamMeta {
+  margin-top: 6px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+/* =========================================================
+   ÉDITION
+========================================================= */
+
+.editCard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+  padding: 24px 24px 28px;
+}
+
+.peakFields {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.peakFields select,
+.peakFields input {
+  flex: 1 1 140px;
+  width: auto;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .identity {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
