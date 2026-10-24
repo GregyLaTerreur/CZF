@@ -154,10 +154,7 @@ export default function OnboardingView() {
           {complete && (
             <div className={styles.next}>
               <Link href="/teams" className={ds.btnPrimary}>
-                Voir les équipes
-              </Link>
-              <Link href="/my-team" className={ds.btnOutline}>
-                Mon équipe
+                Créer mon équipe
               </Link>
             </div>
           )}
