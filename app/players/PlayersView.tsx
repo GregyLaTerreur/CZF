@@ -386,10 +386,6 @@ export default function PlayersView() {
           <div>
             <div className={styles.sectionLabel}>Saison 1 · Joueurs</div>
             <h1 className={styles.h1}>Les joueurs</h1>
-            <p className={styles.body}>
-              Tous les joueurs inscrits à la CZF, leur rang SoloQ, leurs points CZF et leur
-              champion pool. Les joueurs LFT cherchent une équipe.
-            </p>
 
             <div className={styles.counters}>
               <div className={styles.counter}>
