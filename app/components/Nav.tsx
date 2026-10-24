@@ -165,12 +165,14 @@ export default function Nav() {
           Résultats
         </Link>
 
+        {/* Hall of Fame masqué pour le moment (page encore vide).
         <Link
           href="/hall-of-fame"
           className={isActive('/hall-of-fame') ? 'active' : ''}
         >
           Hall of Fame
         </Link>
+        */}
 
         {/* ADMIN visible uniquement pour les admins */}
         {isAdmin && (
