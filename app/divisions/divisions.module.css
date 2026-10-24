@@ -62,13 +62,6 @@
   transform: none;
 }
 
-.sideNote {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: rgba(8, 20, 40, 0.6);
-}
-
 /* =========================================================
    BLOC DIVISION
 ========================================================= */
@@ -121,12 +114,6 @@
   background: var(--division-color);
   border: 2px solid var(--dark);
   flex-shrink: 0;
-}
-
-.divisionDesc {
-  margin: 0;
-  font-size: 0.95rem;
-  color: rgba(8, 20, 40, 0.6);
 }
 
 .divisionMeta {

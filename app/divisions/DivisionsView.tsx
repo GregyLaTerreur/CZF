@@ -16,23 +16,20 @@ const SCALE_MAX = 8000;
 
 const DIVISION_INFO: Record<
   DivisionName,
-  { level: string; description: string; min: number; max: number }
+  { level: string; min: number; max: number }
 > = {
   Targon: {
     level: 'Division Élite',
-    description: 'Les meilleures équipes de la ligue.',
     min: 6101,
     max: SCALE_MAX,
   },
   Ixtal: {
     level: 'Division Intermédiaire',
-    description: 'Des équipes solides et des matchs serrés.',
     min: 3901,
     max: 6100,
   },
   Yordle: {
     level: 'Division Développement',
-    description: 'Pour progresser et jouer à son niveau.',
     min: 0,
     max: 3900,
   },
@@ -146,12 +143,6 @@ export default function DivisionsView() {
               <span style={{ left: `${(6100 / SCALE_MAX) * 100}%` }}>6100</span>
               <span>8000</span>
             </div>
-
-            <p className={styles.sideNote}>
-              Chaque joueur a un score CZF calculé depuis son rang SoloQ, son winrate, son peak
-              et sa Flex. N&apos;importe quel joueur peut donc évoluer dans n&apos;importe quelle
-              division.
-            </p>
           </div>
         </div>
       </header>
@@ -219,7 +210,6 @@ function DivisionBlock({ division, teams }: { division: DivisionName; teams: any
             {division}
             <span className={styles.divisionDot} aria-hidden="true" />
           </h2>
-          <p className={styles.divisionDesc}>{info.description}</p>
         </div>
 
         <div className={styles.divisionMeta}>
