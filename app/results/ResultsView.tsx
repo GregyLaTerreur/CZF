@@ -306,14 +306,14 @@ export default function ResultsView() {
                 <Bracket teams={data.teams} />
               </div>
 
-              <History key={division} history={data.history} />
-
               <PlayerSection
                 role={role}
                 onRoleChange={setRole}
                 playerStats={data.playerStats}
                 champions={data.champions[role] ?? []}
               />
+
+              <History key={division} history={data.history} />
             </>
           )}
         </div>
