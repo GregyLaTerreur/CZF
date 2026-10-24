@@ -106,7 +106,9 @@ export type StatKey = 'kda' | 'goldPerMin' | 'dpm' | 'csPerMin' | 'visionScore';
 ========================================================= */
 
 async function getJson(url: string) {
-  const res = await fetch(url, { cache: 'no-store' });
+  // Pas de cache: 'no-store' : l'en-tête no-cache envoyé ferait sauter le cache serveur.
+  // La réponse est déjà marquée no-store et la page gère ses propres 60 s.
+  const res = await fetch(url);
   const json = await res.json();
 
   if (!res.ok || !json.success) {
@@ -151,11 +153,14 @@ export function loadGames(matchId: number): Promise<Game[]> {
   );
 }
 
+// Dernière division vue : gardée en passant de Résultats à Stats (et inversement).
+let lastDivision: DivisionName = 'Yordle';
+
 function readDivisionFromUrl(): DivisionName {
   const value = new URLSearchParams(window.location.search).get('division');
   const match = DIVISIONS.find((division) => division.toLowerCase() === value?.toLowerCase());
 
-  return match ?? 'Yordle';
+  return match ?? lastDivision;
 }
 
 // Division choisie (synchronisée avec ?division=) et ses données, avec préchargement des autres.
@@ -173,6 +178,7 @@ export function useDivisionData() {
   useEffect(() => {
     if (!selected) return;
 
+    lastDivision = selected;
     const url = new URL(window.location.href);
     url.searchParams.set('division', selected);
     window.history.replaceState(null, '', url.toString());
