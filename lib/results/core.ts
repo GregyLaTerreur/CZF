@@ -53,6 +53,8 @@ export type PlayerStats = {
   visionScore: number;
   mvp: number;
   totalDurationSeconds: number;
+  // A joué assez de games de son équipe pour figurer dans les classements.
+  qualified: boolean;
 };
 
 export type ChampionRoleStat = {
@@ -544,6 +546,10 @@ export function buildMatchGames(
     });
 }
 
+// Part minimale des games de son équipe qu'un joueur doit avoir jouées
+// pour apparaître dans les classements de stats (pas dans le classement MVP).
+export const MIN_TEAM_GAMES_SHARE = 0.25;
+
 /* =========================================================
    STATISTIQUES INDIVIDUELLES D'UNE DIVISION
    Lit la vue czf_current_player_stats (joueurs encore au même
@@ -584,6 +590,17 @@ export function computePlayerStats(
       .filter((g) => divisionMatchIds.has(Number(g.match_id)))
       .map((g) => Number(g.id))
   );
+
+  // Games jouées par chaque équipe dans la division.
+  const teamGames = new Map<number, number>();
+
+  for (const gameId of divisionGameIds) {
+    const match = matchMap.get(Number(gameMap.get(gameId)?.match_id));
+
+    for (const teamId of [Number(match?.team1_id), Number(match?.team2_id)]) {
+      if (Number.isFinite(teamId)) teamGames.set(teamId, (teamGames.get(teamId) ?? 0) + 1);
+    }
+  }
 
   const result = emptyRoleStats<PlayerStats>();
   const playerRoleKeys = new Set<string>();
@@ -711,6 +728,7 @@ export function computePlayerStats(
 
       mvp,
       totalDurationSeconds: duration,
+      qualified: gamesPlayed >= MIN_TEAM_GAMES_SHARE * (teamGames.get(teamId) ?? 0),
     });
   }
 

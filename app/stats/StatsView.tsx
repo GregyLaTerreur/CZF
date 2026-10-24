@@ -33,7 +33,7 @@ export default function StatsView() {
   const [role, setRole] = useState<Role>('Top');
 
   const playerStats = data?.playerStats;
-  const players = playerStats?.[role] ?? [];
+  const players = (playerStats?.[role] ?? []).filter((player) => player.qualified);
   const champions = data?.champions[role] ?? [];
   // Le support est classé à la vision plutôt qu'aux CS.
   const cards = role === 'Support' ? [...STAT_CARDS.slice(0, 3), VISION_CARD] : STAT_CARDS;
@@ -84,7 +84,7 @@ export default function StatsView() {
             <>
               {/* JOUEURS */}
               <div className={styles.playerSection}>
-                <BlockHead label="Performances" title="Statistiques joueurs" />
+                <BlockHead label="Performances" title="Statistiques joueurs" aside="Min. 25 % des games de l’équipe" />
 
                 <div className={`${ds.tabs} ${ds.filterRowLast}`}>
                   {ROLES.map((item) => (
