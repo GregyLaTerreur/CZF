@@ -788,23 +788,16 @@ function PlayerSection({
             <div key={player.playerId} className={styles.mvpRow}>
               <span className={styles.rankNumber}>{index + 1}</span>
               <TeamLogo logo={player.teamLogo} size="sm" />
-              <span className={styles.playerName}>
-                {splitRiotId(player.riotId).name}
-                <small>{player.teamShortName}</small>
-              </span>
               <span className={styles.mvpRoles}>
                 {player.roles.map((playerRole) => {
                   const info = ROLES.find((item) => item.name === playerRole);
 
-                  return (
-                    info && (
-                      <span key={playerRole} className={styles.mvpRole}>
-                        <img src={info.image} alt="" />
-                        {info.label}
-                      </span>
-                    )
-                  );
+                  return info && <img key={playerRole} src={info.image} alt={info.label} title={info.label} />;
                 })}
+              </span>
+              <span className={styles.playerName}>
+                {splitRiotId(player.riotId).name}
+                <small>{player.teamShortName}</small>
               </span>
               <span className={styles.bar}>
                 <span style={{ width: `${(player.mvp / mvpRanking[0].mvp) * 100}%` }} />
