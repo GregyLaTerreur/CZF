@@ -257,7 +257,7 @@
 ========================================================= */
 
 .header {
-  padding: 64px 0 40px;
+  padding: 28px 0 32px;
 }
 
 .headerGrid {
@@ -670,7 +670,7 @@
   }
 
   .header {
-    padding: 40px 0 28px;
+    padding: 20px 0 24px;
   }
 
   .search {
