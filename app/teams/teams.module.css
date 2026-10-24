@@ -1,0 +1,567 @@
+/* =========================================================
+   CZF — PAGE ÉQUIPES
+   Le socle (couleurs, boutons, onglets, cartes…) est dans
+   app/components/ds/ds.module.css.
+========================================================= */
+
+/* =========================================================
+   GRILLE DE CARTES (« Team Card » du design system)
+========================================================= */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.teamCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  color: var(--dark);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+/* Même effet « press » que les boutons du design system */
+.teamCard:hover,
+.teamCard:active {
+  box-shadow: 2px 2px 0 var(--dark);
+  transform: translate(4px, 4px);
+  filter: none;
+}
+
+.teamHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.15);
+}
+
+.teamLogo,
+.teamLogoEmpty {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamLogoEmpty {
+  border: 2px dashed rgba(8, 20, 40, 0.18);
+  border-radius: 50%;
+}
+
+.teamTitle {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.teamName {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.2rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamCaptain {
+  margin-top: 2px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.42);
+}
+
+.statusValidated,
+.statusPending {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.statusValidated {
+  background: var(--dark);
+  color: var(--teal);
+}
+
+.statusPending {
+  border: 1px solid rgba(8, 20, 40, 0.3);
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.rosterRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.08);
+}
+
+.rosterRow:last-child {
+  border-bottom: none;
+}
+
+.roleLabel {
+  width: 32px;
+  flex-shrink: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: rgba(8, 20, 40, 0.35);
+}
+
+.rosterName {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rosterName small {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: rgba(8, 20, 40, 0.35);
+}
+
+.freeSlot {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--teal);
+}
+
+.rosterRank {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamFoot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-top: 2px solid var(--dark);
+}
+
+.divisionChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  background: var(--dark);
+  color: var(--on-dark);
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.divisionChip small {
+  margin-left: 3px;
+  font-weight: 600;
+  color: rgba(224, 216, 204, 0.55);
+}
+
+.teamPoints {
+  margin-left: auto;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+.teamPoints small {
+  font-size: 0.7rem;
+  font-style: normal;
+  color: rgba(8, 20, 40, 0.45);
+}
+
+.countComplete,
+.countOpen {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.countComplete {
+  color: var(--win);
+}
+
+.countOpen {
+  color: var(--orange);
+}
+
+.requestsBadge {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--orange);
+  color: #fff;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.myTeam {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* =========================================================
+   FICHE D'ÉQUIPE (fenêtre, fond sombre via ds.onDark)
+========================================================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+  background: rgba(4, 12, 24, 0.72);
+}
+
+.modal {
+  position: relative;
+  width: min(940px, 100%);
+  padding: 28px;
+  border: 2px solid rgba(224, 216, 204, 0.12);
+  box-shadow: 8px 8px 0 var(--orange);
+}
+
+.closeButton {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid rgba(224, 216, 204, 0.3);
+  border-radius: 0;
+  background: none;
+  color: var(--on-dark);
+  cursor: pointer;
+}
+
+.closeButton:hover,
+.closeButton:active {
+  border-color: var(--orange);
+  color: var(--orange);
+  transform: none;
+  filter: none;
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-right: 44px;
+}
+
+.modalLogo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.modalWho {
+  flex: 1;
+  min-width: 220px;
+}
+
+.modalName {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 2.2rem;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.modalMeta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.65);
+}
+
+.modalStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 22px 0;
+  background: rgba(224, 216, 204, 0.12);
+  border: 1px solid rgba(224, 216, 204, 0.12);
+}
+
+.modalStat {
+  padding: 12px 14px;
+  background: var(--dark);
+}
+
+.modalStat span {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.modalStat strong {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.modalStat strong small {
+  margin-left: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(224, 216, 204, 0.55);
+  text-transform: uppercase;
+}
+
+.modalDescription {
+  margin: 0 0 22px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.modalLabel {
+  margin: 22px 0 10px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.55);
+}
+
+.modalRoster {
+  border: 1px solid rgba(224, 216, 204, 0.12);
+}
+
+.modalRosterRow {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1.3fr) minmax(0, 1fr) 164px 90px;
+  gap: 14px;
+  align-items: center;
+  min-height: 54px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(224, 216, 204, 0.1);
+}
+
+.modalRosterRow:last-child {
+  border-bottom: none;
+}
+
+.modalRole {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: rgba(224, 216, 204, 0.7);
+}
+
+.modalPlayer {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.modalPlayerName {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modalPlayerName small {
+  font-weight: 400;
+  color: rgba(224, 216, 204, 0.45);
+}
+
+.modalDiscord {
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.5);
+}
+
+.modalRank {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--on-dark);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.modalPool {
+  min-width: 0;
+}
+
+.modalRowAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.requests {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requestRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid rgba(224, 216, 204, 0.15);
+}
+
+.requestActions {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.modalActions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}
+
+.blockReason {
+  margin: 0;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.6);
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1080px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modalRosterRow {
+    grid-template-columns: 74px minmax(0, 1.3fr) minmax(0, 1fr) 90px;
+  }
+
+  .modalPool {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .overlay {
+    padding: 16px 10px;
+  }
+
+  .modal {
+    padding: 20px 16px;
+  }
+
+  .modalName {
+    font-size: 1.6rem;
+  }
+
+  .modalStats {
+    grid-template-columns: 1fr;
+  }
+
+  .modalRosterRow {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .modalRank {
+    display: none;
+  }
+}

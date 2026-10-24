@@ -8,92 +8,30 @@ import {
   DIVISIONS,
   type DivisionName,
 } from '@/app/components/home/divisions';
+import ds from '@/app/components/ds/ds.module.css';
+import {
+  ROLES,
+  TIERS,
+  dpmUrl,
+  formatRank,
+  rankValue,
+  roleInfo,
+  soloqGames,
+  splitRiotId,
+  teamDivision,
+  winRate,
+} from '@/app/components/ds/lol';
+import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
 import styles from './players.module.css';
 
 /* =========================================================
    CONSTANTES
 ========================================================= */
 
-const ROLES = [
-  { name: 'Top', label: 'TOP', image: '/assets/roles/top.png' },
-  { name: 'Jungle', label: 'JGL', image: '/assets/roles/jungle.png' },
-  { name: 'Mid', label: 'MID', image: '/assets/roles/mid.png' },
-  { name: 'ADC', label: 'ADC', image: '/assets/roles/adc.png' },
-  { name: 'Support', label: 'SUP', image: '/assets/roles/sup.png' },
-];
-
-const TIERS: Record<string, { label: string; icon: string; order: number }> = {
-  IRON: { label: 'Fer', icon: '/assets/ranks/iron.webp', order: 0 },
-  BRONZE: { label: 'Bronze', icon: '/assets/ranks/bronze.webp', order: 1 },
-  SILVER: { label: 'Argent', icon: '/assets/ranks/silver.webp', order: 2 },
-  GOLD: { label: 'Or', icon: '/assets/ranks/gold.webp', order: 3 },
-  PLATINUM: { label: 'Platine', icon: '/assets/ranks/platine.webp', order: 4 },
-  EMERALD: { label: 'Émeraude', icon: '/assets/ranks/Emerald.webp', order: 5 },
-  DIAMOND: { label: 'Diamant', icon: '/assets/ranks/diamant.webp', order: 6 },
-  MASTER: { label: 'Maître', icon: '/assets/ranks/master.webp', order: 7 },
-  GRANDMASTER: { label: 'Grand Maître', icon: '/assets/ranks/gm.webp', order: 8 },
-  CHALLENGER: { label: 'Challenger', icon: '/assets/ranks/chall.webp', order: 9 },
-};
-
-const APEX_TIERS = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];
-const DIVISION_ORDER: Record<string, number> = { IV: 0, III: 1, II: 2, I: 3 };
-
-const DDRAGON_FALLBACK = '14.24.1';
 const PAGE_SIZE = 40;
 
 type SortKey = 'riot_id' | 'main_role' | 'rank' | 'points' | 'wr';
 type SortDirection = 'asc' | 'desc';
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function splitRiotId(riotId: string) {
-  const [name, tag] = String(riotId || '').split('#');
-  return { name, tag };
-}
-
-function roleInfo(role: string | null | undefined) {
-  return ROLES.find((item) => item.name === role) || null;
-}
-
-// "Maître 375 LP", "Or II 54 LP" ou null si non classé.
-function formatRank(tier?: string | null, division?: string | null, lp?: number | null) {
-  if (!tier) return null;
-
-  const label = TIERS[tier]?.label ?? tier;
-
-  if (APEX_TIERS.includes(tier)) return `${label} ${lp || 0} LP`;
-
-  return `${label} ${division || ''} ${lp || 0} LP`.replace(/\s+/g, ' ');
-}
-
-function rankValue(player: any) {
-  const tier = TIERS[player.soloq_tier]?.order ?? -1;
-  const division = DIVISION_ORDER[player.soloq_rank] ?? 0;
-
-  return tier * 10000 + division * 1000 + (player.soloq_lp || 0);
-}
-
-function soloqGames(player: any) {
-  return (player.soloq_wins || 0) + (player.soloq_losses || 0);
-}
-
-function winRate(player: any): number | null {
-  const games = soloqGames(player);
-  return games ? Math.round(((player.soloq_wins || 0) / games) * 100) : null;
-}
-
-// Division d'un joueur = celle de son équipe, si elle est validée.
-function teamDivision(team: any): DivisionName | null {
-  if (team?.validated_by_admin !== true) return null;
-
-  return DIVISIONS.includes(team.division) ? team.division : null;
-}
-
-function dpmUrl(riotId: string) {
-  return `https://dpm.lol/${encodeURIComponent(riotId.replace('#', '-'))}`;
-}
 
 /* =========================================================
    ICONES
@@ -153,66 +91,6 @@ function SortHeader({
   );
 }
 
-function ChampionPool({
-  player,
-  ddragonVersion,
-  size = 'small',
-}: {
-  player: any;
-  ddragonVersion: string;
-  size?: 'small' | 'large';
-}) {
-  const champions = player.top_champions || [];
-
-  if (!champions.length) return <span className={styles.muted}>—</span>;
-
-  return (
-    <div className={size === 'large' ? styles.poolLarge : styles.pool}>
-      {champions.map((champion: any) => (
-        <img
-          key={champion.champion_id}
-          src={`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/champion/${champion.champion_name}.png`}
-          alt={champion.champion_name}
-          title={champion.champion_name}
-          loading="lazy"
-          // Nom de champion inconnu de Data Dragon : on masque l'image cassée.
-          onError={(event) => {
-            event.currentTarget.style.display = 'none';
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function RolePicker({
-  value,
-  onChange,
-  optional,
-}: {
-  value: string;
-  onChange: (role: string) => void;
-  optional?: boolean;
-}) {
-  return (
-    <div className={styles.rolePicker}>
-      {ROLES.map((role) => (
-        <button
-          key={role.name}
-          type="button"
-          className={value === role.name ? styles.rolePickActive : styles.rolePick}
-          // Le rôle secondaire peut être retiré en recliquant dessus.
-          onClick={() => onChange(optional && value === role.name ? '' : role.name)}
-          title={role.name}
-        >
-          <img src={role.image} alt="" />
-          {role.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 /* =========================================================
    VUE
 ========================================================= */
@@ -224,7 +102,6 @@ export default function PlayersView() {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [ddragonVersion, setDdragonVersion] = useState(DDRAGON_FALLBACK);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
@@ -235,16 +112,11 @@ export default function PlayersView() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [openPlayerId, setOpenPlayerId] = useState<number | null>(null);
+  const ddragonVersion = useDdragonVersion();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
     loadData();
-
-    // Version Data Dragon à jour pour les icônes des champions récents.
-    fetch('https://ddragon.leagueoflegends.com/api/versions.json')
-      .then((res) => res.json())
-      .then((versions) => versions?.[0] && setDdragonVersion(versions[0]))
-      .catch(() => {});
   }, []);
 
   async function loadData() {
@@ -381,23 +253,23 @@ export default function PlayersView() {
           EN-TÊTE
       ================================================= */}
 
-      <header className={styles.header}>
-        <div className={`${styles.container} ${styles.headerGrid}`}>
+      <header className={ds.header}>
+        <div className={`${ds.container} ${ds.headerGrid}`}>
           <div>
-            <div className={styles.sectionLabel}>Saison 1 · Joueurs</div>
-            <h1 className={styles.h1}>Les joueurs</h1>
+            <div className={ds.sectionLabel}>Saison 1 · Joueurs</div>
+            <h1 className={ds.h1}>Les joueurs</h1>
 
-            <div className={styles.counters}>
-              <div className={styles.counter}>
+            <div className={ds.counters}>
+              <div className={ds.counter}>
                 <strong>{loading ? '—' : counts.total}</strong>
                 <span>Inscrits</span>
               </div>
-              <div className={styles.counter}>
+              <div className={ds.counter}>
                 <strong>{loading ? '—' : counts.participants}</strong>
                 <span>En équipe validée</span>
               </div>
-              <div className={styles.counter}>
-                <strong className={styles.teal}>{loading ? '—' : counts.lft}</strong>
+              <div className={ds.counter}>
+                <strong className={ds.teal}>{loading ? '—' : counts.lft}</strong>
                 <span>LFT</span>
               </div>
             </div>
@@ -411,21 +283,21 @@ export default function PlayersView() {
           LISTE
       ================================================= */}
 
-      <section className={styles.section}>
-        <div className={styles.container}>
-          <div className={styles.toolbar}>
+      <section className={ds.section}>
+        <div className={ds.container}>
+          <div className={ds.toolbar}>
             <input
               type="search"
-              className={styles.search}
+              className={ds.search}
               placeholder="Rechercher un joueur, un pseudo Discord, une équipe..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
 
-            <div className={styles.tabs}>
+            <div className={ds.tabs}>
               <button
                 type="button"
-                className={participantsOnly ? styles.tabActive : styles.tab}
+                className={participantsOnly ? ds.tabActive : ds.tab}
                 onClick={() => setParticipantsOnly(!participantsOnly)}
                 aria-pressed={participantsOnly}
               >
@@ -434,20 +306,20 @@ export default function PlayersView() {
 
               <button
                 type="button"
-                className={lftOnly ? styles.tabActive : styles.tab}
+                className={lftOnly ? ds.tabActive : ds.tab}
                 onClick={() => setLftOnly(!lftOnly)}
                 aria-pressed={lftOnly}
               >
-                <span className={styles.dot} />
+                <span className={ds.dot} />
                 LFT
               </button>
             </div>
           </div>
 
-          <div className={`${styles.tabs} ${styles.divisionTabs}`}>
+          <div className={`${ds.tabs} ${ds.filterRow}`}>
             <button
               type="button"
-              className={divisionFilter === null ? styles.tabActive : styles.tab}
+              className={divisionFilter === null ? ds.tabActive : ds.tab}
               onClick={() => setDivisionFilter(null)}
             >
               Toutes les divisions
@@ -457,19 +329,19 @@ export default function PlayersView() {
               <button
                 key={division}
                 type="button"
-                className={divisionFilter === division ? styles.tabActive : styles.tab}
+                className={divisionFilter === division ? ds.tabActive : ds.tab}
                 onClick={() => setDivisionFilter(divisionFilter === division ? null : division)}
               >
-                <span className={styles.dot} style={{ background: DIVISION_COLORS[division] }} />
+                <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
                 {division}
               </button>
             ))}
           </div>
 
-          <div className={`${styles.tabs} ${styles.roleTabs}`}>
+          <div className={`${ds.tabs} ${ds.filterRowLast}`}>
             <button
               type="button"
-              className={roleFilter === null ? styles.tabActive : styles.tab}
+              className={roleFilter === null ? ds.tabActive : ds.tab}
               onClick={() => setRoleFilter(null)}
             >
               Tous les rôles
@@ -479,16 +351,16 @@ export default function PlayersView() {
               <button
                 key={role.name}
                 type="button"
-                className={roleFilter === role.name ? styles.tabActive : styles.tab}
+                className={roleFilter === role.name ? ds.tabActive : ds.tab}
                 onClick={() => setRoleFilter(roleFilter === role.name ? null : role.name)}
               >
-                <img src={role.image} alt="" className={styles.tabRoleIcon} />
+                <img src={role.image} alt="" className={ds.tabRoleIcon} />
                 {role.label}
               </button>
             ))}
           </div>
 
-          <div className={styles.card}>
+          <div className={ds.card}>
             <div className={`${styles.row} ${styles.rowHead}`}>
               <SortHeader sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} sort="riot_id" label="Joueur" />
               <SortHeader sortKey={sortKey} sortDirection={sortDirection} onSort={handleSort} sort="main_role" label="Rôles" />
@@ -499,11 +371,11 @@ export default function PlayersView() {
               <span className={styles.headLabel} />
             </div>
 
-            {loading && <div className={styles.empty}>Chargement des joueurs…</div>}
-            {loadError && <div className={styles.empty}>{loadError}</div>}
+            {loading && <div className={ds.empty}>Chargement des joueurs…</div>}
+            {loadError && <div className={ds.empty}>{loadError}</div>}
 
             {!loading && !loadError && filteredPlayers.length === 0 && (
-              <div className={styles.empty}>Aucun joueur ne correspond à ces filtres.</div>
+              <div className={ds.empty}>Aucun joueur ne correspond à ces filtres.</div>
             )}
 
             {visiblePlayers.map((player) => {
@@ -535,12 +407,12 @@ export default function PlayersView() {
                         <span className={styles.playerName}>
                           {name}
                           {tag && <small>#{tag}</small>}
-                          {isMe && <em className={styles.meChip}>Toi</em>}
+                          {isMe && <em className={ds.meChip}>Toi</em>}
                         </span>
                         <span className={styles.playerTeam}>
                           {teamDivision(team) && (
                             <span
-                              className={styles.teamDot}
+                              className={ds.teamDot}
                               style={{ background: DIVISION_COLORS[teamDivision(team)!] }}
                               title={teamDivision(team)!}
                             />
@@ -551,26 +423,26 @@ export default function PlayersView() {
                     </span>
 
                     <span className={styles.rolesCell}>
-                      {main && <img src={main.image} alt={main.name} title={main.name} className={styles.roleIcon} />}
+                      {main && <img src={main.image} alt={main.name} title={main.name} className={ds.roleIcon} />}
                       {secondary && (
                         <img
                           src={secondary.image}
                           alt={secondary.name}
                           title={`${secondary.name} (secondaire)`}
-                          className={`${styles.roleIcon} ${styles.roleSecondary}`}
+                          className={`${ds.roleIcon} ${styles.roleSecondary}`}
                         />
                       )}
-                      {!main && !secondary && <span className={styles.muted}>—</span>}
+                      {!main && !secondary && <span className={ds.muted}>—</span>}
                     </span>
 
                     <span className={styles.rankCell}>
                       {rank ? (
                         <>
-                          <img src={TIERS[player.soloq_tier]?.icon} alt="" className={styles.rankIcon} />
+                          <img src={TIERS[player.soloq_tier]?.icon} alt="" className={ds.rankIcon} />
                           <span>{rank}</span>
                         </>
                       ) : (
-                        <span className={styles.muted}>Non classé</span>
+                        <span className={ds.muted}>Non classé</span>
                       )}
                     </span>
 
@@ -580,10 +452,10 @@ export default function PlayersView() {
 
                     <span className={`${styles.wr} ${styles.alignRight} ${styles.hideMobile}`}>
                       {wr === null ? (
-                        <span className={styles.muted}>—</span>
+                        <span className={ds.muted}>—</span>
                       ) : (
                         <>
-                          <b className={wr >= 50 ? styles.win : styles.loss}>{wr}%</b>
+                          <b className={wr >= 50 ? ds.win : ds.loss}>{wr}%</b>
                           <small>{soloqGames(player)} games</small>
                         </>
                       )}
@@ -594,7 +466,7 @@ export default function PlayersView() {
                     </span>
 
                     <span className={styles.endCell}>
-                      {player.lft && <span className={styles.lftChip}>LFT</span>}
+                      {player.lft && <span className={ds.lftChip}>LFT</span>}
                       <ChevronIcon open={open} />
                     </span>
                   </button>
@@ -614,7 +486,7 @@ export default function PlayersView() {
             {filteredPlayers.length > visibleCount && (
               <button
                 type="button"
-                className={styles.cardFooter}
+                className={ds.cardFooter}
                 onClick={() => setVisibleCount(visibleCount + PAGE_SIZE)}
               >
                 Afficher plus · {filteredPlayers.length - visibleCount} restants
@@ -623,7 +495,7 @@ export default function PlayersView() {
           </div>
 
           {!loading && filteredPlayers.length > 0 && (
-            <p className={styles.resultCount}>
+            <p className={ds.resultCount}>
               {Math.min(visibleCount, filteredPlayers.length)} sur {filteredPlayers.length} joueur
               {filteredPlayers.length > 1 ? 's' : ''}
             </p>
@@ -662,7 +534,7 @@ function PlayerDetails({
   ];
 
   return (
-    <div className={styles.details}>
+    <div className={`${styles.details} ${ds.onDark}`}>
       <div className={styles.detailsHead}>
         {player.profile_icon_id ? (
           <img
@@ -692,7 +564,7 @@ function PlayerDetails({
           </div>
         </div>
 
-        <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={styles.btnOutline}>
+        <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
           Profil DPM
         </a>
       </div>
@@ -837,12 +709,12 @@ function ProfileCard({
 
   if (!user) {
     return (
-      <div className={`${styles.card} ${styles.profileCard}`}>
-        <div className={styles.cardTitle}>Rejoindre la CZF</div>
-        <p className={styles.body}>
+      <div className={`${ds.card} ${ds.sideCard}`}>
+        <div className={ds.cardTitle}>Rejoindre la CZF</div>
+        <p className={ds.body}>
           Connecte-toi avec Discord pour créer ton profil joueur et rejoindre une équipe.
         </p>
-        <Link href="/login" className={styles.btnPrimary}>
+        <Link href="/login" className={ds.btnPrimary}>
           Se connecter avec Discord
         </Link>
       </div>
@@ -853,14 +725,14 @@ function ProfileCard({
     const { name, tag } = splitRiotId(myPlayer.riot_id);
 
     return (
-      <div className={`${styles.card} ${styles.profileCard}`}>
-        <div className={styles.cardTitle}>Mon profil</div>
-        <div className={styles.myName}>
+      <div className={`${ds.card} ${ds.sideCard}`}>
+        <div className={ds.cardTitle}>Mon profil</div>
+        <div className={ds.myName}>
           {name}
           {tag && <small>#{tag}</small>}
         </div>
-        <p className={styles.body}>Ton profil joueur est créé.</p>
-        <Link href="/profile" className={styles.btnOutline}>
+        <p className={ds.body}>Ton profil joueur est créé.</p>
+        <Link href="/profile" className={ds.btnOutline}>
           Voir mon profil
         </Link>
       </div>
@@ -870,13 +742,13 @@ function ProfileCard({
   // Connecté sans profil : le formulaire ne s'ouvre qu'au clic.
   if (!formOpen) {
     return (
-      <div className={`${styles.card} ${styles.profileCard}`}>
-        <div className={styles.cardTitle}>Rejoindre la CZF</div>
-        <p className={styles.body}>
+      <div className={`${ds.card} ${ds.sideCard}`}>
+        <div className={ds.cardTitle}>Rejoindre la CZF</div>
+        <p className={ds.body}>
           Tu n&apos;as pas encore de profil joueur. Crée-le pour apparaître dans la liste et
           rejoindre une équipe.
         </p>
-        <button type="button" className={styles.btnPrimary} onClick={() => setFormOpen(true)}>
+        <button type="button" className={ds.btnPrimary} onClick={() => setFormOpen(true)}>
           Créer mon profil
         </button>
       </div>
@@ -884,13 +756,13 @@ function ProfileCard({
   }
 
   return (
-    <form className={`${styles.card} ${styles.profileCard}`} onSubmit={handleSubmit}>
-      <div className={styles.cardTitle}>Créer mon profil</div>
+    <form className={`${ds.card} ${ds.sideCard}`} onSubmit={handleSubmit}>
+      <div className={ds.cardTitle}>Créer mon profil</div>
 
-      <label className={styles.field}>
+      <label className={ds.field}>
         <span>Riot ID</span>
         <input
-          className={styles.input}
+          className={ds.input}
           placeholder="Pseudo#TAG"
           value={riotId}
           onChange={(e) => setRiotId(e.target.value)}
@@ -898,34 +770,34 @@ function ProfileCard({
         />
       </label>
 
-      <div className={styles.field}>
+      <div className={ds.field}>
         <span>Rôle principal</span>
         <RolePicker value={mainRole} onChange={setMainRole} />
       </div>
 
-      <div className={styles.field}>
+      <div className={ds.field}>
         <span>Rôle secondaire (optionnel)</span>
         <RolePicker value={secondaryRole} onChange={setSecondaryRole} optional />
       </div>
 
-      <label className={styles.field}>
+      <label className={ds.field}>
         <span>Description (optionnel)</span>
         <textarea
-          className={styles.input}
+          className={ds.input}
           rows={2}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
 
-      <div className={styles.formActions}>
-        <button type="submit" className={styles.btnPrimary} disabled={submitting}>
+      <div className={ds.formActions}>
+        <button type="submit" className={ds.btnPrimary} disabled={submitting}>
           {submitting ? 'Recherche Riot…' : 'Créer mon profil'}
         </button>
 
         <button
           type="button"
-          className={styles.btnOutline}
+          className={ds.btnOutline}
           disabled={submitting}
           onClick={() => {
             setFormOpen(false);
@@ -936,7 +808,7 @@ function ProfileCard({
         </button>
       </div>
 
-      {message && <p className={error ? styles.formError : styles.formInfo}>{message}</p>}
+      {message && <p className={error ? ds.formError : ds.formInfo}>{message}</p>}
     </form>
   );
 }

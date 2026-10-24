@@ -1,11 +1,11 @@
 import Nav from '../components/Nav';
 import { fontVariables } from '../fonts';
-import styles from './players.module.css';
+import ds from '../components/ds/ds.module.css';
 import PlayersView from './PlayersView';
 
 export default function PlayersPage() {
   return (
-    <main className={`${styles.page} ${fontVariables}`}>
+    <main className={`${ds.page} ${fontVariables}`}>
       <Nav />
       <PlayersView />
     </main>
