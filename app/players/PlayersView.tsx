@@ -747,6 +747,7 @@ function ProfileCard({
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -841,7 +842,7 @@ function ProfileCard({
   if (!user) {
     return (
       <div className={`${styles.card} ${styles.profileCard}`}>
-        <div className={styles.cardTitle}>Créer mon profil</div>
+        <div className={styles.cardTitle}>Rejoindre la CZF</div>
         <p className={styles.body}>
           Connecte-toi avec Discord pour créer ton profil joueur et rejoindre une équipe.
         </p>
@@ -866,6 +867,22 @@ function ProfileCard({
         <Link href="/profile" className={styles.btnOutline}>
           Voir mon profil
         </Link>
+      </div>
+    );
+  }
+
+  // Connecté sans profil : le formulaire ne s'ouvre qu'au clic.
+  if (!formOpen) {
+    return (
+      <div className={`${styles.card} ${styles.profileCard}`}>
+        <div className={styles.cardTitle}>Rejoindre la CZF</div>
+        <p className={styles.body}>
+          Tu n&apos;as pas encore de profil joueur. Crée-le pour apparaître dans la liste et
+          rejoindre une équipe.
+        </p>
+        <button type="button" className={styles.btnPrimary} onClick={() => setFormOpen(true)}>
+          Créer mon profil
+        </button>
       </div>
     );
   }
@@ -905,9 +922,23 @@ function ProfileCard({
         />
       </label>
 
-      <button type="submit" className={styles.btnPrimary} disabled={submitting}>
-        {submitting ? 'Recherche Riot…' : 'Créer mon profil'}
-      </button>
+      <div className={styles.formActions}>
+        <button type="submit" className={styles.btnPrimary} disabled={submitting}>
+          {submitting ? 'Recherche Riot…' : 'Créer mon profil'}
+        </button>
+
+        <button
+          type="button"
+          className={styles.btnOutline}
+          disabled={submitting}
+          onClick={() => {
+            setFormOpen(false);
+            setMessage('');
+          }}
+        >
+          Annuler
+        </button>
+      </div>
 
       {message && <p className={error ? styles.formError : styles.formInfo}>{message}</p>}
     </form>

@@ -394,6 +394,12 @@
   filter: brightness(0) invert(1);
 }
 
+.formActions {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
 .formError,
 .formInfo {
   margin: 0;
