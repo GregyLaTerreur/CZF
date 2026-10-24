@@ -6,8 +6,34 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+// Statut admin gardé pour la visite : la Nav est remontée à chaque page,
+// on ne redemande pas is_admin à chaque navigation.
+let adminCache: { userId: string; isAdmin: Promise<boolean>; value?: boolean } | null = null;
+
+function loadIsAdmin(userId: string) {
+  if (adminCache?.userId !== userId) {
+    const entry: NonNullable<typeof adminCache> = {
+      userId,
+      isAdmin: Promise.resolve(
+        supabase.from('profiles').select('is_admin').eq('id', userId).single()
+      ).then(({ data, error }) => {
+        // En cas d'erreur, on redemandera à la prochaine page.
+        if (error && adminCache === entry) adminCache = null;
+
+        entry.value = data?.is_admin === true;
+        return entry.value;
+      }),
+    };
+
+    adminCache = entry;
+  }
+
+  return adminCache.isAdmin;
+}
+
 export default function Nav() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Valeur déjà connue : pas de clignotement du lien Admin entre deux pages.
+  const [isAdmin, setIsAdmin] = useState(adminCache?.value === true);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -23,15 +49,12 @@ export default function Nav() {
 
     const user = session?.user;
 
-    if (!user) return;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    setIsAdmin(profile?.is_admin === true);
+    setIsAdmin(await loadIsAdmin(user.id));
   }
 
   function isActive(path: string) {

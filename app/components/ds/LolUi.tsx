@@ -4,15 +4,39 @@ import { useEffect, useState } from 'react';
 import ds from './ds.module.css';
 import { DDRAGON_FALLBACK, ROLES } from './lol';
 
+// Une seule requête par visite, partagée entre les pages.
+let ddragonVersion: string | null = null;
+let ddragonRequest: Promise<string> | null = null;
+
+function loadDdragonVersion() {
+  ddragonRequest ??= fetch('https://ddragon.leagueoflegends.com/api/versions.json')
+    .then((res) => res.json())
+    .then((versions) => {
+      ddragonVersion = versions?.[0] || DDRAGON_FALLBACK;
+      return ddragonVersion as string;
+    })
+    .catch(() => {
+      // Réessai possible à la prochaine page.
+      ddragonRequest = null;
+      return DDRAGON_FALLBACK;
+    });
+
+  return ddragonRequest;
+}
+
 // Dernière version Data Dragon, pour les icônes des champions récents.
 export function useDdragonVersion() {
-  const [version, setVersion] = useState(DDRAGON_FALLBACK);
+  const [version, setVersion] = useState(ddragonVersion ?? DDRAGON_FALLBACK);
 
   useEffect(() => {
-    fetch('https://ddragon.leagueoflegends.com/api/versions.json')
-      .then((res) => res.json())
-      .then((versions) => versions?.[0] && setVersion(versions[0]))
-      .catch(() => {});
+    if (ddragonVersion) return;
+
+    let active = true;
+    loadDdragonVersion().then((value) => active && setVersion(value));
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   return version;
