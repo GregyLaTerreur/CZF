@@ -71,7 +71,22 @@ export async function PATCH(request: Request) {
     description,
     logo_url,
     multigg_url,
+    tag,
   } = body;
+
+  // Absent = on ne touche pas au tag (l'admin ne l'envoie pas) ; vide = on l'efface.
+  let cleanTag: string | null | undefined;
+
+  if (tag !== undefined) {
+    cleanTag = String(tag || '').trim().toUpperCase() || null;
+
+    if (cleanTag && !/^[A-Z0-9]{2,5}$/.test(cleanTag)) {
+      return NextResponse.json(
+        { success: false, message: 'Le tag doit faire 2 à 5 lettres ou chiffres.' },
+        { status: 400 }
+      );
+    }
+  }
 
   const { data, error } = await supabase
     .from('teams')
@@ -80,6 +95,7 @@ export async function PATCH(request: Request) {
       description,
       logo_url,
       multigg_url,
+      tag: cleanTag,
     })
     .eq('id', team_id)
     .select();

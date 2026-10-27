@@ -548,6 +548,7 @@ function TeamModal({
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(team.name || '');
+  const [editTag, setEditTag] = useState(team.tag || '');
   const [editLogo, setEditLogo] = useState(team.logo_url || '');
   const [editMultiGG, setEditMultiGG] = useState(team.multigg_url || '');
   const [editDescription, setEditDescription] = useState(team.description || '');
@@ -665,6 +666,7 @@ function TeamModal({
           body: JSON.stringify({
             team_id: team.id,
             name: editName,
+            tag: editTag,
             description: editDescription,
             logo_url: editLogo,
             multigg_url: editMultiGG,
@@ -716,7 +718,10 @@ function TeamModal({
           )}
 
           <div className={styles.modalWho}>
-            <div className={styles.modalName}>{team.name}</div>
+            <div className={styles.modalName}>
+              {team.name}
+              {team.tag && <small> [{team.tag}]</small>}
+            </div>
             <div className={styles.modalMeta}>
               <span>Capitaine · {team.captain_riot_id || '—'}</span>
               <span>{view.validated ? 'Validée par un admin' : 'En attente de validation'}</span>
@@ -771,6 +776,16 @@ function TeamModal({
             <label className={ds.field}>
               <span>Nom de l&apos;équipe</span>
               <input className={ds.input} value={editName} onChange={(e) => setEditName(e.target.value)} required />
+            </label>
+            <label className={ds.field}>
+              <span>Tag (2 à 5 caractères)</span>
+              <input
+                className={ds.input}
+                value={editTag}
+                onChange={(e) => setEditTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                maxLength={5}
+                placeholder="CZF"
+              />
             </label>
             <label className={ds.field}>
               <span>URL du logo</span>
