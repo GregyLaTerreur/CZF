@@ -36,7 +36,11 @@ type CzfChampion = {
   winRate: number;
   kda: number;
 };
-type TeamChampions = { team: CzfChampion[]; players: Record<number, CzfChampion[]> };
+type TeamChampions = {
+  team: CzfChampion[];
+  byRole: Record<string, CzfChampion[]>;
+  players: Record<number, CzfChampion[]>;
+};
 
 // Champions affichés au bout de chaque ligne du roster, et dans le bloc équipe.
 const ROSTER_CHAMPIONS = 5;
@@ -157,6 +161,8 @@ export default function MyTeamView() {
   const [teamChampions, setTeamChampions] = useState<TeamChampions | null>(null);
   const [allChampionsOpen, setAllChampionsOpen] = useState(false);
   const closeAllChampions = useCallback(() => setAllChampionsOpen(false), []);
+  // null : tous les rôles.
+  const [championRole, setChampionRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (!teamId) return;
@@ -166,10 +172,10 @@ export default function MyTeamView() {
     fetch(`/api/stats-equipe/${teamId}`)
       .then((res) => res.json())
       .then((json) => {
-        if (active) setTeamChampions(json.success ? json : { team: [], players: {} });
+        if (active) setTeamChampions(json.success ? json : { team: [], byRole: {}, players: {} });
       })
       .catch(() => {
-        if (active) setTeamChampions({ team: [], players: {} });
+        if (active) setTeamChampions({ team: [], byRole: {}, players: {} });
       });
 
     return () => {
@@ -380,6 +386,12 @@ export default function MyTeamView() {
   // Sans division officielle, on l'estime pour une équipe complète.
   const division = official ?? (complete ? divisionFromPoints(roster.points) : null);
 
+  // Champions de l'équipe, tous rôles ou pour le rôle filtré.
+  const shownChampions = championRole
+    ? teamChampions?.byRole[championRole] ?? []
+    : teamChampions?.team ?? [];
+  const championRoleLabel = championRole ? roleInfo(championRole)?.label ?? championRole : null;
+
   return (
     <>
       <header className={ds.header}>
@@ -533,24 +545,49 @@ export default function MyTeamView() {
               <div className={ds.sectionLabel}>Draft</div>
               <h2 className={styles.h2}>Champions de l’équipe</h2>
             </div>
-            {teamChampions && teamChampions.team.length > TEAM_TOP_CHAMPIONS && (
+            {shownChampions.length > TEAM_TOP_CHAMPIONS && (
               <button
                 type="button"
                 className={`${ds.btnOutline} ${ds.btnSmall}`}
                 onClick={() => setAllChampionsOpen(true)}
               >
-                Voir plus ({teamChampions.team.length})
+                Voir plus ({shownChampions.length})
               </button>
             )}
           </div>
+
+          {teamChampions && teamChampions.team.length > 0 && (
+            <div className={`${ds.tabs} ${ds.filterRowLast}`}>
+              <button
+                type="button"
+                className={championRole === null ? ds.tabActive : ds.tab}
+                onClick={() => setChampionRole(null)}
+              >
+                Tous
+              </button>
+              {ROLES.map((role) => (
+                <button
+                  key={role.name}
+                  type="button"
+                  className={championRole === role.name ? ds.tabActive : ds.tab}
+                  onClick={() => setChampionRole(role.name)}
+                >
+                  <img src={role.image} alt="" className={ds.tabRoleIcon} />
+                  {role.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {teamChampions === null ? (
             <div className={`${ds.card} ${ds.empty}`}>Chargement des champions…</div>
           ) : teamChampions.team.length === 0 ? (
             <div className={`${ds.card} ${ds.empty}`}>Aucune game CZF jouée pour le moment.</div>
+          ) : shownChampions.length === 0 ? (
+            <div className={`${ds.card} ${ds.empty}`}>Aucun champion joué en {championRoleLabel}.</div>
           ) : (
             <div className={styles.teamChampions}>
-              {teamChampions.team.slice(0, TEAM_TOP_CHAMPIONS).map((champion, index) => (
+              {shownChampions.slice(0, TEAM_TOP_CHAMPIONS).map((champion, index) => (
                 <div key={champion.championId} className={`${ds.card} ${styles.teamChampion}`}>
                   <span className={styles.teamChampionRank}>#{index + 1}</span>
                   {champion.image ? (
@@ -581,10 +618,12 @@ export default function MyTeamView() {
             <ChampionRowsModal
               title={team.name}
               image={team.logo_url || null}
-              meta={`${teamChampions.team.length} champions joués en CZF`}
+              meta={`${shownChampions.length} champions joués en CZF${
+                championRoleLabel ? ` · ${championRoleLabel}` : ''
+              }`}
               label="Champion"
               rowImage="champion"
-              rows={teamChampions.team.map((champion) => ({
+              rows={shownChampions.map((champion) => ({
                 key: champion.championId,
                 image: champion.image,
                 name: champion.name,

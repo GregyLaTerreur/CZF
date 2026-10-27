@@ -936,16 +936,27 @@ export function computePlayerChampions(
   });
 }
 
-// Champions d'une équipe (toutes ses games) et de chacun de ses joueurs dans cette équipe.
+// Champions d'une équipe (toutes ses games, puis rôle par rôle) et de chacun
+// de ses joueurs dans cette équipe.
 export function computeTeamChampions(
   teamId: number,
   data: ChampionTotalsData
-): { team: PlayerChampionStat[]; players: Record<number, PlayerChampionStat[]> } {
+): {
+  team: PlayerChampionStat[];
+  byRole: Record<Role, PlayerChampionStat[]>;
+  players: Record<number, PlayerChampionStat[]>;
+} {
   const rows = data.stats.filter((row) => Number(row.team_id) === teamId);
   const byPlayer = groupBy(rows, (row) => Number(row.player_id));
 
   return {
     team: computeChampionTotals({ ...data, stats: rows }),
+    byRole: Object.fromEntries(
+      ROLES.map((role) => [
+        role,
+        computeChampionTotals({ ...data, stats: rows.filter((row) => normalizeRole(row.role) === role) }),
+      ])
+    ) as Record<Role, PlayerChampionStat[]>,
     players: Object.fromEntries(
       [...byPlayer.entries()].map(([playerId, playerRows]) => [
         playerId,
