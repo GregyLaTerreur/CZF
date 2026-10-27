@@ -1,7 +1,8 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
+import CloseIcon from '@/app/components/icons/CloseIcon';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
 import {
@@ -113,6 +114,8 @@ export default function StatsView() {
   }, [playerStats]);
 
   const championRoleLabel = ROLES.find((item) => item.name === championRole)?.label;
+  const openedChampion = champions.find((champion) => champion.championId === openChampion) ?? null;
+  const closeChampion = useCallback(() => setOpenChampion(null), []);
 
   return (
     <div style={{ '--division-color': DIVISION_COLORS[division] } as React.CSSProperties}>
@@ -191,45 +194,43 @@ export default function StatsView() {
                 ) : (
                   <div className={styles.championGrid}>
                     {shownChampions.map(({ champion, rank }) => (
-                      <Fragment key={champion.championId}>
-                        <button
-                          type="button"
-                          className={`${ds.card} ${styles.championCard} ${
-                            openChampion === champion.championId ? styles.championCardOpen : ''
-                          }`}
-                          aria-expanded={openChampion === champion.championId}
-                          onClick={() =>
-                            setOpenChampion(openChampion === champion.championId ? null : champion.championId)
-                          }
-                        >
-                          <span className={styles.championRank}>#{rank}</span>
-                          {champion.image ? (
-                            <img src={champion.image} alt="" loading="lazy" />
-                          ) : (
-                            <span className={styles.championEmpty} />
-                          )}
-                          <strong>{champion.name}</strong>
-                          <small>
-                            {champion.picks} pick{champion.picks > 1 ? 's' : ''}
-                          </small>
-                          <div className={styles.championStats}>
-                            <span>
-                              <small>Pick</small>
-                              {champion.pickRate}%
-                            </span>
-                            <span>
-                              <small>Win</small>
-                              {champion.winRate}%
-                            </span>
-                          </div>
-                        </button>
-
-                        {openChampion === champion.championId && (
-                          <ChampionPlayers champion={champion} onClose={() => setOpenChampion(null)} />
+                      <button
+                        key={champion.championId}
+                        type="button"
+                        className={`${ds.card} ${styles.championCard}`}
+                        onClick={() => setOpenChampion(champion.championId)}
+                      >
+                        <span className={styles.championRank}>#{rank}</span>
+                        {champion.image ? (
+                          <img src={champion.image} alt="" loading="lazy" />
+                        ) : (
+                          <span className={styles.championEmpty} />
                         )}
-                      </Fragment>
+                        <strong>{champion.name}</strong>
+                        <small>
+                          {champion.picks} pick{champion.picks > 1 ? 's' : ''}
+                        </small>
+                        <div className={styles.championStats}>
+                          <span>
+                            <small>Pick</small>
+                            {champion.pickRate}%
+                          </span>
+                          <span>
+                            <small>Win</small>
+                            {champion.winRate}%
+                          </span>
+                        </div>
+                      </button>
                     ))}
                   </div>
+                )}
+
+                {openedChampion && (
+                  <ChampionPlayersModal
+                    champion={openedChampion}
+                    roleLabel={championRoleLabel}
+                    onClose={closeChampion}
+                  />
                 )}
               </div>
 
@@ -275,47 +276,85 @@ export default function StatsView() {
   );
 }
 
-// Joueurs d'un champion, sur toute la largeur de la grille, sous la ligne du champion.
-function ChampionPlayers({ champion, onClose }: { champion: ChampionStat; onClose: () => void }) {
+// Pop-up : tous les joueurs qui ont joué le champion à ce rôle dans la division.
+function ChampionPlayersModal({
+  champion,
+  roleLabel,
+  onClose,
+}: {
+  champion: ChampionStat;
+  roleLabel?: string;
+  onClose: () => void;
+}) {
+  // Échap ferme la pop-up ; on bloque le défilement de la page derrière.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    const previousOverflow = document.body.style.overflow;
+
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
   return (
-    <div className={`${ds.card} ${styles.championPlayers}`}>
-      <div className={styles.rankingHead}>
-        <strong>Joueurs · {champion.name}</strong>
-        <button type="button" className={styles.championPlayersClose} onClick={onClose}>
-          Fermer
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={`${styles.championModal} ${ds.onDark}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Joueurs de ${champion.name}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Fermer">
+          <CloseIcon />
         </button>
-      </div>
 
-      {champion.players.length === 0 ? (
-        <div className={ds.empty}>Aucun joueur</div>
-      ) : (
-        <div className={styles.championPlayersRows}>
-          <div className={`${styles.championPlayerRow} ${styles.championPlayerHead}`}>
-            <span />
-            <span />
-            <span>Joueur</span>
-            <span>Games</span>
-            <span>Win</span>
-            <span>KDA</span>
+        <div className={styles.championModalHead}>
+          {champion.image ? <img src={champion.image} alt="" /> : <span className={styles.championEmpty} />}
+          <div>
+            <strong>{champion.name}</strong>
+            <small>
+              {roleLabel} · {champion.players.length} joueur{champion.players.length > 1 ? 's' : ''} ·{' '}
+              {champion.picks} pick{champion.picks > 1 ? 's' : ''} · {champion.winRate}% win
+            </small>
           </div>
-
-          {champion.players.map((player, index) => (
-            <div key={player.playerId} className={styles.championPlayerRow}>
-              <span className={styles.rankNumber}>{index + 1}</span>
-              <TeamLogo logo={player.teamLogo} size="sm" />
-              <span className={styles.playerName}>
-                {splitRiotId(player.riotId).name}
-                {player.teamShortName && <small>{player.teamShortName}</small>}
-              </span>
-              <strong className={styles.rankValue}>{player.games}</strong>
-              <strong className={`${styles.rankValue} ${player.winRate >= 50 ? ds.win : ds.loss}`}>
-                {Math.round(player.winRate)}%
-              </strong>
-              <strong className={styles.rankValue}>{player.kda.toFixed(2)}</strong>
-            </div>
-          ))}
         </div>
-      )}
+
+        {champion.players.length === 0 ? (
+          <div className={ds.empty}>Aucun joueur</div>
+        ) : (
+          <div className={styles.championPlayersRows}>
+            <div className={`${styles.championPlayerRow} ${styles.championPlayerHead}`}>
+              <span />
+              <span />
+              <span>Joueur</span>
+              <span>Games</span>
+              <span>Win</span>
+              <span>KDA</span>
+            </div>
+
+            {champion.players.map((player, index) => (
+              <div key={player.playerId} className={styles.championPlayerRow}>
+                <span className={styles.rankNumber}>{index + 1}</span>
+                <TeamLogo logo={player.teamLogo} size="sm" />
+                <span className={styles.playerName}>
+                  {splitRiotId(player.riotId).name}
+                  {player.teamShortName && <small>{player.teamShortName}</small>}
+                </span>
+                <strong className={styles.rankValue}>{player.games}</strong>
+                <strong className={`${styles.rankValue} ${player.winRate >= 50 ? ds.win : ds.loss}`}>
+                  {Math.round(player.winRate)}%
+                </strong>
+                <strong className={styles.rankValue}>{player.kda.toFixed(2)}</strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

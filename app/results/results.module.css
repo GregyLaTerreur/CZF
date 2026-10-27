@@ -764,11 +764,9 @@
   margin: 0 0 26px;
 }
 
-/* dense : les cartes suivant le panneau joueurs remplissent la fin de la ligne */
 .championGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-auto-flow: dense;
   gap: 24px;
 }
 
@@ -786,54 +784,102 @@
 }
 
 .championCard:hover,
-.championCard:active,
-.championCardOpen {
+.championCard:active {
   transform: translate(4px, 4px);
   box-shadow: 2px 2px 0 var(--dark);
 }
 
-.championCardOpen,
-.championCardOpen:hover,
-.championCardOpen:active {
-  border-color: var(--orange);
-  box-shadow: 2px 2px 0 var(--orange);
+/* Pop-up des joueurs d'un champion (même fenêtre que la fiche équipe) */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+  background: rgba(4, 12, 24, 0.72);
 }
 
-.championPlayers {
-  grid-column: 1 / -1;
+.championModal {
+  position: relative;
+  width: min(620px, 100%);
+  padding: 24px;
+  border: 2px solid rgba(224, 216, 204, 0.12);
+  box-shadow: 8px 8px 0 var(--orange);
 }
 
-.championPlayersClose {
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: none;
+  border: 2px solid rgba(224, 216, 204, 0.3);
+  border-radius: 0;
   background: none;
-  font-family: var(--condensed);
-  font-weight: 700;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(8, 20, 40, 0.55);
+  color: var(--on-dark);
   cursor: pointer;
 }
 
-.championPlayersClose:hover,
-.championPlayersClose:active {
-  transform: none;
+.modalClose:hover,
+.modalClose:active {
+  border-color: var(--orange);
   color: var(--orange);
+  transform: none;
+  filter: none;
 }
 
-.championPlayersRows {
-  max-height: 420px;
-  overflow-y: auto;
+.championModalHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-right: 44px;
+  margin-bottom: 18px;
+}
+
+.championModalHead img,
+.championModalHead .championEmpty {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border: 2px solid var(--orange);
+  object-fit: cover;
+}
+
+.championModalHead strong {
+  display: block;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 2rem;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.championModalHead small {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.65);
 }
 
 .championPlayerRow {
   display: grid;
-  grid-template-columns: 22px 28px minmax(0, 1fr) repeat(3, 64px);
+  grid-template-columns: 22px 28px minmax(0, 1fr) repeat(3, 56px);
   align-items: center;
   column-gap: 10px;
-  padding: 9px 16px;
-  border-bottom: 1px solid rgba(8, 20, 40, 0.08);
+  padding: 9px 4px;
+  border-bottom: 1px solid rgba(224, 216, 204, 0.1);
 }
 
 .championPlayerRow:last-child {
@@ -844,14 +890,25 @@
   text-align: right;
 }
 
+.championPlayerRow .rankNumber,
+.championPlayerRow .playerName small {
+  color: rgba(224, 216, 204, 0.5);
+}
+
+/* Le winrate garde sa couleur victoire/défaite (ds.win / ds.loss) */
+.championPlayerRow .playerName {
+  color: #fff;
+}
+
 .championPlayerHead {
-  padding-block: 8px 6px;
+  padding-block: 0 6px;
+  border-bottom-color: rgba(224, 216, 204, 0.3);
   font-family: var(--condensed);
   font-weight: 700;
   font-size: 0.64rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(8, 20, 40, 0.45);
+  color: var(--orange);
 }
 
 .championCard > img,
@@ -1012,9 +1069,17 @@
     gap: 18px;
   }
 
+  .modalOverlay {
+    padding: 24px 12px;
+  }
+
+  .championModal {
+    padding: 18px 14px;
+  }
+
   .championPlayerRow {
-    grid-template-columns: 18px 28px minmax(0, 1fr) repeat(3, 44px);
+    grid-template-columns: 18px 28px minmax(0, 1fr) repeat(3, 40px);
     column-gap: 8px;
-    padding-inline: 12px;
+    padding-inline: 0;
   }
 }
