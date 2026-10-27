@@ -895,6 +895,18 @@
   color: rgba(224, 216, 204, 0.5);
 }
 
+/* Fond cream : les logos sombres restent lisibles sur le fond dark */
+.championPlayerRow img.logoSm {
+  box-sizing: border-box;
+  padding: 3px;
+  background: var(--cream);
+  border-radius: 3px;
+}
+
+.championPlayerRow .logoEmpty {
+  border-color: rgba(224, 216, 204, 0.25);
+}
+
 /* Le winrate garde sa couleur victoire/défaite (ds.win / ds.loss) */
 .championPlayerRow .playerName {
   color: #fff;
