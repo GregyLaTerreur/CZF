@@ -243,8 +243,14 @@
   flex-wrap: wrap;
 }
 
-.counter {
+.fixturesTools {
+  display: flex;
+  align-items: center;
+  gap: 18px;
   margin-bottom: 22px;
+}
+
+.counter {
   padding: 7px 14px;
   background: var(--dark);
   color: var(--on-dark);

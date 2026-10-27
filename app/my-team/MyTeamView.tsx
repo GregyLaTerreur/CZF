@@ -20,6 +20,7 @@ import FixtureCard, { type Fixture, type GameSlot, type MvpFixture } from './Fix
 import styles from './my-team.module.css';
 
 const TEAM_SIZE = 5;
+const FIXTURES_OPEN_KEY = 'czf-my-team-fixtures-open';
 
 type Season = { id: number; name: string; status: string };
 type Feedback = { text: string; error: boolean } | null;
@@ -62,6 +63,23 @@ export default function MyTeamView() {
   const [mvpLoading, setMvpLoading] = useState(false);
   const [mvpError, setMvpError] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
+  const [fixturesOpen, setFixturesOpen] = useState(true);
+
+  // Bloc rencontres réduit ou non : retenu dans ce navigateur.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(FIXTURES_OPEN_KEY) === 'false') setFixturesOpen(false);
+    } catch {}
+  }, []);
+
+  function toggleFixtures() {
+    const next = !fixturesOpen;
+
+    setFixturesOpen(next);
+    try {
+      localStorage.setItem(FIXTURES_OPEN_KEY, String(next));
+    } catch {}
+  }
 
   const ddragonVersion = useDdragonVersion();
 
@@ -466,14 +484,27 @@ export default function MyTeamView() {
               <div className={ds.sectionLabel}>{season?.name || 'Saison 1'} · Calendrier</div>
               <h2 className={styles.h2}>Mes rencontres</h2>
             </div>
-            <span className={styles.counter}>
-              <strong>{pendingFixtures.length}</strong> à jouer
-            </span>
+            <div className={styles.fixturesTools}>
+              <span className={styles.counter}>
+                <strong>{pendingFixtures.length}</strong> à jouer
+              </span>
+              <button
+                type="button"
+                className={`${ds.btnOutline} ${ds.btnSmall}`}
+                onClick={toggleFixtures}
+                aria-expanded={fixturesOpen}
+              >
+                {fixturesOpen ? 'Réduire' : 'Afficher'}
+                <ChevronIcon open={fixturesOpen} />
+              </button>
+            </div>
           </div>
 
-          {fixturesError && <p className={`${ds.formError} ${styles.feedback}`}>{fixturesError}</p>}
+          {fixturesOpen && fixturesError && (
+            <p className={`${ds.formError} ${styles.feedback}`}>{fixturesError}</p>
+          )}
 
-          {fixturesLoading ? (
+          {!fixturesOpen ? null : fixturesLoading ? (
             <div className={`${ds.card} ${ds.empty}`}>Chargement des rencontres…</div>
           ) : (
             <>
