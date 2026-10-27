@@ -17,24 +17,44 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const riotRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/riot/player`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        riot_id: String(player.riot_id).trim(),
-        peak_tier: player.peak_tier,
-        peak_rank: player.peak_rank,
-        peak_lp: player.peak_lp,
-        skip_top_champions: false,
-      }),
-    }
-  );
+  let riotData: any;
 
-  const riotData = await riotRes.json();
+  try {
+    // Origine de la requête plutôt que NEXT_PUBLIC_SITE_URL : marche quel que soit le domaine ou le port.
+    const riotRes = await fetch(
+      `${new URL(request.url).origin}/api/riot/player`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          riot_id: String(player.riot_id).trim(),
+          peak_tier: player.peak_tier,
+          peak_rank: player.peak_rank,
+          peak_lp: player.peak_lp,
+          skip_top_champions: false,
+        }),
+      }
+    );
+
+    const text = await riotRes.text();
+    riotData = text ? JSON.parse(text) : null;
+
+    if (!riotData) {
+      throw new Error(`Réponse vide de /api/riot/player (${riotRes.status}).`);
+    }
+  } catch (error: any) {
+    console.log('CHAMPIONS REFRESH ERROR:', error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: error?.message || 'Impossible de contacter le service Riot.',
+      },
+      { status: 502 }
+    );
+  }
 
   if (!riotData.success) {
     return NextResponse.json(
