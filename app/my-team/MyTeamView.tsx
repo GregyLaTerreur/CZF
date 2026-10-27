@@ -1,16 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
-import { ChampionPool, ChevronIcon, useDdragonVersion } from '@/app/components/ds/LolUi';
+import { ChevronIcon } from '@/app/components/ds/LolUi';
+import { ChampionRowsModal } from '@/app/results/shared';
 import {
   divisionFromPoints,
   findMemberPlayer,
   formatRank,
   normalizeRiotId,
+  roleInfo,
   ROLES,
   splitRiotId,
   teamDivision,
@@ -23,6 +25,22 @@ const TEAM_SIZE = 5;
 const FIXTURES_OPEN_KEY = 'czf-my-team-fixtures-open';
 
 type Season = { id: number; name: string; status: string };
+
+// Réponse de /api/stats-equipe/[id].
+type CzfChampion = {
+  championId: string;
+  name: string;
+  image: string | null;
+  roles: string[];
+  games: number;
+  winRate: number;
+  kda: number;
+};
+type TeamChampions = { team: CzfChampion[]; players: Record<number, CzfChampion[]> };
+
+// Champions affichés au bout de chaque ligne du roster, et dans le bloc équipe.
+const ROSTER_CHAMPIONS = 5;
+const TEAM_TOP_CHAMPIONS = 10;
 type Feedback = { text: string; error: boolean } | null;
 
 async function authFetch(url: string, init: RequestInit = {}) {
@@ -81,8 +99,6 @@ export default function MyTeamView() {
     } catch {}
   }
 
-  const ddragonVersion = useDdragonVersion();
-
   async function loadData() {
     try {
       const {
@@ -136,6 +152,30 @@ export default function MyTeamView() {
   }, [player, members, teams]);
 
   const teamId = team?.id ?? null;
+
+  // Champions joués en CZF par l'équipe et ses joueurs ; null tant que non chargés.
+  const [teamChampions, setTeamChampions] = useState<TeamChampions | null>(null);
+  const [allChampionsOpen, setAllChampionsOpen] = useState(false);
+  const closeAllChampions = useCallback(() => setAllChampionsOpen(false), []);
+
+  useEffect(() => {
+    if (!teamId) return;
+
+    let active = true;
+
+    fetch(`/api/stats-equipe/${teamId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (active) setTeamChampions(json.success ? json : { team: [], players: {} });
+      })
+      .catch(() => {
+        if (active) setTeamChampions({ team: [], players: {} });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [teamId]);
 
   useEffect(() => {
     if (teamId === null) return;
@@ -470,7 +510,13 @@ export default function MyTeamView() {
                       </span>
 
                       <span className={styles.rosterPool}>
-                        <ChampionPool player={rosterPlayer} ddragonVersion={ddragonVersion} />
+                        <PlayedChampions
+                          champions={
+                            teamChampions && rosterPlayer
+                              ? teamChampions.players[Number(rosterPlayer.id)] ?? []
+                              : null
+                          }
+                        />
                       </span>
                     </>
                   ) : (
@@ -480,6 +526,76 @@ export default function MyTeamView() {
               );
             })}
           </div>
+
+          {/* CHAMPIONS DE L'ÉQUIPE */}
+          <div className={styles.teamChampionsHead}>
+            <div>
+              <div className={ds.sectionLabel}>Draft</div>
+              <h2 className={styles.h2}>Champions de l’équipe</h2>
+            </div>
+            {teamChampions && teamChampions.team.length > TEAM_TOP_CHAMPIONS && (
+              <button
+                type="button"
+                className={`${ds.btnOutline} ${ds.btnSmall}`}
+                onClick={() => setAllChampionsOpen(true)}
+              >
+                Voir plus ({teamChampions.team.length})
+              </button>
+            )}
+          </div>
+
+          {teamChampions === null ? (
+            <div className={`${ds.card} ${ds.empty}`}>Chargement des champions…</div>
+          ) : teamChampions.team.length === 0 ? (
+            <div className={`${ds.card} ${ds.empty}`}>Aucune game CZF jouée pour le moment.</div>
+          ) : (
+            <div className={styles.teamChampions}>
+              {teamChampions.team.slice(0, TEAM_TOP_CHAMPIONS).map((champion, index) => (
+                <div key={champion.championId} className={`${ds.card} ${styles.teamChampion}`}>
+                  <span className={styles.teamChampionRank}>#{index + 1}</span>
+                  {champion.image ? (
+                    <img src={champion.image} alt="" loading="lazy" />
+                  ) : (
+                    <span className={styles.championEmpty} />
+                  )}
+                  <strong>{champion.name}</strong>
+                  <small>
+                    {champion.games} game{champion.games > 1 ? 's' : ''}
+                  </small>
+                  <div className={styles.teamChampionStats}>
+                    <span>
+                      <small>Win</small>
+                      {Math.round(champion.winRate)}%
+                    </span>
+                    <span>
+                      <small>KDA</small>
+                      {champion.kda.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {allChampionsOpen && teamChampions && (
+            <ChampionRowsModal
+              title={team.name}
+              image={team.logo_url || null}
+              meta={`${teamChampions.team.length} champions joués en CZF`}
+              label="Champion"
+              rowImage="champion"
+              rows={teamChampions.team.map((champion) => ({
+                key: champion.championId,
+                image: champion.image,
+                name: champion.name,
+                sub: champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · '),
+                games: champion.games,
+                winRate: champion.winRate,
+                kda: champion.kda,
+              }))}
+              onClose={closeAllChampions}
+            />
+          )}
         </div>
       </section>
 
@@ -550,5 +666,26 @@ export default function MyTeamView() {
         </div>
       </section>
     </>
+  );
+}
+
+// Champions les plus joués en CZF par un joueur de l'équipe, avec le nombre de games.
+function PlayedChampions({ champions }: { champions: CzfChampion[] | null }) {
+  if (champions === null) return null;
+  if (champions.length === 0) return <span className={`${styles.playedEmpty} ${ds.muted}`}>Aucune game</span>;
+
+  return (
+    <span className={styles.played}>
+      {champions.slice(0, ROSTER_CHAMPIONS).map((champion) => (
+        <span
+          key={champion.championId}
+          className={styles.playedChampion}
+          title={`${champion.name} · ${champion.games} game${champion.games > 1 ? 's' : ''}`}
+        >
+          {champion.image ? <img src={champion.image} alt={champion.name} loading="lazy" /> : <span />}
+          <b>{champion.games}</b>
+        </span>
+      ))}
+    </span>
   );
 }

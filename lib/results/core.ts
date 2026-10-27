@@ -903,7 +903,8 @@ export function computeChampionStats(
 }
 
 /* =========================================================
-   CHAMPIONS JOUÉS PAR UN JOUEUR (page Mon profil)
+   CHAMPIONS JOUÉS PAR UN JOUEUR OU UNE ÉQUIPE
+   (pages Profil et Mon équipe)
    Toutes divisions, données historiques complètes.
 ========================================================= */
 
@@ -919,14 +920,42 @@ export type PlayerChampionStat = {
   kda: number;
 };
 
+type ChampionTotalsData = {
+  games: AnyObject[];
+  stats: AnyObject[];
+  championMap: Map<string, Champion>;
+};
+
 export function computePlayerChampions(
   playerId: number,
-  data: {
-    games: AnyObject[];
-    stats: AnyObject[];
-    championMap: Map<string, Champion>;
-  }
+  data: ChampionTotalsData
 ): PlayerChampionStat[] {
+  return computeChampionTotals({
+    ...data,
+    stats: data.stats.filter((row) => Number(row.player_id) === playerId),
+  });
+}
+
+// Champions d'une équipe (toutes ses games) et de chacun de ses joueurs dans cette équipe.
+export function computeTeamChampions(
+  teamId: number,
+  data: ChampionTotalsData
+): { team: PlayerChampionStat[]; players: Record<number, PlayerChampionStat[]> } {
+  const rows = data.stats.filter((row) => Number(row.team_id) === teamId);
+  const byPlayer = groupBy(rows, (row) => Number(row.player_id));
+
+  return {
+    team: computeChampionTotals({ ...data, stats: rows }),
+    players: Object.fromEntries(
+      [...byPlayer.entries()].map(([playerId, playerRows]) => [
+        playerId,
+        computeChampionTotals({ ...data, stats: playerRows }),
+      ])
+    ),
+  };
+}
+
+function computeChampionTotals(data: ChampionTotalsData): PlayerChampionStat[] {
   const { games, stats, championMap } = data;
 
   const gameMap = new Map<number, AnyObject>(
@@ -939,8 +968,6 @@ export function computePlayerChampions(
   >();
 
   for (const row of stats) {
-    if (Number(row.player_id) !== playerId) continue;
-
     const championId = String(row.champion_id ?? '');
     const game = gameMap.get(Number(row.game_id));
 
