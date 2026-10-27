@@ -354,7 +354,7 @@ export default function MyTeamView() {
 
             <div className={styles.teamMeta}>
               <span>Capitaine · {team.captain_riot_id || '—'}</span>
-              <span>{team.validated_by_admin ? 'Validée par un admin' : 'En attente de validation'}</span>
+              {!team.validated_by_admin && <span>En attente de validation</span>}
             </div>
 
             {team.description && <p className={`${ds.body} ${styles.description}`}>{team.description}</p>}
@@ -435,11 +435,18 @@ export default function MyTeamView() {
                   {member ? (
                     <>
                       <span className={styles.rosterPlayer}>
-                        <span className={styles.rosterName}>
-                          {name}
-                          {tag && <small>#{tag}</small>}
-                          {me && <span className={ds.meChip}>Moi</span>}
-                        </span>
+                        {rosterPlayer ? (
+                          <Link href={`/players/${rosterPlayer.id}`} className={`${styles.rosterName} ${styles.rosterLink}`}>
+                            {name}
+                            {tag && <small>#{tag}</small>}
+                            {me && <span className={ds.meChip}>Moi</span>}
+                          </Link>
+                        ) : (
+                          <span className={styles.rosterName}>
+                            {name}
+                            {tag && <small>#{tag}</small>}
+                          </span>
+                        )}
                         <span className={styles.rosterSub}>
                           {captain && <span className={styles.captain}>Capitaine</span>}
                           {rosterPlayer?.profiles?.discord_name}
