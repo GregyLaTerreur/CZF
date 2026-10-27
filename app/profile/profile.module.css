@@ -269,6 +269,78 @@
 }
 
 /* =========================================================
+   CHAMPIONS JOUÉS EN CZF
+========================================================= */
+
+.czfChampions {
+  margin-top: 28px;
+  align-items: stretch;
+}
+
+.championRow {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) repeat(3, 64px);
+  align-items: center;
+  column-gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.08);
+  font-family: var(--condensed);
+}
+
+.championRow:last-child {
+  border-bottom: none;
+}
+
+.championRow > :nth-child(n + 3) {
+  text-align: right;
+}
+
+.championRow strong {
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+.championHead {
+  padding-top: 0;
+  border-bottom: 2px solid var(--dark);
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.45);
+}
+
+.championImage {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--dark);
+  background: rgba(8, 20, 40, 0.1);
+  object-fit: cover;
+}
+
+.championName {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.championName small {
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  color: rgba(8, 20, 40, 0.45);
+}
+
+/* =========================================================
    ÉDITION
 ========================================================= */
 
@@ -302,5 +374,15 @@
   .identity {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .championRow {
+    grid-template-columns: 34px minmax(0, 1fr) repeat(3, 44px);
+    column-gap: 8px;
+  }
+
+  .championImage {
+    width: 34px;
+    height: 34px;
   }
 }

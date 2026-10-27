@@ -23,6 +23,17 @@ const DIVISIONS = ['IV', 'III', 'II', 'I'];
 
 type Feedback = { text: string; error: boolean } | null;
 
+// Réponse de /api/stats-joueurs/[id].
+type CzfChampion = {
+  championId: string;
+  name: string;
+  image: string | null;
+  roles: string[];
+  games: number;
+  winRate: number;
+  kda: number;
+};
+
 function discordNameOf(user: any) {
   return (
     user?.user_metadata?.full_name ||
@@ -48,11 +59,35 @@ export default function ProfileView() {
   const [peakRank, setPeakRank] = useState('');
   const [peakLp, setPeakLp] = useState('0');
 
+  // null tant que les stats CZF ne sont pas chargées.
+  const [czfChampions, setCzfChampions] = useState<CzfChampion[] | null>(null);
+
   const ddragonVersion = useDdragonVersion();
 
   useEffect(() => {
     void loadProfile();
   }, []);
+
+  const playerId = player?.id;
+
+  useEffect(() => {
+    if (!playerId) return;
+
+    let active = true;
+
+    fetch(`/api/stats-joueurs/${playerId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (active) setCzfChampions(json.success ? json.champions : []);
+      })
+      .catch(() => {
+        if (active) setCzfChampions([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [playerId]);
 
   async function loadProfile() {
     try {
@@ -486,6 +521,47 @@ export default function ProfileView() {
                   <div className={styles.blockLabel}>Champion pool</div>
                   <ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />
                 </div>
+              </div>
+
+              <div className={`${ds.card} ${styles.block} ${styles.czfChampions}`}>
+                <div className={styles.blockLabel}>Champions joués en CZF</div>
+
+                {czfChampions === null ? (
+                  <p className={styles.text}>Chargement…</p>
+                ) : czfChampions.length === 0 ? (
+                  <p className={styles.text}>Aucune game CZF jouée pour le moment.</p>
+                ) : (
+                  <div>
+                    <div className={`${styles.championRow} ${styles.championHead}`}>
+                      <span />
+                      <span>Champion</span>
+                      <span>Games</span>
+                      <span>Win</span>
+                      <span>KDA</span>
+                    </div>
+
+                    {czfChampions.map((champion) => (
+                      <div key={champion.championId} className={styles.championRow}>
+                        {champion.image ? (
+                          <img src={champion.image} alt="" loading="lazy" className={styles.championImage} />
+                        ) : (
+                          <span className={styles.championImage} />
+                        )}
+                        <span className={styles.championName}>
+                          {champion.name}
+                          <small>
+                            {champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · ')}
+                          </small>
+                        </span>
+                        <strong>{champion.games}</strong>
+                        <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
+                          {Math.round(champion.winRate)}%
+                        </strong>
+                        <strong>{champion.kda.toFixed(2)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {player.description && (
