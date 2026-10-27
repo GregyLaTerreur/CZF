@@ -9,6 +9,7 @@ import {
   type DivisionName,
 } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
+import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './results.module.css';
 
 /* =========================================================
@@ -298,5 +299,114 @@ export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 's
     <img src={logo} alt="" className={className} loading="lazy" />
   ) : (
     <span className={`${className} ${styles.logoEmpty}`} />
+  );
+}
+
+/* =========================================================
+   POP-UP CHAMPIONS (Stats et Mon équipe)
+========================================================= */
+
+export type ChampionRow = {
+  key: string | number;
+  image: string | null;
+  name: string;
+  sub?: string | null;
+  games: number;
+  winRate: number;
+  kda: number;
+};
+
+// Pop-up sombre : en-tête (image, titre, infos) puis tableau games, winrate, KDA.
+// Échap ou un clic à côté la ferme ; la page derrière ne défile plus.
+export function ChampionRowsModal({
+  title,
+  image,
+  meta,
+  label,
+  rows,
+  rowImage = 'logo',
+  onClose,
+}: {
+  title: string;
+  image: string | null;
+  meta: string;
+  label: string;
+  rows: ChampionRow[];
+  // logo : logo d'équipe (joueurs d'un champion) ; champion : portrait du champion.
+  rowImage?: 'logo' | 'champion';
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    const previousOverflow = document.body.style.overflow;
+
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={`${styles.championModal} ${ds.onDark}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Fermer">
+          <CloseIcon />
+        </button>
+
+        <div className={styles.championModalHead}>
+          {image ? <img src={image} alt="" /> : <span className={styles.championEmpty} />}
+          <div>
+            <strong>{title}</strong>
+            <small>{meta}</small>
+          </div>
+        </div>
+
+        {rows.length === 0 ? (
+          <div className={ds.empty}>Aucune donnée</div>
+        ) : (
+          <div>
+            <div className={`${styles.championPlayerRow} ${styles.championPlayerHead}`}>
+              <span />
+              <span />
+              <span>{label}</span>
+              <span>Games</span>
+              <span>Win</span>
+              <span>KDA</span>
+            </div>
+
+            {rows.map((row, index) => (
+              <div key={row.key} className={styles.championPlayerRow}>
+                <span className={styles.rankNumber}>{index + 1}</span>
+                {rowImage === 'logo' ? (
+                  <TeamLogo logo={row.image} size="sm" />
+                ) : row.image ? (
+                  <img src={row.image} alt="" loading="lazy" className={styles.modalChampion} />
+                ) : (
+                  <span className={`${styles.modalChampion} ${styles.championEmpty}`} />
+                )}
+                <span className={styles.playerName}>
+                  {row.name}
+                  {row.sub && <small>{row.sub}</small>}
+                </span>
+                <strong className={styles.rankValue}>{row.games}</strong>
+                <strong className={`${styles.rankValue} ${row.winRate >= 50 ? ds.win : ds.loss}`}>
+                  {Math.round(row.winRate)}%
+                </strong>
+                <strong className={styles.rankValue}>{row.kda.toFixed(2)}</strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

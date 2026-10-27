@@ -23,6 +23,17 @@ const DIVISIONS = ['IV', 'III', 'II', 'I'];
 
 type Feedback = { text: string; error: boolean } | null;
 
+// Réponse de /api/stats-joueurs/[id].
+type CzfChampion = {
+  championId: string;
+  name: string;
+  image: string | null;
+  roles: string[];
+  games: number;
+  winRate: number;
+  kda: number;
+};
+
 function discordNameOf(user: any) {
   return (
     user?.user_metadata?.full_name ||
@@ -32,10 +43,14 @@ function discordNameOf(user: any) {
   );
 }
 
-export default function ProfileView() {
+// Sans playerId : le profil du joueur connecté (/profile).
+// Avec playerId : le profil public d'un joueur (/players/[id]), en lecture seule sauf si c'est le sien.
+export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: number } = {}) {
   const [user, setUser] = useState<any>(null);
   const [player, setPlayer] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
+  // Nom Discord du joueur affiché quand ce n'est pas le joueur connecté.
+  const [ownerDiscord, setOwnerDiscord] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -48,11 +63,35 @@ export default function ProfileView() {
   const [peakRank, setPeakRank] = useState('');
   const [peakLp, setPeakLp] = useState('0');
 
+  // null tant que les stats CZF ne sont pas chargées.
+  const [czfChampions, setCzfChampions] = useState<CzfChampion[] | null>(null);
+
   const ddragonVersion = useDdragonVersion();
 
   useEffect(() => {
     void loadProfile();
   }, []);
+
+  const playerId = player?.id;
+
+  useEffect(() => {
+    if (!playerId) return;
+
+    let active = true;
+
+    fetch(`/api/stats-joueurs/${playerId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (active) setCzfChampions(json.success ? json.champions : []);
+      })
+      .catch(() => {
+        if (active) setCzfChampions([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [playerId]);
 
   async function loadProfile() {
     try {
@@ -61,25 +100,46 @@ export default function ProfileView() {
       } = await supabase.auth.getUser();
 
       setUser(currentUser);
-      if (!currentUser) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', currentUser.id)
-        .maybeSingle();
+      let linkedPlayer: any = null;
 
-      if (!profile) {
-        await supabase
+      if (viewedPlayerId) {
+        ({ data: linkedPlayer } = await supabase
+          .from('players')
+          .select('*')
+          .eq('id', viewedPlayerId)
+          .maybeSingle());
+
+        if (linkedPlayer?.profile_id && linkedPlayer.profile_id !== currentUser?.id) {
+          const { data: owner } = await supabase
+            .from('profiles')
+            .select('discord_name')
+            .eq('id', linkedPlayer.profile_id)
+            .maybeSingle();
+
+          setOwnerDiscord(owner?.discord_name || null);
+        }
+      } else {
+        if (!currentUser) return;
+
+        const { data: profile } = await supabase
           .from('profiles')
-          .insert([{ id: currentUser.id, discord_name: discordNameOf(currentUser) }]);
-      }
+          .select('id')
+          .eq('id', currentUser.id)
+          .maybeSingle();
 
-      const { data: linkedPlayer } = await supabase
-        .from('players')
-        .select('*')
-        .eq('profile_id', currentUser.id)
-        .maybeSingle();
+        if (!profile) {
+          await supabase
+            .from('profiles')
+            .insert([{ id: currentUser.id, discord_name: discordNameOf(currentUser) }]);
+        }
+
+        ({ data: linkedPlayer } = await supabase
+          .from('players')
+          .select('*')
+          .eq('profile_id', currentUser.id)
+          .maybeSingle());
+      }
 
       setPlayer(linkedPlayer || null);
       if (!linkedPlayer) return;
@@ -212,7 +272,18 @@ export default function ProfileView() {
     );
   }
 
-  if (!user || !player) {
+  if (viewedPlayerId && !player) {
+    return (
+      <header className={ds.header}>
+        <div className={ds.container}>
+          <div className={ds.sectionLabel}>Saison 1 · Profil joueur</div>
+          <div className={`${ds.card} ${ds.empty}`}>Joueur introuvable.</div>
+        </div>
+      </header>
+    );
+  }
+
+  if (!player) {
     return (
       <header className={ds.header}>
         <div className={`${ds.container} ${ds.headerGrid}`}>
@@ -258,14 +329,17 @@ export default function ProfileView() {
   const winrate = winRate(player);
   const roles = [roleInfo(player.main_role), roleInfo(player.secondary_role)].filter(Boolean);
   const division = teamDivision(team);
-  const avatar = user.user_metadata?.avatar_url;
+  // Les actions (modifier, actualiser, LFT) ne sont que pour son propre profil.
+  const isOwn = Boolean(user) && player.profile_id === user.id;
+  const avatar = isOwn ? user.user_metadata?.avatar_url : null;
+  const discordName = isOwn ? discordNameOf(user) : ownerDiscord;
 
   return (
     <>
       <header className={ds.header}>
         <div className={`${ds.container} ${ds.headerGrid}`}>
           <div>
-            <div className={ds.sectionLabel}>Saison 1 · Mon profil</div>
+            <div className={ds.sectionLabel}>Saison 1 · {isOwn ? 'Mon profil' : 'Profil joueur'}</div>
 
             <div className={styles.identity}>
               {avatar && <img src={avatar} alt="" className={styles.avatar} />}
@@ -274,7 +348,7 @@ export default function ProfileView() {
                   {name}
                   {tag && <small>#{tag}</small>}
                 </h1>
-                <span className={styles.discord}>Discord · {discordNameOf(user)}</span>
+                {discordName && <span className={styles.discord}>Discord · {discordName}</span>}
               </div>
             </div>
 
@@ -427,25 +501,27 @@ export default function ProfileView() {
             </form>
           ) : (
             <>
-              <div className={styles.actions}>
-                <button type="button" className={ds.btnPrimary} onClick={startEditing} disabled={busy}>
-                  Modifier mon profil
-                </button>
-                <button
-                  type="button"
-                  className={ds.btnOutline}
-                  disabled={busy}
-                  onClick={() => run(refreshRiot, 'Données Riot actualisées.')}
-                >
-                  Actualiser Riot
-                </button>
-                <button type="button" className={ds.btnOutline} disabled={busy} onClick={refreshChampions}>
-                  Actualiser champions
-                </button>
-                <button type="button" className={ds.btnOutline} disabled={busy} onClick={toggleLft}>
-                  {player.lft ? 'Ne plus être LFT' : 'Me mettre LFT'}
-                </button>
-              </div>
+              {isOwn && (
+                <div className={styles.actions}>
+                  <button type="button" className={ds.btnPrimary} onClick={startEditing} disabled={busy}>
+                    Modifier mon profil
+                  </button>
+                  <button
+                    type="button"
+                    className={ds.btnOutline}
+                    disabled={busy}
+                    onClick={() => run(refreshRiot, 'Données Riot actualisées.')}
+                  >
+                    Actualiser Riot
+                  </button>
+                  <button type="button" className={ds.btnOutline} disabled={busy} onClick={refreshChampions}>
+                    Actualiser champions
+                  </button>
+                  <button type="button" className={ds.btnOutline} disabled={busy} onClick={toggleLft}>
+                    {player.lft ? 'Ne plus être LFT' : 'Me mettre LFT'}
+                  </button>
+                </div>
+              )}
 
               <div className={styles.grid}>
                 <div className={`${ds.card} ${styles.block}`}>
@@ -468,17 +544,19 @@ export default function ProfileView() {
                           </div>
                         </div>
                       </div>
-                      <Link href="/my-team" className={ds.btnOutline}>
-                        Voir mon équipe
+                      <Link href={isOwn ? '/my-team' : `/teams?team=${team.id}`} className={ds.btnOutline}>
+                        {isOwn ? 'Voir mon équipe' : 'Voir l’équipe'}
                       </Link>
                     </>
-                  ) : (
+                  ) : isOwn ? (
                     <>
                       <p className={styles.text}>Tu n’as pas encore d’équipe.</p>
                       <Link href="/teams" className={ds.btnOutline}>
                         Trouver une équipe
                       </Link>
                     </>
+                  ) : (
+                    <p className={styles.text}>Pas encore d’équipe.</p>
                   )}
                 </div>
 
@@ -486,6 +564,47 @@ export default function ProfileView() {
                   <div className={styles.blockLabel}>Champion pool</div>
                   <ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />
                 </div>
+              </div>
+
+              <div className={`${ds.card} ${styles.block} ${styles.czfChampions}`}>
+                <div className={styles.blockLabel}>Champions joués en CZF</div>
+
+                {czfChampions === null ? (
+                  <p className={styles.text}>Chargement…</p>
+                ) : czfChampions.length === 0 ? (
+                  <p className={styles.text}>Aucune game CZF jouée pour le moment.</p>
+                ) : (
+                  <div>
+                    <div className={`${styles.championRow} ${styles.championHead}`}>
+                      <span />
+                      <span>Champion</span>
+                      <span>Games</span>
+                      <span>Win</span>
+                      <span>KDA</span>
+                    </div>
+
+                    {czfChampions.map((champion) => (
+                      <div key={champion.championId} className={styles.championRow}>
+                        {champion.image ? (
+                          <img src={champion.image} alt="" loading="lazy" className={styles.championImage} />
+                        ) : (
+                          <span className={styles.championImage} />
+                        )}
+                        <span className={styles.championName}>
+                          {champion.name}
+                          <small>
+                            {champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · ')}
+                          </small>
+                        </span>
+                        <strong>{champion.games}</strong>
+                        <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
+                          {Math.round(champion.winRate)}%
+                        </strong>
+                        <strong>{champion.kda.toFixed(2)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {player.description && (

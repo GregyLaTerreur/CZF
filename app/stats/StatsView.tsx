@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
-import CloseIcon from '@/app/components/icons/CloseIcon';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
 import {
   BlockHead,
+  ChampionRowsModal,
   DivisionTabs,
   TeamLogo,
   useDivisionData,
@@ -286,76 +286,27 @@ function ChampionPlayersModal({
   roleLabel?: string;
   onClose: () => void;
 }) {
-  // Échap ferme la pop-up ; on bloque le défilement de la page derrière.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
-    const previousOverflow = document.body.style.overflow;
-
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
+  const count = champion.players.length;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div
-        className={`${styles.championModal} ${ds.onDark}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Joueurs de ${champion.name}`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Fermer">
-          <CloseIcon />
-        </button>
-
-        <div className={styles.championModalHead}>
-          {champion.image ? <img src={champion.image} alt="" /> : <span className={styles.championEmpty} />}
-          <div>
-            <strong>{champion.name}</strong>
-            <small>
-              {roleLabel} · {champion.players.length} joueur{champion.players.length > 1 ? 's' : ''} ·{' '}
-              {champion.picks} pick{champion.picks > 1 ? 's' : ''} · {champion.winRate}% win
-            </small>
-          </div>
-        </div>
-
-        {champion.players.length === 0 ? (
-          <div className={ds.empty}>Aucun joueur</div>
-        ) : (
-          <div className={styles.championPlayersRows}>
-            <div className={`${styles.championPlayerRow} ${styles.championPlayerHead}`}>
-              <span />
-              <span />
-              <span>Joueur</span>
-              <span>Games</span>
-              <span>Win</span>
-              <span>KDA</span>
-            </div>
-
-            {champion.players.map((player, index) => (
-              <div key={player.playerId} className={styles.championPlayerRow}>
-                <span className={styles.rankNumber}>{index + 1}</span>
-                <TeamLogo logo={player.teamLogo} size="sm" />
-                <span className={styles.playerName}>
-                  {splitRiotId(player.riotId).name}
-                  {player.teamShortName && <small>{player.teamShortName}</small>}
-                </span>
-                <strong className={styles.rankValue}>{player.games}</strong>
-                <strong className={`${styles.rankValue} ${player.winRate >= 50 ? ds.win : ds.loss}`}>
-                  {Math.round(player.winRate)}%
-                </strong>
-                <strong className={styles.rankValue}>{player.kda.toFixed(2)}</strong>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <ChampionRowsModal
+      title={champion.name}
+      image={champion.image}
+      meta={`${roleLabel} · ${count} joueur${count > 1 ? 's' : ''} · ${champion.picks} pick${
+        champion.picks > 1 ? 's' : ''
+      } · ${champion.winRate}% win`}
+      label="Joueur"
+      rows={champion.players.map((player) => ({
+        key: player.playerId,
+        image: player.teamLogo,
+        name: splitRiotId(player.riotId).name,
+        sub: player.teamShortName,
+        games: player.games,
+        winRate: player.winRate,
+        kda: player.kda,
+      }))}
+      onClose={onClose}
+    />
   );
 }
 

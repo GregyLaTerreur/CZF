@@ -901,3 +901,125 @@ export function computeChampionStats(
 
   return result;
 }
+
+/* =========================================================
+   CHAMPIONS JOUÉS PAR UN JOUEUR OU UNE ÉQUIPE
+   (pages Profil et Mon équipe)
+   Toutes divisions, données historiques complètes.
+========================================================= */
+
+export type PlayerChampionStat = {
+  championId: string;
+  name: string;
+  image: string | null;
+  // Rôles où il a joué ce champion, du plus joué au moins joué.
+  roles: Role[];
+  games: number;
+  wins: number;
+  winRate: number;
+  kda: number;
+};
+
+type ChampionTotalsData = {
+  games: AnyObject[];
+  stats: AnyObject[];
+  championMap: Map<string, Champion>;
+};
+
+export function computePlayerChampions(
+  playerId: number,
+  data: ChampionTotalsData
+): PlayerChampionStat[] {
+  return computeChampionTotals({
+    ...data,
+    stats: data.stats.filter((row) => Number(row.player_id) === playerId),
+  });
+}
+
+// Champions d'une équipe (toutes ses games, puis rôle par rôle) et de chacun
+// de ses joueurs dans cette équipe.
+export function computeTeamChampions(
+  teamId: number,
+  data: ChampionTotalsData
+): {
+  team: PlayerChampionStat[];
+  byRole: Record<Role, PlayerChampionStat[]>;
+  players: Record<number, PlayerChampionStat[]>;
+} {
+  const rows = data.stats.filter((row) => Number(row.team_id) === teamId);
+  const byPlayer = groupBy(rows, (row) => Number(row.player_id));
+
+  return {
+    team: computeChampionTotals({ ...data, stats: rows }),
+    byRole: Object.fromEntries(
+      ROLES.map((role) => [
+        role,
+        computeChampionTotals({ ...data, stats: rows.filter((row) => normalizeRole(row.role) === role) }),
+      ])
+    ) as Record<Role, PlayerChampionStat[]>,
+    players: Object.fromEntries(
+      [...byPlayer.entries()].map(([playerId, playerRows]) => [
+        playerId,
+        computeChampionTotals({ ...data, stats: playerRows }),
+      ])
+    ),
+  };
+}
+
+function computeChampionTotals(data: ChampionTotalsData): PlayerChampionStat[] {
+  const { games, stats, championMap } = data;
+
+  const gameMap = new Map<number, AnyObject>(
+    games.map((game) => [Number(game.id), game])
+  );
+
+  const map = new Map<
+    string,
+    { games: number; wins: number; kdaSum: number; roles: Map<Role, number> }
+  >();
+
+  for (const row of stats) {
+    const championId = String(row.champion_id ?? '');
+    const game = gameMap.get(Number(row.game_id));
+
+    if (!championId || !game) continue;
+
+    const current = map.get(championId) || {
+      games: 0,
+      wins: 0,
+      kdaSum: 0,
+      roles: new Map<Role, number>(),
+    };
+
+    current.games++;
+    if (Number(game.winner_team_id) === Number(row.team_id)) current.wins++;
+    // KDA : moyenne des ratios par game, comme les stats joueurs.
+    current.kdaSum +=
+      ((Number(row.kills) || 0) + (Number(row.assists) || 0)) /
+      Math.max(1, Number(row.deaths) || 0);
+
+    const role = normalizeRole(row.role);
+    if (role) current.roles.set(role, (current.roles.get(role) ?? 0) + 1);
+
+    map.set(championId, current);
+  }
+
+  return [...map.entries()]
+    .map(([championId, values]) => {
+      const champion = championMap.get(championId);
+
+      return {
+        championId,
+        name: champion?.name ?? championId,
+        image: champion?.image ?? null,
+        roles: [...values.roles.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .map(([role]) => role),
+        games: values.games,
+        wins: values.wins,
+        winRate: round2((values.wins / values.games) * 100),
+        kda: round2(values.kdaSum / values.games),
+      };
+    })
+    .sort((a, b) => b.games - a.games || b.winRate - a.winRate || b.kda - a.kda);
+}
