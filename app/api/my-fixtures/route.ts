@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
 
     const { data: teams, error: teamsError } = await supabase
       .from('teams')
-      .select('id, name, logo_url')
+      .select('id, name, tag, logo_url')
       .in('id', teamIds);
 
     if (teamsError) throw teamsError;
@@ -247,12 +247,14 @@ export async function GET(request: NextRequest) {
         team1: {
           id: fixture.team1_id,
           name: team1?.name ?? 'Équipe inconnue',
+          tag: team1?.tag ?? null,
           logo: team1?.logo_url ?? null,
           score: fixture.status === 'completed' ? score1 : null,
         },
         team2: {
           id: fixture.team2_id,
           name: team2?.name ?? 'Équipe inconnue',
+          tag: team2?.tag ?? null,
           logo: team2?.logo_url ?? null,
           score: fixture.status === 'completed' ? score2 : null,
         },

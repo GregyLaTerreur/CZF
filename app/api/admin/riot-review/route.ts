@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
 
       db
         .from('teams')
-        .select('id, name, logo_url')
+        .select('id, name, tag, logo_url')
         .in('id', teamIds),
     ]);
 
@@ -167,6 +167,7 @@ export async function GET(request: NextRequest) {
         {
           id: Number(t.id),
           name: String(t.name || 'Équipe'),
+          tag: t.tag || null,
           logo: t.logo_url || null,
         },
       ])

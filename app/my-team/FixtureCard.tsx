@@ -10,6 +10,7 @@ import styles from './my-team.module.css';
 export type FixtureTeam = {
   id: number;
   name: string;
+  tag?: string | null;
   logo: string | null;
   score: number | null;
 };
@@ -120,7 +121,7 @@ function TeamSide({ team }: { team: FixtureTeam }) {
       {team.logo ? (
         <img src={team.logo} alt="" className={styles.sideLogo} />
       ) : (
-        <span className={styles.sideLogoEmpty}>{team.name.slice(0, 2).toUpperCase()}</span>
+        <span className={styles.sideLogoEmpty}>{team.tag || team.name.slice(0, 2).toUpperCase()}</span>
       )}
       <strong className={styles.sideName}>{team.name}</strong>
     </div>

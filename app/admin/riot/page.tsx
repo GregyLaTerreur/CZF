@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 type Team = {
   id: number;
   name: string;
+  tag?: string | null;
   logo: string | null;
 };
 
@@ -69,7 +70,7 @@ function TeamLabel({ team }: { team: Team }) {
         <img src={team.logo} alt="" />
       ) : (
         <div className="riotAdminPlaceholder">
-          {team.name.slice(0, 2).toUpperCase()}
+          {team.tag || team.name.slice(0, 2).toUpperCase()}
         </div>
       )}
       <strong>{team.name}</strong>

@@ -20,6 +20,7 @@ type FixtureRow = {
 type TeamRow = {
   id: number;
   name: string;
+  tag: string | null;
   logo_url: string | null;
 };
 
@@ -98,7 +99,7 @@ export async function GET() {
 
     const { data: teamsData, error: teamsError } = await db
       .from('teams')
-      .select('id, name, logo_url')
+      .select('id, name, tag, logo_url')
       .in('id', teamIds);
 
     if (teamsError) throw teamsError;
@@ -111,6 +112,7 @@ export async function GET() {
         {
           id: Number(team.id),
           name: String(team.name || 'Équipe'),
+          tag: team.tag || null,
           logo: team.logo_url || null,
         },
       ])

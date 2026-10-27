@@ -7,6 +7,7 @@ import Nav from '../components/Nav';
 type Team = {
   id: number;
   name: string;
+  tag?: string | null;
   logo: string | null;
 };
 
@@ -95,7 +96,7 @@ function TeamView({ team }: { team: Team }) {
           />
         ) : (
           <span>
-            {team.name.slice(0, 2).toUpperCase()}
+            {team.tag || team.name.slice(0, 2).toUpperCase()}
           </span>
         )}
       </div>

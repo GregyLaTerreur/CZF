@@ -85,7 +85,7 @@ export async function loadValidatedTeams(): Promise<TeamInfo[]> {
   const rows = await fetchAll((from, to) =>
     supabaseAdmin
       .from('teams')
-      .select('id, name, logo_url, division, validated_by_admin')
+      .select('id, name, tag, logo_url, division, validated_by_admin')
       .order('id', { ascending: true })
       .range(from, to)
   );
