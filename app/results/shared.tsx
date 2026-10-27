@@ -92,6 +92,17 @@ export type ChampionStat = {
   picks: number;
   pickRate: number;
   winRate: number;
+  players: ChampionPlayer[];
+};
+
+export type ChampionPlayer = {
+  playerId: number;
+  riotId: string;
+  teamShortName: string | null;
+  teamLogo: string | null;
+  games: number;
+  winRate: number;
+  kda: number;
 };
 
 export type DivisionData = {

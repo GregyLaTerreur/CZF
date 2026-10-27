@@ -67,6 +67,19 @@ export type ChampionRoleStat = {
   losses: number;
   pickRate: number;
   winRate: number;
+  // Joueurs de ce champion à ce rôle, du plus de games au moins.
+  players: ChampionPlayerStat[];
+};
+
+export type ChampionPlayerStat = {
+  playerId: number;
+  riotId: string;
+  teamShortName: string | null;
+  teamLogo: string | null;
+  games: number;
+  wins: number;
+  winRate: number;
+  kda: number;
 };
 
 // Riot ID par id joueur ; une clé présente = joueur connu, même sans riot_id.
@@ -753,9 +766,12 @@ export function computeChampionStats(
     games: AnyObject[];
     stats: AnyObject[];
     championMap: Map<string, Champion>;
+    // Sans eux, les joueurs sont nommés « Joueur <id> », sans logo.
+    playerNames?: PlayerNames;
+    teamMap?: Map<number, TeamInfo>;
   }
 ): Record<Role, ChampionRoleStat[]> {
-  const { matches, games, stats, championMap } = data;
+  const { matches, games, stats, championMap, playerNames, teamMap } = data;
 
   const gameMap = new Map<number, AnyObject>(
     games.map((game) => [Number(game.id), game])
@@ -781,9 +797,16 @@ export function computeChampionStats(
         normalizeRole(stat.role) === role
     );
 
+    type PlayerTotals = { games: number; wins: number; kdaSum: number; teamId: number };
+
     const map = new Map<
       string,
-      { picks: number; wins: number; matchIds: Set<number> }
+      {
+        picks: number;
+        wins: number;
+        matchIds: Set<number>;
+        players: Map<number, PlayerTotals>;
+      }
     >();
 
     for (const row of rows) {
@@ -799,15 +822,38 @@ export function computeChampionStats(
         picks: 0,
         wins: 0,
         matchIds: new Set<number>(),
+        players: new Map<number, PlayerTotals>(),
       };
+
+      const won = Number(game.winner_team_id) === Number(row.team_id);
 
       current.picks++;
 
-      if (Number(game.winner_team_id) === Number(row.team_id)) {
+      if (won) {
         current.wins++;
       }
 
       current.matchIds.add(Number(game.match_id));
+
+      const playerId = Number(row.player_id);
+
+      if (Number.isFinite(playerId)) {
+        const player = current.players.get(playerId) || {
+          games: 0,
+          wins: 0,
+          kdaSum: 0,
+          teamId: Number(row.team_id),
+        };
+
+        player.games++;
+        if (won) player.wins++;
+        // KDA : moyenne des ratios par game, comme les stats joueurs.
+        player.kdaSum +=
+          ((Number(row.kills) || 0) + (Number(row.assists) || 0)) /
+          Math.max(1, Number(row.deaths) || 0);
+        current.players.set(playerId, player);
+      }
+
       map.set(championId, current);
     }
 
@@ -831,6 +877,23 @@ export function computeChampionStats(
 
           winRate:
             values.picks > 0 ? round2((values.wins / values.picks) * 100) : 0,
+
+          players: [...values.players.entries()]
+            .map(([playerId, player]): ChampionPlayerStat => {
+              const team = teamMap?.get(player.teamId);
+
+              return {
+                playerId,
+                riotId: String(playerNames?.get(playerId) ?? `Joueur ${playerId}`),
+                teamShortName: team?.shortName ?? null,
+                teamLogo: team?.logo ?? null,
+                games: player.games,
+                wins: player.wins,
+                winRate: round2((player.wins / player.games) * 100),
+                kda: round2(player.kdaSum / player.games),
+              };
+            })
+            .sort((a, b) => b.games - a.games || b.winRate - a.winRate || b.kda - a.kda),
         };
       })
       .sort((a, b) => b.picks - a.picks || b.winRate - a.winRate);

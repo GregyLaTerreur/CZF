@@ -764,9 +764,11 @@
   margin: 0 0 26px;
 }
 
+/* dense : les cartes suivant le panneau joueurs remplissent la fin de la ligne */
 .championGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-flow: dense;
   gap: 24px;
 }
 
@@ -776,7 +778,80 @@
   flex-direction: column;
   align-items: center;
   padding: 18px 14px 14px;
+  font: inherit;
+  color: inherit;
   text-align: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.championCard:hover,
+.championCard:active,
+.championCardOpen {
+  transform: translate(4px, 4px);
+  box-shadow: 2px 2px 0 var(--dark);
+}
+
+.championCardOpen,
+.championCardOpen:hover,
+.championCardOpen:active {
+  border-color: var(--orange);
+  box-shadow: 2px 2px 0 var(--orange);
+}
+
+.championPlayers {
+  grid-column: 1 / -1;
+}
+
+.championPlayersClose {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+  cursor: pointer;
+}
+
+.championPlayersClose:hover,
+.championPlayersClose:active {
+  transform: none;
+  color: var(--orange);
+}
+
+.championPlayersRows {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.championPlayerRow {
+  display: grid;
+  grid-template-columns: 22px 28px minmax(0, 1fr) repeat(3, 64px);
+  align-items: center;
+  column-gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.08);
+}
+
+.championPlayerRow:last-child {
+  border-bottom: none;
+}
+
+.championPlayerRow > :nth-child(n + 4) {
+  text-align: right;
+}
+
+.championPlayerHead {
+  padding-block: 8px 6px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.45);
 }
 
 .championCard > img,
@@ -935,5 +1010,11 @@
   .championGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
+  }
+
+  .championPlayerRow {
+    grid-template-columns: 18px 28px minmax(0, 1fr) repeat(3, 44px);
+    column-gap: 8px;
+    padding-inline: 12px;
   }
 }

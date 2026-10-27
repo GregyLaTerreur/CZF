@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
         games,
         stats: dataset.stats.filter(inDivision),
         championMap: new Map(champions.map((champion) => [champion.id, champion])),
+        playerNames,
+        teamMap,
       }),
     });
   } catch (error) {
