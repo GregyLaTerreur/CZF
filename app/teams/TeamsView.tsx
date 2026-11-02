@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
   DIVISION_COLORS,
@@ -20,7 +21,6 @@ import {
   teamDivision,
   multiOpggUrl,
 } from '@/app/components/ds/lol';
-import { ChampionPool, useDdragonVersion } from '@/app/components/ds/LolUi';
 import styles from './teams.module.css';
 
 const TEAM_SIZE = 5;
@@ -41,22 +41,11 @@ type TeamView = {
 };
 
 /* =========================================================
-   ICONES
-========================================================= */
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-      <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" strokeWidth="2.4" fill="none" />
-    </svg>
-  );
-}
-
-/* =========================================================
    VUE
 ========================================================= */
 
 export default function TeamsView() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [teams, setTeams] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -69,9 +58,7 @@ export default function TeamsView() {
   const [validatedOnly, setValidatedOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
   const [divisionFilter, setDivisionFilter] = useState<DivisionName | null>(null);
-  const [openTeamId, setOpenTeamId] = useState<number | null>(null);
 
-  const ddragonVersion = useDdragonVersion();
 
   const loadData = useCallback(async () => {
     try {
@@ -100,20 +87,10 @@ export default function TeamsView() {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
     loadData();
 
-    // Lien direct /teams?team=ID : ouvre la fiche de l'équipe.
+    // Anciens liens /teams?team=ID : redirige vers la page de l'équipe.
     const teamParam = Number(new URLSearchParams(window.location.search).get('team'));
-    if (Number.isInteger(teamParam) && teamParam > 0) setOpenTeamId(teamParam);
-  }, [loadData]);
-
-  // Garde l'URL synchronisée avec la fiche ouverte (lien partageable).
-  useEffect(() => {
-    const url = new URL(window.location.href);
-
-    if (openTeamId) url.searchParams.set('team', String(openTeamId));
-    else url.searchParams.delete('team');
-
-    window.history.replaceState(null, '', url.toString());
-  }, [openTeamId]);
+    if (Number.isInteger(teamParam) && teamParam > 0) router.replace(`/teams/${teamParam}`);
+  }, [loadData, router]);
 
   const myPlayer = useMemo(
     () => (user ? players.find((player) => player.profile_id === user.id) || null : null),
@@ -205,7 +182,6 @@ export default function TeamsView() {
       );
   }, [teamViews, search, validatedOnly, statusFilter, divisionFilter]);
 
-  const openView = teamViews.find((view) => Number(view.team.id) === openTeamId) || null;
   const myTeamView = myMembership
     ? teamViews.find((view) => Number(view.team.id) === Number(myMembership.team_id)) || null
     : null;
@@ -248,7 +224,6 @@ export default function TeamsView() {
             user={user}
             myPlayer={myPlayer}
             myTeamView={myTeamView}
-            onOpenTeam={setOpenTeamId}
             onCreated={loadData}
           />
         </div>
@@ -340,7 +315,7 @@ export default function TeamsView() {
                     ? pendingRequestsFor(view.team.id).length
                     : 0
                 }
-                onOpen={() => setOpenTeamId(Number(view.team.id))}
+                onOpen={() => router.push(`/teams/${view.team.id}`)}
               />
             ))}
           </div>
@@ -353,28 +328,6 @@ export default function TeamsView() {
         </div>
       </section>
 
-      {openView && (
-        <TeamModal
-          key={openView.team.id}
-          view={openView}
-          user={user}
-          myPlayer={myPlayer}
-          myMembership={myMembership}
-          pendingRequests={pendingRequestsFor(openView.team.id)}
-          hasPendingRequest={
-            Boolean(myPlayer) &&
-            joinRequests.some(
-              (request) =>
-                Number(request.team_id) === Number(openView.team.id) &&
-                Number(request.player_id) === Number(myPlayer?.id) &&
-                request.status === 'pending'
-            )
-          }
-          ddragonVersion={ddragonVersion}
-          onClose={() => setOpenTeamId(null)}
-          onChanged={loadData}
-        />
-      )}
     </>
   );
 }
@@ -412,7 +365,7 @@ function TeamCard({
   const opggUrl = rosterOpggUrl(view);
 
   return (
-    // Toute la carte ouvre la fiche, sauf le bouton de copie du lien OP.GG.
+    // Toute la carte mène à la page de l'équipe, sauf le lien OP.GG.
     <div
       className={`${ds.card} ${styles.teamCard} ${view.validated ? '' : styles.teamCardPending}`}
       onClick={onOpen}
@@ -507,7 +460,7 @@ function ExternalIcon() {
   );
 }
 
-// Ouvre le multi OP.GG dans un nouvel onglet, sans ouvrir la fiche.
+// Ouvre le multi OP.GG dans un nouvel onglet, sans ouvrir la page de l'équipe.
 function OpggLink({ url }: { url: string }) {
   return (
     <a
@@ -525,429 +478,6 @@ function OpggLink({ url }: { url: string }) {
 }
 
 /* =========================================================
-   FICHE D'ÉQUIPE (fenêtre)
-========================================================= */
-
-function TeamModal({
-  view,
-  user,
-  myPlayer,
-  myMembership,
-  pendingRequests,
-  hasPendingRequest,
-  ddragonVersion,
-  onClose,
-  onChanged,
-}: {
-  view: TeamView;
-  user: any;
-  myPlayer: any;
-  myMembership: any;
-  pendingRequests: any[];
-  hasPendingRequest: boolean;
-  ddragonVersion: string;
-  onClose: () => void;
-  onChanged: () => Promise<void>;
-}) {
-  const { team } = view;
-  const isCaptain = Boolean(user) && team.captain_profile_id === user.id;
-
-  const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState(team.name || '');
-  const [editTag, setEditTag] = useState(team.tag || '');
-  const [editLogo, setEditLogo] = useState(team.logo_url || '');
-  const [editDescription, setEditDescription] = useState(team.description || '');
-  const [feedback, setFeedback] = useState<{ text: string; error: boolean } | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  // Échap ferme la fiche ; on bloque le défilement de la page derrière.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
-    const previousOverflow = document.body.style.overflow;
-
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
-
-  function joinBlockReason(): string | null {
-    if (!user || !myPlayer) return 'Connecte-toi et crée ton profil joueur pour postuler.';
-
-    if (myMembership) {
-      return Number(myMembership.team_id) === Number(team.id)
-        ? 'Tu fais partie de cette équipe.'
-        : 'Tu es déjà dans une autre équipe.';
-    }
-
-    if (view.complete) return "L'équipe est complète.";
-
-    if (view.members.some((member) => member.role === myPlayer.main_role)) {
-      return `Le poste ${myPlayer.main_role} est déjà occupé.`;
-    }
-
-    if (hasPendingRequest) return 'Ta demande est en attente de réponse du capitaine.';
-
-    return null;
-  }
-
-  // Appel d'API avec message de retour dans la fiche.
-  async function run(action: () => Promise<Response>, success: string) {
-    setBusy(true);
-    setFeedback(null);
-
-    try {
-      const res = await action();
-      const data = await res.json();
-
-      if (!data.success) throw new Error(data.message || data.error?.message || 'Erreur.');
-
-      setFeedback({ text: success, error: false });
-      await onChanged();
-      return true;
-    } catch (error: any) {
-      setFeedback({ text: error?.message || 'Erreur.', error: true });
-      return false;
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function requestJoin() {
-    return run(
-      () =>
-        fetch('/api/team-join-requests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            team_id: team.id,
-            riot_id: myPlayer.riot_id,
-            role: myPlayer.main_role,
-            profile_id: user.id,
-            player_id: myPlayer.id,
-          }),
-        }),
-      'Demande envoyée au capitaine.'
-    );
-  }
-
-  function answerRequest(requestId: number, action: 'accept' | 'reject') {
-    return run(
-      () =>
-        fetch('/api/team-join-requests', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ request_id: requestId, action }),
-        }),
-      action === 'accept' ? 'Joueur accepté.' : 'Demande refusée.'
-    );
-  }
-
-  function removeMember(riotId: string) {
-    if (!confirm(`Retirer ${riotId} de l'équipe ?`)) return;
-
-    return run(
-      () =>
-        fetch('/api/team-members', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ team_id: team.id, riot_id: riotId }),
-        }),
-      'Joueur retiré.'
-    );
-  }
-
-  async function saveTeam(event: React.FormEvent) {
-    event.preventDefault();
-
-    const ok = await run(
-      () =>
-        fetch('/api/teams', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            team_id: team.id,
-            name: editName,
-            tag: editTag,
-            description: editDescription,
-            logo_url: editLogo,
-          }),
-        }),
-      'Équipe modifiée.'
-    );
-
-    if (ok) setEditing(false);
-  }
-
-  async function deleteTeam() {
-    if (!confirm('Supprimer définitivement cette équipe ?')) return;
-
-    const ok = await run(
-      () =>
-        fetch('/api/teams/delete', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ team_id: team.id }),
-        }),
-      'Équipe supprimée.'
-    );
-
-    if (ok) onClose();
-  }
-
-  const blockReason = joinBlockReason();
-
-  return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div
-        className={`${styles.modal} ${ds.onDark}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={team.name}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Fermer">
-          <CloseIcon />
-        </button>
-
-        {/* EN-TÊTE */}
-        <div className={styles.modalHead}>
-          {team.logo_url ? (
-            <img src={team.logo_url} alt="" className={styles.modalLogo} />
-          ) : (
-            <span className={styles.modalLogo} />
-          )}
-
-          <div className={styles.modalWho}>
-            <div className={styles.modalName}>
-              {team.name}
-              {team.tag && <small> [{team.tag}]</small>}
-            </div>
-            <div className={styles.modalMeta}>
-              <span>Capitaine · {team.captain_riot_id || '—'}</span>
-              <span>{view.validated ? 'Validée par un admin' : 'En attente de validation'}</span>
-            </div>
-          </div>
-
-          {rosterOpggUrl(view) && (
-            <a href={rosterOpggUrl(view)!} target="_blank" rel="noreferrer" className={ds.btnOutline}>
-              MultiGG
-            </a>
-          )}
-        </div>
-
-        <div className={styles.modalStats}>
-          <div className={styles.modalStat}>
-            <span>Division</span>
-            <strong>
-              {view.division ? (
-                <>
-                  <span className={ds.teamDot} style={{ background: DIVISION_COLORS[view.division] }} />
-                  {view.division}
-                  {!view.divisionOfficial && <small> estimée</small>}
-                </>
-              ) : (
-                'À définir'
-              )}
-            </strong>
-          </div>
-          <div className={styles.modalStat}>
-            <span>Total CZF</span>
-            <strong>{view.points} pts</strong>
-          </div>
-          <div className={styles.modalStat}>
-            <span>Effectif</span>
-            <strong>
-              {view.count}/{TEAM_SIZE} · {view.complete ? 'Complète' : 'Recrute'}
-            </strong>
-          </div>
-        </div>
-
-        {team.description && !editing && <p className={styles.modalDescription}>{team.description}</p>}
-
-        {feedback && (
-          <p className={feedback.error ? ds.formError : ds.formInfo} role="status">
-            {feedback.text}
-          </p>
-        )}
-
-        {/* ÉDITION (capitaine) */}
-        {editing ? (
-          <form className={styles.editForm} onSubmit={saveTeam}>
-            <label className={ds.field}>
-              <span>Nom de l&apos;équipe</span>
-              <input className={ds.input} value={editName} onChange={(e) => setEditName(e.target.value)} required />
-            </label>
-            <label className={ds.field}>
-              <span>Tag (2 à 5 caractères)</span>
-              <input
-                className={ds.input}
-                value={editTag}
-                onChange={(e) => setEditTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-                maxLength={5}
-                placeholder="CZF"
-              />
-            </label>
-            <label className={ds.field}>
-              <span>URL du logo</span>
-              <input className={ds.input} value={editLogo} onChange={(e) => setEditLogo(e.target.value)} />
-            </label>
-            <label className={ds.field}>
-              <span>Description</span>
-              <textarea
-                className={ds.input}
-                rows={3}
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-              />
-            </label>
-
-            <div className={ds.formActions}>
-              <button type="submit" className={ds.btnPrimary} disabled={busy}>
-                Enregistrer
-              </button>
-              <button type="button" className={ds.btnOutline} disabled={busy} onClick={() => setEditing(false)}>
-                Annuler
-              </button>
-            </div>
-          </form>
-        ) : (
-          <>
-            {/* ROSTER */}
-            <div className={styles.modalLabel}>Roster</div>
-
-            <div className={styles.modalRoster}>
-              {view.slots.map(({ role, member, player }) => {
-                const riotId = player?.riot_id || member?.riot_id || '';
-                const { name, tag } = splitRiotId(riotId);
-                const rank = formatRank(player?.soloq_tier, player?.soloq_rank, player?.soloq_lp);
-
-                return (
-                  <div key={role.name} className={styles.modalRosterRow}>
-                    <span className={styles.modalRole}>
-                      <img src={role.image} alt="" className={ds.roleIcon} />
-                      {role.label}
-                    </span>
-
-                    {member ? (
-                      <>
-                        <span className={styles.modalPlayer}>
-                          <span className={styles.modalPlayerName}>
-                            {name}
-                            {tag && <small>#{tag}</small>}
-                          </span>
-                          {player?.profiles?.discord_name && (
-                            <span className={styles.modalDiscord}>{player.profiles.discord_name}</span>
-                          )}
-                        </span>
-
-                        <span className={styles.modalRank}>
-                          {rank ? (
-                            <>
-                              <img src={TIERS[player.soloq_tier]?.icon} alt="" className={ds.rankIcon} />
-                              {rank}
-                            </>
-                          ) : (
-                            <span className={ds.muted}>Non classé</span>
-                          )}
-                        </span>
-
-                        <span className={styles.modalPool}>
-                          <ChampionPool player={player} ddragonVersion={ddragonVersion} />
-                        </span>
-
-                        <span className={styles.modalRowAction}>
-                          {isCaptain && (
-                            <button
-                              type="button"
-                              className={`${ds.btnDanger} ${ds.btnSmall}`}
-                              disabled={busy}
-                              onClick={() => removeMember(riotId)}
-                            >
-                              Retirer
-                            </button>
-                          )}
-                        </span>
-                      </>
-                    ) : (
-                      <span className={`${styles.modalPlayer} ${ds.muted}`}>Place libre</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* DEMANDES (capitaine) */}
-            {isCaptain && (
-              <>
-                <div className={styles.modalLabel}>Demandes reçues</div>
-
-                {pendingRequests.length === 0 ? (
-                  <p className={ds.muted}>Aucune demande en attente.</p>
-                ) : (
-                  <div className={styles.requests}>
-                    {pendingRequests.map((request) => (
-                      <div key={request.id} className={styles.requestRow}>
-                        <span className={styles.modalPlayerName}>{request.riot_id}</span>
-                        <span className={styles.modalDiscord}>{request.role}</span>
-
-                        <span className={styles.requestActions}>
-                          <button
-                            type="button"
-                            className={`${ds.btnPrimary} ${ds.btnSmall}`}
-                            disabled={busy}
-                            onClick={() => answerRequest(request.id, 'accept')}
-                          >
-                            Accepter
-                          </button>
-                          <button
-                            type="button"
-                            className={`${ds.btnOutline} ${ds.btnSmall}`}
-                            disabled={busy}
-                            onClick={() => answerRequest(request.id, 'reject')}
-                          >
-                            Refuser
-                          </button>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* ACTIONS */}
-            <div className={styles.modalActions}>
-              {!blockReason && (
-                <button type="button" className={ds.btnPrimary} disabled={busy} onClick={requestJoin}>
-                  Demander à rejoindre
-                </button>
-              )}
-
-              {blockReason && !isCaptain && <p className={styles.blockReason}>{blockReason}</p>}
-
-              {isCaptain && (
-                <>
-                  <button type="button" className={ds.btnOutline} onClick={() => setEditing(true)}>
-                    Modifier l&apos;équipe
-                  </button>
-                  <button type="button" className={ds.btnDanger} disabled={busy} onClick={deleteTeam}>
-                    Supprimer l&apos;équipe
-                  </button>
-                </>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
    CARTE D'ACTION (création / mon équipe)
 ========================================================= */
 
@@ -955,13 +485,11 @@ function TeamActionCard({
   user,
   myPlayer,
   myTeamView,
-  onOpenTeam,
   onCreated,
 }: {
   user: any;
   myPlayer: any;
   myTeamView: TeamView | null;
-  onOpenTeam: (teamId: number) => void;
   onCreated: () => Promise<void>;
 }) {
   const [formOpen, setFormOpen] = useState(false);
@@ -1047,9 +575,9 @@ function TeamActionCard({
         <p className={ds.body}>
           {myTeamView.count}/{TEAM_SIZE} joueurs · {myTeamView.validated ? 'validée' : 'en attente de validation'}
         </p>
-        <button type="button" className={ds.btnOutline} onClick={() => onOpenTeam(Number(team.id))}>
+        <Link href="/my-team" className={ds.btnOutline}>
           Voir mon équipe
-        </button>
+        </Link>
       </div>
     );
   }

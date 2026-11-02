@@ -248,7 +248,7 @@ function DivisionBlock({ division, teams }: { division: DivisionName; teams: any
           {teams.map((team, index) => (
             <Link
               key={team.id}
-              href={`/teams?team=${team.id}`}
+              href={`/teams/${team.id}`}
               className={`${ds.card} ${styles.teamTile}`}
             >
               <span className={styles.teamRank}>{index + 1}</span>
