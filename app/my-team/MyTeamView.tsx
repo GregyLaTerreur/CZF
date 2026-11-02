@@ -17,6 +17,7 @@ import {
   splitRiotId,
   teamDivision,
   TIERS,
+  multiOpggUrl,
 } from '@/app/components/ds/lol';
 import FixtureCard, { type Fixture, type GameSlot, type MvpFixture } from './FixtureCard';
 import styles from './my-team.module.css';
@@ -382,6 +383,9 @@ export default function MyTeamView() {
   }
 
   const official = teamDivision(team);
+  const opggUrl = multiOpggUrl(
+    roster.slots.map(({ member, player: rosterPlayer }) => rosterPlayer?.riot_id || member?.riot_id)
+  );
   const complete = roster.count >= TEAM_SIZE;
   // Sans division officielle, on l'estime pour une équipe complète.
   const division = official ?? (complete ? divisionFromPoints(roster.points) : null);
@@ -446,8 +450,8 @@ export default function MyTeamView() {
                   Gérer l’équipe
                 </Link>
               )}
-              {team.multigg_url && (
-                <a href={team.multigg_url} target="_blank" rel="noreferrer" className={ds.btnOutline}>
+              {opggUrl && (
+                <a href={opggUrl} target="_blank" rel="noreferrer" className={ds.btnOutline}>
                   MultiGG
                 </a>
               )}

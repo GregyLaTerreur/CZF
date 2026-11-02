@@ -18,6 +18,7 @@ import {
   normalizeRiotId,
   splitRiotId,
   teamDivision,
+  multiOpggUrl,
 } from '@/app/components/ds/lol';
 import { ChampionPool, useDdragonVersion } from '@/app/components/ds/LolUi';
 import styles from './teams.module.css';
@@ -408,6 +409,7 @@ function TeamCard({
   onOpen: () => void;
 }) {
   const { team } = view;
+  const opggUrl = rosterOpggUrl(view);
 
   return (
     // Toute la carte ouvre la fiche, sauf le bouton de copie du lien OP.GG.
@@ -480,7 +482,7 @@ function TeamCard({
           {view.count}/{TEAM_SIZE}
         </span>
 
-        {team.multigg_url && <OpggLink url={team.multigg_url} />}
+        {opggUrl && <OpggLink url={opggUrl} />}
 
         {pendingCount > 0 && (
           <span className={styles.requestsBadge} title="Demandes en attente">
@@ -490,6 +492,10 @@ function TeamCard({
       </span>
     </div>
   );
+}
+
+function rosterOpggUrl(view: TeamView) {
+  return multiOpggUrl(view.slots.map(({ member, player }) => player?.riot_id || member?.riot_id));
 }
 
 function ExternalIcon() {
@@ -550,7 +556,6 @@ function TeamModal({
   const [editName, setEditName] = useState(team.name || '');
   const [editTag, setEditTag] = useState(team.tag || '');
   const [editLogo, setEditLogo] = useState(team.logo_url || '');
-  const [editMultiGG, setEditMultiGG] = useState(team.multigg_url || '');
   const [editDescription, setEditDescription] = useState(team.description || '');
   const [feedback, setFeedback] = useState<{ text: string; error: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -669,7 +674,6 @@ function TeamModal({
             tag: editTag,
             description: editDescription,
             logo_url: editLogo,
-            multigg_url: editMultiGG,
           }),
         }),
       'Équipe modifiée.'
@@ -728,8 +732,8 @@ function TeamModal({
             </div>
           </div>
 
-          {team.multigg_url && (
-            <a href={team.multigg_url} target="_blank" rel="noreferrer" className={ds.btnOutline}>
+          {rosterOpggUrl(view) && (
+            <a href={rosterOpggUrl(view)!} target="_blank" rel="noreferrer" className={ds.btnOutline}>
               MultiGG
             </a>
           )}
@@ -790,10 +794,6 @@ function TeamModal({
             <label className={ds.field}>
               <span>URL du logo</span>
               <input className={ds.input} value={editLogo} onChange={(e) => setEditLogo(e.target.value)} />
-            </label>
-            <label className={ds.field}>
-              <span>Lien MultiGG</span>
-              <input className={ds.input} value={editMultiGG} onChange={(e) => setEditMultiGG(e.target.value)} />
             </label>
             <label className={ds.field}>
               <span>Description</span>
@@ -967,7 +967,6 @@ function TeamActionCard({
   const [formOpen, setFormOpen] = useState(false);
   const [name, setName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
-  const [multiggUrl, setMultiggUrl] = useState('');
   const [description, setDescription] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
@@ -990,7 +989,6 @@ function TeamActionCard({
           captain_player_id: myPlayer.id,
           description,
           logo_url: logoUrl,
-          multigg_url: multiggUrl,
         }),
       });
 
@@ -1000,7 +998,6 @@ function TeamActionCard({
 
       setName('');
       setLogoUrl('');
-      setMultiggUrl('');
       setDescription('');
       setFormOpen(false);
 
@@ -1089,11 +1086,6 @@ function TeamActionCard({
           value={logoUrl}
           onChange={(e) => setLogoUrl(e.target.value)}
         />
-      </label>
-
-      <label className={ds.field}>
-        <span>Lien MultiGG (optionnel)</span>
-        <input className={ds.input} value={multiggUrl} onChange={(e) => setMultiggUrl(e.target.value)} />
       </label>
 
       <label className={ds.field}>
