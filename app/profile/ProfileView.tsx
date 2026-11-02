@@ -56,6 +56,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
   const [feedback, setFeedback] = useState<Feedback>(null);
 
   const [editing, setEditing] = useState(false);
+  const [riotIdInput, setRiotIdInput] = useState('');
   const [mainRole, setMainRole] = useState('');
   const [secondaryRole, setSecondaryRole] = useState('');
   const [description, setDescription] = useState('');
@@ -228,7 +229,27 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
     }, 'Champion pool actualisé.');
   }
 
+  // Change le compte Riot lié (route authentifiée : seulement son propre profil).
+  async function changeRiotAccount(riotId: string) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const res = await fetch('/api/players/riot-account', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token ?? ''}`,
+      },
+      body: JSON.stringify({ riot_id: riotId }),
+    });
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.message || 'Impossible de changer de compte Riot.');
+  }
+
   function startEditing() {
+    setRiotIdInput(player.riot_id || '');
     setMainRole(player.main_role || '');
     setSecondaryRole(player.secondary_role || '');
     setDescription(player.description || '');
@@ -244,6 +265,13 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
 
     run(async () => {
       if (!mainRole) throw new Error('Choisis un rôle principal.');
+
+      const newRiotId = riotIdInput.trim();
+      if (!/^[^#]+#[^#]+$/.test(newRiotId)) throw new Error('Riot ID attendu : Pseudo#TAG.');
+
+      if (normalizeRiotId(newRiotId) !== normalizeRiotId(player.riot_id)) {
+        await changeRiotAccount(newRiotId);
+      }
 
       const data = await patchPlayer({
         main_role: mainRole,
@@ -416,6 +444,21 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
           {editing ? (
             <form className={`${ds.card} ${styles.editCard}`} onSubmit={saveProfile}>
               <div className={ds.cardTitle}>Modifier mon profil</div>
+
+              <label className={ds.field}>
+                <span>Compte Riot (Pseudo#TAG)</span>
+                <input
+                  className={ds.input}
+                  value={riotIdInput}
+                  onChange={(e) => setRiotIdInput(e.target.value)}
+                  placeholder="Pseudo#TAG"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <small className={styles.hint}>
+                  Pseudo renommé ou nouveau compte : rang et points CZF seront recalculés.
+                </small>
+              </label>
 
               <div className={ds.field}>
                 <span>Rôle principal</span>
