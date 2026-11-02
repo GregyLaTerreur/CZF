@@ -547,9 +547,14 @@ function PlayerDetails({
           </div>
         </div>
 
-        <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
-          Profil DPM
-        </a>
+        <div className={styles.detailsActions}>
+          <Link href={`/players/${player.id}`} className={ds.btnPrimary}>
+            Page du joueur
+          </Link>
+          <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
+            Profil DPM
+          </a>
+        </div>
       </div>
 
       <div className={styles.detailsStats}>

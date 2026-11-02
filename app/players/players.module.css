@@ -253,6 +253,12 @@
   flex-wrap: wrap;
 }
 
+.detailsActions {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
 .profileIcon {
   width: 64px;
   height: 64px;
