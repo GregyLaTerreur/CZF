@@ -386,3 +386,8 @@
     height: 34px;
   }
 }
+
+.hint {
+  font-size: 0.8rem;
+  color: rgba(8, 20, 40, 0.55);
+}
