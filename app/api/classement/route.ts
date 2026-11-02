@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import {
   computeStandings,
   groupBy,
+  lastResultUpdate,
   splitByDivision,
 } from '@/lib/results/core';
 import {
@@ -23,10 +24,16 @@ export async function GET(request: NextRequest) {
   if (invalid) return invalidDivision();
 
   try {
-    const [teams, matches] = await Promise.all([
-      loadValidatedTeams(),
-      loadFinishedMatches({ stage: 'pool' }),
-    ]);
+    const [teams, allMatches] = await Promise.all([loadValidatedTeams(), loadFinishedMatches()]);
+    const matches = allMatches.filter((match) => match.stage === 'pool');
+
+    // Dernier résultat ajouté par division (poules et playoffs).
+    const byDivision = splitByDivision(allMatches, (match) => match.division);
+    const lastUpdates = {
+      Yordle: lastResultUpdate(byDivision.Yordle),
+      Ixtal: lastResultUpdate(byDivision.Ixtal),
+      Targon: lastResultUpdate(byDivision.Targon),
+    };
 
     const games = await loadGames(
       matches.map((match) => Number(match.id)),
@@ -44,12 +51,14 @@ export async function GET(request: NextRequest) {
         success: true,
         division,
         teams: standings.filter((team) => team.division === division),
+        lastUpdate: lastUpdates[division],
       });
     }
 
     return jsonNoStore({
       success: true,
       totalTeams: standings.length,
+      lastUpdates,
       divisions: splitByDivision(standings, (team) => team.division),
     });
   } catch (error) {

@@ -7,6 +7,7 @@ import {
   computeStandings,
   getChampions,
   groupBy,
+  lastResultUpdate,
   parseExclusions,
 } from '@/lib/results/core';
 import {
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
       success: true,
       division,
       teams: standings,
+      lastUpdate: lastResultUpdate(matches),
       history: matches.map((match) =>
         buildMatchSummary(
           match,

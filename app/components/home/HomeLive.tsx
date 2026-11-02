@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from '@/app/home.module.css';
 import BoltIcon from '@/app/components/icons/BoltIcon';
 import { DIVISION_COLORS, DIVISIONS, type DivisionName } from './divisions';
+import { formatLastUpdate } from '@/app/components/ds/lol';
 import {
   type PlayerStat,
   type StandingTeam,
@@ -265,6 +266,14 @@ export function Standings() {
           </div>
           <DivisionTabs value={division} onChange={setDivision} />
         </div>
+
+        {data && (
+          <p className={styles.lastUpdate}>
+            {formatLastUpdate(data.lastUpdates?.[division] ?? null)
+              ? `Résultats ${division} mis à jour le ${formatLastUpdate(data.lastUpdates[division])}`
+              : `Aucun résultat ${division} pour le moment`}
+          </p>
+        )}
 
         {error && <div className={`${styles.card} ${styles.empty}`}>{error}</div>}
 

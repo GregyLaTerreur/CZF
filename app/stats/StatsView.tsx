@@ -8,6 +8,7 @@ import {
   BlockHead,
   ChampionRowsModal,
   DivisionTabs,
+  LastUpdate,
   TeamLogo,
   useDivisionData,
   type ChampionStat,
@@ -143,6 +144,8 @@ export default function StatsView() {
 
           {data && (
             <>
+              <LastUpdate date={data.lastUpdate} />
+
               {/* JOUEURS */}
               <div className={styles.playerSection}>
                 <BlockHead label="Performances" title="Statistiques joueurs" aside="Min. 45 % des games de l’équipe" />

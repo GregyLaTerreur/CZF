@@ -1001,3 +1001,14 @@
     display: none;
   }
 }
+
+/* Date du dernier résultat de la division affichée */
+.lastUpdate {
+  margin: -20px 0 22px;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}

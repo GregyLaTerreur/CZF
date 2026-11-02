@@ -8,6 +8,7 @@ import {
   BlockHead,
   ChevronIcon,
   DivisionTabs,
+  LastUpdate,
   loadGames,
   TeamLogo,
   useDivisionData,
@@ -46,6 +47,8 @@ export default function ResultsView() {
 
           {data && (
             <>
+              <LastUpdate date={data.lastUpdate} />
+
               <div className={styles.mainGrid}>
                 <Standings teams={data.teams} />
                 <Bracket teams={data.teams} />

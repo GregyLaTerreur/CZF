@@ -48,6 +48,7 @@ export type PlayerStat = {
 
 export type ClassementData = {
   totalTeams: number;
+  lastUpdates: Record<DivisionName, string | null>;
   divisions: Record<DivisionName, StandingTeam[]>;
 };
 

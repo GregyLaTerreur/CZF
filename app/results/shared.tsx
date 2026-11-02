@@ -11,6 +11,7 @@ import {
 import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './results.module.css';
+import { formatLastUpdate } from '@/app/components/ds/lol';
 
 /* =========================================================
    TYPES (réponse de /api/resultats)
@@ -108,6 +109,7 @@ export type ChampionPlayer = {
 
 export type DivisionData = {
   teams: Team[];
+  lastUpdate: string | null;
   history: HistoryMatch[];
   playerStats: Record<Role, PlayerStats[]>;
   champions: Record<Role, ChampionStat[]>;
@@ -255,6 +257,17 @@ export function DivisionTabs({
         </button>
       ))}
     </div>
+  );
+}
+
+// Date du dernier résultat de la division (sous les onglets).
+export function LastUpdate({ date }: { date: string | null }) {
+  const label = formatLastUpdate(date);
+
+  return (
+    <p className={styles.lastUpdate}>
+      {label ? `Résultats mis à jour le ${label}` : 'Aucun résultat pour le moment'}
+    </p>
   );
 }
 
