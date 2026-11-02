@@ -63,7 +63,7 @@ async function authFetch(url: string, init: RequestInit = {}) {
   });
   const json = await res.json();
 
-  if (!res.ok || !json.success) throw new Error(json.error || 'Erreur de chargement.');
+  if (!res.ok || !json.success) throw new Error(json.message || json.error || 'Erreur de chargement.');
 
   return json;
 }
@@ -86,6 +86,9 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
   const [editTag, setEditTag] = useState('');
   const [editLogo, setEditLogo] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  // Riot ID modifiables, par id de ligne team_members.
+  const [editRiotIds, setEditRiotIds] = useState<Record<number, string>>({});
+  const [editError, setEditError] = useState('');
 
   const [season, setSeason] = useState<Season | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
@@ -357,25 +360,70 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
     setEditTag(team.tag || '');
     setEditLogo(team.logo_url || '');
     setEditDescription(team.description || '');
+    setEditRiotIds(
+      Object.fromEntries(
+        roster.slots
+          .filter(({ member }) => member)
+          .map(({ member, player: rosterPlayer }) => [member.id, rosterPlayer?.riot_id || member.riot_id || ''])
+      )
+    );
+    setEditError('');
     setFeedback(null);
     setEditing(true);
   }
 
+  const closeEditing = useCallback(() => setEditing(false), []);
+
   async function saveTeam(event: React.FormEvent) {
     event.preventDefault();
+    setBusy(true);
+    setEditError('');
 
-    const ok = await run(
-      jsonRequest('/api/teams', 'PATCH', {
+    const errors: string[] = [];
+
+    try {
+      const res = await jsonRequest('/api/teams', 'PATCH', {
         team_id: team.id,
         name: editName,
         tag: editTag,
         description: editDescription,
         logo_url: editLogo,
-      }),
-      'Équipe modifiée.'
-    );
+      })();
+      const data = await res.json();
 
-    if (ok) setEditing(false);
+      if (!data.success) throw new Error(data.message || data.error?.message || 'Impossible de modifier l’équipe.');
+
+      // Riot ID changés : un appel par joueur, vérifié chez Riot.
+      for (const { member, player: rosterPlayer } of roster.slots) {
+        if (!member) continue;
+
+        const next = String(editRiotIds[member.id] || '').trim();
+        const current = rosterPlayer?.riot_id || member.riot_id || '';
+        if (!next || normalizeRiotId(next) === normalizeRiotId(current)) continue;
+
+        try {
+          await authFetch('/api/team-members/riot-id', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ member_id: member.id, riot_id: next }),
+          });
+        } catch (error: any) {
+          errors.push(`${next} : ${error?.message || 'erreur.'}`);
+        }
+      }
+    } catch (error: any) {
+      errors.push(error?.message || 'Erreur.');
+    }
+
+    await loadData();
+    setBusy(false);
+
+    if (errors.length) {
+      setEditError(errors.join(' '));
+    } else {
+      setEditing(false);
+      setFeedback({ text: 'Équipe modifiée.', error: false });
+    }
   }
 
   async function deleteTeam() {
@@ -612,15 +660,15 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
 
       {/* ÉDITION (capitaine) */}
       {editing && (
-        <section className={styles.section}>
-          <div className={ds.container}>
-            <form className={`${ds.card} ${styles.editCard}`} onSubmit={saveTeam}>
-              <div className={ds.cardTitle}>Modifier l’équipe</div>
+        <EditTeamModal onClose={closeEditing}>
+          <form className={styles.editForm} onSubmit={saveTeam}>
+            <div className={styles.modalTitle}>Modifier l’équipe</div>
 
-              <label className={ds.field}>
-                <span>Nom de l’équipe</span>
-                <input className={ds.input} value={editName} onChange={(e) => setEditName(e.target.value)} required />
-              </label>
+            <label className={ds.field}>
+              <span>Nom de l’équipe</span>
+              <input className={ds.input} value={editName} onChange={(e) => setEditName(e.target.value)} required />
+            </label>
+            <div className={styles.editRow}>
               <label className={ds.field}>
                 <span>Tag (2 à 5 caractères)</span>
                 <input
@@ -635,30 +683,59 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
                 <span>URL du logo</span>
                 <input className={ds.input} value={editLogo} onChange={(e) => setEditLogo(e.target.value)} />
               </label>
-              <label className={ds.field}>
-                <span>Description</span>
-                <textarea
-                  className={ds.input}
-                  rows={3}
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                />
-              </label>
+            </div>
+            <label className={ds.field}>
+              <span>Description</span>
+              <textarea
+                className={ds.input}
+                rows={3}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+            </label>
 
-              <div className={ds.formActions}>
-                <button type="submit" className={ds.btnPrimary} disabled={busy}>
-                  {busy ? 'Enregistrement…' : 'Enregistrer'}
-                </button>
-                <button type="button" className={ds.btnOutline} disabled={busy} onClick={() => setEditing(false)}>
-                  Annuler
-                </button>
-                <button type="button" className={`${ds.btnDanger} ${styles.deleteTeam}`} disabled={busy} onClick={deleteTeam}>
-                  Supprimer l’équipe
-                </button>
+            <div className={ds.field}>
+              <span>Riot ID des joueurs</span>
+              <div className={styles.editRiotIds}>
+                {roster.slots
+                  .filter(({ member }) => member)
+                  .map(({ role, member }) => (
+                    <label key={member.id} className={styles.editRiotId}>
+                      <span className={styles.editRiotRole}>
+                        <img src={role.image} alt="" className={ds.roleIcon} />
+                        {role.label}
+                      </span>
+                      <input
+                        className={ds.input}
+                        value={editRiotIds[member.id] ?? ''}
+                        onChange={(e) => setEditRiotIds({ ...editRiotIds, [member.id]: e.target.value })}
+                        placeholder="Pseudo#TAG"
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                    </label>
+                  ))}
               </div>
-            </form>
-          </div>
-        </section>
+              <small className={styles.editHint}>
+                Chaque Riot ID modifié est vérifié chez Riot ; rang et points CZF sont recalculés.
+              </small>
+            </div>
+
+            {editError && <p className={ds.formError}>{editError}</p>}
+
+            <div className={ds.formActions}>
+              <button type="submit" className={ds.btnPrimary} disabled={busy}>
+                {busy ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+              <button type="button" className={ds.btnOutline} disabled={busy} onClick={closeEditing}>
+                Annuler
+              </button>
+              <button type="button" className={`${ds.btnDanger} ${styles.deleteTeam}`} disabled={busy} onClick={deleteTeam}>
+                Supprimer l’équipe
+              </button>
+            </div>
+          </form>
+        </EditTeamModal>
       )}
 
       {/* DEMANDES REÇUES (capitaine) */}
@@ -959,6 +1036,47 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
       </section>
       )}
     </>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
+      <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" strokeWidth="2.4" fill="none" />
+    </svg>
+  );
+}
+
+// Fenêtre d'édition : Échap ou clic à côté ferme, la page derrière ne défile plus.
+function EditTeamModal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    const previousOverflow = document.body.style.overflow;
+
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={`${styles.modal} ${ds.onDark}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Modifier l’équipe"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Fermer">
+          <CloseIcon />
+        </button>
+        {children}
+      </div>
+    </div>
   );
 }
 

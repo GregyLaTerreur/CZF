@@ -765,12 +765,115 @@
   color: rgba(8, 20, 40, 0.55);
 }
 
-.editCard {
+/* Fenêtre « Modifier l'équipe » (fond sombre via ds.onDark) */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  overflow-y: auto;
+  background: rgba(4, 12, 24, 0.72);
+}
+
+.modal {
+  position: relative;
+  width: min(680px, 100%);
+  padding: 28px;
+  border: 2px solid rgba(224, 216, 204, 0.12);
+  box-shadow: 8px 8px 0 var(--orange);
+}
+
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid rgba(224, 216, 204, 0.3);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--on-dark);
+  cursor: pointer;
+}
+
+.modalClose:hover,
+.modalClose:active {
+  border-color: var(--orange);
+  color: var(--orange);
+  transform: none;
+  box-shadow: none;
+}
+
+.modalTitle {
+  padding-right: 44px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  color: var(--on-dark);
+}
+
+.editForm {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 720px;
-  padding: 24px 24px 28px;
+  gap: 18px;
+}
+
+.editRow {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.editRiotIds {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editRiotId {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.editRiotRole {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: rgba(224, 216, 204, 0.75);
+}
+
+.editHint {
+  font-size: 0.8rem;
+  color: rgba(224, 216, 204, 0.55);
+}
+
+@media (max-width: 620px) {
+  .modalOverlay {
+    padding: 24px 12px;
+  }
+
+  .modal {
+    padding: 20px 16px;
+  }
+
+  .editRow {
+    grid-template-columns: 1fr;
+  }
 }
 
 .deleteTeam {
