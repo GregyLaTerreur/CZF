@@ -29,6 +29,14 @@ const DIVISION_ORDER: Record<string, number> = { IV: 0, III: 1, II: 2, I: 3 };
 
 export const DDRAGON_FALLBACK = '14.24.1';
 
+// Multi OP.GG construit depuis les Riot ID du roster : suit les changements de pseudo.
+export function multiOpggUrl(riotIds: (string | null | undefined)[]) {
+  const ids = riotIds.map((id) => String(id || '').trim()).filter((id) => id.includes('#'));
+  if (!ids.length) return null;
+
+  return `https://op.gg/fr/lol/multisearch/euw?${new URLSearchParams({ summoners: ids.join(',') })}`;
+}
+
 export function splitRiotId(riotId: string) {
   const [name, tag] = String(riotId || '').split('#');
   return { name, tag };

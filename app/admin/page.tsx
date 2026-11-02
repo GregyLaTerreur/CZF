@@ -23,7 +23,6 @@ export default function AdminPage() {
   const [editTeamDescription, setEditTeamDescription] =
     useState('');
   const [editTeamLogo, setEditTeamLogo] = useState('');
-  const [editTeamMultiGG, setEditTeamMultiGG] = useState('');
 
   const [message, setMessage] = useState('');
 
@@ -203,10 +202,6 @@ export default function AdminPage() {
     setEditTeamLogo(
       team.logo_url || ''
     );
-
-    setEditTeamMultiGG(
-      team.multigg_url || ''
-    );
   }
 
   function cancelEditingTeam() {
@@ -215,7 +210,6 @@ export default function AdminPage() {
     setEditTeamName('');
     setEditTeamDescription('');
     setEditTeamLogo('');
-    setEditTeamMultiGG('');
   }
 
   async function saveTeam(teamId: number) {
@@ -229,7 +223,6 @@ export default function AdminPage() {
         name: editTeamName,
         description: editTeamDescription,
         logo_url: editTeamLogo,
-        multigg_url: editTeamMultiGG,
       }),
     });
 
@@ -628,33 +621,6 @@ export default function AdminPage() {
                       }
                       onChange={(e) =>
                         setEditTeamLogo(
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        width: '100%',
-                        boxSizing:
-                          'border-box',
-                        padding: '12px',
-                        borderRadius:
-                          '8px',
-                        border:
-                          '2px solid #0b1f4d',
-                        marginBottom:
-                          '10px',
-                        fontFamily:
-                          'inherit',
-                      }}
-                    />
-
-                    <input
-                      type="text"
-                      placeholder="Lien MultiGG"
-                      value={
-                        editTeamMultiGG
-                      }
-                      onChange={(e) =>
-                        setEditTeamMultiGG(
                           e.target.value
                         )
                       }
