@@ -587,7 +587,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                           </div>
                         </div>
                       </div>
-                      <Link href={isOwn ? '/my-team' : `/teams?team=${team.id}`} className={ds.btnOutline}>
+                      <Link href={isOwn ? '/my-team' : `/teams/${team.id}`} className={ds.btnOutline}>
                         {isOwn ? 'Voir mon équipe' : 'Voir l’équipe'}
                       </Link>
                     </>

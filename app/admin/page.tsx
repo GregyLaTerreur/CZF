@@ -915,7 +915,7 @@ export default function AdminPage() {
                       </button>
 
                       <a
-                        href={`/teams?team=${team.id}`}
+                        href={`/teams/${team.id}`}
                         className="joinTeamBtn"
                         style={{
                           textDecoration:
@@ -1124,7 +1124,7 @@ export default function AdminPage() {
 
                   {team && (
                     <a
-                      href={`/teams?team=${team.id}`}
+                      href={`/teams/${team.id}`}
                       className="joinTeamBtn"
                       style={{
                         textDecoration:

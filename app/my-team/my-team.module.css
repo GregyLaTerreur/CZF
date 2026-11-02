@@ -747,3 +747,72 @@
     font-size: 1.5rem;
   }
 }
+
+/* Page équipe : tag, gestion capitaine, demandes */
+.teamTag {
+  margin-left: 14px;
+  font-size: 0.5em;
+  color: var(--orange);
+}
+
+.blockReason {
+  margin: 0;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.editCard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+  padding: 24px 24px 28px;
+}
+
+.deleteTeam {
+  margin-left: auto;
+}
+
+.requests {
+  padding: 0;
+}
+
+.requestRow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
+}
+
+.requestRow:last-child {
+  border-bottom: none;
+}
+
+.requestActions {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.removeMember {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  color: #e05050;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.removeMember:hover,
+.removeMember:active {
+  transform: none;
+  box-shadow: none;
+}
