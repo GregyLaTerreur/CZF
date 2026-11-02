@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
-import { ChevronIcon } from '@/app/components/ds/LolUi';
+import { ChevronIcon, useDdragonVersion } from '@/app/components/ds/LolUi';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
   divisionFromPoints,
@@ -72,6 +72,7 @@ async function authFetch(url: string, init: RequestInit = {}) {
 // Avec teamId : la page publique d'une équipe (/teams/[id]) ; gestion seulement si c'est la sienne.
 export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number } = {}) {
   const router = useRouter();
+  const ddragonVersion = useDdragonVersion();
   const [user, setUser] = useState<any>(null);
   const [players, setPlayers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
@@ -805,6 +806,17 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
 
                   {member ? (
                     <>
+                      <span className={styles.rosterIdentity}>
+                      {rosterPlayer?.profile_icon_id ? (
+                        <img
+                          src={`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${rosterPlayer.profile_icon_id}.png`}
+                          alt=""
+                          loading="lazy"
+                          className={styles.summonerIcon}
+                        />
+                      ) : (
+                        <span className={styles.summonerIcon} />
+                      )}
                       <span className={styles.rosterPlayer}>
                         {rosterPlayer ? (
                           <Link href={`/players/${rosterPlayer.id}`} className={`${styles.rosterName} ${styles.rosterLink}`}>
@@ -832,6 +844,7 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
                             </button>
                           )}
                         </span>
+                      </span>
                       </span>
 
                       <span className={styles.rosterRank}>

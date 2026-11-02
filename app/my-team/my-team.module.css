@@ -160,6 +160,23 @@
   color: rgba(8, 20, 40, 0.7);
 }
 
+.rosterIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Icône d'invocateur Riot, à gauche du pseudo */
+.summonerIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 2px solid var(--dark);
+  background: rgba(8, 20, 40, 0.08);
+  object-fit: cover;
+}
+
 .rosterPlayer {
   display: flex;
   flex-direction: column;
