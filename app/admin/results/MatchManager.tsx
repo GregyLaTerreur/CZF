@@ -9,7 +9,7 @@ type Side = { id: number; shortName: string; name: string; score: number } | nul
 
 type Match = {
   id: number;
-  stage: 'pool' | 'playoff';
+  stage: 'pool' | 'playoff' | 'tiebreak';
   playedAt: string;
   team1: Side;
   team2: Side;
@@ -118,7 +118,7 @@ export default function MatchManager() {
           {matches.map((match) => (
             <li key={match.id} className={styles.row}>
               <span className={styles.meta}>
-                {match.stage === 'pool' ? 'Poule' : 'Playoff'} · {formatDate(match.playedAt)}
+                {match.stage === 'pool' ? 'Poule' : match.stage === 'tiebreak' ? 'Tie-break' : 'Playoff'} · {formatDate(match.playedAt)}
               </span>
 
               <span className={styles.teams}>

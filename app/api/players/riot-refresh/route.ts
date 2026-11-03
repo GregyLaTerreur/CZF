@@ -38,7 +38,8 @@ export async function PATCH(request: Request) {
           peak_tier: player.peak_tier,
           peak_rank: player.peak_rank,
           peak_lp: player.peak_lp,
-          skip_top_champions: true,
+          // « Actualiser Riot » met aussi à jour le champion pool.
+          skip_top_champions: false,
         }),
       }
     );

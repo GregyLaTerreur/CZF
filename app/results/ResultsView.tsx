@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo, useState } from 'react';
-import { DIVISION_COLORS } from '@/app/components/home/divisions';
+import { DIVISION_COLORS, displayRank } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
 import {
@@ -86,7 +86,7 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
           key={team.id}
           className={`${styles.standingRow} ${index < QUALIFIED ? styles.qualified : styles.eliminated}`}
         >
-          <span className={styles.standingRank}>{index + 1}</span>
+          <span className={styles.standingRank}>{displayRank(teams, index)}</span>
 
           <span className={styles.standingTeam}>
             <TeamLogo logo={team.logo} size="sm" />
@@ -258,7 +258,7 @@ function HistoryRow({ match, roundName }: { match: HistoryMatch; roundName?: str
       >
         <span className={styles.historyMeta}>
           <span className={match.stage === 'pool' ? styles.stageChip : styles.stageChipPlayoff}>
-            {match.stage === 'pool' ? 'Poule' : roundName ?? 'Playoff'}
+            {match.stage === 'pool' ? 'Poule' : match.stage === 'tiebreak' ? 'Tie-break' : roundName ?? 'Playoff'}
           </span>
           <small>{formatDate(match.playedAt)}</small>
         </span>

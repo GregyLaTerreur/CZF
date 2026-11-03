@@ -29,6 +29,7 @@ export type Team = {
   logo: string | null;
   wins: number;
   losses: number;
+  rank?: number;
 };
 
 export type MatchSide = {
@@ -41,7 +42,7 @@ export type MatchSide = {
 
 export type HistoryMatch = {
   id: number;
-  stage: 'pool' | 'playoff';
+  stage: 'pool' | 'playoff' | 'tiebreak';
   bracket: 'winner' | 'loser' | 'grand_final' | null;
   bestOf: number;
   playedAt: string;

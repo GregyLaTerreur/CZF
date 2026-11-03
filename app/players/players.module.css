@@ -340,8 +340,12 @@
 
 .detailsBottom {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.detailsBottom:empty {
+  display: none;
 }
 
 .detailsLabel {

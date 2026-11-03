@@ -1,0 +1,247 @@
+/* Tier list façon TierMaker : étiquette colorée à gauche, rangée sombre à droite. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.board {
+  border: 2px solid var(--dark);
+  background: var(--dark);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  min-height: 72px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 2rem;
+  color: var(--dark);
+}
+
+.zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 2px;
+  padding: 2px;
+  background: #1a2233;
+}
+
+.zoneTarget {
+  cursor: pointer;
+}
+
+.zoneOver {
+  background: #2a3550;
+  outline: 2px dashed var(--orange);
+  outline-offset: -2px;
+}
+
+.champion {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  user-select: none;
+}
+
+.zone .champion[draggable='true'],
+.pool .champion {
+  cursor: grab;
+}
+
+.championSelected {
+  outline: 3px solid var(--orange);
+  outline-offset: -3px;
+}
+
+.pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 72px;
+  padding: 8px;
+  border: 2px solid var(--dark);
+  background: rgba(8, 20, 40, 0.06);
+}
+
+.pool .champion {
+  width: 52px;
+  height: 52px;
+}
+
+.search {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 12px;
+  border: 2px solid var(--dark);
+  background: #fff;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.hint,
+.state {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+.error {
+  margin: 0;
+  font-weight: 700;
+  color: var(--loss);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Version réduite (détail d'un joueur dans la liste) */
+.boardCompact .row {
+  grid-template-columns: 52px minmax(0, 1fr);
+  min-height: 50px;
+}
+
+.boardCompact .label {
+  font-size: 1.4rem;
+}
+
+.boardCompact .champion {
+  width: 46px;
+  height: 46px;
+}
+
+/* ---------- Pop-in d'édition ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 12, 24, 0.72);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 48px);
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.modalHead,
+.modalFoot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 22px;
+}
+
+.modalHead {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--dark);
+}
+
+.modalFoot {
+  border-top: 2px solid var(--dark);
+}
+
+.modalTitle {
+  margin: 0;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+}
+
+.modalClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid var(--dark);
+  background: #fff;
+  color: var(--dark);
+  cursor: pointer;
+}
+
+/* globals.css anime tous les <button> : pas de décalage sur la croix */
+.modalClose:hover,
+.modalClose:active {
+  transform: none;
+  background: var(--dark);
+  color: #fff;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px;
+}
+
+/* Sans ça, la colonne flex (hauteur limitée) écrase la liste : les champions débordent de la bordure */
+.modalBody > * {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .overlay {
+    padding: 0;
+  }
+
+  .modal {
+    max-height: 100vh;
+    height: 100%;
+  }
+
+  .row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    min-height: 52px;
+  }
+
+  .label {
+    font-size: 1.4rem;
+  }
+
+  .champion {
+    width: 46px;
+    height: 46px;
+  }
+
+  .pool .champion {
+    width: 44px;
+    height: 44px;
+  }
+}

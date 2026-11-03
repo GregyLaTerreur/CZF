@@ -198,13 +198,6 @@
   gap: 18px;
   flex-wrap: wrap;
   padding-top: var(--space-block);
-  margin-bottom: var(--space-block);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
 }
 
 .block {
@@ -273,14 +266,47 @@
    CHAMPIONS JOUÉS EN CZF
 ========================================================= */
 
-.czfChampions {
+/* Colonne de gauche : équipe puis champions CZF */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+/* Le dernier bloc de la colonne s'étire si la tier list est plus haute */
+.column > :last-child {
+  flex: 1;
+}
+
+.championList {
+  width: 100%;
+}
+
+/* Équipe à gauche, tier list (plus large) à droite */
+.grid {
+  display: grid;
+  /* Espace sous l'en-tête, avec ou sans les boutons de son propre profil */
   margin-top: var(--space-block);
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
+  gap: 28px;
+  /* Les deux colonnes finissent à la même hauteur */
   align-items: stretch;
+}
+
+.tierList {
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .championRow {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) repeat(3, 64px);
+  grid-template-columns: 40px minmax(0, 1fr) repeat(2, 56px);
   align-items: center;
   column-gap: 12px;
   padding: 8px 0;
@@ -365,12 +391,6 @@
   width: auto;
 }
 
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 520px) {
   .identity {
     flex-direction: column;
@@ -378,7 +398,7 @@
   }
 
   .championRow {
-    grid-template-columns: 34px minmax(0, 1fr) repeat(3, 44px);
+    grid-template-columns: 34px minmax(0, 1fr) repeat(2, 44px);
     column-gap: 8px;
   }
 

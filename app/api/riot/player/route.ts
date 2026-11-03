@@ -202,8 +202,9 @@ async function getTopChampions(puuid: string) {
   const masteries = await masteryRes.json();
   const championMap = await getChampionIdToNameMap();
 
+  // 10 champions les plus maîtrisés : champion pool du profil.
   return masteries
-    .slice(0, 5)
+    .slice(0, 10)
     .map((champion: any) => ({
       champion_id: champion.championId,
       champion_name:

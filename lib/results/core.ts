@@ -20,6 +20,8 @@ export type StandingTeam = TeamInfo & {
   wins: number;
   losses: number;
   gameDiff: number;
+  // Place dans sa division ; deux équipes à égalité parfaite partagent la même.
+  rank?: number;
 };
 
 export type Champion = {
@@ -345,6 +347,7 @@ export function computeStandings<T extends StandingTeam>(
   );
 
   const poolMatches = matches.filter((match) => match.stage === 'pool');
+  const tiebreakMatches = matches.filter((match) => match.stage === 'tiebreak');
 
   for (const match of poolMatches) {
     const team1 = teamMap.get(Number(match.team1_id));
@@ -395,19 +398,49 @@ export function computeStandings<T extends StandingTeam>(
     return winsA - winsB;
   }
 
-  return teams.sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
+  // Vainqueur du dernier tie-break joué entre les deux équipes (null si aucun).
+  function getTiebreakWinner(teamAId: number, teamBId: number): number | null {
+    const played = tiebreakMatches
+      .filter((match) => {
+        const ids = [Number(match.team1_id), Number(match.team2_id)];
+        return ids.includes(teamAId) && ids.includes(teamBId) && match.winner_team_id;
+      })
+      .sort((x, y) => String(y.played_at).localeCompare(String(x.played_at)));
 
-    if (b.gameDiff !== a.gameDiff) {
-      return b.gameDiff - a.gameDiff;
-    }
+    return played.length ? Number(played[0].winner_team_id) : null;
+  }
+
+  // Victoires, puis moins de défaites, puis confrontation directe (poules), puis tie-break.
+  function compare(a: T, b: T): number {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (a.losses !== b.losses) return a.losses - b.losses;
 
     const headToHead = getHeadToHeadDifference(Number(a.id), Number(b.id));
-
     if (headToHead !== 0) return -headToHead;
 
-    return a.name.localeCompare(b.name, 'fr');
-  });
+    const tiebreakWinner = getTiebreakWinner(Number(a.id), Number(b.id));
+    if (tiebreakWinner === Number(a.id)) return -1;
+    if (tiebreakWinner === Number(b.id)) return 1;
+
+    return 0;
+  }
+
+  teams.sort((a, b) => compare(a, b) || a.name.localeCompare(b.name, 'fr'));
+
+  // Place par division : égalité parfaite = même place que l'équipe du dessus.
+  const lastByDivision = new Map<string, { team: T; position: number }>();
+
+  for (const team of teams) {
+    const key = String(team.division ?? '');
+    const previous = lastByDivision.get(key);
+    const position = (previous?.position ?? 0) + 1;
+
+    team.rank =
+      previous && compare(previous.team, team) === 0 ? previous.team.rank : position;
+    lastByDivision.set(key, { team, position });
+  }
+
+  return teams;
 }
 
 /* =========================================================

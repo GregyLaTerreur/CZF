@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
 import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
+import TierList from './TierList';
+import { ChampionRowsModal } from '@/app/results/shared';
 import {
   formatRank,
   normalizeRiotId,
@@ -25,6 +27,9 @@ const DIVISIONS = ['IV', 'III', 'II', 'I'];
 type Feedback = { text: string; error: boolean } | null;
 
 // Réponse de /api/stats-joueurs/[id].
+// Champions CZF affichés dans le bloc ; le reste et le détail (KDA, rôles) dans la pop-up.
+const CZF_CHAMPIONS_PREVIEW = 5;
+
 type CzfChampion = {
   championId: string;
   name: string;
@@ -67,6 +72,8 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
 
   // null tant que les stats CZF ne sont pas chargées.
   const [czfChampions, setCzfChampions] = useState<CzfChampion[] | null>(null);
+  const [championsOpen, setChampionsOpen] = useState(false);
+  const closeChampions = useCallback(() => setChampionsOpen(false), []);
 
   const ddragonVersion = useDdragonVersion();
 
@@ -214,20 +221,6 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
       if (!data.success) throw new Error('Impossible de modifier le statut LFT.');
       setPlayer({ ...player, lft: !player.lft });
     }, player.lft ? 'Tu n’es plus marqué LFT.' : 'Tu es maintenant marqué LFT.');
-  }
-
-  function refreshChampions() {
-    run(async () => {
-      const res = await fetch('/api/players/champions-refresh', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_id: player.id }),
-      });
-      const data = await res.json();
-
-      if (!data.success) throw new Error(data.message || 'Impossible d’actualiser les champions.');
-      await loadProfile();
-    }, 'Champion pool actualisé.');
   }
 
   // Change le compte Riot lié (route authentifiée : seulement son propre profil).
@@ -558,9 +551,6 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   >
                     Actualiser Riot
                   </button>
-                  <button type="button" className={ds.btnOutline} disabled={busy} onClick={refreshChampions}>
-                    Actualiser champions
-                  </button>
                   <button type="button" className={ds.btnOutline} disabled={busy} onClick={toggleLft}>
                     {player.lft ? 'Ne plus être LFT' : 'Me mettre LFT'}
                   </button>
@@ -568,6 +558,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
               )}
 
               <div className={styles.grid}>
+                <div className={styles.column}>
                 <div className={`${ds.card} ${styles.block}`}>
                   <div className={styles.blockLabel}>Équipe</div>
                   {team ? (
@@ -604,52 +595,81 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   )}
                 </div>
 
-                <div className={`${ds.card} ${styles.block}`}>
-                  <div className={styles.blockLabel}>Champion pool</div>
-                  <ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />
+                  <div className={`${ds.card} ${styles.block}`}>
+                    <div className={styles.blockLabel}>Champions joués en CZF</div>
+
+                    {czfChampions === null ? (
+                      <p className={styles.text}>Chargement…</p>
+                    ) : czfChampions.length === 0 ? (
+                      <p className={styles.text}>Aucune game CZF jouée pour le moment.</p>
+                    ) : (
+                      <>
+                        <div className={styles.championList}>
+                          <div className={`${styles.championRow} ${styles.championHead}`}>
+                            <span />
+                            <span>Champion</span>
+                            <span>Games</span>
+                            <span>Win</span>
+                          </div>
+
+                          {czfChampions.slice(0, CZF_CHAMPIONS_PREVIEW).map((champion) => (
+                            <div key={champion.championId} className={styles.championRow}>
+                              {champion.image ? (
+                                <img src={champion.image} alt="" loading="lazy" className={styles.championImage} />
+                              ) : (
+                                <span className={styles.championImage} />
+                              )}
+                              <span className={styles.championName}>{champion.name}</span>
+                              <strong>{champion.games}</strong>
+                              <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
+                                {Math.round(champion.winRate)}%
+                              </strong>
+                            </div>
+                          ))}
+                        </div>
+
+                        <button type="button" className={ds.btnOutline} onClick={() => setChampionsOpen(true)}>
+                          Voir plus ({czfChampions.length})
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.column}>
+                  <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
+                    <div className={styles.blockLabel}>Tier list</div>
+                    <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                  </div>
+
+                  <div className={`${ds.card} ${styles.block}`}>
+                    <div className={styles.blockLabel}>Champion pool</div>
+                    <ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />
+                  </div>
                 </div>
               </div>
 
-              <div className={`${ds.card} ${styles.block} ${styles.czfChampions}`}>
-                <div className={styles.blockLabel}>Champions joués en CZF</div>
-
-                {czfChampions === null ? (
-                  <p className={styles.text}>Chargement…</p>
-                ) : czfChampions.length === 0 ? (
-                  <p className={styles.text}>Aucune game CZF jouée pour le moment.</p>
-                ) : (
-                  <div>
-                    <div className={`${styles.championRow} ${styles.championHead}`}>
-                      <span />
-                      <span>Champion</span>
-                      <span>Games</span>
-                      <span>Win</span>
-                      <span>KDA</span>
-                    </div>
-
-                    {czfChampions.map((champion) => (
-                      <div key={champion.championId} className={styles.championRow}>
-                        {champion.image ? (
-                          <img src={champion.image} alt="" loading="lazy" className={styles.championImage} />
-                        ) : (
-                          <span className={styles.championImage} />
-                        )}
-                        <span className={styles.championName}>
-                          {champion.name}
-                          <small>
-                            {champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · ')}
-                          </small>
-                        </span>
-                        <strong>{champion.games}</strong>
-                        <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
-                          {Math.round(champion.winRate)}%
-                        </strong>
-                        <strong>{champion.kda.toFixed(2)}</strong>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {championsOpen && czfChampions && (
+                <ChampionRowsModal
+                  title={splitRiotId(player.riot_id).name}
+                  image={null}
+                  meta={`${czfChampions.length} champion${czfChampions.length > 1 ? 's' : ''} joué${
+                    czfChampions.length > 1 ? 's' : ''
+                  } en CZF`}
+                  label="Champion"
+                  rowImage="champion"
+                  rows={czfChampions.map((champion) => ({
+                    key: champion.championId,
+                    image: champion.image,
+                    name: champion.name,
+                    sub: champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · '),
+                    games: champion.games,
+                    winRate: champion.winRate,
+                    kda: champion.kda,
+                  }))}
+                  onClose={closeChampions}
+                />
+              )}
 
               {player.description && (
                 <div className={`${ds.card} ${styles.block} ${styles.description}`}>
