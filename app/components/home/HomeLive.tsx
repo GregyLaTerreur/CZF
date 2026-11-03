@@ -175,6 +175,7 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
               <div className={styles.teamCell}>
                 <TeamLogo logo={team.logo} shortName={team.shortName} />
                 <span>{team.name}</span>
+                {team.tiebreakPending && <span className={styles.tiebreakChip}>Tie-break</span>}
               </div>
             </td>
             <td className={`${styles.num} ${styles.win}`}>{team.wins}</td>
@@ -349,7 +350,7 @@ export function LatestResults() {
                     {match.division}
                   </span>
                   <span>
-                    {match.stage === 'playoff' ? 'Playoffs' : 'Poules'} · BO{match.bestOf} ·{' '}
+                    {match.stage === 'playoff' ? 'Playoffs' : match.stage === 'tiebreak' ? 'Tie-break' : 'Poules'} · BO{match.bestOf} ·{' '}
                     {dateFormat.format(new Date(match.playedAt))}
                   </span>
                 </div>

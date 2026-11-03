@@ -91,7 +91,10 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
           <span className={styles.standingTeam}>
             <TeamLogo logo={team.logo} size="sm" />
             <span className={styles.standingName}>
-              <strong>{team.shortName}</strong>
+              <strong>
+                {team.shortName}
+                {team.tiebreakPending && <span className={styles.tiebreakChip}>Tie-break</span>}
+              </strong>
               <small>{team.name}</small>
             </span>
           </span>
@@ -258,7 +261,7 @@ function HistoryRow({ match, roundName }: { match: HistoryMatch; roundName?: str
       >
         <span className={styles.historyMeta}>
           <span className={match.stage === 'pool' ? styles.stageChip : styles.stageChipPlayoff}>
-            {match.stage === 'pool' ? 'Poule' : roundName ?? 'Playoff'}
+            {match.stage === 'pool' ? 'Poule' : match.stage === 'tiebreak' ? 'Tie-break' : roundName ?? 'Playoff'}
           </span>
           <small>{formatDate(match.playedAt)}</small>
         </span>

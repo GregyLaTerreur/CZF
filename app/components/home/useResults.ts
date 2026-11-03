@@ -13,6 +13,7 @@ export type StandingTeam = {
   losses: number;
   gameDiff: number;
   rank?: number;
+  tiebreakPending?: boolean;
 };
 
 export type MatchSide = {
@@ -26,7 +27,7 @@ export type MatchSide = {
 export type HistoryMatch = {
   id: number;
   division: DivisionName;
-  stage: 'pool' | 'playoff';
+  stage: 'pool' | 'playoff' | 'tiebreak';
   bestOf: number;
   playedAt: string;
   mvpRiotId: string | null;
