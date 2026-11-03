@@ -347,7 +347,6 @@ export function computeStandings<T extends StandingTeam>(
   );
 
   const poolMatches = matches.filter((match) => match.stage === 'pool');
-  const tiebreakMatches = matches.filter((match) => match.stage === 'tiebreak');
 
   for (const match of poolMatches) {
     const team1 = teamMap.get(Number(match.team1_id));
@@ -398,31 +397,12 @@ export function computeStandings<T extends StandingTeam>(
     return winsA - winsB;
   }
 
-  // Vainqueur du dernier tie-break joué entre les deux équipes (null si aucun).
-  function getTiebreakWinner(teamAId: number, teamBId: number): number | null {
-    const played = tiebreakMatches
-      .filter((match) => {
-        const ids = [Number(match.team1_id), Number(match.team2_id)];
-        return ids.includes(teamAId) && ids.includes(teamBId) && match.winner_team_id;
-      })
-      .sort((x, y) => String(y.played_at).localeCompare(String(x.played_at)));
-
-    return played.length ? Number(played[0].winner_team_id) : null;
-  }
-
-  // Victoires, puis moins de défaites, puis confrontation directe (poules), puis tie-break.
+  // Victoires, puis moins de défaites, puis confrontation directe (poules).
   function compare(a: T, b: T): number {
     if (b.wins !== a.wins) return b.wins - a.wins;
     if (a.losses !== b.losses) return a.losses - b.losses;
 
-    const headToHead = getHeadToHeadDifference(Number(a.id), Number(b.id));
-    if (headToHead !== 0) return -headToHead;
-
-    const tiebreakWinner = getTiebreakWinner(Number(a.id), Number(b.id));
-    if (tiebreakWinner === Number(a.id)) return -1;
-    if (tiebreakWinner === Number(b.id)) return 1;
-
-    return 0;
+    return -getHeadToHeadDifference(Number(a.id), Number(b.id));
   }
 
   teams.sort((a, b) => compare(a, b) || a.name.localeCompare(b.name, 'fr'));

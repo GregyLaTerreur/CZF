@@ -86,9 +86,8 @@ type MatchInput = {
     | number
     | null;
   stage:
-    | 'pool'
-    | 'playoff'
-    | 'tiebreak';
+    | 'pool'
+    | 'playoff';
   bracket?:
     | 'winner'
     | 'loser'
@@ -281,9 +280,8 @@ export async function POST(
     ===================================================== */
     if (
       stage !== 'pool' &&
-      stage !== 'playoff' &&
-      stage !== 'tiebreak'
-    ) {
+      stage !== 'playoff'
+    ) {
       throw new Error(
         'Phase invalide.'
       );
@@ -325,14 +323,9 @@ export async function POST(
       ) {
         throw new Error(
           'Les matchs de poule doivent obligatoirement être joués en 2 games.'
-        );
-      }
-    } else if (stage === 'tiebreak') {
-      // Tie-break : une seule game pour départager deux ex aequo.
-      if (Number(bestOf) !== 1 || !Array.isArray(games) || games.length !== 1) {
-        throw new Error('Un tie-break se joue en une seule game.');
-      }
-    } else {
+        );
+      }
+    } else {
       if (
         ![
           1,
@@ -1097,12 +1090,12 @@ export async function POST(
       }
     }
     /* =====================================================
-       REGLES PLAYOFFS ET TIE-BREAK
-    ===================================================== */
-    if (
-      stage === 'playoff' ||
-      stage === 'tiebreak'
-    ) {
+       REGLES PLAYOFFS
+    ===================================================== */
+    if (
+      stage ===
+      'playoff'
+    ) {
       if (
         calculatedWinner ===
         null

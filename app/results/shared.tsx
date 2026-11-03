@@ -42,7 +42,7 @@ export type MatchSide = {
 
 export type HistoryMatch = {
   id: number;
-  stage: 'pool' | 'playoff' | 'tiebreak';
+  stage: 'pool' | 'playoff';
   bracket: 'winner' | 'loser' | 'grand_final' | null;
   bestOf: number;
   playedAt: string;

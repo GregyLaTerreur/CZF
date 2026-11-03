@@ -258,7 +258,7 @@ function HistoryRow({ match, roundName }: { match: HistoryMatch; roundName?: str
       >
         <span className={styles.historyMeta}>
           <span className={match.stage === 'pool' ? styles.stageChip : styles.stageChipPlayoff}>
-            {match.stage === 'pool' ? 'Poule' : match.stage === 'tiebreak' ? 'Tie-break' : roundName ?? 'Playoff'}
+            {match.stage === 'pool' ? 'Poule' : roundName ?? 'Playoff'}
           </span>
           <small>{formatDate(match.playedAt)}</small>
         </span>
