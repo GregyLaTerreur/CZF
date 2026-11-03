@@ -67,7 +67,7 @@ function RoleTabs({
 }
 
 export default function StatsView() {
-  const { division, setDivision, data, error, loading } = useDivisionData();
+  const { division, setDivision, data, error, loading } = useDivisionData('stats');
   const [role, setRole] = useState<Role>('Top');
   // Top 10 ouvert ou fermé pour toutes les colonnes à la fois.
   const [expanded, setExpanded] = useState(false);

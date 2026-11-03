@@ -27,7 +27,7 @@ const HISTORY_PREVIEW = 5;
 ========================================================= */
 
 export default function ResultsView() {
-  const { division, setDivision, data, error, loading } = useDivisionData();
+  const { division, setDivision, data, error, loading } = useDivisionData('resultats');
   const tree = useMemo(() => (data ? buildBracket(data.teams, data.history) : null), [data]);
 
   return (

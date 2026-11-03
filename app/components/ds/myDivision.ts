@@ -1,16 +1,50 @@
 'use client';
 
 // Division de l'équipe du joueur connecté : sert de filtre par défaut sur les listes.
+// Calculée dès l'arrivée sur le site (la Nav la lance) et gardée dans le navigateur :
+// les pages la lisent tout de suite (peekMyDivision) puis elle est recalculée en arrière-plan.
 
 import { supabase } from '@/lib/supabase';
-import type { DivisionName } from '@/app/components/home/divisions';
+import { DIVISIONS, type DivisionName } from '@/app/components/home/divisions';
 import { normalizeRiotId, teamDivision } from './lol';
 
+const STORAGE_KEY = 'czf:my-division';
+
 let request: Promise<DivisionName | null> | null = null;
+// undefined : pas encore connue sur cet appareil.
+let known: DivisionName | null | undefined;
+
+function readStored(): DivisionName | null | undefined {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return undefined;
+
+    const value = JSON.parse(raw)?.division ?? null;
+    return DIVISIONS.includes(value) ? value : null;
+  } catch {
+    return undefined;
+  }
+}
+
+function store(division: DivisionName | null | undefined) {
+  known = division;
+
+  try {
+    if (division === undefined) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify({ division }));
+  } catch {}
+}
+
+// Valeur connue tout de suite, sans réseau (undefined si jamais calculée sur cet appareil).
+export function peekMyDivision(): DivisionName | null | undefined {
+  if (known === undefined && typeof window !== 'undefined') known = readStored();
+  return known;
+}
 
 async function loadMyDivision(): Promise<DivisionName | null> {
   const { data } = await supabase.auth.getSession();
   const userId = data.session?.user?.id;
+  // Déconnecté : null, qui remplace aussi la division gardée d'un compte précédent.
   if (!userId) return null;
 
   const { data: player } = await supabase
@@ -58,8 +92,14 @@ async function loadMyDivision(): Promise<DivisionName | null> {
   return teamDivision(team);
 }
 
-// Une seule requête par chargement de page, partagée entre composants.
+// Un seul calcul par visite, partagé entre composants ; le résultat est gardé pour les visites suivantes.
 export function getMyDivision(): Promise<DivisionName | null> {
-  if (!request) request = loadMyDivision().catch(() => null);
+  request ??= loadMyDivision()
+    .then((division) => {
+      store(division);
+      return division;
+    })
+    .catch(() => peekMyDivision() ?? null);
+
   return request;
 }

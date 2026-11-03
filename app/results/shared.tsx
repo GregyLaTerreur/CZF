@@ -12,7 +12,7 @@ import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './results.module.css';
 import { formatLastUpdate } from '@/app/components/ds/lol';
-import { getMyDivision } from '@/app/components/ds/myDivision';
+import { getMyDivision, peekMyDivision } from '@/app/components/ds/myDivision';
 import { logoSrc } from '@/lib/logo';
 
 /* =========================================================
@@ -110,13 +110,22 @@ export type ChampionPlayer = {
   kda: number;
 };
 
-export type DivisionData = {
+// Réponse de /api/resultats selon ?view= : chaque page ne charge que ce qu'elle affiche.
+export type ResultsData = {
   teams: Team[];
   lastUpdate: string | null;
   history: HistoryMatch[];
+};
+
+export type StatsData = {
+  lastUpdate: string | null;
   playerStats: Record<Role, PlayerStats[]>;
   champions: Record<Role, ChampionStat[]>;
 };
+
+type ViewData = { resultats: ResultsData; stats: StatsData };
+
+export type DivisionView = keyof ViewData;
 
 export type StatKey = 'kda' | 'goldPerMin' | 'dpm' | 'csPerMin' | 'visionScore';
 
@@ -143,7 +152,7 @@ const CLIENT_TTL_MS = 60_000;
 
 type Entry<T> = { promise: Promise<T>; at: number };
 
-const divisionRequests = new Map<DivisionName, Entry<DivisionData>>();
+const divisionRequests = new Map<string, Entry<any>>();
 const gameRequests = new Map<number, Entry<Game[]>>();
 
 // Une seule requête par clé, partagée entre chargement et préchargement.
@@ -162,8 +171,10 @@ function remember<K, T>(store: Map<K, Entry<T>>, key: K, load: () => Promise<T>)
   return promise;
 }
 
-function loadDivision(division: DivisionName): Promise<DivisionData> {
-  return remember(divisionRequests, division, () => getJson(`/api/resultats?division=${division}`));
+function loadDivision<V extends DivisionView>(division: DivisionName, view: V): Promise<ViewData[V]> {
+  return remember(divisionRequests, `${view}:${division}`, () =>
+    getJson(`/api/resultats?division=${division}&view=${view}`)
+  );
 }
 
 export function loadGames(matchId: number): Promise<Game[]> {
@@ -183,19 +194,29 @@ function readDivisionFromUrl(): DivisionName | null {
 }
 
 // Division choisie (synchronisée avec ?division=) et ses données, avec préchargement des autres.
-export function useDivisionData() {
+export function useDivisionData<V extends DivisionView>(view: V) {
   // null tant que l'URL n'est pas lue : évite de charger Yordle pour rien.
   const [selected, setSelected] = useState<DivisionName | null>(null);
-  const [cache, setCache] = useState<Partial<Record<DivisionName, DivisionData>>>({});
+  const [cache, setCache] = useState<Partial<Record<DivisionName, ViewData[V]>>>({});
   const [error, setError] = useState('');
 
-  // Priorité : URL, puis dernière division vue, puis celle de l'équipe du joueur connecté.
+  // Priorité : URL, puis dernière division vue, puis celle de l'équipe du joueur connecté
+  // (gardée dans le navigateur dès l'arrivée sur le site, cf. myDivision).
   useEffect(() => {
     const initial = readDivisionFromUrl();
     if (initial) {
       setSelected(initial);
       return;
     }
+
+    const known = peekMyDivision();
+    if (known !== undefined) {
+      setSelected(known ?? 'Yordle');
+      return;
+    }
+
+    // Jamais calculée sur cet appareil : on charge les 3 divisions pendant le calcul.
+    for (const division of DIVISIONS) loadDivision(division, view).catch(() => {});
 
     let active = true;
     getMyDivision().then((mine) => {
@@ -205,7 +226,7 @@ export function useDivisionData() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [view]);
 
   // Lien partageable : ?division=Ixtal.
   useEffect(() => {
@@ -223,7 +244,7 @@ export function useDivisionData() {
     let active = true;
     setError('');
 
-    loadDivision(selected)
+    loadDivision(selected, view)
       .then((data) => {
         if (!active) return;
 
@@ -233,7 +254,7 @@ export function useDivisionData() {
         for (const other of DIVISIONS) {
           if (other === selected) continue;
 
-          loadDivision(other)
+          loadDivision(other, view)
             .then((otherData) => setCache((previous) => ({ ...previous, [other]: otherData })))
             .catch(() => {});
         }
@@ -245,7 +266,7 @@ export function useDivisionData() {
     return () => {
       active = false;
     };
-  }, [selected, cache]);
+  }, [selected, cache, view]);
 
   const division = selected ?? 'Yordle';
   const data = selected ? cache[selected] ?? null : null;

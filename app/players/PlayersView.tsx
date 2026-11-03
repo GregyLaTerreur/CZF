@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getMyDivision } from '@/app/components/ds/myDivision';
+import { getMyDivision, peekMyDivision } from '@/app/components/ds/myDivision';
 import {
   DIVISION_COLORS,
   DIVISIONS,
@@ -115,6 +115,10 @@ export default function PlayersView() {
 
   // Par défaut : la division de l'équipe du joueur connecté, tant qu'il n'a rien choisi.
   useEffect(() => {
+    // Valeur gardée dans le navigateur d'abord (immédiate), puis valeur recalculée.
+    const known = peekMyDivision();
+    if (known) setDivisionFilter(known);
+
     getMyDivision().then((mine) => {
       if (mine && !divisionTouched.current) setDivisionFilter(mine);
     });
