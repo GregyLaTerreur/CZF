@@ -46,9 +46,9 @@ type TeamChampions = {
 
 // Champions affichés au bout de chaque ligne du roster, et dans le bloc équipe.
 const ROSTER_CHAMPIONS = 5;
-// Liste en deux colonnes de 10.
-const TEAM_TOP_CHAMPIONS = 20;
-const CHAMPIONS_PER_COLUMN = 10;
+// Liste en deux colonnes de 5.
+const TEAM_TOP_CHAMPIONS = 10;
+const CHAMPIONS_PER_COLUMN = 5;
 type Feedback = { text: string; error: boolean } | null;
 
 async function authFetch(url: string, init: RequestInit = {}) {
