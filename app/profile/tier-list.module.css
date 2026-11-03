@@ -196,6 +196,11 @@
   padding: 22px;
 }
 
+/* Sans ça, la colonne flex (hauteur limitée) écrase la liste : les champions débordent de la bordure */
+.modalBody > * {
+  flex-shrink: 0;
+}
+
 @media (max-width: 600px) {
   .overlay {
     padding: 0;
