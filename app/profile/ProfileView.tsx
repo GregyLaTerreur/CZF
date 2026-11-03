@@ -628,11 +628,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                           ))}
                         </div>
 
-                        <button
-                          type="button"
-                          className={`${ds.btnOutline} ${styles.centered}`}
-                          onClick={() => setChampionsOpen(true)}
-                        >
+                        <button type="button" className={ds.btnOutline} onClick={() => setChampionsOpen(true)}>
                           Voir plus ({czfChampions.length})
                         </button>
                       </>
