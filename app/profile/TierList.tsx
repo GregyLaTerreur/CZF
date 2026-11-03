@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
+import CloseIcon from '@/app/components/icons/CloseIcon';
 import { TIER_COLORS, TIER_KEYS, emptyTierList, type TierKey, type TierListData } from '@/lib/tierList';
 import styles from './tier-list.module.css';
 
@@ -190,24 +191,24 @@ export default function TierList({
 
   /* ---------- Rendu ---------- */
 
-  if (saved === undefined) return <p className={styles.state}>Chargement…</p>;
+  // Échap ferme la pop-in ; la page derrière ne défile plus.
+  useEffect(() => {
+    if (!editing) return;
 
-  if (!editing && !saved) {
-    return isOwn ? (
-      <div className={styles.actions}>
-        <button type="button" className={ds.btnPrimary} onClick={startEditing}>
-          Faire ma tier list
-        </button>
-      </div>
-    ) : (
-      <p className={styles.state}>Pas encore de tier list.</p>
-    );
-  }
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && !saving && cancel();
+    const previousOverflow = document.body.style.overflow;
 
-  const tiers = draft ?? saved!;
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
 
-  return (
-    <div className={styles.wrap}>
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [editing, saving]);
+
+  function board(tiers: TierListData, editable: boolean) {
+    return (
       <div className={styles.board}>
         {TIER_KEYS.map((key) => (
           <div key={key} className={styles.row}>
@@ -216,10 +217,10 @@ export default function TierList({
             </div>
 
             <div
-              className={`${styles.zone} ${editing && dragOver === key ? styles.zoneOver : ''} ${
-                editing && selected ? styles.zoneTarget : ''
+              className={`${styles.zone} ${editable && dragOver === key ? styles.zoneOver : ''} ${
+                editable && selected ? styles.zoneTarget : ''
               }`}
-              {...(editing ? dropProps(key) : {})}
+              {...(editable ? dropProps(key) : {})}
             >
               {tiers[key].map((id) => (
                 <img
@@ -228,8 +229,8 @@ export default function TierList({
                   alt={names.get(id) ?? id}
                   title={names.get(id) ?? id}
                   loading="lazy"
-                  className={`${styles.champion} ${selected === id ? styles.championSelected : ''}`}
-                  {...(editing
+                  className={`${styles.champion} ${editable && selected === id ? styles.championSelected : ''}`}
+                  {...(editable
                     ? {
                         ...dragProps(id),
                         // Déposé sur un champion : se place juste avant lui.
@@ -253,71 +254,107 @@ export default function TierList({
           </div>
         ))}
       </div>
+    );
+  }
 
-      {editing ? (
-        <>
-          <p className={styles.hint}>
-            Glisse les champions dans les rangées, ou clique sur un champion puis sur une rangée.
-            Remets-le dans la liste pour le retirer.
-          </p>
+  if (saved === undefined) return <p className={styles.state}>Chargement…</p>;
 
-          <input
-            className={styles.search}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Rechercher un champion"
-          />
+  return (
+    <div className={styles.wrap}>
+      {saved ? board(saved, false) : !isOwn && <p className={styles.state}>Pas encore de tier list.</p>}
 
+      {isOwn && (
+        <div className={styles.actions}>
+          <button type="button" className={saved ? ds.btnOutline : ds.btnPrimary} onClick={startEditing}>
+            {saved ? 'Modifier ma tier list' : 'Faire ma tier list'}
+          </button>
+        </div>
+      )}
+
+      {draft && (
+        <div className={styles.overlay} onClick={() => !saving && cancel()}>
           <div
-            className={`${styles.pool} ${dragOver === 'pool' ? styles.zoneOver : ''}`}
-            {...dropProps('pool')}
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Ma tier list"
+            onClick={(event) => event.stopPropagation()}
           >
-            {!champions && <p className={styles.state}>Chargement des champions…</p>}
+            <div className={styles.modalHead}>
+              <h2 className={styles.modalTitle}>Ma tier list</h2>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={cancel}
+                disabled={saving}
+                aria-label="Fermer"
+              >
+                <CloseIcon />
+              </button>
+            </div>
 
-            {pool.map((champion) => (
-              <img
-                key={champion.id}
-                src={championImage(ddragonVersion, champion.id)}
-                alt={champion.name}
-                title={champion.name}
-                loading="lazy"
-                className={`${styles.champion} ${selected === champion.id ? styles.championSelected : ''}`}
-                {...dragProps(champion.id)}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setSelected(selected === champion.id ? null : champion.id);
-                }}
+            <div className={styles.modalBody}>
+              {board(draft, true)}
+
+              <p className={styles.hint}>
+                Glisse les champions dans les rangées, ou clique sur un champion puis sur une rangée.
+                Remets-le dans la liste pour le retirer.
+              </p>
+
+              <input
+                className={styles.search}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Rechercher un champion"
+                autoFocus
               />
-            ))}
-          </div>
 
-          {message && <p className={styles.error}>{message}</p>}
+              <div
+                className={`${styles.pool} ${dragOver === 'pool' ? styles.zoneOver : ''}`}
+                {...dropProps('pool')}
+              >
+                {!champions && <p className={styles.state}>Chargement des champions…</p>}
 
-          <div className={styles.actions}>
-            <button type="button" className={ds.btnPrimary} onClick={save} disabled={saving}>
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
-            </button>
-            <button type="button" className={ds.btnOutline} onClick={cancel} disabled={saving}>
-              Annuler
-            </button>
-            <button
-              type="button"
-              className={ds.btnOutline}
-              onClick={() => setDraft(emptyTierList())}
-              disabled={saving}
-            >
-              Tout vider
-            </button>
+                {pool.map((champion) => (
+                  <img
+                    key={champion.id}
+                    src={championImage(ddragonVersion, champion.id)}
+                    alt={champion.name}
+                    title={champion.name}
+                    loading="lazy"
+                    className={`${styles.champion} ${selected === champion.id ? styles.championSelected : ''}`}
+                    {...dragProps(champion.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelected(selected === champion.id ? null : champion.id);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.modalFoot}>
+              {message && <p className={styles.error}>{message}</p>}
+
+              <div className={styles.actions}>
+                <button type="button" className={ds.btnPrimary} onClick={save} disabled={saving}>
+                  {saving ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
+                <button type="button" className={ds.btnOutline} onClick={cancel} disabled={saving}>
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  className={ds.btnOutline}
+                  onClick={() => setDraft(emptyTierList())}
+                  disabled={saving}
+                >
+                  Tout vider
+                </button>
+              </div>
+            </div>
           </div>
-        </>
-      ) : (
-        isOwn && (
-          <div className={styles.actions}>
-            <button type="button" className={ds.btnOutline} onClick={startEditing}>
-              Modifier ma tier list
-            </button>
-          </div>
-        )
+        </div>
       )}
     </div>
   );
