@@ -593,10 +593,11 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
               </h1>
             </div>
 
-            <div className={styles.teamMeta}>
-              <span>Capitaine · {team.captain_riot_id || '—'}</span>
-              {!team.validated_by_admin && <span>En attente de validation</span>}
-            </div>
+            {!team.validated_by_admin && (
+              <div className={styles.teamMeta}>
+                <span>En attente de validation</span>
+              </div>
+            )}
 
             {team.description && <p className={`${ds.body} ${styles.description}`}>{team.description}</p>}
           </div>
