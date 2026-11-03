@@ -595,7 +595,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   )}
                 </div>
 
-                  <div className={`${ds.card} ${styles.block} ${styles.czfChampions}`}>
+                  <div className={`${ds.card} ${styles.block}`}>
                     <div className={styles.blockLabel}>Champions joués en CZF</div>
 
                     {czfChampions === null ? (
