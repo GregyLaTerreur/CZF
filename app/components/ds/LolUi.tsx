@@ -51,7 +51,8 @@ export function ChampionPool({
   ddragonVersion: string;
   size?: 'small' | 'large';
 }) {
-  const champions = player?.top_champions || [];
+  // Petite taille (lignes de la liste des joueurs) : 5 champions ; grande (profil) : 10.
+  const champions = (player?.top_champions || []).slice(0, size === 'small' ? 5 : 10);
 
   if (!champions.length) return <span className={ds.muted}>—</span>;
 
