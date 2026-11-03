@@ -87,7 +87,7 @@
 ========================================================= */
 
 .division {
-  margin-bottom: 56px;
+  margin-bottom: var(--space-section);
 }
 
 .division:last-child {
@@ -100,7 +100,7 @@
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 22px;
+  margin-bottom: var(--space-block);
   padding-bottom: 14px;
   border-bottom: 2px solid var(--dark);
 }

@@ -11,6 +11,9 @@ import {
 import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './results.module.css';
+import { formatLastUpdate } from '@/app/components/ds/lol';
+import { getMyDivision, peekMyDivision } from '@/app/components/ds/myDivision';
+import { logoSrc } from '@/lib/logo';
 
 /* =========================================================
    TYPES (réponse de /api/resultats)
@@ -39,6 +42,7 @@ export type MatchSide = {
 export type HistoryMatch = {
   id: number;
   stage: 'pool' | 'playoff';
+  bracket: 'winner' | 'loser' | 'grand_final' | null;
   bestOf: number;
   playedAt: string;
   mvpRiotId: string | null;
@@ -106,12 +110,22 @@ export type ChampionPlayer = {
   kda: number;
 };
 
-export type DivisionData = {
+// Réponse de /api/resultats selon ?view= : chaque page ne charge que ce qu'elle affiche.
+export type ResultsData = {
   teams: Team[];
+  lastUpdate: string | null;
   history: HistoryMatch[];
+};
+
+export type StatsData = {
+  lastUpdate: string | null;
   playerStats: Record<Role, PlayerStats[]>;
   champions: Record<Role, ChampionStat[]>;
 };
+
+type ViewData = { resultats: ResultsData; stats: StatsData };
+
+export type DivisionView = keyof ViewData;
 
 export type StatKey = 'kda' | 'goldPerMin' | 'dpm' | 'csPerMin' | 'visionScore';
 
@@ -138,7 +152,7 @@ const CLIENT_TTL_MS = 60_000;
 
 type Entry<T> = { promise: Promise<T>; at: number };
 
-const divisionRequests = new Map<DivisionName, Entry<DivisionData>>();
+const divisionRequests = new Map<string, Entry<any>>();
 const gameRequests = new Map<number, Entry<Game[]>>();
 
 // Une seule requête par clé, partagée entre chargement et préchargement.
@@ -157,8 +171,10 @@ function remember<K, T>(store: Map<K, Entry<T>>, key: K, load: () => Promise<T>)
   return promise;
 }
 
-function loadDivision(division: DivisionName): Promise<DivisionData> {
-  return remember(divisionRequests, division, () => getJson(`/api/resultats?division=${division}`));
+function loadDivision<V extends DivisionView>(division: DivisionName, view: V): Promise<ViewData[V]> {
+  return remember(divisionRequests, `${view}:${division}`, () =>
+    getJson(`/api/resultats?division=${division}&view=${view}`)
+  );
 }
 
 export function loadGames(matchId: number): Promise<Game[]> {
@@ -168,9 +184,9 @@ export function loadGames(matchId: number): Promise<Game[]> {
 }
 
 // Dernière division vue : gardée en passant de Résultats à Stats (et inversement).
-let lastDivision: DivisionName = 'Yordle';
+let lastDivision: DivisionName | null = null;
 
-function readDivisionFromUrl(): DivisionName {
+function readDivisionFromUrl(): DivisionName | null {
   const value = new URLSearchParams(window.location.search).get('division');
   const match = DIVISIONS.find((division) => division.toLowerCase() === value?.toLowerCase());
 
@@ -178,15 +194,39 @@ function readDivisionFromUrl(): DivisionName {
 }
 
 // Division choisie (synchronisée avec ?division=) et ses données, avec préchargement des autres.
-export function useDivisionData() {
+export function useDivisionData<V extends DivisionView>(view: V) {
   // null tant que l'URL n'est pas lue : évite de charger Yordle pour rien.
   const [selected, setSelected] = useState<DivisionName | null>(null);
-  const [cache, setCache] = useState<Partial<Record<DivisionName, DivisionData>>>({});
+  const [cache, setCache] = useState<Partial<Record<DivisionName, ViewData[V]>>>({});
   const [error, setError] = useState('');
 
+  // Priorité : URL, puis dernière division vue, puis celle de l'équipe du joueur connecté
+  // (gardée dans le navigateur dès l'arrivée sur le site, cf. myDivision).
   useEffect(() => {
-    setSelected(readDivisionFromUrl());
-  }, []);
+    const initial = readDivisionFromUrl();
+    if (initial) {
+      setSelected(initial);
+      return;
+    }
+
+    const known = peekMyDivision();
+    if (known !== undefined) {
+      setSelected(known ?? 'Yordle');
+      return;
+    }
+
+    // Jamais calculée sur cet appareil : on charge les 3 divisions pendant le calcul.
+    for (const division of DIVISIONS) loadDivision(division, view).catch(() => {});
+
+    let active = true;
+    getMyDivision().then((mine) => {
+      if (active) setSelected((current) => current ?? mine ?? 'Yordle');
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [view]);
 
   // Lien partageable : ?division=Ixtal.
   useEffect(() => {
@@ -204,7 +244,7 @@ export function useDivisionData() {
     let active = true;
     setError('');
 
-    loadDivision(selected)
+    loadDivision(selected, view)
       .then((data) => {
         if (!active) return;
 
@@ -214,7 +254,7 @@ export function useDivisionData() {
         for (const other of DIVISIONS) {
           if (other === selected) continue;
 
-          loadDivision(other)
+          loadDivision(other, view)
             .then((otherData) => setCache((previous) => ({ ...previous, [other]: otherData })))
             .catch(() => {});
         }
@@ -226,7 +266,7 @@ export function useDivisionData() {
     return () => {
       active = false;
     };
-  }, [selected, cache]);
+  }, [selected, cache, view]);
 
   const division = selected ?? 'Yordle';
   const data = selected ? cache[selected] ?? null : null;
@@ -255,6 +295,17 @@ export function DivisionTabs({
         </button>
       ))}
     </div>
+  );
+}
+
+// Date du dernier résultat de la division (sous les onglets).
+export function LastUpdate({ date }: { date: string | null }) {
+  const label = formatLastUpdate(date);
+
+  return (
+    <p className={styles.lastUpdate}>
+      {label ? `Résultats mis à jour le ${label}` : 'Aucun résultat pour le moment'}
+    </p>
   );
 }
 
@@ -292,11 +343,11 @@ export function BlockHead({ label, title, aside }: { label: string; title: strin
   );
 }
 
-export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'sm' | 'md' }) {
-  const className = size === 'sm' ? styles.logoSm : styles.logo;
+export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'xs' | 'sm' | 'md' }) {
+  const className = size === 'xs' ? styles.logoXs : size === 'sm' ? styles.logoSm : styles.logo;
 
   return logo ? (
-    <img src={logo} alt="" className={className} loading="lazy" />
+    <img src={logoSrc(logo)} alt="" className={className} loading="lazy" />
   ) : (
     <span className={`${className} ${styles.logoEmpty}`} />
   );

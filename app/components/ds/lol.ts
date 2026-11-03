@@ -108,3 +108,10 @@ export function findMemberPlayer(member: any, players: any[]) {
   const riotId = normalizeRiotId(member.riot_id);
   return players.find((p) => normalizeRiotId(p.riot_id) === riotId) || null;
 }
+
+// Date de mise à jour lisible, sans l'heure : « 24 oct. » (jour de Paris).
+export function formatLastUpdate(date: string | null) {
+  if (!date) return null;
+
+  return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' });
+}

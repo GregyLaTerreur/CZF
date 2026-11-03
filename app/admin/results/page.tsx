@@ -451,12 +451,6 @@ export default function AdminResultsPage() {
     >('winner');
 
   const [
-    round,
-    setRound,
-  ] =
-    useState('');
-
-  const [
     bestOf,
     setBestOf,
   ] =
@@ -565,47 +559,34 @@ export default function AdminResultsPage() {
   }, []);
 
   /* =========================================================
-     SI ON PASSE EN POULES => BO2
+     CHANGEMENT DE PHASE / FORMAT (action admin uniquement)
   ========================================================= */
 
-  useEffect(() => {
-    if (
-      stage ===
-      'pool'
-    ) {
-      setBestOf(
-        2
-      );
+  // Pas d'effet sur `stage` : l'import change aussi la phase et ses games seraient effacées.
+  // Les games déjà saisies sont gardées tant qu'elles tiennent dans le nouveau format.
+  function changeStage(nextStage: 'pool' | 'playoff') {
+    const nextBestOf =
+      nextStage === 'pool' ? 2 : [1, 3, 5].includes(bestOf) ? bestOf : 3;
+    const keepGames =
+      nextStage === 'pool' ? games.length === 2 : games.length <= nextBestOf;
 
-      setGames(
-        []
-      );
-    } else {
-      if (
-        ![
-          1,
-          3,
-          5,
-        ].includes(
-          bestOf
-        )
-      ) {
-        setBestOf(
-          3
-        );
-      }
+    setStage(nextStage);
+    setBestOf(nextBestOf);
 
-      setGames(
-        []
-      );
+    if (!keepGames) {
+      setGames([]);
+      setMatchMvpPlayerId(null);
     }
+  }
 
-    setMatchMvpPlayerId(
-      null
-    );
+  function changeBestOf(nextBestOf: number) {
+    setBestOf(nextBestOf);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage]);
+    if (games.length > nextBestOf) {
+      setGames([]);
+      setMatchMvpPlayerId(null);
+    }
+  }
 
   /* =========================================================
      TEAMS
@@ -1991,11 +1972,6 @@ export default function AdminResultsPage() {
           'winner'
       );
 
-      setRound(
-        parsed.round ??
-          ''
-      );
-
       setBestOf(
         importedBestOf
       );
@@ -2288,12 +2264,6 @@ export default function AdminResultsPage() {
           stage ===
           'playoff'
             ? bracket
-            : null,
-
-        round:
-          stage ===
-          'playoff'
-            ? round
             : null,
 
         bestOf:
@@ -2842,7 +2812,7 @@ export default function AdminResultsPage() {
                 onChange={(
                   e
                 ) =>
-                  setStage(
+                  changeStage(
                     e.target
                       .value as
                       | 'pool'
@@ -2895,25 +2865,6 @@ export default function AdminResultsPage() {
                     </option>
                   </select>
                 </label>
-
-                <label>
-                  Round
-
-                  <input
-                    value={
-                      round
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setRound(
-                        e.target
-                          .value
-                      )
-                    }
-                    placeholder="Quart, Demi..."
-                  />
-                </label>
               </>
             )}
 
@@ -2937,18 +2888,14 @@ export default function AdminResultsPage() {
                   }
                   onChange={(
                     e
-                  ) => {
-                    setBestOf(
+                  ) =>
+                    changeBestOf(
                       Number(
                         e.target
                           .value
                       )
-                    );
-
-                    setGames(
-                      []
-                    );
-                  }}
+                    )
+                  }
                 >
                   <option value={1}>
                     BO1

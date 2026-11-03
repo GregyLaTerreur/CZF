@@ -1,0 +1,13 @@
+/* =========================================================
+   CZF — ESPACEMENTS COMMUNS
+   Une seule source pour tous les espacements verticaux du site.
+========================================================= */
+
+:root {
+  /* Padding haut = bas de chaque section (écart entre blocs) */
+  --space-section: 40px;
+  /* Écart entre les éléments d'un même bloc */
+  --space-block: 22px;
+  /* Hauteur des transitions diagonales beige/dark */
+  --space-diagonal: 36px;
+}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import styles from '@/app/home.module.css';
 import BoltIcon from '@/app/components/icons/BoltIcon';
 import { DIVISION_COLORS, DIVISIONS, type DivisionName } from './divisions';
+import { formatLastUpdate } from '@/app/components/ds/lol';
 import {
   type PlayerStat,
   type StandingTeam,
@@ -12,6 +13,7 @@ import {
   useHistorique,
   useStatsJoueurs,
 } from './useResults';
+import { logoSrc } from '@/lib/logo';
 
 // Nombre de derniers matchs affichés (même requête pour le hero et les résultats).
 const LATEST_LIMIT = 6;
@@ -29,7 +31,7 @@ function TeamLogo({ logo, shortName }: { logo: string | null; shortName: string 
     return <span className={styles.logoFallback}>{shortName}</span>;
   }
 
-  return <img src={logo} alt="" className={styles.logo} loading="lazy" />;
+  return <img src={logoSrc(logo)} alt="" className={styles.logo} loading="lazy" />;
 }
 
 function splitRiotId(riotId: string) {
@@ -265,6 +267,14 @@ export function Standings() {
           </div>
           <DivisionTabs value={division} onChange={setDivision} />
         </div>
+
+        {data && (
+          <p className={styles.lastUpdate}>
+            {formatLastUpdate(data.lastUpdates?.[division] ?? null)
+              ? `Résultats ${division} mis à jour le ${formatLastUpdate(data.lastUpdates[division])}`
+              : `Aucun résultat ${division} pour le moment`}
+          </p>
+        )}
 
         {error && <div className={`${styles.card} ${styles.empty}`}>{error}</div>}
 

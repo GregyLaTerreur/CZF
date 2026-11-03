@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getMyDivision } from '@/app/components/ds/myDivision';
 
 // Statut admin gardé pour la visite : la Nav est remontée à chaque page,
 // on ne redemande pas is_admin à chaque navigation.
@@ -38,6 +39,8 @@ export default function Nav() {
 
   useEffect(() => {
     checkAdmin();
+    // Division du joueur calculée dès l'arrivée, quelle que soit la page : prête pour les filtres.
+    void getMyDivision();
   }, []);
 
   async function checkAdmin() {

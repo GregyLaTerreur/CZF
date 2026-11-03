@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
-import { ChevronIcon } from '@/app/components/ds/LolUi';
+import { ChevronIcon, useDdragonVersion } from '@/app/components/ds/LolUi';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
   divisionFromPoints,
@@ -22,6 +22,7 @@ import {
 } from '@/app/components/ds/lol';
 import FixtureCard, { type Fixture, type GameSlot, type MvpFixture } from './FixtureCard';
 import styles from './my-team.module.css';
+import { logoSrc } from '@/lib/logo';
 
 const TEAM_SIZE = 5;
 const FIXTURES_OPEN_KEY = 'czf-my-team-fixtures-open';
@@ -46,7 +47,9 @@ type TeamChampions = {
 
 // Champions affichés au bout de chaque ligne du roster, et dans le bloc équipe.
 const ROSTER_CHAMPIONS = 5;
+// Liste en deux colonnes de 5.
 const TEAM_TOP_CHAMPIONS = 10;
+const CHAMPIONS_PER_COLUMN = 5;
 type Feedback = { text: string; error: boolean } | null;
 
 async function authFetch(url: string, init: RequestInit = {}) {
@@ -72,6 +75,7 @@ async function authFetch(url: string, init: RequestInit = {}) {
 // Avec teamId : la page publique d'une équipe (/teams/[id]) ; gestion seulement si c'est la sienne.
 export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number } = {}) {
   const router = useRouter();
+  const ddragonVersion = useDdragonVersion();
   const [user, setUser] = useState<any>(null);
   const [players, setPlayers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
@@ -585,17 +589,18 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
             </div>
 
             <div className={styles.teamHead}>
-              {team.logo_url && <img src={team.logo_url} alt="" className={styles.teamLogo} />}
+              {team.logo_url && <img src={logoSrc(team.logo_url, 192)} alt="" className={styles.teamLogo} />}
               <h1 className={`${ds.h1} ${styles.teamName}`}>
                 {team.name}
                 {team.tag && <small className={styles.teamTag}>{team.tag}</small>}
               </h1>
             </div>
 
-            <div className={styles.teamMeta}>
-              <span>Capitaine · {team.captain_riot_id || '—'}</span>
-              {!team.validated_by_admin && <span>En attente de validation</span>}
-            </div>
+            {!team.validated_by_admin && (
+              <div className={styles.teamMeta}>
+                <span>En attente de validation</span>
+              </div>
+            )}
 
             {team.description && <p className={`${ds.body} ${styles.description}`}>{team.description}</p>}
           </div>
@@ -805,6 +810,17 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
 
                   {member ? (
                     <>
+                      <span className={styles.rosterIdentity}>
+                      {rosterPlayer?.profile_icon_id ? (
+                        <img
+                          src={`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${rosterPlayer.profile_icon_id}.png`}
+                          alt=""
+                          loading="lazy"
+                          className={styles.summonerIcon}
+                        />
+                      ) : (
+                        <span className={styles.summonerIcon} />
+                      )}
                       <span className={styles.rosterPlayer}>
                         {rosterPlayer ? (
                           <Link href={`/players/${rosterPlayer.id}`} className={`${styles.rosterName} ${styles.rosterLink}`}>
@@ -832,6 +848,7 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
                             </button>
                           )}
                         </span>
+                      </span>
                       </span>
 
                       <span className={styles.rosterRank}>
@@ -916,37 +933,49 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
             <div className={`${ds.card} ${ds.empty}`}>Aucun champion joué en {championRoleLabel}.</div>
           ) : (
             <div className={styles.teamChampions}>
-              {shownChampions.slice(0, TEAM_TOP_CHAMPIONS).map((champion, index) => (
-                <div key={champion.championId} className={`${ds.card} ${styles.teamChampion}`}>
-                  <span className={styles.teamChampionRank}>#{index + 1}</span>
-                  {champion.image ? (
-                    <img src={champion.image} alt="" loading="lazy" />
-                  ) : (
-                    <span className={styles.championEmpty} />
-                  )}
-                  <strong>{champion.name}</strong>
-                  <small>
-                    {champion.games} game{champion.games > 1 ? 's' : ''}
-                  </small>
-                  <div className={styles.teamChampionStats}>
-                    <span>
-                      <small>Win</small>
-                      {Math.round(champion.winRate)}%
-                    </span>
-                    <span>
-                      <small>KDA</small>
-                      {champion.kda.toFixed(2)}
-                    </span>
+              {[0, CHAMPIONS_PER_COLUMN]
+                .filter((offset) => offset < Math.min(shownChampions.length, TEAM_TOP_CHAMPIONS))
+                .map((offset) => (
+                  <div key={offset} className={`${ds.card} ${styles.championList}`}>
+                    <div className={`${styles.championRow} ${styles.championListHead}`}>
+                      <span>#</span>
+                      <span />
+                      <span>Champion</span>
+                      <span>Games</span>
+                      <span>Win</span>
+                      <span>KDA</span>
+                    </div>
+
+                    {shownChampions.slice(offset, offset + CHAMPIONS_PER_COLUMN).map((champion, index) => (
+                      <div key={champion.championId} className={styles.championRow}>
+                        <span className={styles.championRank}>{offset + index + 1}</span>
+                        {champion.image ? (
+                          <img src={champion.image} alt="" loading="lazy" />
+                        ) : (
+                          <span className={styles.championEmpty} />
+                        )}
+                        <span className={styles.championName}>
+                          <strong>{champion.name}</strong>
+                          <small>
+                            {champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · ')}
+                          </small>
+                        </span>
+                        <strong>{champion.games}</strong>
+                        <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
+                          {Math.round(champion.winRate)}%
+                        </strong>
+                        <strong>{champion.kda.toFixed(2)}</strong>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
 
           {allChampionsOpen && teamChampions && (
             <ChampionRowsModal
               title={team.name}
-              image={team.logo_url || null}
+              image={logoSrc(team.logo_url, 192) || null}
               meta={`${shownChampions.length} champions joués en CZF${
                 championRoleLabel ? ` · ${championRoleLabel}` : ''
               }`}
@@ -967,9 +996,9 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
         </div>
       </section>
 
-      {/* RENCONTRES (sa propre équipe) */}
+      {/* RENCONTRES (sa propre équipe) — masqué pour le moment */}
       {isMine && (
-      <section className={styles.section}>
+      <section className={styles.section} style={{ display: 'none' }}>
         <div className={ds.container}>
           <div className={styles.fixturesHead}>
             <div>

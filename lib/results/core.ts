@@ -236,6 +236,18 @@ export function groupBy<T>(
   return map;
 }
 
+// Date du dernier résultat ajouté (ISO), ou null sans match.
+export function lastResultUpdate(matches: AnyObject[]): string | null {
+  let latest: string | null = null;
+
+  for (const match of matches) {
+    const date = match.created_at || match.played_at;
+    if (date && (!latest || new Date(date) > new Date(latest))) latest = date;
+  }
+
+  return latest;
+}
+
 export function splitByDivision<T>(
   items: T[],
   getDivision: (item: T) => Division | null

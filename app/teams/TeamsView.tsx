@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import type { TeamsDirectory } from '@/lib/teams/directory';
 import {
   DIVISION_COLORS,
   DIVISIONS,
@@ -22,6 +23,7 @@ import {
   multiOpggUrl,
 } from '@/app/components/ds/lol';
 import styles from './teams.module.css';
+import { logoSrc } from '@/lib/logo';
 
 const TEAM_SIZE = 5;
 
@@ -44,58 +46,52 @@ type TeamView = {
    VUE
 ========================================================= */
 
-export default function TeamsView() {
+export default function TeamsView({ directory }: { directory: TeamsDirectory | null }) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [teams, setTeams] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [joinRequests, setJoinRequests] = useState<any[]>([]);
-  const [players, setPlayers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [myPlayer, setMyPlayer] = useState<{ id: number; riot_id: string } | null>(null);
+  // Données rendues par le serveur (cache partagé), rafraîchies par router.refresh().
+  const teams = directory?.teams ?? [];
+  const teamMembers = directory?.members ?? [];
+  const players = directory?.players ?? [];
+  const loadError = directory ? '' : 'Impossible de charger les équipes.';
 
   const [search, setSearch] = useState('');
   const [validatedOnly, setValidatedOnly] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
   const [divisionFilter, setDivisionFilter] = useState<DivisionName | null>(null);
+  const divisionTouched = useRef(false);
 
+  function chooseDivision(division: DivisionName | null) {
+    divisionTouched.current = true;
+    setDivisionFilter(division);
+  }
 
-  const loadData = useCallback(async () => {
-    try {
-      const [teamsRes, membersRes, requestsRes, playersRes] = await Promise.all([
-        fetch('/api/teams').then((res) => res.json()),
-        fetch('/api/team-members').then((res) => res.json()),
-        fetch('/api/team-join-requests').then((res) => res.json()),
-        fetch('/api/players?view=list').then((res) => res.json()),
-      ]);
-
-      if (!teamsRes.success) throw new Error('Impossible de charger les équipes.');
-
-      setTeams(teamsRes.data || []);
-      setTeamMembers(membersRes.success ? membersRes.data || [] : []);
-      setJoinRequests(requestsRes.success ? requestsRes.data || [] : []);
-      setPlayers(playersRes.success ? playersRes.data || [] : []);
-    } catch (error: any) {
-      setLoadError(error?.message || 'Erreur de chargement.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const reload = useCallback(async () => {
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
-    // Session locale : pas d'appel réseau, les routes d'API vérifient le jeton.
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
-    loadData();
+    // Session locale : pas d'appel réseau. Seul le joueur connecté est demandé à Supabase.
+    supabase.auth.getSession().then(async ({ data }) => {
+      const sessionUser = data.session?.user ?? null;
+      setUser(sessionUser);
+      if (!sessionUser) return;
+
+      const { data: player } = await supabase
+        .from('players')
+        .select('id, riot_id')
+        .eq('profile_id', sessionUser.id)
+        .limit(1)
+        .maybeSingle();
+
+      setMyPlayer(player ?? null);
+    });
 
     // Anciens liens /teams?team=ID : redirige vers la page de l'équipe.
     const teamParam = Number(new URLSearchParams(window.location.search).get('team'));
     if (Number.isInteger(teamParam) && teamParam > 0) router.replace(`/teams/${teamParam}`);
-  }, [loadData, router]);
-
-  const myPlayer = useMemo(
-    () => (user ? players.find((player) => player.profile_id === user.id) || null : null),
-    [players, user]
-  );
+  }, [router]);
 
   // Membre d'équipe correspondant au joueur connecté.
   const myMembership = useMemo(() => {
@@ -186,11 +182,20 @@ export default function TeamsView() {
     ? teamViews.find((view) => Number(view.team.id) === Number(myMembership.team_id)) || null
     : null;
 
-  function pendingRequestsFor(teamId: number) {
-    return joinRequests.filter(
-      (request) => Number(request.team_id) === Number(teamId) && request.status === 'pending'
-    );
-  }
+  // Filtre par défaut : division de l'équipe du joueur (capitaine d'abord), tant qu'il n'a rien choisi.
+  const myDivision = useMemo(() => {
+    if (!myPlayer) return null;
+
+    const team =
+      teams.find((item) => Number(item.captain_player_id) === Number(myPlayer.id)) ||
+      teams.find((item) => Number(item.id) === Number(myMembership?.team_id));
+
+    return team ? teamDivision(team) : null;
+  }, [myPlayer, myMembership, teams]);
+
+  useEffect(() => {
+    if (myDivision && !divisionTouched.current) setDivisionFilter(myDivision);
+  }, [myDivision]);
 
   return (
     <>
@@ -206,15 +211,15 @@ export default function TeamsView() {
 
             <div className={ds.counters}>
               <div className={ds.counter}>
-                <strong>{loading ? '—' : counts.total}</strong>
+                <strong>{counts.total}</strong>
                 <span>Équipes</span>
               </div>
               <div className={ds.counter}>
-                <strong>{loading ? '—' : counts.validated}</strong>
+                <strong>{counts.validated}</strong>
                 <span>Validées</span>
               </div>
               <div className={ds.counter}>
-                <strong className={ds.teal}>{loading ? '—' : counts.recruiting}</strong>
+                <strong className={ds.teal}>{counts.recruiting}</strong>
                 <span>En recrutement</span>
               </div>
             </div>
@@ -224,7 +229,7 @@ export default function TeamsView() {
             user={user}
             myPlayer={myPlayer}
             myTeamView={myTeamView}
-            onCreated={loadData}
+            onCreated={reload}
           />
         </div>
       </header>
@@ -279,7 +284,7 @@ export default function TeamsView() {
             <button
               type="button"
               className={divisionFilter === null ? ds.tabActive : ds.tab}
-              onClick={() => setDivisionFilter(null)}
+              onClick={() => chooseDivision(null)}
             >
               Toutes les divisions
             </button>
@@ -289,7 +294,7 @@ export default function TeamsView() {
                 key={division}
                 type="button"
                 className={divisionFilter === division ? ds.tabActive : ds.tab}
-                onClick={() => setDivisionFilter(divisionFilter === division ? null : division)}
+                onClick={() => chooseDivision(divisionFilter === division ? null : division)}
               >
                 <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
                 {division}
@@ -297,10 +302,9 @@ export default function TeamsView() {
             ))}
           </div>
 
-          {loading && <div className={`${ds.card} ${ds.empty}`}>Chargement des équipes…</div>}
           {loadError && <div className={`${ds.card} ${ds.empty}`}>{loadError}</div>}
 
-          {!loading && !loadError && filteredTeams.length === 0 && (
+          {!loadError && filteredTeams.length === 0 && (
             <div className={`${ds.card} ${ds.empty}`}>Aucune équipe ne correspond à ces filtres.</div>
           )}
 
@@ -312,7 +316,7 @@ export default function TeamsView() {
                 isMine={Number(myMembership?.team_id) === Number(view.team.id)}
                 pendingCount={
                   view.team.captain_profile_id === user?.id
-                    ? pendingRequestsFor(view.team.id).length
+                    ? directory?.pendingRequests[Number(view.team.id)] ?? 0
                     : 0
                 }
                 onOpen={() => router.push(`/teams/${view.team.id}`)}
@@ -320,7 +324,7 @@ export default function TeamsView() {
             ))}
           </div>
 
-          {!loading && filteredTeams.length > 0 && (
+          {filteredTeams.length > 0 && (
             <p className={ds.resultCount}>
               {filteredTeams.length} équipe{filteredTeams.length > 1 ? 's' : ''}
             </p>
@@ -373,7 +377,7 @@ function TeamCard({
       <button type="button" className={styles.teamCardMain}>
         <span className={styles.teamHead}>
           {team.logo_url ? (
-            <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
+            <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} loading="lazy" />
           ) : (
             <span className={styles.teamLogoEmpty} />
           )}
@@ -569,7 +573,7 @@ function TeamActionCard({
       <div className={`${ds.card} ${ds.sideCard}`}>
         <div className={ds.cardTitle}>Mon équipe</div>
         <div className={styles.myTeam}>
-          {team.logo_url && <img src={team.logo_url} alt="" className={styles.teamLogo} />}
+          {team.logo_url && <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} />}
           <span className={ds.myName}>{team.name}</span>
         </div>
         <p className={ds.body}>

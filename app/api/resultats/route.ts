@@ -7,6 +7,7 @@ import {
   computeStandings,
   getChampions,
   groupBy,
+  lastResultUpdate,
   parseExclusions,
 } from '@/lib/results/core';
 import {
@@ -19,11 +20,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-// Tout ce qu'affichent les pages Résultats et Stats pour une division, en une requête :
-// classement, historique, stats joueurs et champions. ?division= obligatoire.
+// Données des pages Résultats et Stats pour une division. ?division= obligatoire.
+// ?view=resultats : classement + historique ; ?view=stats : stats joueurs + champions ; sans view : tout.
 // Les données viennent du cache partagé (cf. loadResultsDataset).
 export async function GET(request: NextRequest) {
   const { division } = readDivisionParam(request);
+  const view = request.nextUrl.searchParams.get('view');
+  const withResults = view !== 'stats';
+  const withStats = view !== 'resultats';
 
   if (!division) {
     return jsonNoStore(
@@ -33,7 +37,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [dataset, champions] = await Promise.all([loadResultsDataset(), getChampions()]);
+    const [dataset, champions] = await Promise.all([
+      loadResultsDataset(),
+      withStats ? getChampions() : Promise.resolve([]),
+    ]);
     const { matches: allMatches, teams, games, exclusions } = dataset;
 
     const matches = allMatches.filter((match) => match.division === division);
@@ -48,25 +55,19 @@ export async function GET(request: NextRequest) {
     const teamMap = toTeamMap(teams);
     const gamesByMatch = groupBy(games, (game) => Number(game.match_id));
 
-    // Classement calculé comme /api/classement : poules, toutes divisions.
-    const standings = computeStandings(
-      teams.map((team) => ({ ...team, wins: 0, losses: 0, gameDiff: 0 })),
-      allMatches,
-      gamesByMatch
-    ).filter((team) => team.division === division);
-
-    return jsonNoStore({
-      success: true,
-      division,
-      teams: standings,
+    const results = withResults && {
+      // Classement calculé comme /api/classement : poules, toutes divisions.
+      teams: computeStandings(
+        teams.map((team) => ({ ...team, wins: 0, losses: 0, gameDiff: 0 })),
+        allMatches,
+        gamesByMatch
+      ).filter((team) => team.division === division),
       history: matches.map((match) =>
-        buildMatchSummary(
-          match,
-          teamMap,
-          gamesByMatch.get(Number(match.id)) || [],
-          playerNames
-        )
+        buildMatchSummary(match, teamMap, gamesByMatch.get(Number(match.id)) || [], playerNames)
       ),
+    };
+
+    const stats = withStats && {
       playerStats: computePlayerStats(division, {
         matches,
         games,
@@ -83,6 +84,14 @@ export async function GET(request: NextRequest) {
         playerNames,
         teamMap,
       }),
+    };
+
+    return jsonNoStore({
+      success: true,
+      division,
+      lastUpdate: lastResultUpdate(matches),
+      ...results,
+      ...stats,
     });
   } catch (error) {
     return jsonError('RESULTATS API', error, 'Impossible de charger les résultats.');

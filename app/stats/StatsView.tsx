@@ -8,6 +8,7 @@ import {
   BlockHead,
   ChampionRowsModal,
   DivisionTabs,
+  LastUpdate,
   TeamLogo,
   useDivisionData,
   type ChampionStat,
@@ -66,7 +67,7 @@ function RoleTabs({
 }
 
 export default function StatsView() {
-  const { division, setDivision, data, error, loading } = useDivisionData();
+  const { division, setDivision, data, error, loading } = useDivisionData('stats');
   const [role, setRole] = useState<Role>('Top');
   // Top 10 ouvert ou fermé pour toutes les colonnes à la fois.
   const [expanded, setExpanded] = useState(false);
@@ -143,6 +144,8 @@ export default function StatsView() {
 
           {data && (
             <>
+              <LastUpdate date={data.lastUpdate} />
+
               {/* JOUEURS */}
               <div className={styles.playerSection}>
                 <BlockHead label="Performances" title="Statistiques joueurs" aside="Min. 45 % des games de l’équipe" />
@@ -241,7 +244,10 @@ export default function StatsView() {
                 {mvpRanking.length === 0 ? (
                   <div className={`${ds.card} ${ds.empty}`}>Aucun MVP attribué pour le moment.</div>
                 ) : (
-                  <div className={`${ds.card} ${styles.mvpGrid}`}>
+                  <div
+                    className={`${ds.card} ${styles.mvpGrid}`}
+                    style={{ '--mvp-rows': Math.ceil(mvpRanking.length / 2) } as React.CSSProperties}
+                  >
                     {mvpRanking.map((player, index) => (
                       <div key={player.playerId} className={styles.mvpRow}>
                         <span className={styles.rankNumber}>{index + 1}</span>

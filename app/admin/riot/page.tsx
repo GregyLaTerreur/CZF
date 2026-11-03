@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Nav from '../../components/Nav';
 import { supabase } from '@/lib/supabase';
+import { logoSrc } from '@/lib/logo';
 
 type Team = {
   id: number;
@@ -67,7 +68,7 @@ function TeamLabel({ team }: { team: Team }) {
   return (
     <div className="riotAdminTeam">
       {team.logo ? (
-        <img src={team.logo} alt="" />
+        <img src={logoSrc(team.logo)} alt="" />
       ) : (
         <div className="riotAdminPlaceholder">
           {team.tag || team.name.slice(0, 2).toUpperCase()}
@@ -111,10 +112,6 @@ export default function RiotAdminPage() {
   >({});
 
   const [brackets, setBrackets] = useState<
-    Record<number, string>
-  >({});
-
-  const [rounds, setRounds] = useState<
     Record<number, string>
   >({});
 
@@ -193,7 +190,6 @@ export default function RiotAdminPage() {
         ...(fixture.stage === 'playoff'
           ? {
               bracket: brackets[fixture.id] || '',
-              round: rounds[fixture.id] || '',
             }
           : {}),
       };
@@ -494,20 +490,6 @@ export default function RiotAdminPage() {
                               Grande finale
                             </option>
                           </select>
-                        </label>
-
-                        <label>
-                          Round
-                          <input
-                            value={rounds[fixture.id] || ''}
-                            onChange={(event) =>
-                              setRounds((current) => ({
-                                ...current,
-                                [fixture.id]: event.target.value,
-                              }))
-                            }
-                            placeholder="Ex : Demi-finale"
-                          />
                         </label>
                       </div>
                     )}

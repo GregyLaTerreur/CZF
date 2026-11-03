@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { getMyDivision, peekMyDivision } from '@/app/components/ds/myDivision';
 import {
   DIVISION_COLORS,
   DIVISIONS,
@@ -23,6 +24,7 @@ import {
 } from '@/app/components/ds/lol';
 import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
 import styles from './players.module.css';
+import { logoSrc } from '@/lib/logo';
 
 /* =========================================================
    CONSTANTES
@@ -104,6 +106,23 @@ export default function PlayersView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [divisionFilter, setDivisionFilter] = useState<DivisionName | null>(null);
+  const divisionTouched = useRef(false);
+
+  function chooseDivision(division: DivisionName | null) {
+    divisionTouched.current = true;
+    setDivisionFilter(division);
+  }
+
+  // Par défaut : la division de l'équipe du joueur connecté, tant qu'il n'a rien choisi.
+  useEffect(() => {
+    // Valeur gardée dans le navigateur d'abord (immédiate), puis valeur recalculée.
+    const known = peekMyDivision();
+    if (known) setDivisionFilter(known);
+
+    getMyDivision().then((mine) => {
+      if (mine && !divisionTouched.current) setDivisionFilter(mine);
+    });
+  }, []);
   const [participantsOnly, setParticipantsOnly] = useState(false);
   const [lftOnly, setLftOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('points');
@@ -303,7 +322,7 @@ export default function PlayersView() {
             <button
               type="button"
               className={divisionFilter === null ? ds.tabActive : ds.tab}
-              onClick={() => setDivisionFilter(null)}
+              onClick={() => chooseDivision(null)}
             >
               Toutes les divisions
             </button>
@@ -313,7 +332,7 @@ export default function PlayersView() {
                 key={division}
                 type="button"
                 className={divisionFilter === division ? ds.tabActive : ds.tab}
-                onClick={() => setDivisionFilter(divisionFilter === division ? null : division)}
+                onClick={() => chooseDivision(divisionFilter === division ? null : division)}
               >
                 <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
                 {division}
@@ -381,7 +400,7 @@ export default function PlayersView() {
                   >
                     <span className={styles.playerCell}>
                       {team?.logo_url ? (
-                        <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
+                        <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} loading="lazy" />
                       ) : (
                         <span className={styles.teamLogoEmpty} />
                       )}
@@ -547,9 +566,14 @@ function PlayerDetails({
           </div>
         </div>
 
-        <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
-          Profil DPM
-        </a>
+        <div className={styles.detailsActions}>
+          <Link href={`/players/${player.id}`} className={ds.btnPrimary}>
+            Page du joueur
+          </Link>
+          <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
+            Profil DPM
+          </a>
+        </div>
       </div>
 
       <div className={styles.detailsStats}>

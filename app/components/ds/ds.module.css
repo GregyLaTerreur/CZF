@@ -66,7 +66,8 @@
   font-size: clamp(2.6rem, 6vw, 4.4rem);
   line-height: 0.95;
   text-transform: uppercase;
-  margin: 12px 0 16px;
+  /* Label collé au titre, comme les h2 de la homepage */
+  margin: 10px 0 0;
 }
 
 .body {
@@ -75,6 +76,10 @@
   color: rgba(8, 20, 40, 0.6);
   margin: 0;
   max-width: 560px;
+}
+
+.h1 + .body {
+  margin-top: var(--space-block);
 }
 
 .muted {
@@ -245,11 +250,11 @@
 }
 
 .filterRow {
-  margin-bottom: 18px;
+  margin-bottom: var(--space-block);
 }
 
 .filterRowLast {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-block);
 }
 
 /* =========================================================
@@ -257,7 +262,7 @@
 ========================================================= */
 
 .header {
-  padding: 28px 0 16px;
+  padding: var(--space-block) 0 0;
 }
 
 .headerGrid {
@@ -270,7 +275,7 @@
 .counters {
   display: flex;
   gap: 40px;
-  margin-top: 32px;
+  margin-top: var(--space-block);
   flex-wrap: wrap;
 }
 
@@ -373,7 +378,7 @@
 }
 
 .resultCount {
-  margin: 18px 0 0;
+  margin: var(--space-block) 0 0;
   font-family: var(--condensed);
   font-weight: 700;
   font-size: 0.72rem;
@@ -501,7 +506,7 @@
 ========================================================= */
 
 .section {
-  padding: 16px 0 96px;
+  padding: var(--space-block) 0 var(--space-section);
 }
 
 .toolbar {
@@ -510,7 +515,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  margin-bottom: 22px;
+  margin-bottom: var(--space-block);
 }
 
 .search {
@@ -667,10 +672,6 @@
 @media (max-width: 680px) {
   .container {
     padding: 0 16px;
-  }
-
-  .header {
-    padding: 20px 0 12px;
   }
 
   .search {

@@ -42,7 +42,8 @@
 }
 
 .logo,
-.logoSm {
+.logoSm,
+.logoXs {
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -55,6 +56,11 @@
 .logoSm {
   width: 28px;
   height: 28px;
+}
+
+.logoXs {
+  width: 22px;
+  height: 22px;
 }
 
 .logoEmpty {
@@ -155,7 +161,7 @@
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   align-items: start;
   gap: 30px;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-section);
 }
 
 .standingName small,
@@ -261,7 +267,8 @@
 
 .bracketSide {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 14px;
+  min-height: 34px;
+  grid-template-columns: 14px 22px minmax(0, 1fr) 14px;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
@@ -296,6 +303,27 @@
   color: rgba(8, 20, 40, 0.35);
 }
 
+.bracketPlaceholder {
+  grid-column: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.4);
+}
+
+.bracketWin .bracketScore {
+  color: var(--win);
+}
+
+.bracketLoss {
+  opacity: 0.5;
+}
+
 .bracketDrop {
   margin: 20px 0;
   padding: 10px;
@@ -315,7 +343,7 @@
 ========================================================= */
 
 .history {
-  margin-top: 56px;
+  margin-top: var(--space-section);
 }
 
 .historyItem + .historyItem {
@@ -616,11 +644,11 @@
 
 .playerSection .blockHead {
   padding: 0 0 14px;
-  margin-bottom: 22px;
+  margin-bottom: var(--space-block);
 }
 
 .statsBlock {
-  margin-top: 56px;
+  margin-top: var(--space-section);
 }
 
 .rankingGrid {
@@ -734,7 +762,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin: 48px 0 18px;
+  margin: var(--space-section) 0 var(--space-block);
   padding-bottom: 10px;
   border-bottom: 2px solid var(--dark);
 }
@@ -761,7 +789,7 @@
   display: block;
   width: 100%;
   max-width: 360px;
-  margin: 0 0 26px;
+  margin: 0 0 var(--space-block);
 }
 
 .championGrid {
@@ -1007,6 +1035,9 @@
 .mvpGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Classement en colonnes : 1 à N/2 à gauche, la suite à droite */
+  grid-template-rows: repeat(var(--mvp-rows, 1), auto);
+  grid-auto-flow: column;
   column-gap: 32px;
   padding: 8px 20px;
 }
@@ -1082,6 +1113,11 @@
     grid-template-columns: 1fr;
   }
 
+  .mvpGrid {
+    grid-template-rows: none;
+    grid-auto-flow: row;
+  }
+
   .championGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px;
@@ -1100,4 +1136,15 @@
     column-gap: 8px;
     padding-inline: 0;
   }
+}
+
+/* Date du dernier résultat de la division, sous les onglets */
+.lastUpdate {
+  margin: 0 0 var(--space-block);
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
 }

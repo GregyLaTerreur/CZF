@@ -6,6 +6,7 @@ import ds from '@/app/components/ds/ds.module.css';
 import CheckIcon from '@/app/components/icons/CheckIcon';
 import { DIVISION_COLORS, DIVISIONS, type DivisionName } from '@/app/components/home/divisions';
 import styles from './my-team.module.css';
+import { logoSrc } from '@/lib/logo';
 
 export type FixtureTeam = {
   id: number;
@@ -119,7 +120,7 @@ function TeamSide({ team }: { team: FixtureTeam }) {
   return (
     <div className={styles.side}>
       {team.logo ? (
-        <img src={team.logo} alt="" className={styles.sideLogo} />
+        <img src={logoSrc(team.logo, 192)} alt="" className={styles.sideLogo} />
       ) : (
         <span className={styles.sideLogoEmpty}>{team.tag || team.name.slice(0, 2).toUpperCase()}</span>
       )}
