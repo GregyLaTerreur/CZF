@@ -72,7 +72,7 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 22px;
+  margin-top: var(--space-block);
 }
 
 .roleChip {
@@ -186,18 +186,18 @@
 ========================================================= */
 
 .section {
-  padding-bottom: 72px;
+  padding-bottom: var(--space-section);
 }
 
 .feedback {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-block);
 }
 
 .actions {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
-  margin-bottom: 36px;
+  margin-bottom: var(--space-block);
 }
 
 .grid {
@@ -215,7 +215,7 @@
 }
 
 .description {
-  margin-top: 28px;
+  margin-top: var(--space-block);
 }
 
 .blockLabel {
@@ -273,7 +273,7 @@
 ========================================================= */
 
 .czfChampions {
-  margin-top: 28px;
+  margin-top: var(--space-block);
   align-items: stretch;
 }
 

@@ -161,7 +161,7 @@
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   align-items: start;
   gap: 30px;
-  margin-bottom: 30px;
+  margin-bottom: var(--space-section);
 }
 
 .standingName small,
@@ -343,7 +343,7 @@
 ========================================================= */
 
 .history {
-  margin-top: 56px;
+  margin-top: var(--space-section);
 }
 
 .historyItem + .historyItem {
@@ -644,11 +644,11 @@
 
 .playerSection .blockHead {
   padding: 0 0 14px;
-  margin-bottom: 22px;
+  margin-bottom: var(--space-block);
 }
 
 .statsBlock {
-  margin-top: 56px;
+  margin-top: var(--space-section);
 }
 
 .rankingGrid {
@@ -762,7 +762,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin: 48px 0 18px;
+  margin: var(--space-section) 0 var(--space-block);
   padding-bottom: 10px;
   border-bottom: 2px solid var(--dark);
 }
@@ -789,7 +789,7 @@
   display: block;
   width: 100%;
   max-width: 360px;
-  margin: 0 0 26px;
+  margin: 0 0 var(--space-block);
 }
 
 .championGrid {
@@ -1132,7 +1132,7 @@
 
 /* Date du dernier résultat de la division, sous les onglets */
 .lastUpdate {
-  margin: -6px 0 22px;
+  margin: -6px 0 var(--space-block);
   font-family: var(--condensed);
   font-weight: 700;
   font-size: 0.78rem;
