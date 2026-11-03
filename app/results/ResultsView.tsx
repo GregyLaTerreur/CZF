@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
@@ -17,9 +17,9 @@ import {
   type MatchSide,
   type Team,
 } from './shared';
+import { buildBracket, QUALIFIED, type BracketNode, type BracketRoundData } from './bracket';
 import styles from './results.module.css';
 
-const QUALIFIED = 8;
 const HISTORY_PREVIEW = 5;
 
 /* =========================================================
@@ -51,7 +51,7 @@ export default function ResultsView() {
 
               <div className={styles.mainGrid}>
                 <Standings teams={data.teams} />
-                <Bracket teams={data.teams} />
+                <Bracket teams={data.teams} history={data.history} />
               </div>
 
               <History key={division} history={data.history} />
@@ -106,47 +106,56 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
 });
 
 /* =========================================================
-   PHASE FINALE (double élimination, placeholders)
+   PHASE FINALE (double élimination, calculée depuis les matchs saisis)
 ========================================================= */
 
-function seed(teams: Team[], rank: number) {
-  return { seed: rank, name: teams[rank - 1]?.shortName ?? 'À définir' };
-}
-
-function BracketMatch({
-  top,
-  bottom,
-  final = false,
-}: {
-  top: { seed?: number; name: string };
-  bottom: { seed?: number; name: string };
-  final?: boolean;
-}) {
+function BracketMatch({ match, final = false }: { match: BracketNode; final?: boolean }) {
   return (
     <div className={`${styles.bracketMatch} ${final ? styles.bracketFinal : ''}`}>
-      {[top, bottom].map((side, index) => (
-        <div key={index} className={styles.bracketSide}>
+      {[match.top, match.bottom].map((side, index) => (
+        <div
+          key={index}
+          className={`${styles.bracketSide} ${
+            match.played ? (side.won ? styles.bracketWin : styles.bracketLoss) : ''
+          }`}
+          title={side.team?.name}
+        >
           <span className={styles.bracketSeed}>{side.seed ?? ''}</span>
-          <span className={styles.bracketName}>{side.name}</span>
-          <span className={styles.bracketScore}>-</span>
+          {side.team ? (
+            <>
+              <TeamLogo logo={side.team.logo} size="xs" />
+              <span className={styles.bracketName}>{side.team.shortName}</span>
+            </>
+          ) : (
+            <span className={styles.bracketPlaceholder}>{side.placeholder}</span>
+          )}
+          <span className={styles.bracketScore}>{side.score ?? '-'}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function BracketRound({ title, children }: { title: string; children: React.ReactNode }) {
+function BracketLane({ rounds }: { rounds: BracketRoundData[] }) {
   return (
-    <div className={styles.bracketRound}>
-      <h3>{title}</h3>
-      <div className={styles.bracketMatches}>{children}</div>
+    <div className={styles.bracketLane}>
+      {rounds.map((round, roundIndex) => (
+        <div key={round.title} className={styles.bracketRound}>
+          <h3>{round.title}</h3>
+          <div className={styles.bracketMatches}>
+            {round.matches.map((match) => (
+              <BracketMatch key={match.id} match={match} final={roundIndex === rounds.length - 1} />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-const TBD = { name: 'À définir' };
+const Bracket = memo(function Bracket({ teams, history }: { teams: Team[]; history: HistoryMatch[] }) {
+  const tree = useMemo(() => buildBracket(teams, history), [teams, history]);
 
-const Bracket = memo(function Bracket({ teams }: { teams: Team[] }) {
   return (
     <div className={`${ds.card} ${styles.bracket}`}>
       <BlockHead label="Phase finale" title="Double élimination" aside={`Top ${QUALIFIED}`} />
@@ -154,44 +163,12 @@ const Bracket = memo(function Bracket({ teams }: { teams: Team[] }) {
       <div className={styles.bracketScroller}>
         <div className={styles.bracketInner}>
           <div className={styles.laneTitle}>Winner bracket</div>
-          <div className={styles.bracketLane}>
-            <BracketRound title="Quarts">
-              <BracketMatch top={seed(teams, 1)} bottom={seed(teams, 8)} />
-              <BracketMatch top={seed(teams, 4)} bottom={seed(teams, 5)} />
-              <BracketMatch top={seed(teams, 2)} bottom={seed(teams, 7)} />
-              <BracketMatch top={seed(teams, 3)} bottom={seed(teams, 6)} />
-            </BracketRound>
-            <BracketRound title="Demi-finales">
-              <BracketMatch top={TBD} bottom={TBD} />
-              <BracketMatch top={TBD} bottom={TBD} />
-            </BracketRound>
-            <BracketRound title="Finale winner">
-              <BracketMatch top={TBD} bottom={TBD} final />
-            </BracketRound>
-            <BracketRound title="Grande finale">
-              <BracketMatch top={{ name: 'Vainqueur WB' }} bottom={{ name: 'Vainqueur LB' }} final />
-            </BracketRound>
-          </div>
+          <BracketLane rounds={tree.winner} />
 
           <div className={styles.bracketDrop}>Les perdants du winner bracket descendent dans le loser bracket</div>
 
           <div className={`${styles.laneTitle} ${styles.laneLoser}`}>Loser bracket</div>
-          <div className={styles.bracketLane}>
-            <BracketRound title="Round 1">
-              <BracketMatch top={{ name: 'Perdant QF' }} bottom={{ name: 'Perdant QF' }} />
-              <BracketMatch top={{ name: 'Perdant QF' }} bottom={{ name: 'Perdant QF' }} />
-            </BracketRound>
-            <BracketRound title="Round 2">
-              <BracketMatch top={TBD} bottom={{ name: 'Perdant DF' }} />
-              <BracketMatch top={TBD} bottom={{ name: 'Perdant DF' }} />
-            </BracketRound>
-            <BracketRound title="Round 3">
-              <BracketMatch top={TBD} bottom={TBD} />
-            </BracketRound>
-            <BracketRound title="Finale loser">
-              <BracketMatch top={TBD} bottom={{ name: 'Perdant WB' }} final />
-            </BracketRound>
-          </div>
+          <BracketLane rounds={tree.loser} />
         </div>
       </div>
     </div>

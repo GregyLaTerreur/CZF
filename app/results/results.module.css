@@ -42,7 +42,8 @@
 }
 
 .logo,
-.logoSm {
+.logoSm,
+.logoXs {
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -55,6 +56,11 @@
 .logoSm {
   width: 28px;
   height: 28px;
+}
+
+.logoXs {
+  width: 22px;
+  height: 22px;
 }
 
 .logoEmpty {
@@ -261,7 +267,8 @@
 
 .bracketSide {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 14px;
+  min-height: 34px;
+  grid-template-columns: 14px 22px minmax(0, 1fr) 14px;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
@@ -294,6 +301,27 @@
   font-family: var(--condensed);
   font-weight: 800;
   color: rgba(8, 20, 40, 0.35);
+}
+
+.bracketPlaceholder {
+  grid-column: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.4);
+}
+
+.bracketWin .bracketScore {
+  color: var(--win);
+}
+
+.bracketLoss {
+  opacity: 0.5;
 }
 
 .bracketDrop {

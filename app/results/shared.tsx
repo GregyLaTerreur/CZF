@@ -40,6 +40,7 @@ export type MatchSide = {
 export type HistoryMatch = {
   id: number;
   stage: 'pool' | 'playoff';
+  bracket: 'winner' | 'loser' | 'grand_final' | null;
   bestOf: number;
   playedAt: string;
   mvpRiotId: string | null;
@@ -305,8 +306,8 @@ export function BlockHead({ label, title, aside }: { label: string; title: strin
   );
 }
 
-export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'sm' | 'md' }) {
-  const className = size === 'sm' ? styles.logoSm : styles.logo;
+export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'xs' | 'sm' | 'md' }) {
+  const className = size === 'xs' ? styles.logoXs : size === 'sm' ? styles.logoSm : styles.logo;
 
   return logo ? (
     <img src={logo} alt="" className={className} loading="lazy" />
