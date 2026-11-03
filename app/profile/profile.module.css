@@ -275,6 +275,11 @@
   min-width: 0;
 }
 
+/* Le dernier bloc de la colonne s'étire si la tier list est plus haute */
+.column > :last-child {
+  flex: 1;
+}
+
 .championList {
   width: 100%;
 }
@@ -284,7 +289,8 @@
   display: grid;
   grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
   gap: 28px;
-  align-items: start;
+  /* Les deux colonnes finissent à la même hauteur */
+  align-items: stretch;
 }
 
 .tierList {

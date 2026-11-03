@@ -7,6 +7,19 @@
   width: 100%;
 }
 
+/* Sur le profil, la tier list remplit la hauteur du bloc : les rangées s'agrandissent */
+.wrap {
+  flex: 1;
+}
+
+.wrap > .board {
+  flex: 1;
+}
+
+.wrap > .board > .row {
+  flex: 1;
+}
+
 .board {
   border: 2px solid var(--dark);
   background: var(--dark);
