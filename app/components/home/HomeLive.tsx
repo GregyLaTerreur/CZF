@@ -349,7 +349,7 @@ export function LatestResults() {
                     {match.division}
                   </span>
                   <span>
-                    {match.stage === 'playoff' ? 'Playoffs' : match.stage === 'tiebreak' ? 'Tie-break' : 'Poules'} · BO{match.bestOf} ·{' '}
+                    {match.stage === 'playoff' ? 'Playoffs' : 'Poules'} · BO{match.bestOf} ·{' '}
                     {dateFormat.format(new Date(match.playedAt))}
                   </span>
                 </div>

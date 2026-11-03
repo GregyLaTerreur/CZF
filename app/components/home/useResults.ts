@@ -26,7 +26,7 @@ export type MatchSide = {
 export type HistoryMatch = {
   id: number;
   division: DivisionName;
-  stage: 'pool' | 'playoff' | 'tiebreak';
+  stage: 'pool' | 'playoff';
   bestOf: number;
   playedAt: string;
   mvpRiotId: string | null;

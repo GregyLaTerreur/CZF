@@ -438,7 +438,6 @@ export default function AdminResultsPage() {
     useState<
       | 'pool'
       | 'playoff'
-      | 'tiebreak'
     >('pool');
 
   const [
@@ -565,10 +564,9 @@ export default function AdminResultsPage() {
 
   // Pas d'effet sur `stage` : l'import change aussi la phase et ses games seraient effacées.
   // Les games déjà saisies sont gardées tant qu'elles tiennent dans le nouveau format.
-  function changeStage(nextStage: 'pool' | 'playoff' | 'tiebreak') {
-    // Tie-break : toujours une seule game.
+  function changeStage(nextStage: 'pool' | 'playoff') {
     const nextBestOf =
-      nextStage === 'pool' ? 2 : nextStage === 'tiebreak' ? 1 : [1, 3, 5].includes(bestOf) ? bestOf : 3;
+      nextStage === 'pool' ? 2 : [1, 3, 5].includes(bestOf) ? bestOf : 3;
     const keepGames =
       nextStage === 'pool' ? games.length === 2 : games.length <= nextBestOf;
 
@@ -2211,14 +2209,13 @@ export default function AdminResultsPage() {
       }
 
       if (
-        (stage === 'playoff' || stage === 'tiebreak') &&
+        stage ===
+          'playoff' &&
         winnerTeamId ===
           null
       ) {
         throw new Error(
-          stage === 'tiebreak'
-            ? 'Un tie-break doit avoir un vainqueur.'
-            : 'Un match de playoffs doit avoir un vainqueur.'
+          'Un match de playoffs doit avoir un vainqueur.'
         );
       }
 
@@ -2820,7 +2817,6 @@ export default function AdminResultsPage() {
                       .value as
                       | 'pool'
                       | 'playoff'
-                      | 'tiebreak'
                   )
                 }
               >
@@ -2830,10 +2826,6 @@ export default function AdminResultsPage() {
 
                 <option value="playoff">
                   Playoffs
-                </option>
-
-                <option value="tiebreak">
-                  Tie-break (1 game)
                 </option>
               </select>
             </label>
@@ -2879,11 +2871,7 @@ export default function AdminResultsPage() {
             <label>
               Format
 
-              {stage === 'tiebreak' ? (
-                <select value="1" disabled>
-                  <option value="1">1 game (tie-break)</option>
-                </select>
-              ) : stage ===
+              {stage ===
               'pool' ? (
                 <select
                   value="2"
@@ -2980,13 +2968,6 @@ export default function AdminResultsPage() {
             'pool' && (
             <div className="poolNotice">
               Poules : exactement 2 games. Scores possibles : 2-0, 1-1 ou 0-2.
-            </div>
-          )}
-
-          {stage === 'tiebreak' && (
-            <div className="poolNotice">
-              Tie-break : 1 game pour départager deux équipes ex aequo au classement. Ne compte pas
-              dans les victoires et défaites de poule.
             </div>
           )}
 

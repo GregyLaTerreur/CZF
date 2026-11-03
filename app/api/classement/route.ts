@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const [teams, allMatches] = await Promise.all([loadValidatedTeams(), loadFinishedMatches()]);
-    // Poules pour le classement, tie-breaks pour départager les ex aequo.
-    const matches = allMatches.filter((match) => match.stage === 'pool' || match.stage === 'tiebreak');
+    const matches = allMatches.filter((match) => match.stage === 'pool');
 
     // Dernier résultat ajouté par division (poules et playoffs).
     const byDivision = splitByDivision(allMatches, (match) => match.division);
