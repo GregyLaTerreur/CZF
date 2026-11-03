@@ -981,9 +981,9 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
         </div>
       </section>
 
-      {/* RENCONTRES (sa propre équipe) */}
+      {/* RENCONTRES (sa propre équipe) — masqué pour le moment */}
       {isMine && (
-      <section className={styles.section}>
+      <section className={styles.section} style={{ display: 'none' }}>
         <div className={ds.container}>
           <div className={styles.fixturesHead}>
             <div>
