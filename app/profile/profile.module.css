@@ -197,6 +197,7 @@
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
+  padding-top: var(--space-block);
   margin-bottom: var(--space-block);
 }
 
