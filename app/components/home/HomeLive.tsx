@@ -13,6 +13,7 @@ import {
   useHistorique,
   useStatsJoueurs,
 } from './useResults';
+import { logoSrc } from '@/lib/logo';
 
 // Nombre de derniers matchs affichés (même requête pour le hero et les résultats).
 const LATEST_LIMIT = 6;
@@ -30,7 +31,7 @@ function TeamLogo({ logo, shortName }: { logo: string | null; shortName: string 
     return <span className={styles.logoFallback}>{shortName}</span>;
   }
 
-  return <img src={logo} alt="" className={styles.logo} loading="lazy" />;
+  return <img src={logoSrc(logo)} alt="" className={styles.logo} loading="lazy" />;
 }
 
 function splitRiotId(riotId: string) {

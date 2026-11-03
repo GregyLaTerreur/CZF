@@ -24,6 +24,7 @@ import {
 } from '@/app/components/ds/lol';
 import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
 import styles from './players.module.css';
+import { logoSrc } from '@/lib/logo';
 
 /* =========================================================
    CONSTANTES
@@ -395,7 +396,7 @@ export default function PlayersView() {
                   >
                     <span className={styles.playerCell}>
                       {team?.logo_url ? (
-                        <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
+                        <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} loading="lazy" />
                       ) : (
                         <span className={styles.teamLogoEmpty} />
                       )}

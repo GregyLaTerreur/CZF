@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Nav from '../../components/Nav';
 import { supabase } from '@/lib/supabase';
+import { logoSrc } from '@/lib/logo';
 
 type Team = {
   id: number;
@@ -66,7 +67,7 @@ function TeamLabel({ team }: { team: Team }) {
   return (
     <div className="riotAdminTeam">
       {team.logo ? (
-        <img src={team.logo} alt="" />
+        <img src={logoSrc(team.logo)} alt="" />
       ) : (
         <div className="riotAdminPlaceholder">
           {team.name.slice(0, 2).toUpperCase()}

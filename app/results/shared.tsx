@@ -13,6 +13,7 @@ import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './results.module.css';
 import { formatLastUpdate } from '@/app/components/ds/lol';
 import { getMyDivision } from '@/app/components/ds/myDivision';
+import { logoSrc } from '@/lib/logo';
 
 /* =========================================================
    TYPES (réponse de /api/resultats)
@@ -325,7 +326,7 @@ export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'x
   const className = size === 'xs' ? styles.logoXs : size === 'sm' ? styles.logoSm : styles.logo;
 
   return logo ? (
-    <img src={logo} alt="" className={className} loading="lazy" />
+    <img src={logoSrc(logo)} alt="" className={className} loading="lazy" />
   ) : (
     <span className={`${className} ${styles.logoEmpty}`} />
   );

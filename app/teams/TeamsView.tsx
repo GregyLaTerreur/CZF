@@ -23,6 +23,7 @@ import {
   multiOpggUrl,
 } from '@/app/components/ds/lol';
 import styles from './teams.module.css';
+import { logoSrc } from '@/lib/logo';
 
 const TEAM_SIZE = 5;
 
@@ -387,7 +388,7 @@ function TeamCard({
       <button type="button" className={styles.teamCardMain}>
         <span className={styles.teamHead}>
           {team.logo_url ? (
-            <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
+            <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} loading="lazy" />
           ) : (
             <span className={styles.teamLogoEmpty} />
           )}
@@ -583,7 +584,7 @@ function TeamActionCard({
       <div className={`${ds.card} ${ds.sideCard}`}>
         <div className={ds.cardTitle}>Mon équipe</div>
         <div className={styles.myTeam}>
-          {team.logo_url && <img src={team.logo_url} alt="" className={styles.teamLogo} />}
+          {team.logo_url && <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} />}
           <span className={ds.myName}>{team.name}</span>
         </div>
         <p className={ds.body}>

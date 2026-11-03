@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Nav from '../components/Nav';
+import { logoSrc } from '@/lib/logo';
 
 type Team = {
   id: number;
@@ -82,7 +83,7 @@ function TeamView({ team }: { team: Team }) {
       <div className="planningLogo">
         {team.logo ? (
           <img
-            src={team.logo}
+            src={logoSrc(team.logo, 192)}
             alt={team.name}
             style={{
               display: 'block',

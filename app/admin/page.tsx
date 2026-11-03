@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Nav from '../components/Nav';
 import { supabase } from '@/lib/supabase';
 import RiotRefreshPanel from './RiotRefreshPanel';
+import { logoSrc } from '@/lib/logo';
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
@@ -717,9 +718,9 @@ export default function AdminPage() {
 
                       {team.logo_url && (
                         <img
-                          src={
+                          src={logoSrc(
                             team.logo_url
-                          }
+                          )}
                           alt={
                             team.name
                           }

@@ -10,6 +10,7 @@ import {
 import ds from '@/app/components/ds/ds.module.css';
 import { TIERS, teamDivision } from '@/app/components/ds/lol';
 import styles from './divisions.module.css';
+import { logoSrc } from '@/lib/logo';
 
 // Barème de points d'équipe (cf. divisionFromPoints).
 const SCALE_MAX = 8000;
@@ -254,7 +255,7 @@ function DivisionBlock({ division, teams }: { division: DivisionName; teams: any
               <span className={styles.teamRank}>{index + 1}</span>
 
               {team.logo_url ? (
-                <img src={team.logo_url} alt="" className={styles.teamLogo} loading="lazy" />
+                <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} loading="lazy" />
               ) : (
                 <span className={styles.teamLogoEmpty} />
               )}

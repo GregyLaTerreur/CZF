@@ -22,6 +22,7 @@ import {
 } from '@/app/components/ds/lol';
 import FixtureCard, { type Fixture, type GameSlot, type MvpFixture } from './FixtureCard';
 import styles from './my-team.module.css';
+import { logoSrc } from '@/lib/logo';
 
 const TEAM_SIZE = 5;
 const FIXTURES_OPEN_KEY = 'czf-my-team-fixtures-open';
@@ -588,7 +589,7 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
             </div>
 
             <div className={styles.teamHead}>
-              {team.logo_url && <img src={team.logo_url} alt="" className={styles.teamLogo} />}
+              {team.logo_url && <img src={logoSrc(team.logo_url, 192)} alt="" className={styles.teamLogo} />}
               <h1 className={`${ds.h1} ${styles.teamName}`}>
                 {team.name}
                 {team.tag && <small className={styles.teamTag}>{team.tag}</small>}
@@ -974,7 +975,7 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
           {allChampionsOpen && teamChampions && (
             <ChampionRowsModal
               title={team.name}
-              image={team.logo_url || null}
+              image={logoSrc(team.logo_url, 192) || null}
               meta={`${shownChampions.length} champions joués en CZF${
                 championRoleLabel ? ` · ${championRoleLabel}` : ''
               }`}

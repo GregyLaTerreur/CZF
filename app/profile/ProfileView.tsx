@@ -17,6 +17,7 @@ import {
   winRate,
 } from '@/app/components/ds/lol';
 import styles from './profile.module.css';
+import { logoSrc } from '@/lib/logo';
 
 const APEX_TIERS = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];
 const DIVISIONS = ['IV', 'III', 'II', 'I'];
@@ -572,7 +573,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   {team ? (
                     <>
                       <div className={styles.team}>
-                        {team.logo_url && <img src={team.logo_url} alt="" className={styles.teamLogo} />}
+                        {team.logo_url && <img src={logoSrc(team.logo_url, 192)} alt="" className={styles.teamLogo} />}
                         <div>
                           <div className={styles.teamName}>{team.name}</div>
                           <div className={styles.teamMeta}>
