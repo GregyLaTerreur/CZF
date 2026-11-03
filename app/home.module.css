@@ -258,7 +258,8 @@
   font-size: 0.78rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  /* Même espace qu'entre le header et le badge */
+  margin-bottom: var(--space-block);
 }
 
 .badgeLeft {
