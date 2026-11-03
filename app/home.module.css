@@ -279,7 +279,7 @@
 
 .heroText {
   max-width: 560px;
-  margin: 22px 0;
+  margin: var(--space-block) 0;
   font-size: 1.1rem;
 }
 
@@ -292,7 +292,7 @@
 .heroStats {
   display: flex;
   gap: 40px;
-  margin-top: 40px;
+  margin-top: var(--space-block);
   flex-wrap: wrap;
 }
 
@@ -997,7 +997,7 @@
 
 /* Date du dernier résultat de la division affichée */
 .lastUpdate {
-  margin: -20px 0 22px;
+  margin: calc(var(--space-block) / -2) 0 var(--space-block);
   font-family: var(--condensed);
   font-weight: 700;
   font-size: 0.78rem;

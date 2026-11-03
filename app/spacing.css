@@ -4,17 +4,10 @@
 ========================================================= */
 
 :root {
-  /* Padding haut = bas de chaque section */
-  --space-section: 64px;
-  /* Titre de section → contenu, contenu → bouton d'action */
-  --space-block: 32px;
+  /* Padding haut = bas de chaque section (écart entre blocs) */
+  --space-section: 40px;
+  /* Écart entre les éléments d'un même bloc */
+  --space-block: 22px;
   /* Hauteur des transitions diagonales beige/dark */
   --space-diagonal: 36px;
-}
-
-@media (max-width: 600px) {
-  :root {
-    --space-section: 48px;
-    --space-block: 24px;
-  }
 }
