@@ -216,15 +216,6 @@
   flex-shrink: 0;
 }
 
-/* Seule la liste des champions défile : les rangées restent visibles pour y déposer */
-.modalBody > .pool {
-  flex: 1 1 auto;
-  flex-shrink: 1;
-  min-height: 160px;
-  overflow-y: auto;
-  align-content: flex-start;
-}
-
 @media (max-width: 600px) {
   .overlay {
     padding: 0;
