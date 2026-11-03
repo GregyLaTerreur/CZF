@@ -217,20 +217,6 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
     }, player.lft ? 'Tu n’es plus marqué LFT.' : 'Tu es maintenant marqué LFT.');
   }
 
-  function refreshChampions() {
-    run(async () => {
-      const res = await fetch('/api/players/champions-refresh', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_id: player.id }),
-      });
-      const data = await res.json();
-
-      if (!data.success) throw new Error(data.message || 'Impossible d’actualiser les champions.');
-      await loadProfile();
-    }, 'Champion pool actualisé.');
-  }
-
   // Change le compte Riot lié (route authentifiée : seulement son propre profil).
   async function changeRiotAccount(riotId: string) {
     const {
@@ -558,9 +544,6 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                     onClick={() => run(refreshRiot, 'Données Riot actualisées.')}
                   >
                     Actualiser Riot
-                  </button>
-                  <button type="button" className={ds.btnOutline} disabled={busy} onClick={refreshChampions}>
-                    Actualiser champions
                   </button>
                   <button type="button" className={ds.btnOutline} disabled={busy} onClick={toggleLft}>
                     {player.lft ? 'Ne plus être LFT' : 'Me mettre LFT'}
