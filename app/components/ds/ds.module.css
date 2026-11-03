@@ -66,7 +66,8 @@
   font-size: clamp(2.6rem, 6vw, 4.4rem);
   line-height: 0.95;
   text-transform: uppercase;
-  margin: var(--space-block) 0;
+  /* Label collé au titre, comme les h2 de la homepage */
+  margin: 10px 0 0;
 }
 
 .body {
@@ -75,6 +76,10 @@
   color: rgba(8, 20, 40, 0.6);
   margin: 0;
   max-width: 560px;
+}
+
+.h1 + .body {
+  margin-top: var(--space-block);
 }
 
 .muted {
