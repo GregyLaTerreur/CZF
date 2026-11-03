@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
-import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
+import { RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
+import TierList from './TierList';
 import {
   formatRank,
   normalizeRiotId,
@@ -567,7 +568,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 </div>
               )}
 
-              <div className={styles.grid}>
+              <div>
                 <div className={`${ds.card} ${styles.block}`}>
                   <div className={styles.blockLabel}>Équipe</div>
                   {team ? (
@@ -604,10 +605,11 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   )}
                 </div>
 
-                <div className={`${ds.card} ${styles.block}`}>
-                  <div className={styles.blockLabel}>Champion pool</div>
-                  <ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />
-                </div>
+              </div>
+
+              <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
+                <div className={styles.blockLabel}>Tier list</div>
+                <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
               </div>
 
               <div className={`${ds.card} ${styles.block} ${styles.czfChampions}`}>

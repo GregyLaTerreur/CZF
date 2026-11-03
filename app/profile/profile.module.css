@@ -201,12 +201,6 @@
   margin-bottom: var(--space-block);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
-}
-
 .block {
   display: flex;
   flex-direction: column;
@@ -273,7 +267,8 @@
    CHAMPIONS JOUÉS EN CZF
 ========================================================= */
 
-.czfChampions {
+.czfChampions,
+.tierList {
   margin-top: var(--space-block);
   align-items: stretch;
 }
@@ -363,12 +358,6 @@
 .peakFields input {
   flex: 1 1 140px;
   width: auto;
-}
-
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 520px) {
