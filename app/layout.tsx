@@ -1,4 +1,5 @@
 import './globals.css';
+import './spacing.css';
 import type { Metadata } from 'next';
 import { Anton } from 'next/font/google';
 

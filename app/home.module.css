@@ -114,7 +114,7 @@
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 36px;
+  margin-bottom: var(--space-block);
 }
 
 /* =========================================================
@@ -240,7 +240,7 @@
 
 .hero {
   position: relative;
-  padding: 28px 0 76px;
+  padding: var(--space-section) 0;
 }
 
 .heroGrid {
@@ -396,15 +396,15 @@
 ========================================================= */
 
 .section {
-  padding: 96px 0;
+  padding: var(--space-section) 0;
 }
 
 .darkSection {
   position: relative;
   background: var(--dark);
   color: var(--on-dark);
-  padding: 110px 0 120px;
-  margin-top: 36px;
+  padding: var(--space-section) 0;
+  margin: var(--space-diagonal) 0;
 }
 
 /* Transition diagonale beige → dark, même sens que le ticker */
@@ -413,10 +413,10 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: -36px;
-  height: 37px;
+  top: calc(-1 * var(--space-diagonal));
+  height: calc(var(--space-diagonal) + 1px);
   background: var(--dark);
-  clip-path: polygon(0 36px, 100% 0, 100% 100%, 0 100%);
+  clip-path: polygon(0 var(--space-diagonal), 100% 0, 100% 100%, 0 100%);
 }
 
 /* Transition dark → beige */
@@ -425,8 +425,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -36px;
-  height: 37px;
+  bottom: calc(-1 * var(--space-diagonal));
+  height: calc(var(--space-diagonal) + 1px);
   background: var(--dark);
   clip-path: polygon(0 0, 100% 0, 0 100%);
 }
@@ -771,7 +771,7 @@
 }
 
 .darkActions {
-  margin-top: 48px;
+  margin-top: var(--space-block);
 }
 
 /* =========================================================
@@ -842,7 +842,7 @@
 }
 
 .divisionNote {
-  margin-top: 40px;
+  margin-top: var(--space-block);
   max-width: 820px;
 }
 
@@ -851,7 +851,7 @@
 }
 
 .divisionActions {
-  margin-top: 32px;
+  margin-top: var(--space-block);
 }
 
 /* =========================================================
@@ -977,14 +977,6 @@
 @media (max-width: 600px) {
   .container {
     padding: 0 16px;
-  }
-
-  .hero {
-    padding: 44px 0 72px;
-  }
-
-  .section {
-    padding: 72px 0;
   }
 
   .heroStats {
