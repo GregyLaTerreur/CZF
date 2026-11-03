@@ -86,7 +86,7 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
           key={team.id}
           className={`${styles.standingRow} ${index < QUALIFIED ? styles.qualified : styles.eliminated}`}
         >
-          <span className={styles.standingRank}>{index + 1}</span>
+          <span className={styles.standingRank}>{team.rank ?? index + 1}</span>
 
           <span className={styles.standingTeam}>
             <TeamLogo logo={team.logo} size="sm" />

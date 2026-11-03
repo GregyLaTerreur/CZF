@@ -170,7 +170,7 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
       <tbody>
         {teams.map((team, index) => (
           <tr key={team.id}>
-            <td className={`${styles.rank} ${index < 3 ? styles.rankTop : ''}`}>{index + 1}</td>
+            <td className={`${styles.rank} ${(team.rank ?? index + 1) <= 3 ? styles.rankTop : ''}`}>{team.rank ?? index + 1}</td>
             <td>
               <div className={styles.teamCell}>
                 <TeamLogo logo={team.logo} shortName={team.shortName} />

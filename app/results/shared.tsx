@@ -29,6 +29,7 @@ export type Team = {
   logo: string | null;
   wins: number;
   losses: number;
+  rank?: number;
 };
 
 export type MatchSide = {

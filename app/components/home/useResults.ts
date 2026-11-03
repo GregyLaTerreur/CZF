@@ -12,6 +12,7 @@ export type StandingTeam = {
   wins: number;
   losses: number;
   gameDiff: number;
+  rank?: number;
 };
 
 export type MatchSide = {
