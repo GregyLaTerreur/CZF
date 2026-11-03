@@ -198,7 +198,6 @@
   gap: 18px;
   flex-wrap: wrap;
   padding-top: var(--space-block);
-  margin-bottom: var(--space-block);
 }
 
 .block {
@@ -287,6 +286,8 @@
 /* Équipe à gauche, tier list (plus large) à droite */
 .grid {
   display: grid;
+  /* Espace sous l'en-tête, avec ou sans les boutons de son propre profil */
+  margin-top: var(--space-block);
   grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
   gap: 28px;
   /* Les deux colonnes finissent à la même hauteur */
