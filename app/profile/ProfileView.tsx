@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
-import { RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
+import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
 import TierList from './TierList';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
@@ -636,9 +636,16 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   </div>
                 </div>
 
-                <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
-                  <div className={styles.blockLabel}>Tier list</div>
-                  <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                <div className={styles.column}>
+                  <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
+                    <div className={styles.blockLabel}>Tier list</div>
+                    <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                  </div>
+
+                  <div className={`${ds.card} ${styles.block}`}>
+                    <div className={styles.blockLabel}>Champion pool</div>
+                    <ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />
+                  </div>
                 </div>
               </div>
 
