@@ -23,6 +23,7 @@ import {
   winRate,
 } from '@/app/components/ds/lol';
 import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
+import { TierBoard, useTierList } from '@/app/profile/TierList';
 import styles from './players.module.css';
 import { logoSrc } from '@/lib/logo';
 
@@ -478,7 +479,6 @@ export default function PlayersView() {
                       player={player}
                       team={team}
                       ddragonVersion={ddragonVersion}
-                      pool={<ChampionPool player={player} ddragonVersion={ddragonVersion} size="large" />}
                     />
                   )}
                 </div>
@@ -516,14 +516,13 @@ function PlayerDetails({
   player,
   team,
   ddragonVersion,
-  pool,
 }: {
   player: any;
   team: any;
   ddragonVersion: string;
-  pool: React.ReactNode;
 }) {
   const { name, tag } = splitRiotId(player.riot_id);
+  const [tiers] = useTierList(Number(player.id));
   const wr = winRate(player);
 
   const stats = [
@@ -586,10 +585,13 @@ function PlayerDetails({
       </div>
 
       <div className={styles.detailsBottom}>
-        <div>
-          <div className={styles.detailsLabel}>Champion pool</div>
-          {pool}
-        </div>
+        {/* Seulement si le joueur a fait sa tier list. */}
+        {tiers && (
+          <div>
+            <div className={styles.detailsLabel}>Tier list</div>
+            <TierBoard tiers={tiers} ddragonVersion={ddragonVersion} compact />
+          </div>
+        )}
 
         {player.description && (
           <div>

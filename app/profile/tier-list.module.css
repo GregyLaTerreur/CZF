@@ -114,6 +114,21 @@
   gap: 16px;
 }
 
+/* Version réduite (détail d'un joueur dans la liste) */
+.boardCompact .row {
+  grid-template-columns: 52px minmax(0, 1fr);
+  min-height: 50px;
+}
+
+.boardCompact .label {
+  font-size: 1.4rem;
+}
+
+.boardCompact .champion {
+  width: 46px;
+  height: 46px;
+}
+
 /* ---------- Pop-in d'édition ---------- */
 
 .overlay {

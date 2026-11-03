@@ -40,6 +40,62 @@ function championImage(version: string, id: string) {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${id}.png`;
 }
 
+// Tier list enregistrée d'un joueur. undefined : en chargement ; null : pas de tier list.
+export function useTierList(playerId: number) {
+  const [tiers, setTiers] = useState<TierListData | null | undefined>(undefined);
+
+  useEffect(() => {
+    let active = true;
+    setTiers(undefined);
+
+    fetch(`/api/tier-list?playerId=${playerId}`)
+      .then((res) => res.json())
+      .then((json) => active && setTiers(json.success ? json.tierList?.tiers ?? null : null))
+      .catch(() => active && setTiers(null));
+
+    return () => {
+      active = false;
+    };
+  }, [playerId]);
+
+  return [tiers, setTiers] as const;
+}
+
+// Affichage seul (profil, détail d'un joueur dans la liste).
+export function TierBoard({
+  tiers,
+  ddragonVersion,
+  compact = false,
+}: {
+  tiers: TierListData;
+  ddragonVersion: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`${styles.board} ${compact ? styles.boardCompact : ''}`}>
+      {TIER_KEYS.map((key) => (
+        <div key={key} className={styles.row}>
+          <div className={styles.label} style={{ background: TIER_COLORS[key] }}>
+            {key}
+          </div>
+          <div className={styles.zone}>
+            {tiers[key].map((id) => (
+              <img
+                key={id}
+                src={championImage(ddragonVersion, id)}
+                alt={id}
+                title={id}
+                loading="lazy"
+                className={styles.champion}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Position d'un champion : une rangée, ou la liste des champions non classés.
 type Zone = TierKey | 'pool';
 
@@ -52,8 +108,7 @@ export default function TierList({
   isOwn: boolean;
   ddragonVersion: string;
 }) {
-  // undefined : en chargement ; null : pas de tier list.
-  const [saved, setSaved] = useState<TierListData | null | undefined>(undefined);
+  const [saved, setSaved] = useTierList(playerId);
   const [draft, setDraft] = useState<TierListData | null>(null);
   const [champions, setChampions] = useState<Champion[] | null>(null);
   const [search, setSearch] = useState('');
@@ -61,19 +116,6 @@ export default function TierList({
   const [dragOver, setDragOver] = useState<Zone | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    let active = true;
-
-    fetch(`/api/tier-list?playerId=${playerId}`)
-      .then((res) => res.json())
-      .then((json) => active && setSaved(json.success ? json.tierList?.tiers ?? null : null))
-      .catch(() => active && setSaved(null));
-
-    return () => {
-      active = false;
-    };
-  }, [playerId]);
 
   const editing = draft !== null;
 
@@ -261,7 +303,7 @@ export default function TierList({
 
   return (
     <div className={styles.wrap}>
-      {saved ? board(saved, false) : !isOwn && <p className={styles.state}>Pas encore de tier list.</p>}
+      {saved ? <TierBoard tiers={saved} ddragonVersion={ddragonVersion} /> : !isOwn && <p className={styles.state}>Pas encore de tier list.</p>}
 
       {isOwn && (
         <div className={styles.actions}>
