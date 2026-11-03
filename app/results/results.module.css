@@ -1035,6 +1035,9 @@
 .mvpGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Classement en colonnes : 1 à N/2 à gauche, la suite à droite */
+  grid-template-rows: repeat(var(--mvp-rows, 1), auto);
+  grid-auto-flow: column;
   column-gap: 32px;
   padding: 8px 20px;
 }
@@ -1108,6 +1111,11 @@
   .rankingGrid,
   .mvpGrid {
     grid-template-columns: 1fr;
+  }
+
+  .mvpGrid {
+    grid-template-rows: none;
+    grid-auto-flow: row;
   }
 
   .championGrid {

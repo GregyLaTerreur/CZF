@@ -244,7 +244,10 @@ export default function StatsView() {
                 {mvpRanking.length === 0 ? (
                   <div className={`${ds.card} ${ds.empty}`}>Aucun MVP attribué pour le moment.</div>
                 ) : (
-                  <div className={`${ds.card} ${styles.mvpGrid}`}>
+                  <div
+                    className={`${ds.card} ${styles.mvpGrid}`}
+                    style={{ '--mvp-rows': Math.ceil(mvpRanking.length / 2) } as React.CSSProperties}
+                  >
                     {mvpRanking.map((player, index) => (
                       <div key={player.playerId} className={styles.mvpRow}>
                         <span className={styles.rankNumber}>{index + 1}</span>
