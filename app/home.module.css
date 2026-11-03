@@ -240,7 +240,7 @@
 
 .hero {
   position: relative;
-  padding: var(--space-section) 0;
+  padding: var(--space-block) 0;
 }
 
 .heroGrid {
