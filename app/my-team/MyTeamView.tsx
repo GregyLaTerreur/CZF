@@ -46,7 +46,9 @@ type TeamChampions = {
 
 // Champions affichés au bout de chaque ligne du roster, et dans le bloc équipe.
 const ROSTER_CHAMPIONS = 5;
-const TEAM_TOP_CHAMPIONS = 10;
+// Liste en deux colonnes de 10.
+const TEAM_TOP_CHAMPIONS = 20;
+const CHAMPIONS_PER_COLUMN = 10;
 type Feedback = { text: string; error: boolean } | null;
 
 async function authFetch(url: string, init: RequestInit = {}) {
@@ -930,30 +932,42 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
             <div className={`${ds.card} ${ds.empty}`}>Aucun champion joué en {championRoleLabel}.</div>
           ) : (
             <div className={styles.teamChampions}>
-              {shownChampions.slice(0, TEAM_TOP_CHAMPIONS).map((champion, index) => (
-                <div key={champion.championId} className={`${ds.card} ${styles.teamChampion}`}>
-                  <span className={styles.teamChampionRank}>#{index + 1}</span>
-                  {champion.image ? (
-                    <img src={champion.image} alt="" loading="lazy" />
-                  ) : (
-                    <span className={styles.championEmpty} />
-                  )}
-                  <strong>{champion.name}</strong>
-                  <small>
-                    {champion.games} game{champion.games > 1 ? 's' : ''}
-                  </small>
-                  <div className={styles.teamChampionStats}>
-                    <span>
-                      <small>Win</small>
-                      {Math.round(champion.winRate)}%
-                    </span>
-                    <span>
-                      <small>KDA</small>
-                      {champion.kda.toFixed(2)}
-                    </span>
+              {[0, CHAMPIONS_PER_COLUMN]
+                .filter((offset) => offset < Math.min(shownChampions.length, TEAM_TOP_CHAMPIONS))
+                .map((offset) => (
+                  <div key={offset} className={`${ds.card} ${styles.championList}`}>
+                    <div className={`${styles.championRow} ${styles.championListHead}`}>
+                      <span>#</span>
+                      <span />
+                      <span>Champion</span>
+                      <span>Games</span>
+                      <span>Win</span>
+                      <span>KDA</span>
+                    </div>
+
+                    {shownChampions.slice(offset, offset + CHAMPIONS_PER_COLUMN).map((champion, index) => (
+                      <div key={champion.championId} className={styles.championRow}>
+                        <span className={styles.championRank}>{offset + index + 1}</span>
+                        {champion.image ? (
+                          <img src={champion.image} alt="" loading="lazy" />
+                        ) : (
+                          <span className={styles.championEmpty} />
+                        )}
+                        <span className={styles.championName}>
+                          <strong>{champion.name}</strong>
+                          <small>
+                            {champion.roles.map((role) => roleInfo(role)?.label ?? role).join(' · ')}
+                          </small>
+                        </span>
+                        <strong>{champion.games}</strong>
+                        <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
+                          {Math.round(champion.winRate)}%
+                        </strong>
+                        <strong>{champion.kda.toFixed(2)}</strong>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
 
