@@ -267,9 +267,16 @@
    CHAMPIONS JOUÉS EN CZF
 ========================================================= */
 
-.czfChampions {
-  margin-top: var(--space-block);
-  align-items: stretch;
+/* Colonne de gauche : équipe puis champions CZF */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.championList {
+  width: 100%;
 }
 
 /* Équipe à gauche, tier list (plus large) à droite */
@@ -292,7 +299,7 @@
 
 .championRow {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) repeat(3, 64px);
+  grid-template-columns: 40px minmax(0, 1fr) repeat(2, 56px);
   align-items: center;
   column-gap: 12px;
   padding: 8px 0;
@@ -384,7 +391,7 @@
   }
 
   .championRow {
-    grid-template-columns: 34px minmax(0, 1fr) repeat(3, 44px);
+    grid-template-columns: 34px minmax(0, 1fr) repeat(2, 44px);
     column-gap: 8px;
   }
 
