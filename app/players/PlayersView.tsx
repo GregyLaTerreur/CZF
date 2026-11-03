@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { getMyDivision } from '@/app/components/ds/myDivision';
 import {
   DIVISION_COLORS,
   DIVISIONS,
@@ -104,6 +105,19 @@ export default function PlayersView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [divisionFilter, setDivisionFilter] = useState<DivisionName | null>(null);
+  const divisionTouched = useRef(false);
+
+  function chooseDivision(division: DivisionName | null) {
+    divisionTouched.current = true;
+    setDivisionFilter(division);
+  }
+
+  // Par défaut : la division de l'équipe du joueur connecté, tant qu'il n'a rien choisi.
+  useEffect(() => {
+    getMyDivision().then((mine) => {
+      if (mine && !divisionTouched.current) setDivisionFilter(mine);
+    });
+  }, []);
   const [participantsOnly, setParticipantsOnly] = useState(false);
   const [lftOnly, setLftOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('points');
@@ -303,7 +317,7 @@ export default function PlayersView() {
             <button
               type="button"
               className={divisionFilter === null ? ds.tabActive : ds.tab}
-              onClick={() => setDivisionFilter(null)}
+              onClick={() => chooseDivision(null)}
             >
               Toutes les divisions
             </button>
@@ -313,7 +327,7 @@ export default function PlayersView() {
                 key={division}
                 type="button"
                 className={divisionFilter === division ? ds.tabActive : ds.tab}
-                onClick={() => setDivisionFilter(divisionFilter === division ? null : division)}
+                onClick={() => chooseDivision(divisionFilter === division ? null : division)}
               >
                 <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
                 {division}

@@ -12,6 +12,7 @@ import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './results.module.css';
 import { formatLastUpdate } from '@/app/components/ds/lol';
+import { getMyDivision } from '@/app/components/ds/myDivision';
 
 /* =========================================================
    TYPES (réponse de /api/resultats)
@@ -171,9 +172,9 @@ export function loadGames(matchId: number): Promise<Game[]> {
 }
 
 // Dernière division vue : gardée en passant de Résultats à Stats (et inversement).
-let lastDivision: DivisionName = 'Yordle';
+let lastDivision: DivisionName | null = null;
 
-function readDivisionFromUrl(): DivisionName {
+function readDivisionFromUrl(): DivisionName | null {
   const value = new URLSearchParams(window.location.search).get('division');
   const match = DIVISIONS.find((division) => division.toLowerCase() === value?.toLowerCase());
 
@@ -187,8 +188,22 @@ export function useDivisionData() {
   const [cache, setCache] = useState<Partial<Record<DivisionName, DivisionData>>>({});
   const [error, setError] = useState('');
 
+  // Priorité : URL, puis dernière division vue, puis celle de l'équipe du joueur connecté.
   useEffect(() => {
-    setSelected(readDivisionFromUrl());
+    const initial = readDivisionFromUrl();
+    if (initial) {
+      setSelected(initial);
+      return;
+    }
+
+    let active = true;
+    getMyDivision().then((mine) => {
+      if (active) setSelected((current) => current ?? mine ?? 'Yordle');
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Lien partageable : ?division=Ixtal.
