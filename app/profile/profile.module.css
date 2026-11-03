@@ -267,10 +267,27 @@
    CHAMPIONS JOUÉS EN CZF
 ========================================================= */
 
-.czfChampions,
-.tierList {
+.czfChampions {
   margin-top: var(--space-block);
   align-items: stretch;
+}
+
+/* Équipe à gauche, tier list (plus large) à droite */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.tierList {
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .championRow {

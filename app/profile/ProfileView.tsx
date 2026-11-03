@@ -568,7 +568,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 </div>
               )}
 
-              <div>
+              <div className={styles.grid}>
                 <div className={`${ds.card} ${styles.block}`}>
                   <div className={styles.blockLabel}>Équipe</div>
                   {team ? (
@@ -605,11 +605,10 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   )}
                 </div>
 
-              </div>
-
-              <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
-                <div className={styles.blockLabel}>Tier list</div>
-                <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
+                  <div className={styles.blockLabel}>Tier list</div>
+                  <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                </div>
               </div>
 
               <div className={`${ds.card} ${styles.block} ${styles.czfChampions}`}>
