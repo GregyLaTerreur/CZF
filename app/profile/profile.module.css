@@ -284,6 +284,10 @@
   width: 100%;
 }
 
+.centered {
+  align-self: center;
+}
+
 /* Équipe à gauche, tier list (plus large) à droite */
 .grid {
   display: grid;
