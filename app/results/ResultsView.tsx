@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo, useState } from 'react';
-import { DIVISION_COLORS } from '@/app/components/home/divisions';
+import { DIVISION_COLORS, displayRank } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
 import {
@@ -86,15 +86,12 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
           key={team.id}
           className={`${styles.standingRow} ${index < QUALIFIED ? styles.qualified : styles.eliminated}`}
         >
-          <span className={styles.standingRank}>{team.rank ?? index + 1}</span>
+          <span className={styles.standingRank}>{displayRank(teams, index)}</span>
 
           <span className={styles.standingTeam}>
             <TeamLogo logo={team.logo} size="sm" />
             <span className={styles.standingName}>
-              <strong>
-                {team.shortName}
-                {team.tiebreakPending && <span className={styles.tiebreakChip}>Tie-break</span>}
-              </strong>
+              <strong>{team.shortName}</strong>
               <small>{team.name}</small>
             </span>
           </span>

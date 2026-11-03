@@ -13,7 +13,6 @@ export type StandingTeam = {
   losses: number;
   gameDiff: number;
   rank?: number;
-  tiebreakPending?: boolean;
 };
 
 export type MatchSide = {

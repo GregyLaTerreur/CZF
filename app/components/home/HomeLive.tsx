@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from '@/app/home.module.css';
 import BoltIcon from '@/app/components/icons/BoltIcon';
-import { DIVISION_COLORS, DIVISIONS, type DivisionName } from './divisions';
+import { DIVISION_COLORS, DIVISIONS, type DivisionName, displayRank } from './divisions';
 import { formatLastUpdate } from '@/app/components/ds/lol';
 import {
   type PlayerStat,
@@ -170,12 +170,11 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
       <tbody>
         {teams.map((team, index) => (
           <tr key={team.id}>
-            <td className={`${styles.rank} ${(team.rank ?? index + 1) <= 3 ? styles.rankTop : ''}`}>{team.rank ?? index + 1}</td>
+            <td className={`${styles.rank} ${(team.rank ?? index + 1) <= 3 ? styles.rankTop : ''}`}>{displayRank(teams, index)}</td>
             <td>
               <div className={styles.teamCell}>
                 <TeamLogo logo={team.logo} shortName={team.shortName} />
                 <span>{team.name}</span>
-                {team.tiebreakPending && <span className={styles.tiebreakChip}>Tie-break</span>}
               </div>
             </td>
             <td className={`${styles.num} ${styles.win}`}>{team.wins}</td>

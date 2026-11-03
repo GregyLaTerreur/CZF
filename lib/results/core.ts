@@ -22,8 +22,6 @@ export type StandingTeam = TeamInfo & {
   gameDiff: number;
   // Place dans sa division ; deux équipes à égalité parfaite partagent la même.
   rank?: number;
-  // Ex aequo avec une autre équipe : tie-break en une game à jouer.
-  tiebreakPending?: boolean;
 };
 
 export type Champion = {
@@ -437,13 +435,8 @@ export function computeStandings<T extends StandingTeam>(
     const previous = lastByDivision.get(key);
     const position = (previous?.position ?? 0) + 1;
 
-    const tied = Boolean(previous && compare(previous.team, team) === 0);
-
-    team.rank = tied ? previous!.team.rank : position;
-    if (tied) {
-      team.tiebreakPending = true;
-      previous!.team.tiebreakPending = true;
-    }
+    team.rank =
+      previous && compare(previous.team, team) === 0 ? previous.team.rank : position;
     lastByDivision.set(key, { team, position });
   }
 

@@ -30,7 +30,6 @@ export type Team = {
   wins: number;
   losses: number;
   rank?: number;
-  tiebreakPending?: boolean;
 };
 
 export type MatchSide = {
