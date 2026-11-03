@@ -35,6 +35,8 @@ export type BracketRoundData = { title: string; matches: BracketNode[] };
 export type BracketTree = {
   winner: BracketRoundData[];
   loser: BracketRoundData[];
+  // Nom du tour par id de match (« Quart 2 », « Loser R1 »…), affiché dans l'historique.
+  roundNames: Map<number, string>;
 };
 
 type Source = { kind: 'seed'; rank: number } | { kind: 'winner' | 'loser'; match: string };
@@ -42,6 +44,7 @@ type Source = { kind: 'seed'; rank: number } | { kind: 'winner' | 'loser'; match
 type Spec = {
   id: string;
   bracket: 'winner' | 'loser' | 'grand_final';
+  name: string;
   label: string;
   top: Source;
   bottom: Source;
@@ -54,20 +57,20 @@ const lose = (match: string): Source => ({ kind: 'loser', match });
 // Ordre de résolution : chaque match ne dépend que de matchs listés avant lui.
 // Loser round 2 croisé (perdant demi 2 contre le haut du tableau) pour éviter les revanches immédiates.
 const SPECS: Spec[] = [
-  { id: 'QF1', bracket: 'winner', label: 'quart 1', top: seed(1), bottom: seed(8) },
-  { id: 'QF2', bracket: 'winner', label: 'quart 2', top: seed(4), bottom: seed(5) },
-  { id: 'QF3', bracket: 'winner', label: 'quart 3', top: seed(2), bottom: seed(7) },
-  { id: 'QF4', bracket: 'winner', label: 'quart 4', top: seed(3), bottom: seed(6) },
-  { id: 'SF1', bracket: 'winner', label: 'demi 1', top: win('QF1'), bottom: win('QF2') },
-  { id: 'SF2', bracket: 'winner', label: 'demi 2', top: win('QF3'), bottom: win('QF4') },
-  { id: 'WF', bracket: 'winner', label: 'finale WB', top: win('SF1'), bottom: win('SF2') },
-  { id: 'LR1A', bracket: 'loser', label: 'LB R1', top: lose('QF1'), bottom: lose('QF2') },
-  { id: 'LR1B', bracket: 'loser', label: 'LB R1', top: lose('QF3'), bottom: lose('QF4') },
-  { id: 'LR2A', bracket: 'loser', label: 'LB R2', top: win('LR1A'), bottom: lose('SF2') },
-  { id: 'LR2B', bracket: 'loser', label: 'LB R2', top: win('LR1B'), bottom: lose('SF1') },
-  { id: 'LR3', bracket: 'loser', label: 'LB R3', top: win('LR2A'), bottom: win('LR2B') },
-  { id: 'LF', bracket: 'loser', label: 'finale LB', top: win('LR3'), bottom: lose('WF') },
-  { id: 'GF', bracket: 'grand_final', label: 'grande finale', top: win('WF'), bottom: win('LF') },
+  { id: 'QF1', name: 'Quart 1', bracket: 'winner', label: 'quart 1', top: seed(1), bottom: seed(8) },
+  { id: 'QF2', name: 'Quart 2', bracket: 'winner', label: 'quart 2', top: seed(4), bottom: seed(5) },
+  { id: 'QF3', name: 'Quart 3', bracket: 'winner', label: 'quart 3', top: seed(2), bottom: seed(7) },
+  { id: 'QF4', name: 'Quart 4', bracket: 'winner', label: 'quart 4', top: seed(3), bottom: seed(6) },
+  { id: 'SF1', name: 'Demi 1', bracket: 'winner', label: 'demi 1', top: win('QF1'), bottom: win('QF2') },
+  { id: 'SF2', name: 'Demi 2', bracket: 'winner', label: 'demi 2', top: win('QF3'), bottom: win('QF4') },
+  { id: 'WF', name: 'Finale winner', bracket: 'winner', label: 'finale WB', top: win('SF1'), bottom: win('SF2') },
+  { id: 'LR1A', name: 'Loser R1', bracket: 'loser', label: 'LB R1', top: lose('QF1'), bottom: lose('QF2') },
+  { id: 'LR1B', name: 'Loser R1', bracket: 'loser', label: 'LB R1', top: lose('QF3'), bottom: lose('QF4') },
+  { id: 'LR2A', name: 'Loser R2', bracket: 'loser', label: 'LB R2', top: win('LR1A'), bottom: lose('SF2') },
+  { id: 'LR2B', name: 'Loser R2', bracket: 'loser', label: 'LB R2', top: win('LR1B'), bottom: lose('SF1') },
+  { id: 'LR3', name: 'Loser R3', bracket: 'loser', label: 'LB R3', top: win('LR2A'), bottom: win('LR2B') },
+  { id: 'LF', name: 'Finale loser', bracket: 'loser', label: 'finale LB', top: win('LR3'), bottom: lose('WF') },
+  { id: 'GF', name: 'Grande finale', bracket: 'grand_final', label: 'grande finale', top: win('WF'), bottom: win('LF') },
 ];
 
 const LABELS = new Map(SPECS.map((spec) => [spec.id, spec.label]));
@@ -91,6 +94,7 @@ export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTre
     .sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime());
 
   const used = new Set<number>();
+  const roundNames = new Map<number, string>();
   const nodes = new Map<string, BracketNode>();
 
   const resolve = (source: Source) => {
@@ -126,6 +130,7 @@ export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTre
 
       if (match) {
         used.add(match.id);
+        roundNames.set(match.id, spec.name);
 
         const scoreOf = (teamId: number) =>
           match.team1!.id === teamId ? match.team1!.score : match.team2!.score;
@@ -158,5 +163,6 @@ export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTre
       { title: 'Round 3', matches: pick('LR3') },
       { title: 'Finale loser', matches: pick('LF') },
     ],
+    roundNames,
   };
 }

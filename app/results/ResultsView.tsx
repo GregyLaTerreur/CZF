@@ -17,7 +17,7 @@ import {
   type MatchSide,
   type Team,
 } from './shared';
-import { buildBracket, QUALIFIED, type BracketNode, type BracketRoundData } from './bracket';
+import { buildBracket, QUALIFIED, type BracketNode, type BracketRoundData, type BracketTree } from './bracket';
 import styles from './results.module.css';
 
 const HISTORY_PREVIEW = 5;
@@ -28,6 +28,7 @@ const HISTORY_PREVIEW = 5;
 
 export default function ResultsView() {
   const { division, setDivision, data, error, loading } = useDivisionData();
+  const tree = useMemo(() => (data ? buildBracket(data.teams, data.history) : null), [data]);
 
   return (
     <div style={{ '--division-color': DIVISION_COLORS[division] } as React.CSSProperties}>
@@ -45,16 +46,16 @@ export default function ResultsView() {
           {error && <div className={`${ds.card} ${ds.empty}`}>{error}</div>}
           {loading && <div className={`${ds.card} ${ds.empty}`}>Chargement des résultats…</div>}
 
-          {data && (
+          {data && tree && (
             <>
               <LastUpdate date={data.lastUpdate} />
 
               <div className={styles.mainGrid}>
                 <Standings teams={data.teams} />
-                <Bracket teams={data.teams} history={data.history} />
+                <Bracket tree={tree} />
               </div>
 
-              <History key={division} history={data.history} />
+              <History key={division} history={data.history} roundNames={tree.roundNames} />
             </>
           )}
         </div>
@@ -153,9 +154,7 @@ function BracketLane({ rounds }: { rounds: BracketRoundData[] }) {
   );
 }
 
-const Bracket = memo(function Bracket({ teams, history }: { teams: Team[]; history: HistoryMatch[] }) {
-  const tree = useMemo(() => buildBracket(teams, history), [teams, history]);
-
+const Bracket = memo(function Bracket({ tree }: { tree: BracketTree }) {
   return (
     <div className={`${ds.card} ${styles.bracket}`}>
       <BlockHead label="Phase finale" title="Double élimination" aside={`Top ${QUALIFIED}`} />
@@ -196,7 +195,7 @@ function roleIndex(role: string | null) {
   return index === -1 ? 99 : index;
 }
 
-function History({ history }: { history: HistoryMatch[] }) {
+function History({ history, roundNames }: { history: HistoryMatch[]; roundNames: Map<number, string> }) {
   const [showAll, setShowAll] = useState(false);
   const matches = history.filter((match) => match.team1 && match.team2);
   const visible = showAll ? matches : matches.slice(0, HISTORY_PREVIEW);
@@ -212,7 +211,9 @@ function History({ history }: { history: HistoryMatch[] }) {
       {matches.length === 0 ? (
         <div className={ds.empty}>Aucun match enregistré pour le moment.</div>
       ) : (
-        visible.map((match) => <HistoryRow key={match.id} match={match} />)
+        visible.map((match) => (
+          <HistoryRow key={match.id} match={match} roundName={roundNames.get(match.id)} />
+        ))
       )}
 
       {matches.length > HISTORY_PREVIEW && (
@@ -224,7 +225,7 @@ function History({ history }: { history: HistoryMatch[] }) {
   );
 }
 
-function HistoryRow({ match }: { match: HistoryMatch }) {
+function HistoryRow({ match, roundName }: { match: HistoryMatch; roundName?: string }) {
   const [open, setOpen] = useState(false);
   const [games, setGames] = useState<Game[] | null>(null);
   const [detailsError, setDetailsError] = useState('');
@@ -257,7 +258,7 @@ function HistoryRow({ match }: { match: HistoryMatch }) {
       >
         <span className={styles.historyMeta}>
           <span className={match.stage === 'pool' ? styles.stageChip : styles.stageChipPlayoff}>
-            {match.stage === 'pool' ? 'Poule' : 'Playoff'}
+            {match.stage === 'pool' ? 'Poule' : roundName ?? 'Playoff'}
           </span>
           <small>{formatDate(match.playedAt)}</small>
         </span>

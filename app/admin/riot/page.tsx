@@ -113,10 +113,6 @@ export default function RiotAdminPage() {
     Record<number, string>
   >({});
 
-  const [rounds, setRounds] = useState<
-    Record<number, string>
-  >({});
-
   const load = useCallback(async () => {
     setLoading(true);
 
@@ -192,7 +188,6 @@ export default function RiotAdminPage() {
         ...(fixture.stage === 'playoff'
           ? {
               bracket: brackets[fixture.id] || '',
-              round: rounds[fixture.id] || '',
             }
           : {}),
       };
@@ -493,20 +488,6 @@ export default function RiotAdminPage() {
                               Grande finale
                             </option>
                           </select>
-                        </label>
-
-                        <label>
-                          Round
-                          <input
-                            value={rounds[fixture.id] || ''}
-                            onChange={(event) =>
-                              setRounds((current) => ({
-                                ...current,
-                                [fixture.id]: event.target.value,
-                              }))
-                            }
-                            placeholder="Ex : Demi-finale"
-                          />
                         </label>
                       </div>
                     )}

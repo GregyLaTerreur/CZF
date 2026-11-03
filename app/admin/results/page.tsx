@@ -451,12 +451,6 @@ export default function AdminResultsPage() {
     >('winner');
 
   const [
-    round,
-    setRound,
-  ] =
-    useState('');
-
-  const [
     bestOf,
     setBestOf,
   ] =
@@ -1991,11 +1985,6 @@ export default function AdminResultsPage() {
           'winner'
       );
 
-      setRound(
-        parsed.round ??
-          ''
-      );
-
       setBestOf(
         importedBestOf
       );
@@ -2288,12 +2277,6 @@ export default function AdminResultsPage() {
           stage ===
           'playoff'
             ? bracket
-            : null,
-
-        round:
-          stage ===
-          'playoff'
-            ? round
             : null,
 
         bestOf:
@@ -2894,25 +2877,6 @@ export default function AdminResultsPage() {
                       Grande finale
                     </option>
                   </select>
-                </label>
-
-                <label>
-                  Round
-
-                  <input
-                    value={
-                      round
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setRound(
-                        e.target
-                          .value
-                      )
-                    }
-                    placeholder="Quart, Demi..."
-                  />
                 </label>
               </>
             )}
