@@ -516,6 +516,15 @@
   min-width: 0;
 }
 
+.teamLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.teamLink:hover span {
+  color: var(--orange);
+}
+
 .teamCell span {
   overflow: hidden;
   text-overflow: ellipsis;

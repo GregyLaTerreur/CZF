@@ -3,6 +3,7 @@
 // Socle commun des pages Résultats et Stats : données par division, onglets, blocs.
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   DIVISION_COLORS,
   DIVISIONS,
@@ -354,6 +355,16 @@ export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'x
   );
 }
 
+// Nom du joueur, cliquable vers sa page.
+export function PlayerLink({ playerId, name, sub }: { playerId: number; name: string; sub?: string | null }) {
+  return (
+    <Link href={`/players/${playerId}`} className={`${styles.playerName} ${styles.playerLink}`}>
+      {name}
+      {sub && <small>{sub}</small>}
+    </Link>
+  );
+}
+
 /* =========================================================
    POP-UP CHAMPIONS (Stats et Mon équipe)
 ========================================================= */
@@ -363,6 +374,8 @@ export type ChampionRow = {
   image: string | null;
   name: string;
   sub?: string | null;
+  // Ligne joueur : nom cliquable vers sa page.
+  playerId?: number;
   games: number;
   winRate: number;
   kda: number;
@@ -445,10 +458,14 @@ export function ChampionRowsModal({
                 ) : (
                   <span className={`${styles.modalChampion} ${styles.championEmpty}`} />
                 )}
-                <span className={styles.playerName}>
-                  {row.name}
-                  {row.sub && <small>{row.sub}</small>}
-                </span>
+                {row.playerId ? (
+                  <PlayerLink playerId={row.playerId} name={row.name} sub={row.sub} />
+                ) : (
+                  <span className={styles.playerName}>
+                    {row.name}
+                    {row.sub && <small>{row.sub}</small>}
+                  </span>
+                )}
                 <strong className={styles.rankValue}>{row.games}</strong>
                 <strong className={`${styles.rankValue} ${row.winRate >= 50 ? ds.win : ds.loss}`}>
                   {Math.round(row.winRate)}%

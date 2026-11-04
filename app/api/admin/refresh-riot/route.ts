@@ -1,8 +1,75 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import {
+  DIVISIONS,
+  type DivisionName,
+} from '@/app/components/home/divisions';
 
 export const maxDuration = 300;
+
+const normalizeRiotId = (value: any) =>
+  String(value || '').trim().toLowerCase();
+
+// Ids (triés) des joueurs des équipes validées d'une division.
+async function playerIdsOfDivision(
+  division: DivisionName
+): Promise<number[]> {
+  const { data: teams, error: teamsError } =
+    await supabaseAdmin
+      .from('teams')
+      .select('id, captain_player_id')
+      .eq('division', division)
+      .eq('validated_by_admin', true);
+
+  if (teamsError) throw teamsError;
+
+  const teamIds = (teams || []).map((team) => team.id);
+  if (teamIds.length === 0) return [];
+
+  const ids = new Set<number>();
+
+  for (const team of teams || []) {
+    if (team.captain_player_id) ids.add(Number(team.captain_player_id));
+  }
+
+  const { data: members, error: membersError } =
+    await supabaseAdmin
+      .from('team_members')
+      .select('player_id, riot_id')
+      .in('team_id', teamIds);
+
+  if (membersError) throw membersError;
+
+  const riotIds = new Set<string>();
+
+  for (const member of members || []) {
+    if (member.player_id !== null && member.player_id !== undefined) {
+      ids.add(Number(member.player_id));
+    } else if (member.riot_id) {
+      riotIds.add(normalizeRiotId(member.riot_id));
+    }
+  }
+
+  if (riotIds.size > 0) {
+    const { data: players, error: playersError } =
+      await supabaseAdmin
+        .from('players')
+        .select('id, riot_id');
+
+    if (playersError) throw playersError;
+
+    for (const player of players || []) {
+      if (riotIds.has(normalizeRiotId(player.riot_id))) {
+        ids.add(Number(player.id));
+      }
+    }
+  }
+
+  return [...ids]
+    .filter((id) => Number.isFinite(id))
+    .sort((a, b) => a - b);
+}
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -141,29 +208,69 @@ export async function PATCH(request: Request) {
         : [];
 
     /* =====================================================
+       FILTRE DIVISION (optionnel)
+
+       Joueurs des équipes validées de la division :
+       capitaine + membres (par player_id, sinon par Riot ID).
+    ===================================================== */
+
+    const division =
+      typeof body.division === 'string' &&
+      DIVISIONS.includes(body.division)
+        ? (body.division as DivisionName)
+        : null;
+
+    let divisionIds: number[] | null = null;
+
+    if (division && playerIds.length === 0) {
+      try {
+        divisionIds =
+          await playerIdsOfDivision(division);
+      } catch (error) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'Impossible de récupérer les joueurs de la division.',
+            error,
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    /* =====================================================
        TOTAL JOUEURS
     ===================================================== */
 
-    const {
-      count: totalPlayers,
-      error: countError,
-    } = await supabaseAdmin
-      .from('players')
-      .select('id', {
-        count: 'exact',
-        head: true,
-      });
+    let totalPlayers = 0;
 
-    if (countError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            'Impossible de compter les joueurs.',
-          error: countError,
-        },
-        { status: 500 }
-      );
+    if (divisionIds) {
+      totalPlayers = divisionIds.length;
+    } else {
+      const {
+        count,
+        error: countError,
+      } = await supabaseAdmin
+        .from('players')
+        .select('id', {
+          count: 'exact',
+          head: true,
+        });
+
+      if (countError) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'Impossible de compter les joueurs.',
+            error: countError,
+          },
+          { status: 500 }
+        );
+      }
+
+      totalPlayers = count || 0;
     }
 
     /* =====================================================
@@ -183,6 +290,15 @@ export async function PATCH(request: Request) {
         playersQuery.in(
           'id',
           playerIds
+        );
+    } else if (divisionIds) {
+      playersQuery =
+        playersQuery.in(
+          'id',
+          divisionIds.slice(
+            offset,
+            offset + limit
+          )
         );
     } else {
       playersQuery =
@@ -658,7 +774,9 @@ export async function PATCH(request: Request) {
       success: true,
 
       total:
-        totalPlayers || 0,
+        totalPlayers,
+
+      division,
 
       batch_count:
         players?.length || 0,

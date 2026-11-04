@@ -9,6 +9,7 @@ import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds
 import TierList from './TierList';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
+  dpmUrl,
   formatRank,
   normalizeRiotId,
   roleInfo,
@@ -353,7 +354,12 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
   const division = teamDivision(team);
   // Les actions (modifier, actualiser, LFT) ne sont que pour son propre profil.
   const isOwn = Boolean(user) && player.profile_id === user.id;
-  const avatar = isOwn ? user.user_metadata?.avatar_url : null;
+  // Icône d'invocateur Riot ; à défaut, l'avatar Discord sur son propre profil.
+  const avatar = player.profile_icon_id
+    ? `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${player.profile_icon_id}.png`
+    : isOwn
+      ? user.user_metadata?.avatar_url
+      : null;
   const discordName = isOwn ? discordNameOf(user) : ownerDiscord;
 
   return (
@@ -423,6 +429,17 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 <strong>{peak || '—'}</strong>
               </div>
             </div>
+
+            {player.riot_id && (
+              <a
+                href={dpmUrl(player.riot_id)}
+                target="_blank"
+                rel="noreferrer"
+                className={`${ds.btnOutline} ${styles.dpmLink}`}
+              >
+                Profil DPM
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -639,7 +656,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 <div className={styles.column}>
                   <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
                     <div className={styles.blockLabel}>Tier list</div>
-                    <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                    <TierList playerId={Number(player.id)} isOwn={isOwn} lft={Boolean(player.lft)} ddragonVersion={ddragonVersion} />
                   </div>
 
                   <div className={`${ds.card} ${styles.block}`}>

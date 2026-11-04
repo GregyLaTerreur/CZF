@@ -1,0 +1,238 @@
+/* Admin résultats : styles propres (le reste vient de ds.module.css). */
+
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.page > footer {
+  margin-top: auto;
+}
+
+.back {
+  margin-bottom: var(--space-block);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 22px 26px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.hint {
+  margin: 8px 0 0;
+  max-width: 620px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+.json {
+  min-height: 220px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.jsonDrop {
+  border-style: dashed;
+  border-color: var(--orange);
+}
+
+.importActions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.fileName {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.8rem;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+.pushRight {
+  margin-left: auto;
+}
+
+.setupGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.notice {
+  padding: 12px 14px;
+  border-left: 4px solid var(--orange);
+  background: rgba(240, 80, 16, 0.08);
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+}
+
+.message {
+  margin: 0;
+  font-weight: 700;
+  color: var(--orange);
+}
+
+/* =========================================================
+   GAMES
+========================================================= */
+
+.gameHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+}
+
+.gameTitle {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1.7rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.gameTitle small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  color: rgba(224, 216, 204, 0.6);
+}
+
+.subNotice {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 8px;
+  background: var(--orange);
+  color: #fff;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gameOptions {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gameOptions label {
+  width: 100px;
+}
+
+.gameOptions .winnerField {
+  width: 200px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 80px minmax(170px, 1fr) minmax(150px, 1fr) 60px 60px 60px 70px 90px 90px 70px;
+  gap: 8px;
+  align-items: center;
+  min-width: 1080px;
+  padding: 7px 22px;
+  border-top: 1px solid rgba(8, 20, 40, 0.1);
+}
+
+.rowHead {
+  border-top: none;
+  border-bottom: 2px solid var(--dark);
+  padding-top: 12px;
+  padding-bottom: 10px;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+/* Les 5 joueurs de l'équipe 2 se distinguent par un fond plus clair. */
+.rowTeam2 {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.role {
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.cell {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1.5px solid rgba(8, 20, 40, 0.35);
+  border-radius: 0;
+  background: #fff;
+  color: var(--dark);
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 0.88rem;
+}
+
+.cell:focus {
+  outline: none;
+  border-color: var(--orange);
+}
+
+.save {
+  width: 100%;
+  padding-top: 18px;
+  padding-bottom: 18px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  .setupGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .gameHead,
+  .panelHead {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 600px) {
+  .setupGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pushRight {
+    margin-left: 0;
+  }
+}

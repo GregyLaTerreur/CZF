@@ -3,7 +3,7 @@
 // Tier list des champions faite par le joueur, façon TierMaker :
 // rangées S à D, champions glissés depuis la liste (ou clic sur le champion puis sur la rangée).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
@@ -40,17 +40,32 @@ function championImage(version: string, id: string) {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${id}.png`;
 }
 
-// Tier list enregistrée d'un joueur. undefined : en chargement ; null : pas de tier list.
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// Tier list enregistrée d'un joueur. undefined : en chargement ; null : pas de tier list
+// ou pas visible (hidden = elle existe mais est privée pour ce visiteur).
 export function useTierList(playerId: number) {
   const [tiers, setTiers] = useState<TierListData | null | undefined>(undefined);
+  const [visibility, setVisibility] = useState({ isPublic: false, hidden: false });
 
   useEffect(() => {
     let active = true;
     setTiers(undefined);
 
-    fetch(`/api/tier-list?playerId=${playerId}`)
+    // Le token permet au joueur et à ses coéquipiers de voir une tier list privée.
+    authHeaders()
+      .then((headers) => fetch(`/api/tier-list?playerId=${playerId}`, { headers }))
       .then((res) => res.json())
-      .then((json) => active && setTiers(json.success ? json.tierList?.tiers ?? null : null))
+      .then((json) => {
+        if (!active) return;
+        setTiers(json.success ? json.tierList?.tiers ?? null : null);
+        setVisibility({ isPublic: json.tierList?.isPublic === true, hidden: json.private === true });
+      })
       .catch(() => active && setTiers(null));
 
     return () => {
@@ -58,7 +73,28 @@ export function useTierList(playerId: number) {
     };
   }, [playerId]);
 
-  return [tiers, setTiers] as const;
+  return [tiers, setTiers, visibility, setVisibility] as const;
+}
+
+// Tier list privée ou pas encore faite : rangées vides et mention.
+function PrivateBoard() {
+  return (
+    <div className={styles.privateWrap}>
+      <div className={`${styles.board} ${styles.boardPrivate}`}>
+        {TIER_KEYS.map((key) => (
+          <div key={key} className={styles.row}>
+            <div className={styles.label} style={{ background: TIER_COLORS[key] }}>
+              {key}
+            </div>
+            <div className={styles.zone} />
+          </div>
+        ))}
+      </div>
+      <div className={styles.privateNote}>
+        <strong>Tier list privée</strong>
+      </div>
+    </div>
+  );
 }
 
 // Affichage seul (profil, détail d'un joueur dans la liste).
@@ -102,13 +138,16 @@ type Zone = TierKey | 'pool';
 export default function TierList({
   playerId,
   isOwn,
+  lft = false,
   ddragonVersion,
 }: {
   playerId: number;
   isOwn: boolean;
+  lft?: boolean;
   ddragonVersion: string;
 }) {
-  const [saved, setSaved] = useTierList(playerId);
+  const [saved, setSaved, visibility, setVisibility] = useTierList(playerId);
+  const [savingVisibility, setSavingVisibility] = useState(false);
   const [draft, setDraft] = useState<TierListData | null>(null);
   const [champions, setChampions] = useState<Champion[] | null>(null);
   const [search, setSearch] = useState('');
@@ -180,13 +219,9 @@ export default function TierList({
     setMessage('');
 
     try {
-      const { data } = await supabase.auth.getSession();
       const res = await fetch('/api/tier-list', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.session?.access_token ?? ''}`,
-        },
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({ tiers: draft }),
       });
       const json = await res.json();
@@ -201,6 +236,38 @@ export default function TierList({
       setSaving(false);
     }
   }
+
+  async function togglePublic(isPublic: boolean) {
+    setSavingVisibility(true);
+    setMessage('');
+
+    try {
+      const res = await fetch('/api/tier-list', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+        body: JSON.stringify({ isPublic }),
+      });
+      const json = await res.json();
+
+      if (!json.success) throw new Error(json.error || 'Impossible de changer la visibilité.');
+
+      setVisibility((current) => ({ ...current, isPublic }));
+    } catch (error: any) {
+      setMessage(error?.message || 'Impossible de changer la visibilité.');
+    } finally {
+      setSavingVisibility(false);
+    }
+  }
+
+  // Passer LFT rend la tier list publique (une seule fois, au passage en LFT).
+  const wasLft = useRef(lft);
+
+  useEffect(() => {
+    const becameLft = lft && !wasLft.current;
+    wasLft.current = lft;
+
+    if (becameLft && isOwn && saved && !visibility.isPublic) void togglePublic(true);
+  }, [lft]);
 
   /* ---------- Glisser-déposer ---------- */
 
@@ -303,15 +370,42 @@ export default function TierList({
 
   return (
     <div className={styles.wrap}>
-      {saved ? <TierBoard tiers={saved} ddragonVersion={ddragonVersion} /> : !isOwn && <p className={styles.state}>Pas encore de tier list.</p>}
+      {saved ? (
+        <TierBoard tiers={saved} ddragonVersion={ddragonVersion} />
+      ) : (
+        // Sans tier list ou privée : même rendu, on ne dit pas laquelle.
+        !isOwn && <PrivateBoard />
+      )}
 
       {isOwn && (
         <div className={styles.actions}>
           <button type="button" className={saved ? ds.btnOutline : ds.btnPrimary} onClick={startEditing}>
             {saved ? 'Modifier ma tier list' : 'Faire ma tier list'}
           </button>
+
+          {saved && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={visibility.isPublic}
+              className={`${styles.switch} ${visibility.isPublic ? styles.switchOn : ''}`}
+              disabled={savingVisibility}
+              onClick={() => togglePublic(!visibility.isPublic)}
+            >
+              <span className={styles.switchTrack}>
+                <span className={styles.switchThumb} />
+              </span>
+              Publique
+            </button>
+          )}
         </div>
       )}
+
+      {isOwn && saved && !visibility.isPublic && (
+        <p className={styles.hint}>Privée : visible par ton équipe</p>
+      )}
+
+      {!draft && message && <p className={styles.error}>{message}</p>}
 
       {draft && (
         <div className={styles.overlay} onClick={() => !saving && cancel()}>
