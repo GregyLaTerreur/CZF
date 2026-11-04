@@ -1,7 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import ds from '@/app/components/ds/ds.module.css';
+import {
+  DIVISIONS,
+  DIVISION_COLORS,
+  type DivisionName,
+} from '@/app/components/home/divisions';
+import styles from './admin.module.css';
 
 type FailedPlayer = {
   player_id: number;
@@ -23,6 +30,14 @@ export default function RiotRefreshPanel() {
     useState<FailedPlayer[]>([]);
 
   const [message, setMessage] = useState('');
+
+  const [open, setOpen] = useState(false);
+
+  // Périmètre de la dernière actualisation (null : tous les joueurs).
+  const [scope, setScope] =
+    useState<DivisionName | null | undefined>(undefined);
+
+  const busy = running || retrying;
 
   const BATCH_SIZE = 10;
 
@@ -76,10 +91,13 @@ export default function RiotRefreshPanel() {
     return data;
   }
 
-  async function refreshAll() {
-    if (running) return;
+  async function refreshAll(
+    division: DivisionName | null
+  ) {
+    if (running || retrying) return;
 
     setRunning(true);
+    setScope(division);
 
     setMessage(
       'Préparation de l’actualisation...'
@@ -111,6 +129,7 @@ export default function RiotRefreshPanel() {
             offset,
             limit:
               BATCH_SIZE,
+            division,
           });
 
         totalPlayers =
@@ -308,6 +327,13 @@ export default function RiotRefreshPanel() {
         )
       : 0;
 
+  const scopeLabel =
+    scope === undefined
+      ? ''
+      : scope === null
+        ? 'Tous les joueurs'
+        : `Joueurs ${scope}`;
+
   return (
     <div className="card riotAdminCard">
 
@@ -323,162 +349,224 @@ export default function RiotRefreshPanel() {
       </p>
 
       <div className="riotAdminActions">
-
         <button
           className="joinTeamBtn"
-          onClick={refreshAll}
-          disabled={
-            running ||
-            retrying
-          }
+          onClick={() => setOpen(true)}
         >
-          {running
-            ? 'Actualisation en cours...'
-            : 'Mettre à jour tous les joueurs'}
+          {busy
+            ? `Actualisation en cours… ${processed}/${total}`
+            : 'Actualiser Riot'}
         </button>
-
-        {failedPlayers.length >
-          0 && (
-          <button
-            className="joinTeamBtn"
-            onClick={
-              retryFailed
-            }
-            disabled={
-              running ||
-              retrying
-            }
-          >
-            {retrying
-              ? 'Nouvelle tentative...'
-              : `Réessayer les ${failedPlayers.length} échecs`}
-          </button>
-        )}
-
       </div>
 
-
-      {(running ||
-        processed > 0) && (
-        <div className="riotProgress">
-
-          <div className="riotProgressTop">
-
-            <strong>
-              {processed} /{' '}
-              {total}
-            </strong>
-
-            <span>
-              {progress}%
-            </span>
-
-          </div>
-
-          <div className="riotProgressBar">
-
-            <div
-              className="riotProgressFill"
-              style={{
-                width:
-                  `${progress}%`,
-              }}
-            />
-
-          </div>
-
-        </div>
-      )}
-
-
-      <div className="riotAdminStats">
-
-        <div>
-          <span>
-            Traités
-          </span>
-
-          <strong>
-            {processed}
-          </strong>
-        </div>
-
-        <div>
-          <span>
-            Réussis
-          </span>
-
-          <strong>
-            {updated}
-          </strong>
-        </div>
-
-        <div>
-          <span>
-            Pseudos modifiés
-          </span>
-
-          <strong>
-            {renamed}
-          </strong>
-        </div>
-
-        <div>
-          <span>
-            Échecs
-          </span>
-
-          <strong>
-            {
-              failedPlayers.length
-            }
-          </strong>
-        </div>
-
-      </div>
-
-
-      {message && (
+      {!open && message && (
         <p className="riotAdminMessage">
+          {scopeLabel && `${scopeLabel} — `}
           {message}
         </p>
       )}
 
+      {open && (
+        <RefreshModal onClose={() => setOpen(false)}>
 
-      {failedPlayers.length >
-        0 && (
-        <div className="riotFailedPlayers">
+          <div className={styles.modalTitle}>
+            Actualiser Riot
+          </div>
 
-          <h4>
-            Joueurs en échec
-          </h4>
+          <p className={`${styles.modalText} ${ds.muted}`}>
+            Choisis les joueurs à
+            relancer. Seules les
+            équipes validées
+            comptent pour une
+            division.
+          </p>
 
-          {failedPlayers.map(
-            (player) => (
-              <div
-                key={
-                  player.player_id
+          <div className={styles.scopeGrid}>
+            {DIVISIONS.map((division) => (
+              <button
+                key={division}
+                type="button"
+                className={`joinTeamBtn ${styles.scopeBtn}`}
+                onClick={() =>
+                  refreshAll(division)
                 }
-                className="riotFailedRow"
+                disabled={busy}
               >
+                <span
+                  className={styles.dot}
+                  style={{
+                    background:
+                      DIVISION_COLORS[division],
+                  }}
+                />
+                {running && scope === division
+                  ? 'En cours…'
+                  : `Joueurs ${division}`}
+              </button>
+            ))}
 
+            <button
+              type="button"
+              className={`joinTeamBtn ${styles.scopeBtn}`}
+              onClick={() =>
+                refreshAll(null)
+              }
+              disabled={busy}
+            >
+              {running && scope === null
+                ? 'En cours…'
+                : 'Tous les joueurs'}
+            </button>
+          </div>
+
+          {(running ||
+            processed > 0) && (
+            <div className="riotProgress">
+
+              <div className="riotProgressTop">
                 <strong>
-                  {player.riot_id ||
-                    `Joueur ${player.player_id}`}
+                  {scopeLabel} :{' '}
+                  {processed} / {total}
                 </strong>
 
                 <span>
-                  {player.error ||
-                    'Erreur Riot'}
+                  {progress}%
                 </span>
-
               </div>
-            )
+
+              <div className="riotProgressBar">
+                <div
+                  className="riotProgressFill"
+                  style={{
+                    width:
+                      `${progress}%`,
+                  }}
+                />
+              </div>
+
+            </div>
           )}
 
-        </div>
+          {(running ||
+            processed > 0) && (
+            <div className={`riotAdminStats ${styles.stats}`}>
+              <div>
+                <span>Traités</span>
+                <strong>{processed}</strong>
+              </div>
+
+              <div>
+                <span>Réussis</span>
+                <strong>{updated}</strong>
+              </div>
+
+              <div>
+                <span>Pseudos modifiés</span>
+                <strong>{renamed}</strong>
+              </div>
+
+              <div>
+                <span>Échecs</span>
+                <strong>{failedPlayers.length}</strong>
+              </div>
+            </div>
+          )}
+
+          {message && (
+            <p className="riotAdminMessage">
+              {message}
+            </p>
+          )}
+
+          {failedPlayers.length > 0 && (
+            <div className="riotFailedPlayers">
+
+              <button
+                type="button"
+                className="joinTeamBtn"
+                onClick={retryFailed}
+                disabled={busy}
+              >
+                {retrying
+                  ? 'Nouvelle tentative...'
+                  : `Réessayer les ${failedPlayers.length} échecs`}
+              </button>
+
+              <h4>
+                Joueurs en échec
+              </h4>
+
+              {failedPlayers.map(
+                (player) => (
+                  <div
+                    key={player.player_id}
+                    className="riotFailedRow"
+                  >
+                    <strong>
+                      {player.riot_id ||
+                        `Joueur ${player.player_id}`}
+                    </strong>
+
+                    <span>
+                      {player.error ||
+                        'Erreur Riot'}
+                    </span>
+                  </div>
+                )
+              )}
+
+            </div>
+          )}
+
+        </RefreshModal>
       )}
 
+    </div>
+  );
+}
+
+// Pop-in : Échap ou clic à côté ferme (l'actualisation continue),
+// la page derrière ne défile plus.
+function RefreshModal({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) =>
+      event.key === 'Escape' && onClose();
+    const previousOverflow = document.body.style.overflow;
+
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div
+        className={`${styles.modal} ${ds.onDark}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Actualiser Riot"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className={styles.modalClose}
+          onClick={onClose}
+          aria-label="Fermer"
+        >
+          ×
+        </button>
+        {children}
+      </div>
     </div>
   );
 }
