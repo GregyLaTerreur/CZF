@@ -172,10 +172,10 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
           <tr key={team.id}>
             <td className={`${styles.rank} ${(team.rank ?? index + 1) <= 3 ? styles.rankTop : ''}`}>{displayRank(teams, index)}</td>
             <td>
-              <div className={styles.teamCell}>
+              <Link href={`/teams/${team.id}`} className={`${styles.teamCell} ${styles.teamLink}`}>
                 <TeamLogo logo={team.logo} shortName={team.shortName} />
                 <span>{team.name}</span>
-              </div>
+              </Link>
             </td>
             <td className={`${styles.num} ${styles.win}`}>{team.wins}</td>
             <td className={`${styles.num} ${styles.loss}`}>{team.losses}</td>

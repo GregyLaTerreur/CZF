@@ -103,6 +103,16 @@
   border-top: 1px solid rgba(8, 20, 40, 0.1);
 }
 
+.standingLink {
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.standingLink:hover {
+  background: rgba(8, 20, 40, 0.06);
+}
+
 /* Barre de couleur : qualifié (division) ou éliminé */
 .standingRow::before {
   content: '';

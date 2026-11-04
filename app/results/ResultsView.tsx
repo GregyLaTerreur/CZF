@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { DIVISION_COLORS, displayRank } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
 import { ROLES, splitRiotId } from '@/app/components/ds/lol';
@@ -82,9 +83,10 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
       {teams.length === 0 && <div className={ds.empty}>Aucune équipe validée pour le moment.</div>}
 
       {teams.map((team, index) => (
-        <div
+        <Link
           key={team.id}
-          className={`${styles.standingRow} ${index < QUALIFIED ? styles.qualified : styles.eliminated}`}
+          href={`/teams/${team.id}`}
+          className={`${styles.standingRow} ${styles.standingLink} ${index < QUALIFIED ? styles.qualified : styles.eliminated}`}
         >
           <span className={styles.standingRank}>{displayRank(teams, index)}</span>
 
@@ -99,7 +101,7 @@ const Standings = memo(function Standings({ teams }: { teams: Team[] }) {
           <span className={styles.standingScore}>
             {team.wins} - {team.losses}
           </span>
-        </div>
+        </Link>
       ))}
 
     </div>
