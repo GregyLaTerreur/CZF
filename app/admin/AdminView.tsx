@@ -10,6 +10,8 @@ import { divisionFromPoints } from '@/app/components/ds/lol';
 import RiotRefreshPanel from './RiotRefreshPanel';
 import styles from './admin.module.css';
 
+const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+
 export default function AdminView() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -27,6 +29,16 @@ export default function AdminView() {
   const [editTeamLogo, setEditTeamLogo] = useState('');
 
   const [message, setMessage] = useState('');
+
+  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
+  const [playerForm, setPlayerForm] = useState({
+    riot_id: '',
+    main_role: '',
+    secondary_role: '',
+    lft: false,
+  });
+  const [playerSaving, setPlayerSaving] = useState(false);
+  const [playerError, setPlayerError] = useState('');
 
   useEffect(() => {
     loadAdmin();
@@ -160,6 +172,47 @@ export default function AdminView() {
       await loadData();
     } else {
       setMessage(data.message || 'Erreur modification équipe');
+    }
+  }
+
+  function startEditingPlayer(player: any) {
+    setEditingPlayerId(player.id);
+    setPlayerError('');
+    setPlayerForm({
+      riot_id: player.riot_id || '',
+      main_role: player.main_role || '',
+      secondary_role: player.secondary_role || '',
+      lft: player.lft === true,
+    });
+  }
+
+  async function savePlayer(playerId: number) {
+    setPlayerSaving(true);
+    setPlayerError('');
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error('Session admin introuvable.');
+
+      const res = await fetch(`/api/admin/players/${playerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(playerForm),
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) throw new Error(json.message || 'Erreur modification joueur.');
+
+      setMessage(`Joueur ${json.riot_id} modifié`);
+      setEditingPlayerId(null);
+      // La recherche suit le nouveau pseudo.
+      setPlayerSearch(json.riot_id);
+      await loadData();
+    } catch (error: any) {
+      setPlayerError(error?.message || 'Erreur modification joueur.');
+    } finally {
+      setPlayerSaving(false);
     }
   }
 
@@ -425,6 +478,90 @@ export default function AdminView() {
               {searchedPlayers.map((player) => {
                 const team = getPlayerTeam(player);
 
+                if (editingPlayerId === player.id) {
+                  return (
+                    <div key={player.id} className={`${ds.card} ${styles.item}`}>
+                      <div className={styles.itemTitle}>Modifier le joueur</div>
+
+                      <label className={ds.field}>
+                        <span>Riot ID (Pseudo#TAG)</span>
+                        <input
+                          className={ds.input}
+                          value={playerForm.riot_id}
+                          onChange={(e) => setPlayerForm({ ...playerForm, riot_id: e.target.value })}
+                          placeholder="Pseudo#EUW"
+                        />
+                      </label>
+
+                      <div className={styles.formRow}>
+                        <label className={ds.field}>
+                          <span>Rôle principal</span>
+                          <select
+                            className={ds.input}
+                            value={playerForm.main_role}
+                            onChange={(e) => setPlayerForm({ ...playerForm, main_role: e.target.value })}
+                          >
+                            <option value="">-</option>
+                            {ROLES.map((role) => (
+                              <option key={role} value={role}>{role}</option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label className={ds.field}>
+                          <span>Rôle secondaire</span>
+                          <select
+                            className={ds.input}
+                            value={playerForm.secondary_role}
+                            onChange={(e) => setPlayerForm({ ...playerForm, secondary_role: e.target.value })}
+                          >
+                            <option value="">Aucun</option>
+                            {ROLES.map((role) => (
+                              <option key={role} value={role}>{role}</option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className={ds.tabs}>
+                        <button
+                          type="button"
+                          className={playerForm.lft ? ds.tabActive : ds.tab}
+                          onClick={() => setPlayerForm({ ...playerForm, lft: !playerForm.lft })}
+                          aria-pressed={playerForm.lft}
+                        >
+                          {playerForm.lft ? 'LFT : oui' : 'LFT : non'}
+                        </button>
+                      </div>
+
+                      <p className={ds.formInfo}>
+                        Un nouveau Riot ID est vérifié chez Riot : rang, points CZF, rosters et
+                        capitanat suivent automatiquement.
+                      </p>
+
+                      {playerError && <p className={ds.formError}>{playerError}</p>}
+
+                      <div className={ds.formActions}>
+                        <button
+                          type="button"
+                          className={`${ds.btnPrimary} ${ds.btnSmall}`}
+                          onClick={() => savePlayer(player.id)}
+                          disabled={playerSaving}
+                        >
+                          {playerSaving ? 'Vérification...' : 'Enregistrer'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`${ds.btnOutline} ${ds.btnSmall}`}
+                          onClick={() => setEditingPlayerId(null)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <div key={player.id} className={`${ds.card} ${styles.item}`}>
                     <div className={styles.itemHead}>
@@ -461,13 +598,20 @@ export default function AdminView() {
                       </div>
                     </dl>
 
-                    {team && (
-                      <div className={styles.itemActions}>
+                    <div className={styles.itemActions}>
+                      <button
+                        type="button"
+                        className={`${ds.btnPrimary} ${ds.btnSmall}`}
+                        onClick={() => startEditingPlayer(player)}
+                      >
+                        Modifier
+                      </button>
+                      {team && (
                         <Link href={`/teams/${team.id}`} className={`${ds.btnOutline} ${ds.btnSmall}`}>
                           Voir son équipe
                         </Link>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })}

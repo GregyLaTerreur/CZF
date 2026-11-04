@@ -367,3 +367,10 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Formulaire joueur : deux rôles côte à côte. */
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
