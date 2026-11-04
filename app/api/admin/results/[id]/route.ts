@@ -90,12 +90,14 @@ export async function DELETE(
 
     const gameIds = (games || []).map((game) => game.id);
 
+    // Pas de transaction : les propositions MVP passent en premier, car c'est la
+    // table où un droit DELETE manquant a déjà bloqué la prod à mi-chemin.
     const steps = [
+      () => supabaseAdmin.from('czf_mvp_proposals').delete().eq('match_id', matchId),
       () =>
         gameIds.length > 0
           ? supabaseAdmin.from('czf_game_player_stats').delete().in('game_id', gameIds)
           : Promise.resolve({ error: null }),
-      () => supabaseAdmin.from('czf_mvp_proposals').delete().eq('match_id', matchId),
       () =>
         supabaseAdmin
           .from('czf_fixtures')
