@@ -8,6 +8,7 @@ import {
   DIVISION_COLORS,
   type DivisionName,
 } from '@/app/components/home/divisions';
+import CloseIcon from '@/app/components/icons/CloseIcon';
 import styles from './admin.module.css';
 
 type FailedPlayer = {
@@ -334,51 +335,35 @@ export default function RiotRefreshPanel() {
         ? 'Tous les joueurs'
         : `Joueurs ${scope}`;
 
+  const started = running || processed > 0;
+
   return (
-    <div className="card riotAdminCard">
+    <>
+      <button
+        type="button"
+        className={ds.btnPrimary}
+        onClick={() => setOpen(true)}
+      >
+        {busy
+          ? `Riot en cours · ${processed}/${total}`
+          : 'Actualiser Riot'}
+      </button>
 
-      <h3>
-        Actualisation Riot
-      </h3>
-
-      <p>
-        Met à jour les ranks,
-        LP, winrates, points CZF
-        et les Riot ID ayant
-        changé.
-      </p>
-
-      <div className="riotAdminActions">
-        <button
-          className="joinTeamBtn"
-          onClick={() => setOpen(true)}
-        >
-          {busy
-            ? `Actualisation en cours… ${processed}/${total}`
-            : 'Actualiser Riot'}
-        </button>
-      </div>
-
-      {!open && message && (
-        <p className="riotAdminMessage">
-          {scopeLabel && `${scopeLabel} — `}
+      {!open && !busy && message && (
+        <p className={ds.formInfo}>
+          {scopeLabel && `${scopeLabel} : `}
           {message}
         </p>
       )}
 
       {open && (
         <RefreshModal onClose={() => setOpen(false)}>
-
-          <div className={styles.modalTitle}>
-            Actualiser Riot
-          </div>
+          <div className={ds.sectionLabel}>Riot</div>
+          <div className={styles.modalTitle}>Actualiser Riot</div>
 
           <p className={`${styles.modalText} ${ds.muted}`}>
-            Choisis les joueurs à
-            relancer. Seules les
-            équipes validées
-            comptent pour une
-            division.
+            Met à jour ranks, LP, winrates, points CZF et Riot ID
+            changés. Une division = les joueurs de ses équipes validées.
           </p>
 
           <div className={styles.scopeGrid}>
@@ -386,142 +371,91 @@ export default function RiotRefreshPanel() {
               <button
                 key={division}
                 type="button"
-                className={`joinTeamBtn ${styles.scopeBtn}`}
-                onClick={() =>
-                  refreshAll(division)
-                }
+                className={`${ds.btnOutline} ${styles.scopeBtn}`}
+                onClick={() => refreshAll(division)}
                 disabled={busy}
               >
                 <span
                   className={styles.dot}
-                  style={{
-                    background:
-                      DIVISION_COLORS[division],
-                  }}
+                  style={{ background: DIVISION_COLORS[division] }}
                 />
-                {running && scope === division
-                  ? 'En cours…'
-                  : `Joueurs ${division}`}
+                {running && scope === division ? 'En cours...' : `Joueurs ${division}`}
               </button>
             ))}
 
             <button
               type="button"
-              className={`joinTeamBtn ${styles.scopeBtn}`}
-              onClick={() =>
-                refreshAll(null)
-              }
+              className={`${ds.btnPrimary} ${styles.scopeBtn}`}
+              onClick={() => refreshAll(null)}
               disabled={busy}
             >
-              {running && scope === null
-                ? 'En cours…'
-                : 'Tous les joueurs'}
+              {running && scope === null ? 'En cours...' : 'Tous les joueurs'}
             </button>
           </div>
 
-          {(running ||
-            processed > 0) && (
-            <div className="riotProgress">
-
-              <div className="riotProgressTop">
+          {started && (
+            <div className={styles.progress}>
+              <div className={styles.progressTop}>
+                <span>{scopeLabel}</span>
                 <strong>
-                  {scopeLabel} :{' '}
-                  {processed} / {total}
+                  {processed} / {total} · {progress}%
                 </strong>
-
-                <span>
-                  {progress}%
-                </span>
               </div>
 
-              <div className="riotProgressBar">
-                <div
-                  className="riotProgressFill"
-                  style={{
-                    width:
-                      `${progress}%`,
-                  }}
-                />
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${progress}%` }} />
               </div>
 
-            </div>
-          )}
-
-          {(running ||
-            processed > 0) && (
-            <div className={`riotAdminStats ${styles.stats}`}>
-              <div>
-                <span>Traités</span>
-                <strong>{processed}</strong>
-              </div>
-
-              <div>
-                <span>Réussis</span>
-                <strong>{updated}</strong>
-              </div>
-
-              <div>
-                <span>Pseudos modifiés</span>
-                <strong>{renamed}</strong>
-              </div>
-
-              <div>
-                <span>Échecs</span>
-                <strong>{failedPlayers.length}</strong>
+              <div className={styles.stats}>
+                <div>
+                  <strong>{processed}</strong>
+                  <span>Traités</span>
+                </div>
+                <div>
+                  <strong className={ds.teal}>{updated}</strong>
+                  <span>Réussis</span>
+                </div>
+                <div>
+                  <strong>{renamed}</strong>
+                  <span>Pseudos modifiés</span>
+                </div>
+                <div>
+                  <strong className={failedPlayers.length > 0 ? ds.loss : undefined}>
+                    {failedPlayers.length}
+                  </strong>
+                  <span>Échecs</span>
+                </div>
               </div>
             </div>
           )}
 
-          {message && (
-            <p className="riotAdminMessage">
-              {message}
-            </p>
-          )}
+          {message && <p className={styles.modalMessage}>{message}</p>}
 
           {failedPlayers.length > 0 && (
-            <div className="riotFailedPlayers">
+            <div className={styles.failed}>
+              <div className={styles.failedHead}>
+                <span>Joueurs en échec</span>
+                <button
+                  type="button"
+                  className={`${ds.btnOutline} ${ds.btnSmall}`}
+                  onClick={retryFailed}
+                  disabled={busy}
+                >
+                  {retrying ? 'Nouvelle tentative...' : `Réessayer les ${failedPlayers.length}`}
+                </button>
+              </div>
 
-              <button
-                type="button"
-                className="joinTeamBtn"
-                onClick={retryFailed}
-                disabled={busy}
-              >
-                {retrying
-                  ? 'Nouvelle tentative...'
-                  : `Réessayer les ${failedPlayers.length} échecs`}
-              </button>
-
-              <h4>
-                Joueurs en échec
-              </h4>
-
-              {failedPlayers.map(
-                (player) => (
-                  <div
-                    key={player.player_id}
-                    className="riotFailedRow"
-                  >
-                    <strong>
-                      {player.riot_id ||
-                        `Joueur ${player.player_id}`}
-                    </strong>
-
-                    <span>
-                      {player.error ||
-                        'Erreur Riot'}
-                    </span>
-                  </div>
-                )
-              )}
-
+              {failedPlayers.map((player) => (
+                <div key={player.player_id} className={styles.failedRow}>
+                  <strong>{player.riot_id || `Joueur ${player.player_id}`}</strong>
+                  <span className={ds.loss}>{player.error || 'Erreur Riot'}</span>
+                </div>
+              ))}
             </div>
           )}
-
         </RefreshModal>
       )}
-
-    </div>
+    </>
   );
 }
 
@@ -535,8 +469,7 @@ function RefreshModal({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) =>
-      event.key === 'Escape' && onClose();
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
     const previousOverflow = document.body.style.overflow;
 
     document.addEventListener('keydown', onKey);
@@ -557,13 +490,8 @@ function RefreshModal({
         aria-label="Actualiser Riot"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className={styles.modalClose}
-          onClick={onClose}
-          aria-label="Fermer"
-        >
-          ×
+        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Fermer">
+          <CloseIcon />
         </button>
         {children}
       </div>
