@@ -144,7 +144,8 @@
 
 .memberRow {
   display: grid;
-  grid-template-columns: 70px minmax(0, 1fr) auto;
+  grid-template-columns: 70px minmax(0, 1fr) auto auto;
+  align-items: center;
   gap: 10px;
   padding: 5px 0;
   font-size: 0.92rem;
@@ -373,4 +374,35 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+/* « Retirer » discret à droite de chaque membre. */
+.removeBtn {
+  padding: 2px 8px;
+  border: 1.5px solid var(--loss);
+  border-radius: 0;
+  background: none;
+  color: var(--loss);
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.removeBtn:hover,
+.removeBtn:active {
+  background: var(--loss);
+  color: #fff;
+  transform: none;
+  filter: none;
+}
+
+.removeBtn:disabled {
+  opacity: 0.5;
+}
+
+.listMessage {
+  margin-top: var(--space-block);
 }

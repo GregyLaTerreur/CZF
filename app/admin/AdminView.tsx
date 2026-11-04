@@ -40,6 +40,10 @@ export default function AdminView() {
   const [playerSaving, setPlayerSaving] = useState(false);
   const [playerError, setPlayerError] = useState('');
 
+  // Actualisation Riot en cours : 'team-<id>' ou 'player-<id>'.
+  const [refreshingKey, setRefreshingKey] = useState<string | null>(null);
+  const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+
   useEffect(() => {
     loadAdmin();
     loadData();
@@ -172,6 +176,92 @@ export default function AdminView() {
       await loadData();
     } else {
       setMessage(data.message || 'Erreur modification équipe');
+    }
+  }
+
+  async function getToken() {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error('Session admin introuvable.');
+    return token;
+  }
+
+  // Joueurs CZF d'un roster : par player_id, sinon par Riot ID.
+  function teamPlayerIds(teamId: number) {
+    const ids = getTeamMembers(teamId)
+      .map((member) =>
+        member.player_id
+          ? Number(member.player_id)
+          : players.find(
+              (p) =>
+                String(p.riot_id || '').trim().toLowerCase() ===
+                String(member.riot_id || '').trim().toLowerCase()
+            )?.id
+      )
+      .filter((id): id is number => Number.isFinite(id));
+
+    return [...new Set(ids)];
+  }
+
+  // Même route que le panneau Riot, limitée à quelques joueurs.
+  async function refreshRiot(key: string, playerIds: number[], label: string) {
+    if (refreshingKey) return;
+
+    if (playerIds.length === 0) {
+      setMessage(`${label} : aucun joueur CZF à actualiser.`);
+      return;
+    }
+
+    setRefreshingKey(key);
+    setMessage(`${label} : actualisation Riot en cours...`);
+
+    try {
+      const res = await fetch('/api/admin/refresh-riot', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await getToken()}` },
+        body: JSON.stringify({ player_ids: playerIds }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) throw new Error(json.message || 'Erreur actualisation Riot.');
+
+      const failed: any[] = json.failed_players || [];
+
+      setMessage(
+        failed.length === 0
+          ? `${label} : ${json.updated} joueur${json.updated > 1 ? 's' : ''} actualisé${json.updated > 1 ? 's' : ''}.`
+          : `${label} : ${json.updated} actualisé(s), échec pour ${failed
+              .map((f) => f.riot_id || f.player_id)
+              .join(', ')}.`
+      );
+      await loadData();
+    } catch (error: any) {
+      setMessage(`${label} : ${error?.message || 'Erreur actualisation Riot.'}`);
+    } finally {
+      setRefreshingKey(null);
+    }
+  }
+
+  async function removeMember(member: any, teamName: string) {
+    if (!confirm(`Retirer ${member.riot_id} de l'équipe "${teamName}" ?`)) return;
+
+    setRemovingMemberId(member.id);
+
+    try {
+      const res = await fetch(`/api/admin/team-members/${member.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) throw new Error(json.message || 'Erreur retrait joueur.');
+
+      setMessage(`${member.riot_id} retiré de ${teamName}`);
+      await loadData();
+    } catch (error: any) {
+      setMessage(error?.message || 'Erreur retrait joueur.');
+    } finally {
+      setRemovingMemberId(null);
     }
   }
 
@@ -314,6 +404,8 @@ export default function AdminView() {
               onChange={(e) => setTeamSearch(e.target.value)}
             />
 
+            {message && <p className={`${ds.formInfo} ${styles.listMessage}`}>{message}</p>}
+
             <div className={styles.list}>
               {!teamSearch.trim() && (
                 <div className={`${ds.card} ${ds.empty}`}>Recherche une équipe pour la gérer</div>
@@ -426,6 +518,14 @@ export default function AdminView() {
                           <span className={styles.memberPoints}>
                             {findPlayer(member.riot_id)?.czf_points || 0} pts
                           </span>
+                          <button
+                            type="button"
+                            className={styles.removeBtn}
+                            onClick={() => removeMember(member, team.name)}
+                            disabled={removingMemberId === member.id}
+                          >
+                            {removingMemberId === member.id ? '...' : 'Retirer'}
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -440,6 +540,14 @@ export default function AdminView() {
                       </button>
                       <button type="button" className={`${ds.btnOutline} ${ds.btnSmall}`} onClick={() => startEditingTeam(team)}>
                         Modifier
+                      </button>
+                      <button
+                        type="button"
+                        className={`${ds.btnOutline} ${ds.btnSmall}`}
+                        onClick={() => refreshRiot(`team-${team.id}`, teamPlayerIds(team.id), team.name)}
+                        disabled={refreshingKey !== null}
+                      >
+                        {refreshingKey === `team-${team.id}` ? 'Riot en cours...' : 'Actualiser Riot'}
                       </button>
                       <Link href={`/teams/${team.id}`} className={`${ds.btnOutline} ${ds.btnSmall}`}>
                         Voir la fiche
@@ -465,6 +573,8 @@ export default function AdminView() {
               value={playerSearch}
               onChange={(e) => setPlayerSearch(e.target.value)}
             />
+
+            {message && <p className={`${ds.formInfo} ${styles.listMessage}`}>{message}</p>}
 
             <div className={styles.list}>
               {!playerSearch.trim() && (
@@ -605,6 +715,14 @@ export default function AdminView() {
                         onClick={() => startEditingPlayer(player)}
                       >
                         Modifier
+                      </button>
+                      <button
+                        type="button"
+                        className={`${ds.btnOutline} ${ds.btnSmall}`}
+                        onClick={() => refreshRiot(`player-${player.id}`, [player.id], player.riot_id)}
+                        disabled={refreshingKey !== null}
+                      >
+                        {refreshingKey === `player-${player.id}` ? 'Riot en cours...' : 'Actualiser Riot'}
                       </button>
                       {team && (
                         <Link href={`/teams/${team.id}`} className={`${ds.btnOutline} ${ds.btnSmall}`}>
