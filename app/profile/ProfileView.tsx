@@ -389,11 +389,6 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 </span>
               ))}
               {player.lft && <span className={ds.chip}>Cherche une équipe</span>}
-              {player.riot_id && (
-                <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
-                  Profil DPM
-                </a>
-              )}
             </div>
           </div>
 
@@ -434,6 +429,17 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 <strong>{peak || '—'}</strong>
               </div>
             </div>
+
+            {player.riot_id && (
+              <a
+                href={dpmUrl(player.riot_id)}
+                target="_blank"
+                rel="noreferrer"
+                className={`${ds.btnOutline} ${styles.dpmLink}`}
+              >
+                Profil DPM
+              </a>
+            )}
           </div>
         </div>
       </header>
