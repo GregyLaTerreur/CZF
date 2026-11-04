@@ -76,7 +76,7 @@ export function useTierList(playerId: number) {
   return [tiers, setTiers, visibility, setVisibility] as const;
 }
 
-// Tier list existante mais privée : rangées vides et mention.
+// Tier list privée ou pas encore faite : rangées vides et mention.
 function PrivateBoard() {
   return (
     <div className={styles.privateWrap}>
@@ -372,10 +372,9 @@ export default function TierList({
     <div className={styles.wrap}>
       {saved ? (
         <TierBoard tiers={saved} ddragonVersion={ddragonVersion} />
-      ) : visibility.hidden ? (
-        <PrivateBoard />
       ) : (
-        !isOwn && <p className={styles.state}>Pas encore de tier list.</p>
+        // Sans tier list ou privée : même rendu, on ne dit pas laquelle.
+        !isOwn && <PrivateBoard />
       )}
 
       {isOwn && (
