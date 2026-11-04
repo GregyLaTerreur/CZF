@@ -9,6 +9,7 @@ import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds
 import TierList from './TierList';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
+  dpmUrl,
   formatRank,
   normalizeRiotId,
   roleInfo,
@@ -388,6 +389,11 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 </span>
               ))}
               {player.lft && <span className={ds.chip}>Cherche une équipe</span>}
+              {player.riot_id && (
+                <a href={dpmUrl(player.riot_id)} target="_blank" rel="noreferrer" className={ds.btnOutline}>
+                  Profil DPM
+                </a>
+              )}
             </div>
           </div>
 
