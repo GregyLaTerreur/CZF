@@ -92,7 +92,6 @@ function PrivateBoard() {
       </div>
       <div className={styles.privateNote}>
         <strong>Tier list privée</strong>
-        <span>Visible seulement par son équipe.</span>
       </div>
     </div>
   );
