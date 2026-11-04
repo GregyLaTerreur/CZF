@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { DIVISIONS, type DivisionName } from '@/app/components/home/divisions';
+import { DIVISIONS, DIVISION_COLORS, type DivisionName } from '@/app/components/home/divisions';
+import ds from '@/app/components/ds/ds.module.css';
 import styles from './matchManager.module.css';
 
 type Side = { id: number; shortName: string; name: string; score: number } | null;
@@ -82,21 +83,22 @@ export default function MatchManager() {
   }
 
   return (
-    <section className={`card ${styles.panel}`}>
+    <section className={`${ds.card} ${styles.panel}`}>
       <div className={styles.head}>
-        <h3>
+        <div className={ds.cardTitle}>
           Matchs enregistrés
           {matches && matches.length > 0 && <span className={styles.count}>{matches.length}</span>}
-        </h3>
+        </div>
 
-        <div className={styles.tabs}>
+        <div className={ds.tabs}>
           {DIVISIONS.map((item) => (
             <button
               key={item}
               type="button"
-              className={division === item ? styles.tabActive : styles.tab}
+              className={division === item ? ds.tabActive : ds.tab}
               onClick={() => setDivision(item)}
             >
+              <span className={ds.dot} style={{ background: DIVISION_COLORS[item] }} />
               {item}
             </button>
           ))}
@@ -133,19 +135,19 @@ export default function MatchManager() {
                 <span className={styles.actions}>
                   <button
                     type="button"
-                    className={styles.danger}
+                    className={`${ds.btnDanger} ${ds.btnSmall} ${styles.dangerFill}`}
                     disabled={deletingId === match.id}
                     onClick={() => remove(match)}
                   >
                     {deletingId === match.id ? 'Suppression…' : 'Confirmer'}
                   </button>
-                  <button type="button" className={styles.cancel} onClick={() => setConfirmId(null)}>
+                  <button type="button" className={`${ds.btnOutline} ${ds.btnSmall}`} onClick={() => setConfirmId(null)}>
                     Annuler
                   </button>
                 </span>
               ) : (
                 <span className={styles.actions}>
-                  <button type="button" className={styles.delete} onClick={() => setConfirmId(match.id)}>
+                  <button type="button" className={`${ds.btnDanger} ${ds.btnSmall}`} onClick={() => setConfirmId(match.id)}>
                     Supprimer
                   </button>
                 </span>
