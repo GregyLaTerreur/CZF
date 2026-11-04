@@ -4,7 +4,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useDdragonVersion } from '@/app/components/ds/LolUi';
 import {
   DIVISION_COLORS,
   DIVISIONS,
@@ -83,7 +82,6 @@ export type PlayerStats = {
   riotId: string;
   teamShortName: string;
   teamLogo: string | null;
-  profileIconId: number | null;
   kda: number;
   goldPerMin: number;
   dpm: number;
@@ -109,7 +107,6 @@ export type ChampionPlayer = {
   riotId: string;
   teamShortName: string | null;
   teamLogo: string | null;
-  profileIconId: number | null;
   games: number;
   winRate: number;
   kda: number;
@@ -358,36 +355,12 @@ export function TeamLogo({ logo, size = 'md' }: { logo: string | null; size?: 'x
   );
 }
 
-// Icône d'invocateur + nom, cliquable vers la page du joueur.
-export function PlayerLink({
-  playerId,
-  profileIconId,
-  name,
-  sub,
-}: {
-  playerId: number;
-  profileIconId: number | null;
-  name: string;
-  sub?: string | null;
-}) {
-  const ddragonVersion = useDdragonVersion();
-
+// Nom du joueur, cliquable vers sa page.
+export function PlayerLink({ playerId, name, sub }: { playerId: number; name: string; sub?: string | null }) {
   return (
-    <Link href={`/players/${playerId}`} className={styles.playerLink}>
-      {profileIconId != null ? (
-        <img
-          src={`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${profileIconId}.png`}
-          alt=""
-          loading="lazy"
-          className={styles.summonerIcon}
-        />
-      ) : (
-        <span className={`${styles.summonerIcon} ${styles.logoEmpty}`} />
-      )}
-      <span className={styles.playerName}>
-        {name}
-        {sub && <small>{sub}</small>}
-      </span>
+    <Link href={`/players/${playerId}`} className={`${styles.playerName} ${styles.playerLink}`}>
+      {name}
+      {sub && <small>{sub}</small>}
     </Link>
   );
 }
@@ -401,8 +374,8 @@ export type ChampionRow = {
   image: string | null;
   name: string;
   sub?: string | null;
-  // Ligne joueur : lien vers sa page avec son icône d'invocateur.
-  player?: { id: number; profileIconId: number | null };
+  // Ligne joueur : nom cliquable vers sa page.
+  playerId?: number;
   games: number;
   winRate: number;
   kda: number;
@@ -485,13 +458,8 @@ export function ChampionRowsModal({
                 ) : (
                   <span className={`${styles.modalChampion} ${styles.championEmpty}`} />
                 )}
-                {row.player ? (
-                  <PlayerLink
-                    playerId={row.player.id}
-                    profileIconId={row.player.profileIconId}
-                    name={row.name}
-                    sub={row.sub}
-                  />
+                {row.playerId ? (
+                  <PlayerLink playerId={row.playerId} name={row.name} sub={row.sub} />
                 ) : (
                   <span className={styles.playerName}>
                     {row.name}

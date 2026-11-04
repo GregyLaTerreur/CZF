@@ -353,7 +353,12 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
   const division = teamDivision(team);
   // Les actions (modifier, actualiser, LFT) ne sont que pour son propre profil.
   const isOwn = Boolean(user) && player.profile_id === user.id;
-  const avatar = isOwn ? user.user_metadata?.avatar_url : null;
+  // Icône d'invocateur Riot ; à défaut, l'avatar Discord sur son propre profil.
+  const avatar = player.profile_icon_id
+    ? `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${player.profile_icon_id}.png`
+    : isOwn
+      ? user.user_metadata?.avatar_url
+      : null;
   const discordName = isOwn ? discordNameOf(user) : ownerDiscord;
 
   return (

@@ -264,7 +264,6 @@ export default function StatsView() {
                         </span>
                         <PlayerLink
                           playerId={player.playerId}
-                          profileIconId={player.profileIconId}
                           name={splitRiotId(player.riotId).name}
                           sub={player.teamShortName}
                         />
@@ -310,7 +309,7 @@ function ChampionPlayersModal({
         image: player.teamLogo,
         name: splitRiotId(player.riotId).name,
         sub: player.teamShortName,
-        player: { id: player.playerId, profileIconId: player.profileIconId },
+        playerId: player.playerId,
         games: player.games,
         winRate: player.winRate,
         kda: player.kda,
@@ -367,7 +366,6 @@ function RankingCard({
                 <TeamLogo logo={player.teamLogo} size="sm" />
                 <PlayerLink
                   playerId={player.playerId}
-                  profileIconId={player.profileIconId}
                   name={splitRiotId(player.riotId).name}
                   sub={player.teamShortName}
                 />
