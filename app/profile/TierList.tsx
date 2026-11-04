@@ -3,7 +3,7 @@
 // Tier list des champions faite par le joueur, façon TierMaker :
 // rangées S à D, champions glissés depuis la liste (ou clic sur le champion puis sur la rangée).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
@@ -139,10 +139,12 @@ type Zone = TierKey | 'pool';
 export default function TierList({
   playerId,
   isOwn,
+  lft = false,
   ddragonVersion,
 }: {
   playerId: number;
   isOwn: boolean;
+  lft?: boolean;
   ddragonVersion: string;
 }) {
   const [saved, setSaved, visibility, setVisibility] = useTierList(playerId);
@@ -257,6 +259,16 @@ export default function TierList({
       setSavingVisibility(false);
     }
   }
+
+  // Passer LFT rend la tier list publique (une seule fois, au passage en LFT).
+  const wasLft = useRef(lft);
+
+  useEffect(() => {
+    const becameLft = lft && !wasLft.current;
+    wasLft.current = lft;
+
+    if (becameLft && isOwn && saved && !visibility.isPublic) void togglePublic(true);
+  }, [lft]);
 
   /* ---------- Glisser-déposer ---------- */
 
@@ -374,23 +386,25 @@ export default function TierList({
           </button>
 
           {saved && (
-            <label className={styles.publicToggle}>
-              <input
-                type="checkbox"
-                checked={visibility.isPublic}
-                disabled={savingVisibility}
-                onChange={(event) => togglePublic(event.target.checked)}
-              />
-              Tier list publique
-            </label>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={visibility.isPublic}
+              className={`${styles.switch} ${visibility.isPublic ? styles.switchOn : ''}`}
+              disabled={savingVisibility}
+              onClick={() => togglePublic(!visibility.isPublic)}
+            >
+              <span className={styles.switchTrack}>
+                <span className={styles.switchThumb} />
+              </span>
+              Publique
+            </button>
           )}
         </div>
       )}
 
       {isOwn && saved && !visibility.isPublic && (
-        <p className={styles.hint}>
-          Privée : visible par ton équipe, et par tout le monde quand tu cherches une équipe.
-        </p>
+        <p className={styles.hint}>Privée : visible par ton équipe</p>
       )}
 
       {!draft && message && <p className={styles.error}>{message}</p>}

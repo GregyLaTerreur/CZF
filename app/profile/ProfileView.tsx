@@ -644,7 +644,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 <div className={styles.column}>
                   <div className={`${ds.card} ${styles.block} ${styles.tierList}`}>
                     <div className={styles.blockLabel}>Tier list</div>
-                    <TierList playerId={Number(player.id)} isOwn={isOwn} ddragonVersion={ddragonVersion} />
+                    <TierList playerId={Number(player.id)} isOwn={isOwn} lft={Boolean(player.lft)} ddragonVersion={ddragonVersion} />
                   </div>
 
                   <div className={`${ds.card} ${styles.block}`}>

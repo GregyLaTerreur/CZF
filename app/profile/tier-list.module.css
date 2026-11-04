@@ -247,22 +247,58 @@
 }
 
 /* Visibilité */
-.publicToggle {
+.switch,
+.switch:hover,
+.switch:active {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
   font-family: var(--condensed);
   font-weight: 700;
   font-size: 1rem;
   text-transform: uppercase;
+  color: var(--dark);
   cursor: pointer;
 }
 
-.publicToggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--orange);
-  cursor: pointer;
+.switch:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.switchTrack {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border: 2px solid var(--dark);
+  border-radius: 999px;
+  background: rgba(8, 20, 40, 0.15);
+  transition: background 0.15s;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--dark);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.switchOn .switchTrack {
+  background: var(--orange);
+}
+
+.switchOn .switchThumb {
+  transform: translateX(20px);
+  background: var(--cream);
 }
 
 /* Tier list privée : rangées vides, mention par-dessus */
