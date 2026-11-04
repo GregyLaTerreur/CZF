@@ -194,6 +194,7 @@ export type ResultsDataset = {
   currentStatIds: number[];
   // Paires [id, riot_id] : le cache n'accepte que du JSON.
   playerNames: [number, string | null][];
+  playerIcons: [number, number | null][];
 };
 
 // Toutes les tables lues en parallèle : quelques milliers de lignes au plus,
@@ -221,7 +222,7 @@ async function fetchResultsDataset(): Promise<ResultsDataset> {
         .range(from, to)
     ),
     fetchAllPages((from, to) =>
-      supabaseAdmin.from('players').select('id, riot_id').order('id', { ascending: true }).range(from, to)
+      supabaseAdmin.from('players').select('id, riot_id, profile_icon_id').order('id', { ascending: true }).range(from, to)
     ),
   ]);
 
@@ -239,12 +240,16 @@ async function fetchResultsDataset(): Promise<ResultsDataset> {
     stats: stats.filter(inFinishedGame),
     currentStatIds: currentStats.filter(inFinishedGame).map((stat) => Number(stat.id)),
     playerNames: players.map((player) => [Number(player.id), player.riot_id ?? null]),
+    playerIcons: players.map((player) => [
+      Number(player.id),
+      player.profile_icon_id != null ? Number(player.profile_icon_id) : null,
+    ]),
   };
 }
 
 // Les résultats ne changent qu'à la publication d'un match : cache partagé
 // entre divisions et requêtes, invalidé par invalidateResults().
-const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v2'], {
+const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v3'], {
   revalidate: RESULTS_TTL_SECONDS,
   tags: [RESULTS_TAG],
 });

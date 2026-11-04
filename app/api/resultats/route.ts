@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
 
     const currentIds = new Set(dataset.currentStatIds);
     const playerNames = new Map(dataset.playerNames);
+    const playerIcons = new Map(dataset.playerIcons);
     const teamMap = toTeamMap(teams);
     const gamesByMatch = groupBy(games, (game) => Number(game.match_id));
 
@@ -74,6 +75,7 @@ export async function GET(request: NextRequest) {
         currentStats: dataset.stats.filter((stat) => inDivision(stat) && currentIds.has(Number(stat.id))),
         teamMap,
         playerNames,
+        playerIcons,
         exclusions: parseExclusions(exclusions),
       }),
       champions: computeChampionStats(division, {
@@ -82,6 +84,7 @@ export async function GET(request: NextRequest) {
         stats: dataset.stats.filter(inDivision),
         championMap: new Map(champions.map((champion) => [champion.id, champion])),
         playerNames,
+        playerIcons,
         teamMap,
       }),
     };

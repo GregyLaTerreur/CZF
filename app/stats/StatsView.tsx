@@ -9,6 +9,7 @@ import {
   ChampionRowsModal,
   DivisionTabs,
   LastUpdate,
+  PlayerLink,
   TeamLogo,
   useDivisionData,
   type ChampionStat,
@@ -261,10 +262,12 @@ export default function StatsView() {
                             );
                           })}
                         </span>
-                        <span className={styles.playerName}>
-                          {splitRiotId(player.riotId).name}
-                          <small>{player.teamShortName}</small>
-                        </span>
+                        <PlayerLink
+                          playerId={player.playerId}
+                          profileIconId={player.profileIconId}
+                          name={splitRiotId(player.riotId).name}
+                          sub={player.teamShortName}
+                        />
                         <span className={styles.bar}>
                           <span style={{ width: `${(player.mvp / mvpRanking[0].mvp) * 100}%` }} />
                         </span>
@@ -307,6 +310,7 @@ function ChampionPlayersModal({
         image: player.teamLogo,
         name: splitRiotId(player.riotId).name,
         sub: player.teamShortName,
+        player: { id: player.playerId, profileIconId: player.profileIconId },
         games: player.games,
         winRate: player.winRate,
         kda: player.kda,
@@ -361,10 +365,12 @@ function RankingCard({
               <div key={player.playerId} className={styles.rankingRow}>
                 <span className={styles.rankNumber}>{index + 1}</span>
                 <TeamLogo logo={player.teamLogo} size="sm" />
-                <span className={styles.playerName}>
-                  {splitRiotId(player.riotId).name}
-                  <small>{player.teamShortName}</small>
-                </span>
+                <PlayerLink
+                  playerId={player.playerId}
+                  profileIconId={player.profileIconId}
+                  name={splitRiotId(player.riotId).name}
+                  sub={player.teamShortName}
+                />
                 <strong className={styles.rankValue}>{format(value)}</strong>
                 <span className={`${styles.bar} ${styles.barFull}`}>
                   <span style={{ width: `${max > 0 ? Math.max(4, (value / max) * 100) : 0}%` }} />

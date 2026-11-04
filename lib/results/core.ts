@@ -38,6 +38,7 @@ export type PlayerStats = {
   teamName: string;
   teamShortName: string;
   teamLogo: string | null;
+  profileIconId: number | null;
   role: Role;
   games: number;
   wins: number;
@@ -78,6 +79,7 @@ export type ChampionPlayerStat = {
   riotId: string;
   teamShortName: string | null;
   teamLogo: string | null;
+  profileIconId: number | null;
   games: number;
   wins: number;
   winRate: number;
@@ -86,6 +88,9 @@ export type ChampionPlayerStat = {
 
 // Riot ID par id joueur ; une clé présente = joueur connu, même sans riot_id.
 export type PlayerNames = Map<number, string | null>;
+
+// Icône d'invocateur (profile_icon_id) par id joueur.
+export type PlayerIcons = Map<number, number | null>;
 
 /* =========================================================
    HELPERS
@@ -602,10 +607,11 @@ export function computePlayerStats(
     currentStats: AnyObject[];
     teamMap: Map<number, TeamInfo>;
     playerNames: PlayerNames;
+    playerIcons?: PlayerIcons;
     exclusions: Set<string>;
   }
 ): Record<Role, PlayerStats[]> {
-  const { matches, games, currentStats, teamMap, playerNames, exclusions } =
+  const { matches, games, currentStats, teamMap, playerNames, playerIcons, exclusions } =
     data;
 
   const isExcluded = (playerId: number, role: Role) =>
@@ -743,6 +749,7 @@ export function computePlayerStats(
       teamName: team.name,
       teamShortName: team.shortName,
       teamLogo: team.logo,
+      profileIconId: playerIcons?.get(playerId) ?? null,
       role,
       games: gamesPlayed,
       wins,
@@ -793,10 +800,11 @@ export function computeChampionStats(
     championMap: Map<string, Champion>;
     // Sans eux, les joueurs sont nommés « Joueur <id> », sans logo.
     playerNames?: PlayerNames;
+    playerIcons?: PlayerIcons;
     teamMap?: Map<number, TeamInfo>;
   }
 ): Record<Role, ChampionRoleStat[]> {
-  const { matches, games, stats, championMap, playerNames, teamMap } = data;
+  const { matches, games, stats, championMap, playerNames, playerIcons, teamMap } = data;
 
   const gameMap = new Map<number, AnyObject>(
     games.map((game) => [Number(game.id), game])
@@ -912,6 +920,7 @@ export function computeChampionStats(
                 riotId: String(playerNames?.get(playerId) ?? `Joueur ${playerId}`),
                 teamShortName: team?.shortName ?? null,
                 teamLogo: team?.logo ?? null,
+                profileIconId: playerIcons?.get(playerId) ?? null,
                 games: player.games,
                 wins: player.wins,
                 winRate: round2((player.wins / player.games) * 100),
