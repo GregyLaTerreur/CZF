@@ -17,9 +17,19 @@ export type TeamInfo = {
 };
 
 export type StandingTeam = TeamInfo & {
+  // Games gagnées / perdues.
   wins: number;
   losses: number;
+
+  // Différence de games.
   gameDiff: number;
+
+  // Points de poule :
+  // 2-0 = 3 pts
+  // 1-1 = 1 pt chacun
+  // 0-2 = 0 pt
+  points: number;
+
   // Place dans sa division ; deux équipes à égalité parfaite partagent la même.
   rank?: number;
 };
@@ -334,7 +344,15 @@ export function parseExclusions(rows: AnyObject[]): Set<string> {
 
 /* =========================================================
    CLASSEMENT DES EQUIPES : POULES UNIQUEMENT
-   Complète wins / losses / gameDiff puis trie.
+
+   wins / losses = games gagnées / perdues.
+
+   Points :
+   2-0 = 3 points
+   1-1 = 1 point chacun
+   0-2 = 0 point
+
+   Le classement est trié d'abord par points.
 ========================================================= */
 
 export function computeStandings<T extends StandingTeam>(
@@ -342,11 +360,29 @@ export function computeStandings<T extends StandingTeam>(
   matches: AnyObject[],
   gamesByMatch: Map<number, AnyObject[]>
 ): T[] {
+  /*
+   * Sécurité :
+   * certaines routes peuvent envoyer les équipes sans avoir
+   * initialisé tous les champs du classement.
+   *
+   * Sans ça :
+   * undefined + 3 = NaN
+   * puis JSON transforme NaN en null.
+   */
+  for (const team of teams) {
+    team.wins = Number(team.wins) || 0;
+    team.losses = Number(team.losses) || 0;
+    team.gameDiff = Number(team.gameDiff) || 0;
+    team.points = Number(team.points) || 0;
+  }
+
   const teamMap = new Map<number, T>(
     teams.map((team) => [Number(team.id), team])
   );
 
-  const poolMatches = matches.filter((match) => match.stage === 'pool');
+  const poolMatches = matches.filter(
+    (match) => match.stage === 'pool'
+  );
 
   for (const match of poolMatches) {
     const team1 = teamMap.get(Number(match.team1_id));
@@ -354,70 +390,215 @@ export function computeStandings<T extends StandingTeam>(
 
     if (!team1 || !team2) continue;
 
-    for (const game of gamesByMatch.get(Number(match.id)) || []) {
-      const winnerId = Number(game.winner_team_id);
+    const matchGames =
+      gamesByMatch.get(Number(match.id)) || [];
+
+    let team1GameWins = 0;
+    let team2GameWins = 0;
+
+    /*
+     * V-D = nombre de GAMES gagnées / perdues.
+     */
+    for (const game of matchGames) {
+      const winnerId =
+        Number(game.winner_team_id);
 
       if (winnerId === Number(team1.id)) {
+        team1GameWins++;
+
         team1.wins++;
         team2.losses++;
-      } else if (winnerId === Number(team2.id)) {
+      } else if (
+        winnerId === Number(team2.id)
+      ) {
+        team2GameWins++;
+
         team2.wins++;
         team1.losses++;
       }
     }
+
+    /*
+     * Les points ne sont attribués que lorsque
+     * les 2 games du BO2 sont enregistrées.
+     */
+    if (
+      team1GameWins + team2GameWins !== 2
+    ) {
+      continue;
+    }
+
+    /*
+     * 2-0 = 3 points
+     */
+    if (
+      team1GameWins === 2 &&
+      team2GameWins === 0
+    ) {
+      team1.points += 3;
+      continue;
+    }
+
+    /*
+     * 0-2 = 3 points pour l'autre équipe
+     */
+    if (
+      team2GameWins === 2 &&
+      team1GameWins === 0
+    ) {
+      team2.points += 3;
+      continue;
+    }
+
+    /*
+     * 1-1 = 1 point chacun
+     */
+    if (
+      team1GameWins === 1 &&
+      team2GameWins === 1
+    ) {
+      team1.points += 1;
+      team2.points += 1;
+    }
   }
 
+  /*
+   * Différence de games.
+   */
   for (const team of teams) {
-    team.gameDiff = team.wins - team.losses;
+    team.gameDiff =
+      team.wins - team.losses;
   }
 
-  function getHeadToHeadDifference(teamAId: number, teamBId: number): number {
+  /*
+   * Confrontation directe.
+   */
+  function getHeadToHeadDifference(
+    teamAId: number,
+    teamBId: number
+  ): number {
     let winsA = 0;
     let winsB = 0;
 
     for (const match of poolMatches) {
-      const a = Number(match.team1_id);
-      const b = Number(match.team2_id);
+      const team1Id =
+        Number(match.team1_id);
 
-      if (
-        !(
-          (a === teamAId && b === teamBId) ||
-          (a === teamBId && b === teamAId)
-        )
-      ) {
+      const team2Id =
+        Number(match.team2_id);
+
+      const concernsBothTeams =
+        (team1Id === teamAId &&
+          team2Id === teamBId) ||
+        (team1Id === teamBId &&
+          team2Id === teamAId);
+
+      if (!concernsBothTeams) {
         continue;
       }
 
-      for (const game of gamesByMatch.get(Number(match.id)) || []) {
-        if (Number(game.winner_team_id) === teamAId) winsA++;
-        if (Number(game.winner_team_id) === teamBId) winsB++;
+      for (
+        const game of
+        gamesByMatch.get(
+          Number(match.id)
+        ) || []
+      ) {
+        const winnerId =
+          Number(game.winner_team_id);
+
+        if (winnerId === teamAId) {
+          winsA++;
+        }
+
+        if (winnerId === teamBId) {
+          winsB++;
+        }
       }
     }
 
     return winsA - winsB;
   }
 
-  // Victoires, puis moins de défaites, puis confrontation directe (poules).
-  function compare(a: T, b: T): number {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (a.losses !== b.losses) return a.losses - b.losses;
+  /*
+   * ORDRE DU CLASSEMENT
+   *
+   * 1. Points
+   * 2. Différence de games
+   * 3. Games gagnées
+   * 4. Confrontation directe
+   */
+  function compare(
+    a: T,
+    b: T
+  ): number {
+    if (b.points !== a.points) {
+      return b.points - a.points;
+    }
 
-    return -getHeadToHeadDifference(Number(a.id), Number(b.id));
+    if (
+      b.gameDiff !== a.gameDiff
+    ) {
+      return (
+        b.gameDiff -
+        a.gameDiff
+      );
+    }
+
+    if (b.wins !== a.wins) {
+      return b.wins - a.wins;
+    }
+
+    return -getHeadToHeadDifference(
+      Number(a.id),
+      Number(b.id)
+    );
   }
 
-  teams.sort((a, b) => compare(a, b) || a.name.localeCompare(b.name, 'fr'));
+  teams.sort(
+    (a, b) =>
+      compare(a, b) ||
+      a.name.localeCompare(
+        b.name,
+        'fr'
+      )
+  );
 
-  // Place par division : égalité parfaite = même place que l'équipe du dessus.
-  const lastByDivision = new Map<string, { team: T; position: number }>();
+  /*
+   * Places dans chaque division.
+   */
+  const lastByDivision =
+    new Map<
+      string,
+      {
+        team: T;
+        position: number;
+      }
+    >();
 
   for (const team of teams) {
-    const key = String(team.division ?? '');
-    const previous = lastByDivision.get(key);
-    const position = (previous?.position ?? 0) + 1;
+    const key =
+      String(team.division ?? '');
+
+    const previous =
+      lastByDivision.get(key);
+
+    const position =
+      (previous?.position ?? 0) +
+      1;
 
     team.rank =
-      previous && compare(previous.team, team) === 0 ? previous.team.rank : position;
-    lastByDivision.set(key, { team, position });
+      previous &&
+      compare(
+        previous.team,
+        team
+      ) === 0
+        ? previous.team.rank
+        : position;
+
+    lastByDivision.set(key, {
+      team,
+      position,
+    });
   }
 
   return teams;
@@ -636,7 +817,12 @@ export function computePlayerStats(
     const match = matchMap.get(Number(gameMap.get(gameId)?.match_id));
 
     for (const teamId of [Number(match?.team1_id), Number(match?.team2_id)]) {
-      if (Number.isFinite(teamId)) teamGames.set(teamId, (teamGames.get(teamId) ?? 0) + 1);
+      if (Number.isFinite(teamId)) {
+        teamGames.set(
+          teamId,
+          (teamGames.get(teamId) ?? 0) + 1
+        );
+      }
     }
   }
 
@@ -766,7 +952,10 @@ export function computePlayerStats(
 
       mvp,
       totalDurationSeconds: duration,
-      qualified: gamesPlayed >= MIN_TEAM_GAMES_SHARE * (teamGames.get(teamId) ?? 0),
+
+      qualified:
+        gamesPlayed >=
+        MIN_TEAM_GAMES_SHARE * (teamGames.get(teamId) ?? 0),
     });
   }
 
@@ -804,7 +993,9 @@ export function computeChampionStats(
 
   const divisionMatches = matches.filter((m) => m.division === division);
 
-  const divisionMatchIds = new Set(divisionMatches.map((m) => Number(m.id)));
+  const divisionMatchIds = new Set(
+    divisionMatches.map((m) => Number(m.id))
+  );
 
   const divisionGameIds = new Set(
     games
@@ -822,7 +1013,12 @@ export function computeChampionStats(
         normalizeRole(stat.role) === role
     );
 
-    type PlayerTotals = { games: number; wins: number; kdaSum: number; teamId: number };
+    type PlayerTotals = {
+      games: number;
+      wins: number;
+      kdaSum: number;
+      teamId: number;
+    };
 
     const map = new Map<
       string,
@@ -850,7 +1046,8 @@ export function computeChampionStats(
         players: new Map<number, PlayerTotals>(),
       };
 
-      const won = Number(game.winner_team_id) === Number(row.team_id);
+      const won =
+        Number(game.winner_team_id) === Number(row.team_id);
 
       current.picks++;
 
@@ -871,11 +1068,17 @@ export function computeChampionStats(
         };
 
         player.games++;
-        if (won) player.wins++;
+
+        if (won) {
+          player.wins++;
+        }
+
         // KDA : moyenne des ratios par game, comme les stats joueurs.
         player.kdaSum +=
-          ((Number(row.kills) || 0) + (Number(row.assists) || 0)) /
+          ((Number(row.kills) || 0) +
+            (Number(row.assists) || 0)) /
           Math.max(1, Number(row.deaths) || 0);
+
         current.players.set(playerId, player);
       }
 
@@ -897,31 +1100,63 @@ export function computeChampionStats(
 
           pickRate:
             totalBos > 0
-              ? round2((values.matchIds.size / totalBos) * 100)
+              ? round2(
+                  (values.matchIds.size / totalBos) * 100
+                )
               : 0,
 
           winRate:
-            values.picks > 0 ? round2((values.wins / values.picks) * 100) : 0,
+            values.picks > 0
+              ? round2(
+                  (values.wins / values.picks) * 100
+                )
+              : 0,
 
           players: [...values.players.entries()]
-            .map(([playerId, player]): ChampionPlayerStat => {
-              const team = teamMap?.get(player.teamId);
+            .map(
+              ([playerId, player]): ChampionPlayerStat => {
+                const team = teamMap?.get(player.teamId);
 
-              return {
-                playerId,
-                riotId: String(playerNames?.get(playerId) ?? `Joueur ${playerId}`),
-                teamShortName: team?.shortName ?? null,
-                teamLogo: team?.logo ?? null,
-                games: player.games,
-                wins: player.wins,
-                winRate: round2((player.wins / player.games) * 100),
-                kda: round2(player.kdaSum / player.games),
-              };
-            })
-            .sort((a, b) => b.games - a.games || b.winRate - a.winRate || b.kda - a.kda),
+                return {
+                  playerId,
+
+                  riotId: String(
+                    playerNames?.get(playerId) ??
+                      `Joueur ${playerId}`
+                  ),
+
+                  teamShortName:
+                    team?.shortName ?? null,
+
+                  teamLogo:
+                    team?.logo ?? null,
+
+                  games: player.games,
+                  wins: player.wins,
+
+                  winRate: round2(
+                    (player.wins / player.games) * 100
+                  ),
+
+                  kda: round2(
+                    player.kdaSum / player.games
+                  ),
+                };
+              }
+            )
+            .sort(
+              (a, b) =>
+                b.games - a.games ||
+                b.winRate - a.winRate ||
+                b.kda - a.kda
+            ),
         };
       })
-      .sort((a, b) => b.picks - a.picks || b.winRate - a.winRate);
+      .sort(
+        (a, b) =>
+          b.picks - a.picks ||
+          b.winRate - a.winRate
+      );
   }
 
   return result;
@@ -957,7 +1192,9 @@ export function computePlayerChampions(
 ): PlayerChampionStat[] {
   return computeChampionTotals({
     ...data,
-    stats: data.stats.filter((row) => Number(row.player_id) === playerId),
+    stats: data.stats.filter(
+      (row) => Number(row.player_id) === playerId
+    ),
   });
 }
 
@@ -971,80 +1208,176 @@ export function computeTeamChampions(
   byRole: Record<Role, PlayerChampionStat[]>;
   players: Record<number, PlayerChampionStat[]>;
 } {
-  const rows = data.stats.filter((row) => Number(row.team_id) === teamId);
-  const byPlayer = groupBy(rows, (row) => Number(row.player_id));
+  const rows = data.stats.filter(
+    (row) => Number(row.team_id) === teamId
+  );
+
+  const byPlayer = groupBy(
+    rows,
+    (row) => Number(row.player_id)
+  );
 
   return {
-    team: computeChampionTotals({ ...data, stats: rows }),
+    team: computeChampionTotals({
+      ...data,
+      stats: rows,
+    }),
+
     byRole: Object.fromEntries(
       ROLES.map((role) => [
         role,
-        computeChampionTotals({ ...data, stats: rows.filter((row) => normalizeRole(row.role) === role) }),
+
+        computeChampionTotals({
+          ...data,
+
+          stats: rows.filter(
+            (row) =>
+              normalizeRole(row.role) === role
+          ),
+        }),
       ])
     ) as Record<Role, PlayerChampionStat[]>,
+
     players: Object.fromEntries(
-      [...byPlayer.entries()].map(([playerId, playerRows]) => [
-        playerId,
-        computeChampionTotals({ ...data, stats: playerRows }),
-      ])
+      [...byPlayer.entries()].map(
+        ([playerId, playerRows]) => [
+          playerId,
+
+          computeChampionTotals({
+            ...data,
+            stats: playerRows,
+          }),
+        ]
+      )
     ),
   };
 }
 
-function computeChampionTotals(data: ChampionTotalsData): PlayerChampionStat[] {
-  const { games, stats, championMap } = data;
+function computeChampionTotals(
+  data: ChampionTotalsData
+): PlayerChampionStat[] {
+  const {
+    games,
+    stats,
+    championMap,
+  } = data;
 
   const gameMap = new Map<number, AnyObject>(
-    games.map((game) => [Number(game.id), game])
+    games.map((game) => [
+      Number(game.id),
+      game,
+    ])
   );
 
   const map = new Map<
     string,
-    { games: number; wins: number; kdaSum: number; roles: Map<Role, number> }
+    {
+      games: number;
+      wins: number;
+      kdaSum: number;
+      roles: Map<Role, number>;
+    }
   >();
 
   for (const row of stats) {
-    const championId = String(row.champion_id ?? '');
-    const game = gameMap.get(Number(row.game_id));
+    const championId =
+      String(row.champion_id ?? '');
+
+    const game =
+      gameMap.get(Number(row.game_id));
 
     if (!championId || !game) continue;
 
-    const current = map.get(championId) || {
-      games: 0,
-      wins: 0,
-      kdaSum: 0,
-      roles: new Map<Role, number>(),
-    };
+    const current =
+      map.get(championId) || {
+        games: 0,
+        wins: 0,
+        kdaSum: 0,
+        roles: new Map<Role, number>(),
+      };
 
     current.games++;
-    if (Number(game.winner_team_id) === Number(row.team_id)) current.wins++;
+
+    if (
+      Number(game.winner_team_id) ===
+      Number(row.team_id)
+    ) {
+      current.wins++;
+    }
+
     // KDA : moyenne des ratios par game, comme les stats joueurs.
     current.kdaSum +=
-      ((Number(row.kills) || 0) + (Number(row.assists) || 0)) /
-      Math.max(1, Number(row.deaths) || 0);
+      ((Number(row.kills) || 0) +
+        (Number(row.assists) || 0)) /
+      Math.max(
+        1,
+        Number(row.deaths) || 0
+      );
 
     const role = normalizeRole(row.role);
-    if (role) current.roles.set(role, (current.roles.get(role) ?? 0) + 1);
 
-    map.set(championId, current);
+    if (role) {
+      current.roles.set(
+        role,
+        (current.roles.get(role) ?? 0) + 1
+      );
+    }
+
+    map.set(
+      championId,
+      current
+    );
   }
 
   return [...map.entries()]
     .map(([championId, values]) => {
-      const champion = championMap.get(championId);
+      const champion =
+        championMap.get(championId);
 
       return {
         championId,
-        name: champion?.name ?? championId,
-        image: champion?.image ?? null,
+
+        name:
+          champion?.name ??
+          championId,
+
+        image:
+          champion?.image ??
+          null,
+
         roles: [...values.roles.entries()]
-          .sort((a, b) => b[1] - a[1])
-          .map(([role]) => role),
-        games: values.games,
-        wins: values.wins,
-        winRate: round2((values.wins / values.games) * 100),
-        kda: round2(values.kdaSum / values.games),
+          .sort(
+            (a, b) =>
+              b[1] - a[1]
+          )
+          .map(
+            ([role]) => role
+          ),
+
+        games:
+          values.games,
+
+        wins:
+          values.wins,
+
+        winRate:
+          round2(
+            (values.wins /
+              values.games) *
+              100
+          ),
+
+        kda:
+          round2(
+            values.kdaSum /
+              values.games
+          ),
       };
     })
-    .sort((a, b) => b.games - a.games || b.winRate - a.winRate || b.kda - a.kda);
+    .sort(
+      (a, b) =>
+        b.games - a.games ||
+        b.winRate - a.winRate ||
+        b.kda - a.kda
+    );
 }

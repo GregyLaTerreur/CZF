@@ -28,8 +28,15 @@ export type Team = {
   name: string;
   shortName: string;
   logo: string | null;
+
+  // Games gagnées / perdues
   wins: number;
   losses: number;
+  gameDiff: number;
+
+  // Points de poule
+  points: number;
+
   rank?: number;
 };
 

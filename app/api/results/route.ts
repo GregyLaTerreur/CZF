@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import {
   type AnyObject,
   type Division,
@@ -22,6 +23,7 @@ import {
   stringOrNull,
   toTeamInfo,
 } from '@/lib/results/core';
+
 import {
   GAME_COLUMNS,
   MATCH_COLUMNS,
@@ -29,6 +31,7 @@ import {
   fetchAll,
   loadExclusions,
 } from '@/lib/results/load';
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -114,7 +117,9 @@ function extractArray(data: any, possibleKeys: string[]): AnyObject[] {
   return [];
 }
 
-function byDivision<T>(compute: (division: Division) => T): Record<Division, T> {
+function byDivision<T>(
+  compute: (division: Division) => T
+): Record<Division, T> {
   return Object.fromEntries(
     DIVISIONS.map((division) => [division, compute(division)])
   ) as Record<Division, T>;
@@ -130,9 +135,15 @@ export async function GET(request: NextRequest) {
 
     const [teamsResult, membersResult, playersResult] =
       await Promise.allSettled([
-        fetch(`${origin}/api/teams`, { cache: 'no-store' }),
-        fetch(`${origin}/api/team-members`, { cache: 'no-store' }),
-        fetch(`${origin}/api/players`, { cache: 'no-store' }),
+        fetch(`${origin}/api/teams`, {
+          cache: 'no-store',
+        }),
+        fetch(`${origin}/api/team-members`, {
+          cache: 'no-store',
+        }),
+        fetch(`${origin}/api/players`, {
+          cache: 'no-store',
+        }),
       ]);
 
     const rawTeams = extractArray(
@@ -161,8 +172,9 @@ export async function GET(request: NextRequest) {
 
       const teamMembers = rawMembers.filter(
         (member) =>
-          String(getValue(member, ['team_id', 'teamId', 'team'])) ===
-          String(teamId)
+          String(
+            getValue(member, ['team_id', 'teamId', 'team'])
+          ) === String(teamId)
       );
 
       const roster: ResultPlayer[] = teamMembers
@@ -176,21 +188,37 @@ export async function GET(request: NextRequest) {
             ]) ?? ''
           );
 
-          const player = findPlayer(rawPlayers, riotId, member);
+          const player = findPlayer(
+            rawPlayers,
+            riotId,
+            member
+          );
 
           return {
             id:
-              getValue(player, ['id', 'player_id', 'playerId']) ??
-              getValue(member, ['player_id', 'playerId', 'id']) ??
+              getValue(player, [
+                'id',
+                'player_id',
+                'playerId',
+              ]) ??
+              getValue(member, [
+                'player_id',
+                'playerId',
+                'id',
+              ]) ??
               null,
+
             riotId: String(
               getValue(player, [
                 'riot_id',
                 'riotId',
                 'summoner_name',
                 'summonerName',
-              ]) ?? riotId ?? 'Joueur'
+              ]) ??
+                riotId ??
+                'Joueur'
             ),
+
             discordName: stringOrNull(
               getValue(player, [
                 'discord_name',
@@ -200,10 +228,18 @@ export async function GET(request: NextRequest) {
                 'username',
               ])
             ),
+
             role: normalizeRole(
-              getValue(member, ['role', 'position']) ??
-                getValue(player, ['role', 'position'])
+              getValue(member, [
+                'role',
+                'position',
+              ]) ??
+                getValue(player, [
+                  'role',
+                  'position',
+                ])
             ),
+
             avatar: stringOrNull(
               getValue(player, [
                 'avatar',
@@ -214,13 +250,23 @@ export async function GET(request: NextRequest) {
             ),
           };
         })
-        .sort((a, b) => roleOrder(a.role) - roleOrder(b.role));
+        .sort(
+          (a, b) =>
+            roleOrder(a.role) -
+            roleOrder(b.role)
+        );
 
       return {
         ...toTeamInfo(team),
+
+        // Games gagnées / perdues
         wins: 0,
         losses: 0,
         gameDiff: 0,
+
+        // Points de poule
+        points: 0,
+
         roster,
       };
     });
@@ -228,123 +274,186 @@ export async function GET(request: NextRequest) {
     const champions = await getChampions();
 
     const championMap = new Map(
-      champions.map((champion) => [champion.id, champion])
+      champions.map((champion) => [
+        champion.id,
+        champion,
+      ])
     );
 
     /* =====================================================
        SUPABASE : MATCHS, GAMES, STATS ET EXCLUSIONS
     ===================================================== */
 
-    const [allMatches, allGames, allStats, currentStats, exclusionRows] =
-      await Promise.all([
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_matches')
-            .select(MATCH_COLUMNS)
-            .eq('status', 'finished')
-            .order('played_at', { ascending: false })
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
+    const [
+      allMatches,
+      allGames,
+      allStats,
+      currentStats,
+      exclusionRows,
+    ] = await Promise.all([
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_matches')
+          .select(MATCH_COLUMNS)
+          .eq('status', 'finished')
+          .order('played_at', {
+            ascending: false,
+          })
+          .order('id', {
+            ascending: true,
+          })
+          .range(from, to)
+      ),
 
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_games')
-            .select(GAME_COLUMNS)
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_games')
+          .select(GAME_COLUMNS)
+          .order('id', {
+            ascending: true,
+          })
+          .range(from, to)
+      ),
 
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_game_player_stats')
-            .select(STAT_COLUMNS)
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_game_player_stats')
+          .select(STAT_COLUMNS)
+          .order('id', {
+            ascending: true,
+          })
+          .range(from, to)
+      ),
 
-        // Vue des joueurs encore présents au même rôle.
-        fetchAll((from, to) =>
-          supabaseAdmin
-            .from('czf_current_player_stats')
-            .select(STAT_COLUMNS)
-            .order('id', { ascending: true })
-            .range(from, to)
-        ),
+      // Vue des joueurs encore présents au même rôle.
+      fetchAll((from, to) =>
+        supabaseAdmin
+          .from('czf_current_player_stats')
+          .select(STAT_COLUMNS)
+          .order('id', {
+            ascending: true,
+          })
+          .range(from, to)
+      ),
 
-        loadExclusions(),
-      ]);
+      loadExclusions(),
+    ]);
 
     /* =====================================================
        INDEX DES DONNEES
     ===================================================== */
 
-    const playerNames: PlayerNames = new Map();
+    const playerNames: PlayerNames =
+      new Map();
 
     for (const player of rawPlayers) {
-      const id = Number(getValue(player, ['id', 'player_id', 'playerId']));
+      const id = Number(
+        getValue(player, [
+          'id',
+          'player_id',
+          'playerId',
+        ])
+      );
 
       if (Number.isFinite(id)) {
-        playerNames.set(id, getValue(player, ['riot_id', 'riotId']) ?? null);
+        playerNames.set(
+          id,
+          getValue(player, [
+            'riot_id',
+            'riotId',
+          ]) ?? null
+        );
       }
     }
 
-    const gamesByMatch = groupBy(allGames, (game) => Number(game.match_id));
-    const statsByGame = groupBy(allStats, (stat) => Number(stat.game_id));
+    const gamesByMatch = groupBy(
+      allGames,
+      (game) => Number(game.match_id)
+    );
+
+    const statsByGame = groupBy(
+      allStats,
+      (stat) => Number(stat.game_id)
+    );
 
     /* =====================================================
        CLASSEMENT, HISTORIQUE ET STATS
     ===================================================== */
 
-    computeStandings(resultTeams, allMatches, gamesByMatch);
+    computeStandings(
+      resultTeams,
+      allMatches,
+      gamesByMatch
+    );
 
     const teamMap = new Map(
-      resultTeams.map((team) => [Number(team.id), team])
+      resultTeams.map((team) => [
+        Number(team.id),
+        team,
+      ])
     );
 
-    const divisions = splitByDivision(resultTeams, (team) => team.division);
+    const divisions = splitByDivision(
+      resultTeams,
+      (team) => team.division
+    );
 
-    const history = allMatches.map((match) => {
-      const matchGames = gamesByMatch.get(Number(match.id)) || [];
+    const history = allMatches.map(
+      (match) => {
+        const matchGames =
+          gamesByMatch.get(
+            Number(match.id)
+          ) || [];
 
-      return {
-        ...buildMatchSummary(match, teamMap, matchGames, playerNames),
-        games: buildMatchGames(
-          matchGames,
-          statsByGame,
+        return {
+          ...buildMatchSummary(
+            match,
+            teamMap,
+            matchGames,
+            playerNames
+          ),
+
+          games: buildMatchGames(
+            matchGames,
+            statsByGame,
+            teamMap,
+            playerNames,
+            championMap
+          ),
+        };
+      }
+    );
+
+    const historyByDivision =
+      splitByDivision(
+        history,
+        (match) => match.division
+      );
+
+    const exclusions =
+      parseExclusions(exclusionRows);
+
+    const playerStatsByDivision =
+      byDivision((division) =>
+        computePlayerStats(division, {
+          matches: allMatches,
+          games: allGames,
+          currentStats,
           teamMap,
           playerNames,
-          championMap
-        ),
-      };
-    });
+          exclusions,
+        })
+      );
 
-    const historyByDivision = splitByDivision(
-      history,
-      (match) => match.division
-    );
-
-    const exclusions = parseExclusions(exclusionRows);
-
-    const playerStatsByDivision = byDivision((division) =>
-      computePlayerStats(division, {
-        matches: allMatches,
-        games: allGames,
-        currentStats,
-        teamMap,
-        playerNames,
-        exclusions,
-      })
-    );
-
-    const championsByDivision = byDivision((division) =>
-      computeChampionStats(division, {
-        matches: allMatches,
-        games: allGames,
-        stats: allStats,
-        championMap,
-      })
-    );
+    const championsByDivision =
+      byDivision((division) =>
+        computeChampionStats(division, {
+          matches: allMatches,
+          games: allGames,
+          stats: allStats,
+          championMap,
+        })
+      );
 
     /* =====================================================
        REPONSE API
@@ -353,6 +462,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
+
         divisions,
         teams: resultTeams,
         champions,
@@ -366,10 +476,12 @@ export async function GET(request: NextRequest) {
             color: '#51a677',
             logo: '/assets/divisions/yordle.png',
           },
+
           Ixtal: {
             color: '#4387d8',
             logo: '/assets/divisions/ixtal.png',
           },
+
           Targon: {
             color: '#8f6bc7',
             logo: '/assets/divisions/targon.png',
@@ -377,11 +489,35 @@ export async function GET(request: NextRequest) {
         },
 
         roles: [
-          { id: 'Top', label: 'TOP', icon: '/assets/roles/top.png' },
-          { id: 'Jungle', label: 'JGL', icon: '/assets/roles/jungle.png' },
-          { id: 'Mid', label: 'MID', icon: '/assets/roles/mid.png' },
-          { id: 'ADC', label: 'ADC', icon: '/assets/roles/adc.png' },
-          { id: 'Support', label: 'SUP', icon: '/assets/roles/sup.png' },
+          {
+            id: 'Top',
+            label: 'TOP',
+            icon: '/assets/roles/top.png',
+          },
+
+          {
+            id: 'Jungle',
+            label: 'JGL',
+            icon: '/assets/roles/jungle.png',
+          },
+
+          {
+            id: 'Mid',
+            label: 'MID',
+            icon: '/assets/roles/mid.png',
+          },
+
+          {
+            id: 'ADC',
+            label: 'ADC',
+            icon: '/assets/roles/adc.png',
+          },
+
+          {
+            id: 'Support',
+            label: 'SUP',
+            icon: '/assets/roles/sup.png',
+          },
         ],
 
         debug: {
@@ -401,16 +537,21 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Cache-Control':
+            'no-store, no-cache, must-revalidate',
         },
       }
     );
   } catch (error: any) {
-    console.error('[RESULTS API]', error);
+    console.error(
+      '[RESULTS API]',
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
+
         error:
           error?.message ||
           'Impossible de charger les données de la page Résultats.',
@@ -419,8 +560,17 @@ export async function GET(request: NextRequest) {
         champions: [],
         history: [],
 
-        historyByDivision: { Yordle: [], Ixtal: [], Targon: [] },
-        divisions: { Yordle: [], Ixtal: [], Targon: [] },
+        historyByDivision: {
+          Yordle: [],
+          Ixtal: [],
+          Targon: [],
+        },
+
+        divisions: {
+          Yordle: [],
+          Ixtal: [],
+          Targon: [],
+        },
 
         playerStatsByDivision: {
           Yordle: emptyRoleStats(),
@@ -434,7 +584,9 @@ export async function GET(request: NextRequest) {
           Targon: emptyRoleStats(),
         },
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
