@@ -57,11 +57,17 @@ export async function GET(request: NextRequest) {
 
     const results = withResults && {
       // Classement calculé comme /api/classement : poules, toutes divisions.
-      teams: computeStandings(
-        teams.map((team) => ({ ...team, wins: 0, losses: 0, gameDiff: 0 })),
-        allMatches,
-        gamesByMatch
-      ).filter((team) => team.division === division),
+teams: computeStandings(
+  teams.map((team) => ({
+    ...team,
+    wins: 0,
+    losses: 0,
+    gameDiff: 0,
+    points: 0,
+  })),
+  allMatches,
+  gamesByMatch
+).filter((team) => team.division === division),
       history: matches.map((match) =>
         buildMatchSummary(match, teamMap, gamesByMatch.get(Number(match.id)) || [], playerNames)
       ),
