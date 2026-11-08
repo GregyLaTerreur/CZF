@@ -549,6 +549,9 @@ export default function HeadToHeadView() {
     );
   }
 
+  const supportOnly = (role: string | undefined, value: number | undefined) =>
+    normalize(role) === 'support' ? value : undefined;
+
   return (
     <>
       <header className={ds.header}>
@@ -565,277 +568,278 @@ export default function HeadToHeadView() {
 
       <section className={ds.section}>
         <div className={ds.container}>
-          <div className={styles.selectorRow}>
-            <TeamPicker
-              teams={sortedTeams}
-              selectedId={team1Id}
-              blockedId={team2Id}
-              onSelect={setTeam1Id}
-              placeholder="Rechercher une équipe..."
-            />
+          {/* Un seul bloc : sélection, équipes, rosters, duel et historique. */}
+          <div className={styles.board}>
+            <div className={styles.selectorRow}>
+              <TeamPicker
+                teams={sortedTeams}
+                selectedId={team1Id}
+                blockedId={team2Id}
+                onSelect={setTeam1Id}
+                placeholder="Équipe 1"
+              />
 
-            <div className={styles.mainVs}><span>VS</span></div>
+              <div className={styles.vs}><span>VS</span></div>
 
-            <TeamPicker
-              teams={sortedTeams}
-              selectedId={team2Id}
-              blockedId={team1Id}
-              onSelect={setTeam2Id}
-              placeholder="Rechercher une équipe..."
-            />
-          </div>
-
-          {!team1 || !team2 ? (
-            <div className={styles.emptyState}>
-              Sélectionne deux équipes pour lancer la comparaison.
+              <TeamPicker
+                teams={sortedTeams}
+                selectedId={team2Id}
+                blockedId={team1Id}
+                onSelect={setTeam2Id}
+                placeholder="Équipe 2"
+              />
             </div>
-          ) : (
-            <>
-              <div className={styles.teamDuel}>
-                <div className={styles.teamBattle}>
+
+            {!team1 || !team2 ? (
+              <div className={styles.emptyState}>
+                Sélectionne deux équipes pour lancer la comparaison.
+              </div>
+            ) : (
+              <>
+                <div className={styles.faceoff}>
                   <TeamIdentity team={team1} side="left" />
-                  <div className={styles.battleCenter}><span>VS</span></div>
+                  <div className={styles.vs}><span>VS</span></div>
                   <TeamIdentity team={team2} side="right" />
                 </div>
 
-                <div className={styles.teamStatTable}>
-                  <CompareRow
-                    label="Rang"
-                    left={`#${team1.rank ?? '-'}`}
-                    right={`#${team2.rank ?? '-'}`}
+                <Band>Équipes</Band>
+
+                <div className={styles.lines}>
+                  <StatLine
+                    label="Classement"
+                    left={team1.rank}
+                    right={team2.rank}
+                    format={(value) => (value === undefined ? '—' : `#${value}`)}
+                    compare
+                    lowerIsBetter
+                    bar={false}
                   />
-                  <CompareRow
+                  <StatLine
                     label="Points"
-                    left={String(team1.points)}
-                    right={String(team2.points)}
-                    leftBest={team1.points > team2.points}
-                    rightBest={team2.points > team1.points}
+                    left={team1.points}
+                    right={team2.points}
+                    format={formatInteger}
+                    compare
                   />
-                  <CompareRow
+                  <TextLine
                     label="V - D"
                     left={<WinLoss wins={team1.wins} losses={team1.losses} />}
                     right={<WinLoss wins={team2.wins} losses={team2.losses} />}
                   />
                 </div>
-              </div>
 
-              <div className={styles.sectionHead}>
-                <div>
-                  <div className={ds.sectionLabel}>Roster</div>
-                  <h2 className={styles.sectionTitle}>Choisis ton duel</h2>
+                <Band hint="Clique sur un joueur de chaque équipe">Choisis ton duel</Band>
+
+                <div className={styles.rosterGrid}>
+                  <RosterColumn
+                    roster={roster1}
+                    selectedId={player1Id}
+                    onSelect={setPlayer1Id}
+                    side="left"
+                  />
+                  <RosterColumn
+                    roster={roster2}
+                    selectedId={player2Id}
+                    onSelect={setPlayer2Id}
+                    side="right"
+                  />
                 </div>
-                <span className={styles.sectionHint}>
-                  Clique sur un joueur de chaque équipe
-                </span>
-              </div>
 
-              <div className={styles.rosterGrid}>
-                <RosterColumn
-                  team={team1}
-                  roster={roster1}
-                  selectedId={player1Id}
-                  onSelect={setPlayer1Id}
-                />
-                <RosterColumn
-                  team={team2}
-                  roster={roster2}
-                  selectedId={player2Id}
-                  onSelect={setPlayer2Id}
-                />
-              </div>
+                {selectedPlayer1 && selectedPlayer2 && (
+                  <>
+                    <Band>Duel joueurs</Band>
 
-              {selectedPlayer1 && selectedPlayer2 && (
-                <div className={styles.playerDuel}>
-                  <div className={styles.playerDuelHead}>
-                    <div>
-                      <span>{roleLabel(selectedPlayer1.role)}</span>
-                      <strong><RiotName riotId={selectedPlayer1.riotId} /></strong>
-                      <PlayerRank player={selectedPlayer1.player} />
-                      <ChampionMiniList champions={topChampions1} />
+                    <div className={styles.playerHead}>
+                      <div>
+                        <span>{roleLabel(selectedPlayer1.role)}</span>
+                        <strong><RiotName riotId={selectedPlayer1.riotId} /></strong>
+                        <PlayerRank player={selectedPlayer1.player} />
+                        <ChampionMiniList champions={topChampions1} />
+                      </div>
+
+                      <div className={styles.vs}><span>VS</span></div>
+
+                      <div>
+                        <span>{roleLabel(selectedPlayer2.role)}</span>
+                        <strong><RiotName riotId={selectedPlayer2.riotId} /></strong>
+                        <PlayerRank player={selectedPlayer2.player} />
+                        <ChampionMiniList champions={topChampions2} />
+                      </div>
                     </div>
 
-                    <b><span>VS</span></b>
-
-                    <div>
-                      <span>{roleLabel(selectedPlayer2.role)}</span>
-                      <strong><RiotName riotId={selectedPlayer2.riotId} /></strong>
-                      <PlayerRank player={selectedPlayer2.player} />
-                      <ChampionMiniList champions={topChampions2} />
-                    </div>
-                  </div>
-
-                  {!stat1 && !stat2 ? (
-                    <div className={styles.noStats}>
-                      Pas encore de statistiques disponibles pour ces joueurs.
-                    </div>
-                  ) : (
-                    <div className={styles.playerStatList}>
-                      <StatLine
-                        label="Games"
-                        left={stat1?.games}
-                        right={stat2?.games}
-                        format={formatInteger}
-                      />
-
-                      <StatLine
-                        label="KDA"
-                        left={stat1?.kda}
-                        right={stat2?.kda}
-                        leftRank={getStatRank(stat1, 'kda')}
-                        rightRank={getStatRank(stat2, 'kda')}
-                        format={(value) => formatNumber(value, 2)}
-                        compare
-                      />
-
-                      <StatLine
-                        label="Gold / min"
-                        left={stat1?.goldPerMin}
-                        right={stat2?.goldPerMin}
-                        leftRank={getStatRank(stat1, 'goldPerMin')}
-                        rightRank={getStatRank(stat2, 'goldPerMin')}
-                        format={formatInteger}
-                        compare
-                      />
-
-                      <StatLine
-                        label="Gold Team %"
-                        left={stat1?.goldShare}
-                        right={stat2?.goldShare}
-                        leftRank={getStatRank(stat1, 'goldShare')}
-                        rightRank={getStatRank(stat2, 'goldShare')}
-                        format={(value) =>
-                          value === undefined ? '—' : `${formatNumber(value, 1)}%`
-                        }
-                        compare
-                      />
-
-                      <StatLine
-                        label="Dégâts / min"
-                        left={stat1?.dpm}
-                        right={stat2?.dpm}
-                        leftRank={getStatRank(stat1, 'dpm')}
-                        rightRank={getStatRank(stat2, 'dpm')}
-                        format={formatInteger}
-                        compare
-                      />
-
-                      <StatLine
-                        label="DMG Team %"
-                        left={stat1?.damageShare}
-                        right={stat2?.damageShare}
-                        leftRank={getStatRank(stat1, 'damageShare')}
-                        rightRank={getStatRank(stat2, 'damageShare')}
-                        format={(value) =>
-                          value === undefined ? '—' : `${formatNumber(value, 1)}%`
-                        }
-                        compare
-                      />
-
-                      <StatLine
-                        label="CS / min"
-                        left={stat1?.csPerMin}
-                        right={stat2?.csPerMin}
-                        leftRank={getStatRank(stat1, 'csPerMin')}
-                        rightRank={getStatRank(stat2, 'csPerMin')}
-                        format={(value) => formatNumber(value, 1)}
-                        compare
-                      />
-
-                      <StatLine
-                        label="KP %"
-                        left={stat1?.killParticipation}
-                        right={stat2?.killParticipation}
-                        leftRank={getStatRank(stat1, 'killParticipation')}
-                        rightRank={getStatRank(stat2, 'killParticipation')}
-                        format={(value) =>
-                          value === undefined ? '—' : `${formatNumber(value, 1)}%`
-                        }
-                        compare
-                      />
-
-                      {showVision && (
+                    {!stat1 && !stat2 ? (
+                      <div className={styles.emptyState}>
+                        Pas encore de statistiques disponibles pour ces joueurs.
+                      </div>
+                    ) : (
+                      <div className={styles.lines}>
                         <StatLine
-                          label="Vision / min"
-                          left={
-                            normalize(selectedPlayer1.role) === 'support'
-                              ? stat1?.visionScore
-                              : undefined
-                          }
-                          right={
-                            normalize(selectedPlayer2.role) === 'support'
-                              ? stat2?.visionScore
-                              : undefined
-                          }
-                          leftRank={
-                            normalize(selectedPlayer1.role) === 'support'
-                              ? getStatRank(stat1, 'visionScore')
-                              : null
-                          }
-                          rightRank={
-                            normalize(selectedPlayer2.role) === 'support'
-                              ? getStatRank(stat2, 'visionScore')
-                              : null
-                          }
+                          label="Games"
+                          left={stat1?.games}
+                          right={stat2?.games}
+                          format={formatInteger}
+                          bar={false}
+                        />
+                        <StatLine
+                          label="KDA"
+                          left={stat1?.kda}
+                          right={stat2?.kda}
+                          leftRank={getStatRank(stat1, 'kda')}
+                          rightRank={getStatRank(stat2, 'kda')}
                           format={(value) => formatNumber(value, 2)}
                           compare
                         />
-                      )}
-
-                      <StatLine
-                        label="MVP"
-                        left={stat1?.mvp}
-                        right={stat2?.mvp}
-                        format={formatInteger}
-                        compare
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className={styles.sectionHead}>
-                <div>
-                  <div className={ds.sectionLabel}>Confrontations</div>
-                  <h2 className={styles.sectionTitle}>Historique direct</h2>
-                </div>
-                <div className={styles.h2hScore}>
-                  {directScore.left}<span>-</span>{directScore.right}
-                </div>
-              </div>
-
-              {directMatches.length === 0 ? (
-                <div className={styles.noDirect}>
-                  Ces deux équipes ne se sont pas encore affrontées.
-                </div>
-              ) : (
-                <div className={styles.historyList}>
-                  {directMatches.map((match) => {
-                    const leftIsTeam1 =
-                      Number(match.team1.id) === Number(team1.id);
-                    const left = leftIsTeam1 ? match.team1 : match.team2;
-                    const right = leftIsTeam1 ? match.team2 : match.team1;
-
-                    return (
-                      <div key={match.id} className={styles.historyRow}>
-                        <span>{formatDate(match.playedAt)}</span>
-                        <strong>{left.name}</strong>
-                        <b>
-                          <span className={scoreClass(left.score, right.score)}>{left.score}</span>
-                          {' - '}
-                          <span className={scoreClass(right.score, left.score)}>{right.score}</span>
-                        </b>
-                        <strong>{right.name}</strong>
+                        <StatLine
+                          label="KP %"
+                          left={stat1?.killParticipation}
+                          right={stat2?.killParticipation}
+                          leftRank={getStatRank(stat1, 'killParticipation')}
+                          rightRank={getStatRank(stat2, 'killParticipation')}
+                          format={formatPercent}
+                          compare
+                        />
+                        <StatLine
+                          label="Dégâts / min"
+                          left={stat1?.dpm}
+                          right={stat2?.dpm}
+                          leftRank={getStatRank(stat1, 'dpm')}
+                          rightRank={getStatRank(stat2, 'dpm')}
+                          format={formatInteger}
+                          compare
+                        />
+                        <StatLine
+                          label="DMG Team %"
+                          left={stat1?.damageShare}
+                          right={stat2?.damageShare}
+                          leftRank={getStatRank(stat1, 'damageShare')}
+                          rightRank={getStatRank(stat2, 'damageShare')}
+                          format={formatPercent}
+                          compare
+                        />
+                        <StatLine
+                          label="Gold / min"
+                          left={stat1?.goldPerMin}
+                          right={stat2?.goldPerMin}
+                          leftRank={getStatRank(stat1, 'goldPerMin')}
+                          rightRank={getStatRank(stat2, 'goldPerMin')}
+                          format={formatInteger}
+                          compare
+                        />
+                        <StatLine
+                          label="Gold Team %"
+                          left={stat1?.goldShare}
+                          right={stat2?.goldShare}
+                          leftRank={getStatRank(stat1, 'goldShare')}
+                          rightRank={getStatRank(stat2, 'goldShare')}
+                          format={formatPercent}
+                          compare
+                        />
+                        <StatLine
+                          label="CS / min"
+                          left={stat1?.csPerMin}
+                          right={stat2?.csPerMin}
+                          leftRank={getStatRank(stat1, 'csPerMin')}
+                          rightRank={getStatRank(stat2, 'csPerMin')}
+                          format={(value) => formatNumber(value, 1)}
+                          compare
+                        />
+                        {showVision && (
+                          <StatLine
+                            label="Vision / min"
+                            left={supportOnly(selectedPlayer1.role, stat1?.visionScore)}
+                            right={supportOnly(selectedPlayer2.role, stat2?.visionScore)}
+                            leftRank={
+                              supportOnly(selectedPlayer1.role, 1)
+                                ? getStatRank(stat1, 'visionScore')
+                                : null
+                            }
+                            rightRank={
+                              supportOnly(selectedPlayer2.role, 1)
+                                ? getStatRank(stat2, 'visionScore')
+                                : null
+                            }
+                            format={(value) => formatNumber(value, 2)}
+                            compare
+                          />
+                        )}
+                        <StatLine
+                          label="MVP"
+                          left={stat1?.mvp}
+                          right={stat2?.mvp}
+                          format={formatInteger}
+                          compare
+                          bar={false}
+                        />
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )}
+                    )}
+                  </>
+                )}
+
+                <Band
+                  hint={
+                    <span className={styles.h2hScore}>
+                      <b className={scoreClass(directScore.left, directScore.right)}>
+                        {directScore.left}
+                      </b>
+                      {' - '}
+                      <b className={scoreClass(directScore.right, directScore.left)}>
+                        {directScore.right}
+                      </b>
+                    </span>
+                  }
+                >
+                  Historique direct
+                </Band>
+
+                {directMatches.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    Ces deux équipes ne se sont pas encore affrontées.
+                  </div>
+                ) : (
+                  <div className={styles.history}>
+                    {directMatches.map((match) => {
+                      const leftIsTeam1 = Number(match.team1.id) === Number(team1.id);
+                      const left = leftIsTeam1 ? match.team1 : match.team2;
+                      const right = leftIsTeam1 ? match.team2 : match.team1;
+
+                      return (
+                        <div key={match.id} className={styles.historyRow}>
+                          <strong>{left.name}</strong>
+                          <div>
+                            <b>
+                              <span className={scoreClass(left.score, right.score)}>{left.score}</span>
+                              {' - '}
+                              <span className={scoreClass(right.score, left.score)}>{right.score}</span>
+                            </b>
+                            <small>{formatDate(match.playedAt)}</small>
+                          </div>
+                          <strong>{right.name}</strong>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </section>
     </>
   );
+}
+
+// Bandeau de section du bloc, comme les intertitres de dpm.lol.
+function Band({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
+  return (
+    <div className={styles.band}>
+      <span>{children}</span>
+      {hint && <div className={styles.bandHint}>{hint}</div>}
+    </div>
+  );
+}
+
+function formatPercent(value: number | undefined) {
+  return value === undefined ? '—' : `${formatNumber(value, 1)}%`;
 }
 
 function TeamPicker({
@@ -954,52 +958,47 @@ function TeamIdentity({
   );
 }
 
-function CompareRow({
+function TextLine({
   label,
   left,
   right,
-  leftBest,
-  rightBest,
 }: {
   label: string;
   left: ReactNode;
   right: ReactNode;
-  leftBest?: boolean;
-  rightBest?: boolean;
 }) {
   return (
-    <div className={styles.compareRow}>
-      <strong className={leftBest ? styles.compareBest : ''}>{left}</strong>
-      <span>{label}</span>
-      <strong className={rightBest ? styles.compareBest : ''}>{right}</strong>
+    <div className={styles.statLine}>
+      <div className={styles.statSide}>{left}</div>
+      <div className={styles.statCenter}>
+        <span className={styles.statLabel}>{label}</span>
+      </div>
+      <div className={`${styles.statSide} ${styles.statSideRight}`}>{right}</div>
     </div>
   );
 }
 
 function RosterColumn({
-  team,
   roster,
   selectedId,
   onSelect,
+  side,
 }: {
-  team: StandingTeam;
   roster: RosterItem[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
+  side: 'left' | 'right';
 }) {
   return (
-    <div className={`${ds.card} ${styles.rosterCard}`}>
-      <div className={styles.rosterHead}>
-        <strong>{team.name}</strong>
-        <WinLoss wins={team.wins} losses={team.losses} />
-      </div>
-
+    <div className={styles.rosterColumn}>
       {roster.map((item) => (
         <button
           key={item.member.id}
           type="button"
           disabled={!item.playerId}
           className={`${styles.rosterRow} ${
+            side === 'right' ? styles.rosterRowRight : ''
+          } ${
             Number(selectedId) === Number(item.playerId)
               ? styles.rosterRowActive
               : ''
@@ -1067,12 +1066,15 @@ function ChampionMiniList({
   );
 }
 
+// Valeur / libellé + barre de répartition / valeur ; la meilleure valeur passe en badge.
 function StatLine({
   label,
   left,
   right,
   format,
   compare = false,
+  lowerIsBetter = false,
+  bar = true,
   leftRank,
   rightRank,
 }: {
@@ -1081,34 +1083,46 @@ function StatLine({
   right?: number;
   format: (value: number | undefined) => string;
   compare?: boolean;
+  lowerIsBetter?: boolean;
+  bar?: boolean;
   leftRank?: number | null;
   rightRank?: number | null;
 }) {
   const leftNumber = Number(left);
   const rightNumber = Number(right);
-  const validLeft = left !== undefined && Number.isFinite(leftNumber);
-  const validRight = right !== undefined && Number.isFinite(rightNumber);
-  const canCompare = compare && validLeft && validRight;
-  const leftWins = canCompare && leftNumber > rightNumber;
-  const rightWins = canCompare && rightNumber > leftNumber;
+  const validLeft = left !== undefined && left !== null && Number.isFinite(leftNumber);
+  const validRight = right !== undefined && right !== null && Number.isFinite(rightNumber);
+  const canCompare = compare && validLeft && validRight && leftNumber !== rightNumber;
+  const leftWins = canCompare && (lowerIsBetter ? leftNumber < rightNumber : leftNumber > rightNumber);
+  const rightWins = canCompare && !leftWins;
+
+  const total = leftNumber + rightNumber;
+  const showBar = bar && validLeft && validRight && total > 0;
+  const leftShare = showBar ? (leftNumber / total) * 100 : 50;
+
+  const side = (value: number | undefined, rank: number | null | undefined, best: boolean) => (
+    <>
+      <span className={best ? styles.statBest : styles.statValue}>{format(value)}</span>
+      {rank ? <small className={styles.statRank}>#{rank}</small> : null}
+    </>
+  );
 
   return (
     <div className={styles.statLine}>
-      <strong className={leftWins ? styles.statBest : ''}>
-        <span className={styles.statValueWrap}>
-          {format(left)}
-          {leftRank && <small>#{leftRank}</small>}
-        </span>
-      </strong>
+      <div className={styles.statSide}>{side(left, leftRank, leftWins)}</div>
 
-      <span className={styles.statLabel}>{label}</span>
+      <div className={styles.statCenter}>
+        <span className={styles.statLabel}>{label}</span>
+        {showBar && (
+          <div className={styles.statBar}>
+            <i style={{ width: `${leftShare}%` }} />
+          </div>
+        )}
+      </div>
 
-      <strong className={rightWins ? styles.statBest : ''}>
-        <span className={styles.statValueWrap}>
-          {format(right)}
-          {rightRank && <small>#{rightRank}</small>}
-        </span>
-      </strong>
+      <div className={`${styles.statSide} ${styles.statSideRight}`}>
+        {side(right, rightRank, rightWins)}
+      </div>
     </div>
   );
 }
