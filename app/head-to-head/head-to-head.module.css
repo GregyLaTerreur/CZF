@@ -348,9 +348,10 @@
 }
 
 .statRank {
-  font-size: 0.72rem;
+  font-size: 1rem;
+  font-style: italic;
   font-weight: 800;
-  color: rgba(8, 20, 40, 0.4);
+  color: rgba(8, 20, 40, 0.5);
 }
 
 .statCenter {
