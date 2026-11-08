@@ -13,7 +13,7 @@ import { checkPartnerKey } from '@/lib/partenaires/auth';
 
 export const dynamic = 'force-dynamic';
 
-type TeamRef = { id: number; name: string | null };
+type TeamRef = { id_team: number; name: string | null };
 
 const num = (value: any) => Number(value) || 0;
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     const playerNames = new Map(dataset.playerNames);
 
     const team = (id: any): TeamRef | null =>
-      id == null ? null : { id: Number(id), name: teamNames.get(Number(id)) ?? null };
+      id == null ? null : { id_team: Number(id), name: teamNames.get(Number(id)) ?? null };
 
     const matches = division
       ? dataset.matches.filter((match) => match.division === division)
