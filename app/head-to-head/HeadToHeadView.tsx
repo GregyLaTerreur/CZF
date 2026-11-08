@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { logoSrc } from '@/lib/logo';
 import ds from '@/app/components/ds/ds.module.css';
@@ -8,6 +8,7 @@ import {
   DIVISION_COLORS,
   type DivisionName,
 } from '@/app/components/home/divisions';
+import { TIERS, formatRank, roleInfo, splitRiotId } from '@/app/components/ds/lol';
 
 import styles from './head-to-head.module.css';
 
@@ -162,21 +163,34 @@ function formatInteger(value: number | undefined) {
 }
 
 function getPlayerRank(player: Player | null) {
-  if (!player) return 'Non classé';
+  return formatRank(player?.soloq_tier, player?.soloq_rank, player?.soloq_lp) ?? 'Non classé';
+}
 
-  const tier = player.soloq_tier;
-  const rank = player.soloq_rank;
-  const lp = player.soloq_lp;
+function PlayerRank({ player }: { player: Player | null }) {
+  const icon = player?.soloq_tier ? TIERS[player.soloq_tier]?.icon : null;
 
-  if (tier && rank) {
-    return `${tier} ${rank}${lp !== undefined && lp !== null ? ` · ${lp} LP` : ''}`;
-  }
+  return (
+    <small className={styles.playerRank}>
+      {icon && <img src={icon} alt="" className={ds.rankIcon} />}
+      {getPlayerRank(player)}
+    </small>
+  );
+}
 
-  if (tier) {
-    return `${tier}${lp !== undefined && lp !== null ? ` · ${lp} LP` : ''}`;
-  }
+// Pseudo en gras, #TAG atténué, comme dans le design system.
+function RiotName({ riotId }: { riotId: string }) {
+  const { name, tag } = splitRiotId(riotId);
 
-  return 'Non classé';
+  return (
+    <>
+      {name}
+      {tag && <span className={styles.riotTag}>#{tag}</span>}
+    </>
+  );
+}
+
+function roleLabel(role?: string | null) {
+  return roleInfo(role)?.label ?? role ?? '';
 }
 
 export default function HeadToHeadView() {
@@ -560,7 +574,7 @@ export default function HeadToHeadView() {
               placeholder="Rechercher une équipe..."
             />
 
-            <div className={styles.mainVs}>VS</div>
+            <div className={styles.mainVs}><span>VS</span></div>
 
             <TeamPicker
               teams={sortedTeams}
@@ -599,8 +613,8 @@ export default function HeadToHeadView() {
                   />
                   <CompareRow
                     label="V - D"
-                    left={`${team1.wins} - ${team1.losses}`}
-                    right={`${team2.wins} - ${team2.losses}`}
+                    left={<WinLoss wins={team1.wins} losses={team1.losses} />}
+                    right={<WinLoss wins={team2.wins} losses={team2.losses} />}
                   />
                 </div>
               </div>
@@ -617,17 +631,16 @@ export default function HeadToHeadView() {
 
               <div className={styles.rosterGrid}>
                 <RosterColumn
+                  team={team1}
                   roster={roster1}
                   selectedId={player1Id}
                   onSelect={setPlayer1Id}
-                  align="left"
                 />
-                <div className={styles.rosterDivider} />
                 <RosterColumn
+                  team={team2}
                   roster={roster2}
                   selectedId={player2Id}
                   onSelect={setPlayer2Id}
-                  align="right"
                 />
               </div>
 
@@ -635,22 +648,18 @@ export default function HeadToHeadView() {
                 <div className={styles.playerDuel}>
                   <div className={styles.playerDuelHead}>
                     <div>
-                      <span>{selectedPlayer1.role}</span>
-                      <strong>{selectedPlayer1.riotId}</strong>
-                      <small className={styles.playerRank}>
-                        {getPlayerRank(selectedPlayer1.player)}
-                      </small>
+                      <span>{roleLabel(selectedPlayer1.role)}</span>
+                      <strong><RiotName riotId={selectedPlayer1.riotId} /></strong>
+                      <PlayerRank player={selectedPlayer1.player} />
                       <ChampionMiniList champions={topChampions1} />
                     </div>
 
-                    <b>VS</b>
+                    <b><span>VS</span></b>
 
                     <div>
-                      <span>{selectedPlayer2.role}</span>
-                      <strong>{selectedPlayer2.riotId}</strong>
-                      <small className={styles.playerRank}>
-                        {getPlayerRank(selectedPlayer2.player)}
-                      </small>
+                      <span>{roleLabel(selectedPlayer2.role)}</span>
+                      <strong><RiotName riotId={selectedPlayer2.riotId} /></strong>
+                      <PlayerRank player={selectedPlayer2.player} />
                       <ChampionMiniList champions={topChampions2} />
                     </div>
                   </div>
@@ -810,7 +819,11 @@ export default function HeadToHeadView() {
                       <div key={match.id} className={styles.historyRow}>
                         <span>{formatDate(match.playedAt)}</span>
                         <strong>{left.name}</strong>
-                        <b>{left.score} - {right.score}</b>
+                        <b>
+                          <span className={scoreClass(left.score, right.score)}>{left.score}</span>
+                          {' - '}
+                          <span className={scoreClass(right.score, left.score)}>{right.score}</span>
+                        </b>
                         <strong>{right.name}</strong>
                       </div>
                     );
@@ -896,7 +909,10 @@ function TeamPicker({
                 }}
               >
                 <strong>{team.name}</strong>
-                <span>{team.division}</span>
+                <span>
+                  <i style={{ background: DIVISION_COLORS[team.division] }} />
+                  {team.division}
+                </span>
               </button>
             ))
           )}
@@ -946,8 +962,8 @@ function CompareRow({
   rightBest,
 }: {
   label: string;
-  left: string;
-  right: string;
+  left: ReactNode;
+  right: ReactNode;
   leftBest?: boolean;
   rightBest?: boolean;
 }) {
@@ -961,18 +977,23 @@ function CompareRow({
 }
 
 function RosterColumn({
+  team,
   roster,
   selectedId,
   onSelect,
-  align,
 }: {
+  team: StandingTeam;
   roster: RosterItem[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
-  align: 'left' | 'right';
 }) {
   return (
-    <div className={styles.rosterColumn}>
+    <div className={`${ds.card} ${styles.rosterCard}`}>
+      <div className={styles.rosterHead}>
+        <strong>{team.name}</strong>
+        <WinLoss wins={team.wins} losses={team.losses} />
+      </div>
+
       {roster.map((item) => (
         <button
           key={item.member.id}
@@ -982,16 +1003,29 @@ function RosterColumn({
             Number(selectedId) === Number(item.playerId)
               ? styles.rosterRowActive
               : ''
-          } ${align === 'right' ? styles.rosterRowRight : ''}`}
+          }`}
           onClick={() => onSelect(item.playerId)}
         >
-          <span className={styles.rosterRole}>{item.role}</span>
-          <strong>{item.riotId}</strong>
+          <span className={styles.rosterRole}>{roleLabel(item.role)}</span>
+          <strong><RiotName riotId={item.riotId} /></strong>
           <small>{item.points} pts</small>
         </button>
       ))}
     </div>
   );
+}
+
+function WinLoss({ wins, losses }: { wins: number; losses: number }) {
+  return (
+    <span className={styles.winLoss}>
+      <b className={ds.win}>{wins}</b> – <b className={ds.loss}>{losses}</b>
+    </span>
+  );
+}
+
+function scoreClass(score: number, other: number) {
+  if (score === other) return '';
+  return score > other ? ds.win : ds.loss;
 }
 
 function ChampionMiniList({
