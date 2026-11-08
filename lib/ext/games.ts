@@ -1,6 +1,6 @@
 // Données des routes publiques /api/ext/* (lecture seule, ouvertes aux collaborateurs).
 
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { type AnyObject, normalizeRole, roleOrder } from '@/lib/results/core';
 import { fetchAll } from '@/lib/results/load';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
@@ -27,6 +27,23 @@ export function formatFrDate(value: string | null | undefined): string | null {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : frDate.format(date).replace(',', '');
+}
+
+// Comparaison de noms sans casse ni accents.
+export function normalizeText(value: any): string {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+// Paramètre d'id facultatif : null si absent, invalid si ce n'est pas un entier positif.
+export function readIdParam(request: NextRequest, name: string) {
+  const raw = request.nextUrl.searchParams.get(name);
+  const value = raw ? Number(raw) : null;
+
+  return { value, invalid: Boolean(raw) && !(Number.isInteger(value) && value! > 0) };
 }
 
 // Toutes les équipes, validées ou non : un BO ancien peut référencer une équipe dissoute.

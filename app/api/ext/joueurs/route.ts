@@ -1,7 +1,15 @@
 import type { NextRequest } from 'next/server';
 import { type AnyObject, type Role, groupBy, round2 } from '@/lib/results/core';
 import { jsonError, loadResultsDataset, readDivisionParam } from '@/lib/results/load';
-import { buildGamePlayers, extJson, formatFrDate, loadTeamNames, percent } from '@/lib/ext/games';
+import {
+  buildGamePlayers,
+  extJson,
+  formatFrDate,
+  loadTeamNames,
+  normalizeText,
+  percent,
+  readIdParam,
+} from '@/lib/ext/games';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +22,8 @@ type Line = ReturnType<typeof buildGamePlayers>['players'][number] & {
 };
 
 // Stats de chaque joueur calculées à la volée sur toutes ses games officielles.
-// ?division=Ixtal : seulement les games de cette division ; ?id_player=133 : un seul joueur.
+// ?division=Ixtal : seulement les games de cette division ; ?id_player=133 : un seul joueur ;
+// ?riot_id=Pseudo%23TAG (# encodé), ou ?riot_id=Pseudo sans le tag.
 export async function GET(request: NextRequest) {
   const { division, invalid } = readDivisionParam(request);
 
@@ -22,12 +31,16 @@ export async function GET(request: NextRequest) {
     return extJson({ success: false, error: 'Division inconnue (Yordle, Ixtal ou Targon).' }, 400);
   }
 
-  const rawPlayer = request.nextUrl.searchParams.get('id_player');
-  const onlyPlayer = rawPlayer ? Number(rawPlayer) : null;
+  const { value: onlyPlayer, invalid: invalidPlayer } = readIdParam(request, 'id_player');
+  if (invalidPlayer) return extJson({ success: false, error: 'id_player invalide.' }, 400);
 
-  if (rawPlayer && !(Number.isInteger(onlyPlayer) && onlyPlayer! > 0)) {
-    return extJson({ success: false, error: 'id_player invalide.' }, 400);
-  }
+  const riotQuery = normalizeText(request.nextUrl.searchParams.get('riot_id'));
+
+  // Avec le tag : Riot ID complet ; sans : seulement le pseudo.
+  const matchesRiotId = (riotId: string | null) => {
+    const value = normalizeText(riotId);
+    return riotQuery.includes('#') ? value === riotQuery : value.split('#')[0] === riotQuery;
+  };
 
   try {
     const [dataset, teamNames] = await Promise.all([loadResultsDataset(), loadTeamNames()]);
@@ -52,6 +65,7 @@ export async function GET(request: NextRequest) {
 
       for (const player of players) {
         if (player.isSub || (onlyPlayer && player.id_player !== onlyPlayer)) continue;
+        if (riotQuery && !matchesRiotId(player.riotId)) continue;
 
         lines.push({
           ...player,
@@ -132,7 +146,7 @@ export async function GET(request: NextRequest) {
 
     joueurs.sort((a, b) => b.games - a.games || b.kda - a.kda);
 
-    if (onlyPlayer && !joueurs.length) {
+    if ((onlyPlayer || riotQuery) && !joueurs.length) {
       return extJson({ success: false, error: 'Aucune game pour ce joueur.' }, 404);
     }
 

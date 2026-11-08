@@ -1,7 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { type AnyObject, groupBy } from '@/lib/results/core';
 import { jsonError, loadResultsDataset, readDivisionParam } from '@/lib/results/load';
-import { buildGamePlayers, extJson, formatFrDate, loadTeamNames } from '@/lib/ext/games';
+import {
+  buildGamePlayers,
+  extJson,
+  formatFrDate,
+  loadTeamNames,
+  normalizeText,
+  readIdParam,
+} from '@/lib/ext/games';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,13 +18,19 @@ function formatDuration(seconds: number | null): string | null {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
-// BO joués → games → joueurs, en lecture seule. ?division=Ixtal pour filtrer.
+// BO joués → games → joueurs, en lecture seule.
+// Filtres : ?division=Ixtal, ?id_team=38, ?team=Season's (sans casse ni accents).
 export async function GET(request: NextRequest) {
   const { division, invalid } = readDivisionParam(request);
 
   if (invalid) {
     return extJson({ success: false, error: 'Division inconnue (Yordle, Ixtal ou Targon).' }, 400);
   }
+
+  const idTeam = readIdParam(request, 'id_team');
+  if (idTeam.invalid) return extJson({ success: false, error: 'id_team invalide.' }, 400);
+
+  const teamQuery = normalizeText(request.nextUrl.searchParams.get('team'));
 
   try {
     const [dataset, teamNames] = await Promise.all([loadResultsDataset(), loadTeamNames()]);
@@ -26,9 +39,28 @@ export async function GET(request: NextRequest) {
     const team = (id: any) =>
       id == null ? null : { id_team: Number(id), name: teamNames.get(Number(id)) ?? null };
 
-    const matches = division
-      ? dataset.matches.filter((match) => match.division === division)
-      : dataset.matches;
+    // Nom exact d'abord, sinon toutes les équipes dont le nom le contient.
+    let teamIds: Set<number> | null = null;
+
+    if (teamQuery) {
+      const named = [...teamNames].map(([id, name]) => ({ id, name: normalizeText(name) }));
+      const exact = named.filter((item) => item.name === teamQuery);
+      const found = exact.length ? exact : named.filter((item) => item.name.includes(teamQuery));
+
+      if (!found.length) return extJson({ success: false, error: 'Équipe introuvable.' }, 404);
+
+      teamIds = new Set(found.map((item) => item.id));
+    }
+
+    const plays = (match: AnyObject, ids: Set<number>) =>
+      ids.has(Number(match.team1_id)) || ids.has(Number(match.team2_id));
+
+    const matches = dataset.matches.filter(
+      (match) =>
+        (!division || match.division === division) &&
+        (!idTeam.value || plays(match, new Set([idTeam.value]))) &&
+        (!teamIds || plays(match, teamIds))
+    );
 
     const gamesByMatch = groupBy(dataset.games, (game) => Number(game.match_id));
     const statsByGame = groupBy(dataset.stats, (stat) => Number(stat.game_id));
@@ -78,8 +110,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return extJson({ success: true, total: bo.length, bo });
+    return extJson({ success: true, total: bo.length, matches: bo });
   } catch (error) {
-    return jsonError('EXT BO API', error, 'Impossible de charger les BO.');
+    return jsonError('EXT MATCHES API', error, 'Impossible de charger les matchs.');
   }
 }
