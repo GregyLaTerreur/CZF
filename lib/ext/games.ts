@@ -12,6 +12,23 @@ const num = (value: any) => Number(value) || 0;
 export const percent = (part: number, total: number) =>
   total ? Math.round((part / total) * 1000) / 10 : 0;
 
+// Date française à l'heure de Paris : « 03/11/2026 13:07 ».
+const frDate = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: 'Europe/Paris',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+export function formatFrDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : frDate.format(date).replace(',', '');
+}
+
 // Toutes les équipes, validées ou non : un BO ancien peut référencer une équipe dissoute.
 export async function loadTeamNames(): Promise<TeamNames> {
   const rows = await fetchAll((from, to) =>

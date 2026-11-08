@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { type AnyObject, groupBy } from '@/lib/results/core';
 import { jsonError, loadResultsDataset, readDivisionParam } from '@/lib/results/load';
-import { buildGamePlayers, extJson, loadTeamNames } from '@/lib/ext/games';
+import { buildGamePlayers, extJson, formatFrDate, loadTeamNames } from '@/lib/ext/games';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         bracket: match.bracket ?? null,
         round: match.round ?? null,
         bestOf: Number(match.best_of),
-        playedAt: match.played_at,
+        playedAt: formatFrDate(match.played_at),
         team1: { ...team(match.team1_id), score: wins(match.team1_id) },
         team2: { ...team(match.team2_id), score: wins(match.team2_id) },
         // null en poules sur un 1-1.

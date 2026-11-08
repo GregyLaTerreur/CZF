@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { type AnyObject, type Role, groupBy, round2 } from '@/lib/results/core';
 import { jsonError, loadResultsDataset, readDivisionParam } from '@/lib/results/load';
-import { buildGamePlayers, extJson, loadTeamNames, percent } from '@/lib/ext/games';
+import { buildGamePlayers, extJson, formatFrDate, loadTeamNames, percent } from '@/lib/ext/games';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         goldPerMin: perMin(gold),
         mvp: mvpCount.get(id) ?? 0,
         totalDurationSeconds: Math.round(minutes * 60),
-        lastPlayedAt: last.playedAt,
+        lastPlayedAt: formatFrDate(last.playedAt),
       };
     });
 
