@@ -3,14 +3,6 @@
    Côté gauche en dark, côté droit en orange (barres de répartition).
 ========================================================= */
 
-.intro {
-  max-width: 560px;
-  margin: var(--space-block) 0 0;
-  font-size: 1rem;
-  line-height: 1.65;
-  color: rgba(8, 20, 40, 0.6);
-}
-
 /* Bloc global : carte cream, ombre dark */
 .board {
   border: 2px solid var(--dark);

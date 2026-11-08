@@ -558,9 +558,6 @@ export default function HeadToHeadView() {
         <div className={ds.container}>
           <div className={ds.sectionLabel}>Comparateur CZF</div>
           <h1 className={ds.h1}>Head to Head</h1>
-          <p className={styles.intro}>
-            Deux équipes. Deux rosters. Puis joueur contre joueur.
-          </p>
 
           {error && <div className={ds.formError}>{error}</div>}
         </div>
