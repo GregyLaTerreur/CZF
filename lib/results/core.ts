@@ -482,52 +482,30 @@ export function computeStandings<T extends StandingTeam>(
   }
 
   /*
-   * Confrontation directe.
+   * Confrontation directe en mini-championnat : entre les équipes encore
+   * à égalité (points, diff, games gagnées), différence de games sur leurs
+   * seuls matchs entre elles. Comparer deux à deux tourne en rond à 3+ équipes.
    */
-  function getHeadToHeadDifference(
-    teamAId: number,
-    teamBId: number
-  ): number {
-    let winsA = 0;
-    let winsB = 0;
+  const tieKey = (team: T) =>
+    `${team.division ?? ''}|${team.points}|${team.gameDiff}|${team.wins}`;
 
-    for (const match of poolMatches) {
-      const team1Id =
-        Number(match.team1_id);
+  const headToHead = new Map<number, number>();
 
-      const team2Id =
-        Number(match.team2_id);
+  for (const match of poolMatches) {
+    const team1 = teamMap.get(Number(match.team1_id));
+    const team2 = teamMap.get(Number(match.team2_id));
 
-      const concernsBothTeams =
-        (team1Id === teamAId &&
-          team2Id === teamBId) ||
-        (team1Id === teamBId &&
-          team2Id === teamAId);
+    if (!team1 || !team2 || tieKey(team1) !== tieKey(team2)) continue;
 
-      if (!concernsBothTeams) {
-        continue;
-      }
+    for (const game of gamesByMatch.get(Number(match.id)) || []) {
+      const winnerId = Number(game.winner_team_id);
+      const loserId = winnerId === Number(team1.id) ? Number(team2.id) : Number(team1.id);
 
-      for (
-        const game of
-        gamesByMatch.get(
-          Number(match.id)
-        ) || []
-      ) {
-        const winnerId =
-          Number(game.winner_team_id);
+      if (winnerId !== Number(team1.id) && winnerId !== Number(team2.id)) continue;
 
-        if (winnerId === teamAId) {
-          winsA++;
-        }
-
-        if (winnerId === teamBId) {
-          winsB++;
-        }
-      }
+      headToHead.set(winnerId, (headToHead.get(winnerId) ?? 0) + 1);
+      headToHead.set(loserId, (headToHead.get(loserId) ?? 0) - 1);
     }
-
-    return winsA - winsB;
   }
 
   /*
@@ -559,9 +537,9 @@ export function computeStandings<T extends StandingTeam>(
       return b.wins - a.wins;
     }
 
-    return -getHeadToHeadDifference(
-      Number(a.id),
-      Number(b.id)
+    return (
+      (headToHead.get(Number(b.id)) ?? 0) -
+      (headToHead.get(Number(a.id)) ?? 0)
     );
   }
 
