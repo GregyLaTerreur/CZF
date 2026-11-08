@@ -23,7 +23,7 @@ type Line = ReturnType<typeof buildGamePlayers>['players'][number] & {
 
 // Stats de chaque joueur calculées à la volée sur toutes ses games officielles.
 // ?division=Ixtal : seulement les games de cette division ; ?id_player=133 : un seul joueur ;
-// ?riot_id=Pseudo%23TAG (# encodé), ou ?riot_id=Pseudo sans le tag.
+// ?riot_id=Pseudo-TAG, Pseudo%23TAG (# encodé) ou Pseudo sans le tag.
 export async function GET(request: NextRequest) {
   const { division, invalid } = readDivisionParam(request);
 
@@ -36,10 +36,15 @@ export async function GET(request: NextRequest) {
 
   const riotQuery = normalizeText(request.nextUrl.searchParams.get('riot_id'));
 
+  // Le # n'arrive pas au serveur s'il n'est pas encodé : Pseudo-TAG est accepté à la place.
+  const dashed = riotQuery.replace(/-([^-]*)$/, '#$1');
+
   // Avec le tag : Riot ID complet ; sans : seulement le pseudo.
   const matchesRiotId = (riotId: string | null) => {
     const value = normalizeText(riotId);
-    return riotQuery.includes('#') ? value === riotQuery : value.split('#')[0] === riotQuery;
+
+    if (riotQuery.includes('#')) return value === riotQuery;
+    return value === dashed || value.split('#')[0] === riotQuery;
   };
 
   try {
