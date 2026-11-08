@@ -628,7 +628,7 @@ export default function HeadToHeadView() {
                   />
                 </div>
 
-                <Band hint="Clique sur un joueur de chaque équipe">Choisis ton duel</Band>
+                <Band>Choisis ton duel</Band>
 
                 <div className={styles.rosterGrid}>
                   <RosterColumn
