@@ -58,10 +58,10 @@ export async function GET(request: NextRequest) {
 
     const buildGame = (game: AnyObject) => {
       const official = (statsByGame.get(Number(game.id)) || []).map((stat) => ({
-        playerId: Number(stat.player_id),
+        id_player: Number(stat.player_id),
         riotId: playerNames.get(Number(stat.player_id)) ?? null,
         isSub: false,
-        teamId: Number(stat.team_id),
+        id_team: Number(stat.team_id),
         teamName: teamNames.get(Number(stat.team_id)) ?? null,
         role: normalizeRole(stat.role),
         champion: stat.champion_id ?? null,
@@ -77,10 +77,10 @@ export async function GET(request: NextRequest) {
       // Les remplaçants n'ont ni compte CZF ni dégâts/vision enregistrés.
       const subs = (Array.isArray(game.substitute_stats) ? game.substitute_stats : []).map(
         (sub: AnyObject) => ({
-          playerId: null,
+          id_player: null,
           riotId: null,
           isSub: true,
-          teamId: Number(sub.teamId ?? sub.team_id),
+          id_team: Number(sub.teamId ?? sub.team_id),
           teamName: teamNames.get(Number(sub.teamId ?? sub.team_id)) ?? null,
           role: normalizeRole(sub.role),
           champion: sub.championId ?? sub.champion_id ?? null,
@@ -99,22 +99,22 @@ export async function GET(request: NextRequest) {
       // KP = (kills + assists) / kills de l'équipe sur la game.
       const teamKills = new Map<number, number>();
       for (const player of players) {
-        teamKills.set(player.teamId, (teamKills.get(player.teamId) ?? 0) + player.kills);
+        teamKills.set(player.id_team, (teamKills.get(player.id_team) ?? 0) + player.kills);
       }
 
       const teamIds = [...teamKills.keys()].sort((a, b) => a - b);
 
       return {
-        id: Number(game.id),
+        id_game: Number(game.id),
         gameNumber: Number(game.game_number),
         durationSeconds: game.duration_seconds != null ? Number(game.duration_seconds) : null,
         duration: formatDuration(game.duration_seconds != null ? Number(game.duration_seconds) : null),
         teams: teamIds.map((id) => ({ ...team(id)!, kills: teamKills.get(id) ?? 0 })),
         winner: team(game.winner_team_id),
         players: players
-          .sort((a, b) => a.teamId - b.teamId || roleOrder(a.role) - roleOrder(b.role))
+          .sort((a, b) => a.id_team - b.id_team || roleOrder(a.role) - roleOrder(b.role))
           .map((player) => {
-            const kills = teamKills.get(player.teamId) ?? 0;
+            const kills = teamKills.get(player.id_team) ?? 0;
 
             return {
               ...player,
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
         games.filter((game) => Number(game.winner_team_id) === Number(teamId)).length;
 
       return {
-        id: Number(match.id),
+        id_bo: Number(match.id),
         division: match.division,
         stage: match.stage,
         bracket: match.bracket ?? null,
