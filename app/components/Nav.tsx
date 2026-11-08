@@ -4,24 +4,37 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
 import { supabase } from '@/lib/supabase';
 import { getMyDivision } from '@/app/components/ds/myDivision';
 
 // Statut admin gardé pour la visite : la Nav est remontée à chaque page,
 // on ne redemande pas is_admin à chaque navigation.
-let adminCache: { userId: string; isAdmin: Promise<boolean>; value?: boolean } | null = null;
+let adminCache: {
+  userId: string;
+  isAdmin: Promise<boolean>;
+  value?: boolean;
+} | null = null;
 
 function loadIsAdmin(userId: string) {
   if (adminCache?.userId !== userId) {
     const entry: NonNullable<typeof adminCache> = {
       userId,
+
       isAdmin: Promise.resolve(
-        supabase.from('profiles').select('is_admin').eq('id', userId).single()
+        supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', userId)
+          .single()
       ).then(({ data, error }) => {
         // En cas d'erreur, on redemandera à la prochaine page.
-        if (error && adminCache === entry) adminCache = null;
+        if (error && adminCache === entry) {
+          adminCache = null;
+        }
 
         entry.value = data?.is_admin === true;
+
         return entry.value;
       }),
     };
@@ -34,18 +47,24 @@ function loadIsAdmin(userId: string) {
 
 export default function Nav() {
   // Valeur déjà connue : pas de clignotement du lien Admin entre deux pages.
-  const [isAdmin, setIsAdmin] = useState(adminCache?.value === true);
+  const [isAdmin, setIsAdmin] = useState(
+    adminCache?.value === true
+  );
+
   const pathname = usePathname();
 
   useEffect(() => {
     checkAdmin();
-    // Division du joueur calculée dès l'arrivée, quelle que soit la page : prête pour les filtres.
+
+    // Division du joueur calculée dès l'arrivée, quelle que soit la page :
+    // prête pour les filtres.
     void getMyDivision();
   }, []);
 
   async function checkAdmin() {
-    // Session locale : pas d'appel réseau (l'affichage du lien Admin
-    // ne protège rien, les routes admin vérifient le jeton).
+    // Session locale : pas d'appel réseau
+    // (l'affichage du lien Admin ne protège rien,
+    // les routes admin vérifient le jeton).
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -57,7 +76,9 @@ export default function Nav() {
       return;
     }
 
-    setIsAdmin(await loadIsAdmin(user.id));
+    setIsAdmin(
+      await loadIsAdmin(user.id)
+    );
   }
 
   function isActive(path: string) {
@@ -70,10 +91,11 @@ export default function Nav() {
 
   return (
     <nav className="nav">
-
       {/* ÉCLAIRS — CHAOS MAÎTRISÉ */}
-      <div className="navChaos" aria-hidden="true">
-
+      <div
+        className="navChaos"
+        aria-hidden="true"
+      >
         <img
           src="/assets/eclairs/eclair_czf_01.png"
           alt=""
@@ -97,11 +119,13 @@ export default function Nav() {
           alt=""
           className="navBolt navBolt4"
         />
-
       </div>
 
       {/* LOGO CZF */}
-      <Link href="/" className="navLogo">
+      <Link
+        href="/"
+        className="navLogo"
+      >
         <img
           src="/assets/czf-logo.png"
           alt="CZF"
@@ -110,38 +134,57 @@ export default function Nav() {
 
       {/* NAVIGATION */}
       <div className="navLinks">
-
         <Link
           href="/"
-          className={isActive('/') ? 'active' : ''}
+          className={
+            isActive('/')
+              ? 'active'
+              : ''
+          }
         >
           Accueil
         </Link>
 
         <Link
           href="/profile"
-          className={isActive('/profile') ? 'active' : ''}
+          className={
+            isActive('/profile')
+              ? 'active'
+              : ''
+          }
         >
           Mon profil
         </Link>
 
         <Link
           href="/my-team"
-          className={isActive('/my-team') ? 'active' : ''}
+          className={
+            isActive('/my-team')
+              ? 'active'
+              : ''
+          }
         >
           Mon équipe
         </Link>
 
         <Link
           href="/players"
-          className={isActive('/players') ? 'active' : ''}
+          className={
+            isActive('/players')
+              ? 'active'
+              : ''
+          }
         >
           Joueurs
         </Link>
 
         <Link
           href="/teams"
-          className={isActive('/teams') ? 'active' : ''}
+          className={
+            isActive('/teams')
+              ? 'active'
+              : ''
+          }
         >
           Équipes
         </Link>
@@ -149,7 +192,11 @@ export default function Nav() {
         {/* Planning masqué pour le moment.
         <Link
           href="/planning"
-          className={isActive('/planning') ? 'active' : ''}
+          className={
+            isActive('/planning')
+              ? 'active'
+              : ''
+          }
         >
           Planning
         </Link>
@@ -157,22 +204,45 @@ export default function Nav() {
 
         <Link
           href="/results"
-          className={isActive('/results') ? 'active' : ''}
+          className={
+            isActive('/results')
+              ? 'active'
+              : ''
+          }
         >
           Résultats
         </Link>
 
         <Link
           href="/stats"
-          className={isActive('/stats') ? 'active' : ''}
+          className={
+            isActive('/stats')
+              ? 'active'
+              : ''
+          }
         >
           Stats
+        </Link>
+
+        <Link
+          href="/head-to-head"
+          className={
+            isActive('/head-to-head')
+              ? 'active'
+              : ''
+          }
+        >
+          Head to Head
         </Link>
 
         {/* Hall of Fame masqué pour le moment (page encore vide).
         <Link
           href="/hall-of-fame"
-          className={isActive('/hall-of-fame') ? 'active' : ''}
+          className={
+            isActive('/hall-of-fame')
+              ? 'active'
+              : ''
+          }
         >
           Hall of Fame
         </Link>
@@ -182,14 +252,16 @@ export default function Nav() {
         {isAdmin && (
           <Link
             href="/admin"
-            className={isActive('/admin') ? 'active' : ''}
+            className={
+              isActive('/admin')
+                ? 'active'
+                : ''
+            }
           >
             Admin
           </Link>
         )}
-
       </div>
-
     </nav>
   );
 }

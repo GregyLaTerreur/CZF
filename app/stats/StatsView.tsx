@@ -19,17 +19,81 @@ import {
 } from '../results/shared';
 import styles from '../results/results.module.css';
 
-const STAT_CARDS: { statKey: StatKey; title: string; format: (value: number) => string }[] = [
-  { statKey: 'kda', title: 'KDA', format: (value) => value.toFixed(2) },
-  { statKey: 'goldPerMin', title: 'Gold / min', format: (value) => String(Math.round(value)) },
-  { statKey: 'dpm', title: 'Dégâts / min', format: (value) => String(Math.round(value)) },
-  { statKey: 'csPerMin', title: 'CS / min', format: (value) => value.toFixed(1) },
-];
+type ExtendedStatKey =
+  | StatKey
+  | 'killParticipation'
+  | 'goldShare'
+  | 'damageShare'
+  | 'winRate';
 
-const VISION_CARD = {
-  statKey: 'visionScore' as StatKey,
+type ExtendedPlayerStats = PlayerStats & {
+  games: number;
+  wins: number;
+  losses?: number;
+  killParticipation: number;
+  goldShare: number;
+  damageShare: number;
+  winRate: number;
+};
+
+type StatCard = {
+  statKey: ExtendedStatKey;
+  title: string;
+  format: (value: number) => string;
+};
+
+const KDA_CARD: StatCard = {
+  statKey: 'kda',
+  title: 'KDA',
+  format: (value) => value.toFixed(2),
+};
+
+const KP_CARD: StatCard = {
+  statKey: 'killParticipation',
+  title: 'KP',
+  format: (value) => `${value.toFixed(1)}%`,
+};
+
+const GOLD_PER_MIN_CARD: StatCard = {
+  statKey: 'goldPerMin',
+  title: 'Gold / min',
+  format: (value) => String(Math.round(value)),
+};
+
+const GOLD_SHARE_CARD: StatCard = {
+  statKey: 'goldShare',
+  title: 'Gold Team %',
+  format: (value) => `${value.toFixed(1)}%`,
+};
+
+const DPM_CARD: StatCard = {
+  statKey: 'dpm',
+  title: 'Dégâts / min',
+  format: (value) => String(Math.round(value)),
+};
+
+const DAMAGE_SHARE_CARD: StatCard = {
+  statKey: 'damageShare',
+  title: 'DMG Team %',
+  format: (value) => `${value.toFixed(1)}%`,
+};
+
+const CS_CARD: StatCard = {
+  statKey: 'csPerMin',
+  title: 'CS / min',
+  format: (value) => value.toFixed(1),
+};
+
+const VISION_CARD: StatCard = {
+  statKey: 'visionScore',
   title: 'Vision / min',
-  format: (value: number) => value.toFixed(2),
+  format: (value) => value.toFixed(2),
+};
+
+const WINRATE_CARD: StatCard = {
+  statKey: 'winRate',
+  title: 'Winrate',
+  format: (value) => `${value.toFixed(1)}%`,
 };
 
 // « kai sa », « Kaï'Sa » et « kaisa » trouvent tous Kai'Sa.
@@ -79,7 +143,16 @@ export default function StatsView() {
   const [openChampion, setOpenChampion] = useState<string | null>(null);
 
   const playerStats = data?.playerStats;
-  const players = (playerStats?.[role] ?? []).filter((player) => player.qualified);
+
+  const players = ((playerStats?.[role] ?? []) as ExtendedPlayerStats[])
+    .filter((player) => player.qualified)
+    .map((player) => ({
+      ...player,
+      winRate:
+        player.games > 0
+          ? (player.wins / player.games) * 100
+          : 0,
+    }));
   const champions = data?.champions[championRole] ?? [];
 
   // Top 10 par défaut ; la recherche porte sur tous les champions du rôle
@@ -94,8 +167,19 @@ export default function StatsView() {
           )
         )
     : champions.slice(0, 10).map((champion, index) => ({ champion, rank: index + 1 }));
-  // Le support est classé à la vision plutôt qu'aux CS.
-  const cards = role === 'Support' ? [...STAT_CARDS.slice(0, 3), VISION_CARD] : STAT_CARDS;
+  // Ordre voulu :
+  // KDA → KP → Gold/min → Gold Team % → Dégâts/min → DMG Team %
+  // → CS/min (ou Vision/min pour Support) → Winrate
+  const cards: StatCard[] = [
+    KDA_CARD,
+    KP_CARD,
+    GOLD_PER_MIN_CARD,
+    GOLD_SHARE_CARD,
+    DPM_CARD,
+    DAMAGE_SHARE_CARD,
+    role === 'Support' ? VISION_CARD : CS_CARD,
+    WINRATE_CARD,
+  ];
 
   // MVP tous rôles : un joueur peut apparaître dans plusieurs rôles.
   const mvpRanking = useMemo(() => {
@@ -328,8 +412,8 @@ function RankingCard({
   onToggle,
 }: {
   title: string;
-  players: PlayerStats[];
-  statKey: StatKey;
+  players: ExtendedPlayerStats[];
+  statKey: ExtendedStatKey;
   format: (value: number) => string;
   expanded: boolean;
   onToggle: () => void;

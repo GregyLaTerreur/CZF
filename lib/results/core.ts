@@ -63,6 +63,17 @@ export type PlayerStats = {
   damage: number;
   dpm: number;
   visionScore: number;
+
+  // Kill participation sur les games réellement jouées :
+  // (kills + assists du joueur) / kills de son équipe sur ces mêmes games * 100
+  killParticipation: number;
+
+  // Part du gold total de l'équipe sur les games réellement jouées.
+  goldShare: number;
+
+  // Part des dégâts champions totaux de l'équipe sur les games réellement jouées.
+  damageShare: number;
+
   mvp: number;
   totalDurationSeconds: number;
   // A joué assez de games de son équipe pour figurer dans les classements.
@@ -826,6 +837,88 @@ export function computePlayerStats(
     }
   }
 
+  /*
+   * Totaux d'équipe par game.
+   *
+   * Ils servent à calculer, pour chaque joueur et uniquement sur les
+   * games qu'il a réellement jouées :
+   *
+   * - KP %
+   * - Gold Share %
+   * - Damage Share %
+   *
+   * clé = "<gameId>:<teamId>"
+   */
+  const teamKillsByGame = new Map<string, number>();
+  const teamGoldByGame = new Map<string, number>();
+  const teamDamageByGame = new Map<string, number>();
+
+  for (const stat of currentStats) {
+    const gameId = Number(stat.game_id);
+    const teamId = Number(stat.team_id);
+
+    if (!divisionGameIds.has(gameId)) continue;
+    if (!Number.isFinite(teamId)) continue;
+
+    const key = `${gameId}:${teamId}`;
+
+    teamKillsByGame.set(
+      key,
+      (teamKillsByGame.get(key) ?? 0) +
+        (Number(stat.kills) || 0)
+    );
+
+    teamGoldByGame.set(
+      key,
+      (teamGoldByGame.get(key) ?? 0) +
+        (Number(stat.gold) || 0)
+    );
+
+    teamDamageByGame.set(
+      key,
+      (teamDamageByGame.get(key) ?? 0) +
+        (Number(stat.damage) || 0)
+    );
+  }
+
+  /*
+   * Les remplaçants ne sont pas forcément présents dans currentStats.
+   * On ajoute donc leurs valeurs stockées directement sur la game.
+   */
+  for (const gameId of divisionGameIds) {
+    const game = gameMap.get(gameId);
+
+    const substitutes = Array.isArray(game?.substitute_stats)
+      ? game.substitute_stats
+      : [];
+
+    for (const sub of substitutes) {
+      const teamId = Number(sub.teamId ?? sub.team_id);
+
+      if (!Number.isFinite(teamId)) continue;
+
+      const key = `${gameId}:${teamId}`;
+
+      teamKillsByGame.set(
+        key,
+        (teamKillsByGame.get(key) ?? 0) +
+          (Number(sub.kills) || 0)
+      );
+
+      teamGoldByGame.set(
+        key,
+        (teamGoldByGame.get(key) ?? 0) +
+          (Number(sub.gold) || 0)
+      );
+
+      teamDamageByGame.set(
+        key,
+        (teamDamageByGame.get(key) ?? 0) +
+          (Number(sub.damage) || 0)
+      );
+    }
+  }
+
   const result = emptyRoleStats<PlayerStats>();
   const playerRoleKeys = new Set<string>();
 
@@ -867,6 +960,11 @@ export function computePlayerStats(
     let gold = 0;
     let damage = 0;
     let visionScore = 0;
+
+    let teamKillsWhilePlayerPlayed = 0;
+    let teamGoldWhilePlayerPlayed = 0;
+    let teamDamageWhilePlayerPlayed = 0;
+
     let wins = 0;
     let losses = 0;
     let duration = 0;
@@ -886,6 +984,18 @@ export function computePlayerStats(
       damage += Number(row.damage) || 0;
       visionScore += Number(row.vision_score) || 0;
       duration += Number(game.duration_seconds) || 0;
+
+      const teamGameKey =
+        `${Number(row.game_id)}:${Number(row.team_id)}`;
+
+      teamKillsWhilePlayerPlayed +=
+        teamKillsByGame.get(teamGameKey) ?? 0;
+
+      teamGoldWhilePlayerPlayed +=
+        teamGoldByGame.get(teamGameKey) ?? 0;
+
+      teamDamageWhilePlayerPlayed +=
+        teamDamageByGame.get(teamGameKey) ?? 0;
 
       if (Number(game.winner_team_id) === Number(row.team_id)) {
         wins++;
@@ -908,6 +1018,27 @@ export function computePlayerStats(
 
     const gamesPlayed = rows.length;
     const minutes = duration / 60;
+
+    const killParticipation =
+      teamKillsWhilePlayerPlayed > 0
+        ? round2(
+            ((kills + assists) / teamKillsWhilePlayerPlayed) * 100
+          )
+        : 0;
+
+    const goldShare =
+      teamGoldWhilePlayerPlayed > 0
+        ? round2(
+            (gold / teamGoldWhilePlayerPlayed) * 100
+          )
+        : 0;
+
+    const damageShare =
+      teamDamageWhilePlayerPlayed > 0
+        ? round2(
+            (damage / teamDamageWhilePlayerPlayed) * 100
+          )
+        : 0;
 
     // KDA : moyenne des ratios par game
     const kda = gamesPlayed
@@ -949,6 +1080,10 @@ export function computePlayerStats(
       dpm: minutes > 0 ? round2(damage / minutes) : 0,
 
       visionScore: minutes > 0 ? round2(visionScore / minutes) : 0,
+
+      killParticipation,
+      goldShare,
+      damageShare,
 
       mvp,
       totalDurationSeconds: duration,
