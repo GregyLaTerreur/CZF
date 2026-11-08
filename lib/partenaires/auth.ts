@@ -23,7 +23,7 @@ export function checkPartnerKey(request: NextRequest) {
     return jsonNoStore({ success: false, error: 'API partenaires non configurée.' }, 503);
   }
 
-  const given = request.headers.get('x-api-key')?.trim();
+  const given = request.nextUrl.searchParams.get('api_key')?.trim();
 
   if (!given || !keys.some((key) => sameKey(key, given))) {
     return jsonNoStore({ success: false, error: 'Clé API invalide.' }, 401);

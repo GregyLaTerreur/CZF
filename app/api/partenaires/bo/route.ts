@@ -34,7 +34,7 @@ function formatDuration(seconds: number | null): string | null {
 }
 
 // BO joués avec leurs games et les stats de chaque joueur, pour les collaborateurs.
-// En-tête x-api-key obligatoire ; ?division=Ixtal pour filtrer.
+// ?api_key= obligatoire ; ?division=Ixtal pour filtrer.
 export async function GET(request: NextRequest) {
   const denied = checkPartnerKey(request);
   if (denied) return denied;
