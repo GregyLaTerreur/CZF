@@ -553,6 +553,12 @@
 .win { color: var(--win); }
 .loss { color: var(--loss); }
 
+.pts {
+  font-style: italic;
+  font-weight: 800 !important;
+  color: var(--dark);
+}
+
 .diffPos { color: var(--win); }
 .diffNeg { color: var(--loss); }
 

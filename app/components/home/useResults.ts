@@ -12,6 +12,8 @@ export type StandingTeam = {
   wins: number;
   losses: number;
   gameDiff: number;
+  // Points CZF de poule (2-0 = 3, 1-1 = 1) : ils décident du classement.
+  points: number;
   rank?: number;
 };
 

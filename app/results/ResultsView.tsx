@@ -161,59 +161,14 @@ const Standings = memo(
   }: {
     teams: Team[];
   }) {
-    /*
-     * Sécurité côté affichage :
-     *
-     * 1. Points
-     * 2. Différence de games
-     * 3. Games gagnées
-     *
-     * Normalement l'API renvoie déjà les équipes
-     * dans cet ordre, mais on sécurise ici aussi.
-     */
+    // Ordre et rangs calculés par l'API (confrontation directe comprise) :
+    // un retri ici sans cette règle mettait un 3e devant des 1ers ex aequo.
     const sortedTeams = useMemo(
       () =>
         [...(teams as StandingTeam[])].sort(
-          (a, b) => {
-            const pointsA =
-              Number(a.points) || 0;
-
-            const pointsB =
-              Number(b.points) || 0;
-
-            if (pointsB !== pointsA) {
-              return pointsB - pointsA;
-            }
-
-            const diffA =
-              Number(a.gameDiff) ||
-              Number(a.wins) -
-                Number(a.losses);
-
-            const diffB =
-              Number(b.gameDiff) ||
-              Number(b.wins) -
-                Number(b.losses);
-
-            if (diffB !== diffA) {
-              return diffB - diffA;
-            }
-
-            if (
-              Number(b.wins) !==
-              Number(a.wins)
-            ) {
-              return (
-                Number(b.wins) -
-                Number(a.wins)
-              );
-            }
-
-            return a.name.localeCompare(
-              b.name,
-              'fr'
-            );
-          }
+          (a, b) =>
+            (Number(a.rank) || 99) - (Number(b.rank) || 99) ||
+            a.name.localeCompare(b.name, 'fr')
         ),
       [teams]
     );
