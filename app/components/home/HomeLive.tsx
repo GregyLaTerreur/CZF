@@ -165,6 +165,7 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
           <th className={styles.num}>V</th>
           <th className={styles.num}>D</th>
           <th className={`${styles.num} ${styles.hideMobile}`}>Diff</th>
+          <th className={styles.num}>Pts</th>
         </tr>
       </thead>
       <tbody>
@@ -186,6 +187,7 @@ function StandingsTable({ teams }: { teams: StandingTeam[] }) {
             >
               {team.gameDiff > 0 ? `+${team.gameDiff}` : team.gameDiff}
             </td>
+            <td className={`${styles.num} ${styles.pts}`}>{team.points}</td>
           </tr>
         ))}
       </tbody>
