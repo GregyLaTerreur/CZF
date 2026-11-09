@@ -792,3 +792,16 @@
     gap: 8px;
   }
 }
+
+/* =========================================================
+   FOOTER COLLÉ EN BAS — la page fait 100vh, le spacer pousse le footer
+========================================================= */
+
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.footerSpacer {
+  flex: 1;
+}
