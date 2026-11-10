@@ -627,6 +627,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                             <span>Champion</span>
                             <span>Games</span>
                             <span>Win</span>
+                            <span>KDA</span>
                           </div>
 
                           {czfChampions.slice(0, CZF_CHAMPIONS_PREVIEW).map((champion) => (
@@ -641,6 +642,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                               <strong className={champion.winRate >= 50 ? ds.win : ds.loss}>
                                 {Math.round(champion.winRate)}%
                               </strong>
+                              <strong>{champion.kda.toFixed(2)}</strong>
                             </div>
                           ))}
                         </div>
