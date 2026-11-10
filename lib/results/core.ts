@@ -653,6 +653,11 @@ export function buildMatchSummary(
     team1: formatTeam(team1, score1),
     team2: formatTeam(team2, score2),
     winner: formatTeam(winner),
+
+    // Vainqueur de chaque game, dans l'ordre joué (forme des équipes).
+    gameWinners: [...matchGames]
+      .sort((a, b) => Number(a.game_number) - Number(b.game_number))
+      .map((game) => Number(game.winner_team_id)),
   };
 }
 
