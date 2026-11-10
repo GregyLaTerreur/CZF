@@ -5,6 +5,10 @@ import type { HistoryMatch, Team } from './shared';
 
 export const QUALIFIED = 8;
 
+// Arbres fixés à la main par les admins, sans toucher au classement : ids des équipes dans l'ordre des seeds 1 à 8.
+// Ixtal : La Chicha du Sourire (73) retirée de l'arbre, MFF Esport (89) prend sa place contre STF, Queen's Gambit (13) affronte Season's.
+const SEED_OVERRIDES: number[][] = [[38, 88, 16, 32, 15, 89, 37, 13]];
+
 export type BracketTeam = {
   id: number;
   shortName: string;
@@ -85,7 +89,9 @@ function toBracketTeam(team: Team): BracketTeam {
 }
 
 export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTree {
-  const seeds = teams.slice(0, QUALIFIED);
+  const byId = new Map(teams.map((team) => [team.id, team]));
+  const override = SEED_OVERRIDES.find((ids) => ids.every((id) => byId.has(id)));
+  const seeds = override ? override.map((id) => byId.get(id)!) : teams.slice(0, QUALIFIED);
   const seedById = new Map(seeds.map((team, index) => [team.id, index + 1]));
 
   // Les plus anciens d'abord : une paire jouée deux fois (finale WB puis grande finale) se répartit dans l'ordre.
