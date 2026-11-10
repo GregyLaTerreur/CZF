@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 
 import { logoSrc } from '@/lib/logo';
 import ds from '@/app/components/ds/ds.module.css';
@@ -45,7 +46,11 @@ type Match = {
   playedAt?: string | null;
   team1: MatchTeam;
   team2: MatchTeam;
+  // Vainqueur de chaque game, dans l'ordre joué.
+  gameWinners?: number[];
 };
+
+const FORM_GAMES = 7;
 
 type Member = {
   id: number;
@@ -319,6 +324,26 @@ export default function HeadToHeadView() {
     () => teams.find((team) => Number(team.id) === Number(team2Id)) || null,
     [teams, team2Id]
   );
+
+  // 7 dernières games de l'équipe, de la plus ancienne à la plus récente.
+  function formOf(teamId: number) {
+    return history
+      .filter(
+        (match) =>
+          match.team1 &&
+          match.team2 &&
+          (Number(match.team1.id) === Number(teamId) ||
+            Number(match.team2.id) === Number(teamId))
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.playedAt || 0).getTime() -
+          new Date(b.playedAt || 0).getTime()
+      )
+      .flatMap((match) => match.gameWinners || [])
+      .slice(-FORM_GAMES)
+      .map((winnerId) => Number(winnerId) === Number(teamId));
+  }
 
   useEffect(() => setPlayer1Id(null), [team1Id]);
   useEffect(() => setPlayer2Id(null), [team2Id]);
@@ -594,9 +619,9 @@ export default function HeadToHeadView() {
             ) : (
               <>
                 <div className={styles.faceoff}>
-                  <TeamIdentity team={team1} side="left" />
+                  <TeamIdentity team={team1} side="left" form={formOf(team1.id)} />
                   <div className={styles.vs}><span>VS</span></div>
-                  <TeamIdentity team={team2} side="right" />
+                  <TeamIdentity team={team2} side="right" form={formOf(team2.id)} />
                 </div>
 
                 <Band>Équipes</Band>
@@ -649,7 +674,15 @@ export default function HeadToHeadView() {
                     <div className={styles.playerHead}>
                       <div>
                         <span>{roleLabel(selectedPlayer1.role)}</span>
-                        <strong><RiotName riotId={selectedPlayer1.riotId} /></strong>
+                        <strong>
+                          {selectedPlayer1.player ? (
+                            <Link href={`/players/${selectedPlayer1.player.id}`} className={styles.playerLink}>
+                              <RiotName riotId={selectedPlayer1.riotId} />
+                            </Link>
+                          ) : (
+                            <RiotName riotId={selectedPlayer1.riotId} />
+                          )}
+                        </strong>
                         <PlayerRank player={selectedPlayer1.player} />
                         <ChampionMiniList champions={topChampions1} />
                       </div>
@@ -658,7 +691,15 @@ export default function HeadToHeadView() {
 
                       <div>
                         <span>{roleLabel(selectedPlayer2.role)}</span>
-                        <strong><RiotName riotId={selectedPlayer2.riotId} /></strong>
+                        <strong>
+                          {selectedPlayer2.player ? (
+                            <Link href={`/players/${selectedPlayer2.player.id}`} className={styles.playerLink}>
+                              <RiotName riotId={selectedPlayer2.riotId} />
+                            </Link>
+                          ) : (
+                            <RiotName riotId={selectedPlayer2.riotId} />
+                          )}
+                        </strong>
                         <PlayerRank player={selectedPlayer2.player} />
                         <ChampionMiniList champions={topChampions2} />
                       </div>
@@ -926,9 +967,11 @@ function TeamPicker({
 function TeamIdentity({
   team,
   side,
+  form,
 }: {
   team: StandingTeam;
   side: 'left' | 'right';
+  form: boolean[];
 }) {
   return (
     <div
@@ -950,6 +993,15 @@ function TeamIdentity({
           {team.division}
         </div>
         <h2>{team.name}</h2>
+        {form.length > 0 && (
+          <div className={styles.form} title={`${form.length} dernières games`}>
+            {form.map((won, index) => (
+              <span key={index} className={won ? styles.formWin : styles.formLoss}>
+                {won ? 'V' : 'D'}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
