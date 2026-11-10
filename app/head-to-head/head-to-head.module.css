@@ -585,6 +585,16 @@
   white-space: nowrap;
 }
 
+.playerLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.playerLink:hover {
+  color: var(--orange);
+  text-decoration: underline;
+}
+
 .playerRank {
   display: inline-flex;
   align-items: center;

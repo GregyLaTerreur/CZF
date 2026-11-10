@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 
 import { logoSrc } from '@/lib/logo';
 import ds from '@/app/components/ds/ds.module.css';
@@ -673,7 +674,15 @@ export default function HeadToHeadView() {
                     <div className={styles.playerHead}>
                       <div>
                         <span>{roleLabel(selectedPlayer1.role)}</span>
-                        <strong><RiotName riotId={selectedPlayer1.riotId} /></strong>
+                        <strong>
+                          {selectedPlayer1.player ? (
+                            <Link href={`/players/${selectedPlayer1.player.id}`} className={styles.playerLink}>
+                              <RiotName riotId={selectedPlayer1.riotId} />
+                            </Link>
+                          ) : (
+                            <RiotName riotId={selectedPlayer1.riotId} />
+                          )}
+                        </strong>
                         <PlayerRank player={selectedPlayer1.player} />
                         <ChampionMiniList champions={topChampions1} />
                       </div>
@@ -682,7 +691,15 @@ export default function HeadToHeadView() {
 
                       <div>
                         <span>{roleLabel(selectedPlayer2.role)}</span>
-                        <strong><RiotName riotId={selectedPlayer2.riotId} /></strong>
+                        <strong>
+                          {selectedPlayer2.player ? (
+                            <Link href={`/players/${selectedPlayer2.player.id}`} className={styles.playerLink}>
+                              <RiotName riotId={selectedPlayer2.riotId} />
+                            </Link>
+                          ) : (
+                            <RiotName riotId={selectedPlayer2.riotId} />
+                          )}
+                        </strong>
                         <PlayerRank player={selectedPlayer2.player} />
                         <ChampionMiniList champions={topChampions2} />
                       </div>
