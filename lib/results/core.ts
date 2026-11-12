@@ -515,6 +515,7 @@ export function computeStandings<T extends StandingTeam>(
    * 2. Différence de games
    * 3. Games gagnées
    * 4. Confrontation directe
+   * 5. Départage manuel (égalité parfaite)
    */
   function compare(
     a: T,
@@ -537,10 +538,13 @@ export function computeStandings<T extends StandingTeam>(
       return b.wins - a.wins;
     }
 
-    return (
+    const direct =
       (headToHead.get(Number(b.id)) ?? 0) -
-      (headToHead.get(Number(a.id)) ?? 0)
-    );
+      (headToHead.get(Number(a.id)) ?? 0);
+
+    if (direct !== 0) return direct;
+
+    return manualTiebreak(a) - manualTiebreak(b);
   }
 
   teams.sort(
@@ -591,6 +595,15 @@ export function computeStandings<T extends StandingTeam>(
   }
 
   return teams;
+}
+
+// Égalités parfaites tranchées par les orgas (id d'équipe, du mieux classé au moins bien).
+// Targon S1 : MoselleLAN Project, Unfold Winterfall, MG King, SuperNovas.
+const MANUAL_TIEBREAK: number[] = [90, 105, 27, 61];
+
+function manualTiebreak(team: { id: number | string }): number {
+  const index = MANUAL_TIEBREAK.indexOf(Number(team.id));
+  return index === -1 ? MANUAL_TIEBREAK.length : index;
 }
 
 /* =========================================================
