@@ -356,12 +356,10 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
 
   function requestJoin() {
     void run(
+      // Le candidat est déduit du compte connecté côté serveur.
       jsonRequest('/api/team-join-requests', 'POST', {
         team_id: team.id,
-        riot_id: player.riot_id,
         role: player.main_role,
-        profile_id: user.id,
-        player_id: player.id,
       }),
       'Demande envoyée au capitaine.'
     );
