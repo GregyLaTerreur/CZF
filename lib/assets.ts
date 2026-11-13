@@ -12,8 +12,7 @@ const DEFAULT_TRANSFORM = 'f_auto,q_auto';
 // Utilisé aussi par scripts/upload-assets.mjs : garder les deux en phase.
 export function assetPublicId(path: string): string {
   const relative = path.replace(/^\/?assets\//, '');
-  const isSvg = /\.svg$/i.test(relative);
-  const id = (isSvg ? relative : relative.replace(/\.[a-z0-9]+$/i, '')).replace(/\s+/g, '_');
+  const id = relative.replace(/\.[a-z0-9]+$/i, '').replace(/\s+/g, '_');
   return `${ROOT_FOLDER}/${id}`;
 }
 
@@ -22,7 +21,7 @@ export function asset(path: string, transform: string = DEFAULT_TRANSFORM): stri
 
   const publicId = assetPublicId(path).split('/').map(encodeURIComponent).join('/');
 
-  // Les SVG restent vectoriels : pas de transformation.
+  // Les SVG restent vectoriels : pas de transformation (servis en image/svg+xml).
   if (/\.svg$/i.test(path)) return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}`;
 
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transform}/${publicId}`;

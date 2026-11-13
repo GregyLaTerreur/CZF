@@ -4,8 +4,8 @@
 //   npm run assets:upload                          public/assets          -> czf/…
 //   npm run assets:upload -- <dossier> <cible>     ex. ~/Images/cartes-s1 cards/s1 -> czf/cards/s1/…
 //
-// Les sous-dossiers sont conservés, les espaces des noms deviennent des "_", l'extension est retirée
-// (sauf SVG). Ex. cartes-s1/rare/Dragon Rouge.png -> czf/cards/s1/rare/Dragon_Rouge.
+// Les sous-dossiers sont conservés, les espaces des noms deviennent des "_", l'extension est retirée.
+// Ex. cartes-s1/rare/Dragon Rouge.png -> czf/cards/s1/rare/Dragon_Rouge.
 import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -27,8 +27,7 @@ async function loadEnv(file) {
 
 // Même règle que assetPublicId() dans lib/assets.ts.
 function publicId(rel) {
-  const isSvg = /\.svg$/i.test(rel);
-  const id = (isSvg ? rel : rel.replace(/\.[a-z0-9]+$/i, '')).replace(/\s+/g, '_');
+  const id = rel.replace(/\.[a-z0-9]+$/i, '').replace(/\s+/g, '_');
   return posix.join('czf', TARGET, id);
 }
 
