@@ -7,6 +7,9 @@ import { usePathname } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
 import { getMyDivision } from '@/app/components/ds/myDivision';
+import { DISCORD_URL, RULEBOOK_URL } from '@/app/components/links';
+import { fontVariables } from '@/app/fonts';
+import styles from './nav.module.css';
 
 // Statut admin gardé pour la visite : la Nav est remontée à chaque page,
 // on ne redemande pas is_admin à chaque navigation.
@@ -149,181 +152,82 @@ export default function Nav() {
     return pathname.startsWith(path);
   }
 
+  // Pages publiques de la barre principale.
+  // Planning et Hall of Fame masqués pour le moment (pages pas prêtes).
+  const links = [
+    { href: '/', label: 'Accueil' },
+    { href: '/players', label: 'Joueurs' },
+    { href: '/teams', label: 'Équipes' },
+    { href: '/results', label: 'Résultats' },
+    { href: '/stats', label: 'Stats' },
+    { href: '/head-to-head', label: 'Head to Head' },
+  ];
+
+  const cls = (...names: (string | false)[]) => names.filter(Boolean).join(' ');
+
   return (
-    <nav className="nav">
-      {/* ÉCLAIRS — CHAOS MAÎTRISÉ */}
-      <div
-        className="navChaos"
-        aria-hidden="true"
-      >
-        <img
-          src="/assets/eclairs/eclair_czf_01.png"
-          alt=""
-          className="navBolt navBolt1"
-        />
+    <header className={cls(styles.header, fontVariables)}>
+      {/* ÉTAGE DU HAUT : saison + liens secondaires */}
+      <div className={styles.top}>
+        <div className={cls(styles.inner, styles.topInner)}>
+          <span className={styles.season}>
+            <span className={styles.seasonDot} aria-hidden="true" />
+            Saison 1 en cours
+          </span>
 
-        <img
-          src="/assets/eclairs/eclair_czf_02.png"
-          alt=""
-          className="navBolt navBolt2"
-        />
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className={styles.topLink}>
+            Discord
+          </a>
 
-        <img
-          src="/assets/eclairs/eclair_czf_01.png"
-          alt=""
-          className="navBolt navBolt3"
-        />
+          <a href={RULEBOOK_URL} target="_blank" rel="noopener noreferrer" className={styles.topLink}>
+            Règlement
+          </a>
 
-        <img
-          src="/assets/eclairs/eclair_czf_02.png"
-          alt=""
-          className="navBolt navBolt4"
-        />
+          {/* ADMIN visible uniquement pour les admins */}
+          {isAdmin && (
+            <Link href="/admin" className={cls(styles.topLink, isActive('/admin') && styles.active)}>
+              Admin
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* LOGO CZF */}
-      <Link
-        href="/"
-        className="navLogo"
-      >
-        <img
-          src="/assets/czf-logo.png"
-          alt="CZF"
-        />
-      </Link>
-
-      {/* NAVIGATION */}
-      <div className="navLinks">
-        <Link
-          href="/"
-          className={
-            isActive('/')
-              ? 'active'
-              : ''
-          }
-        >
-          Accueil
+      {/* BARRE PRINCIPALE */}
+      <nav className={cls(styles.inner, styles.bar)}>
+        <Link href="/" className={styles.logo}>
+          <img src="/assets/czf-logo.png" alt="CZF" />
         </Link>
 
-        <Link
-          href="/profile"
-          className={
-            isActive('/profile')
-              ? 'active'
-              : ''
-          }
-        >
-          Mon profil
-        </Link>
+        <div className={styles.links}>
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cls(styles.link, isActive(link.href) && styles.active)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
-        {isCaptain && (
+        <div className={styles.account}>
+          {isCaptain && (
+            <Link
+              href="/my-team"
+              className={cls(styles.btn, styles.btnCream, isActive('/my-team') && styles.active)}
+            >
+              Mon équipe
+            </Link>
+          )}
+
           <Link
-            href="/my-team"
-            className={
-              isActive('/my-team')
-                ? 'active'
-                : ''
-            }
+            href="/profile"
+            className={cls(styles.btn, styles.btnOrange, isActive('/profile') && styles.active)}
           >
-            Mon équipe
+            Mon profil
           </Link>
-        )}
-
-        <Link
-          href="/players"
-          className={
-            isActive('/players')
-              ? 'active'
-              : ''
-          }
-        >
-          Joueurs
-        </Link>
-
-        <Link
-          href="/teams"
-          className={
-            isActive('/teams')
-              ? 'active'
-              : ''
-          }
-        >
-          Équipes
-        </Link>
-
-        {/* Planning masqué pour le moment.
-        <Link
-          href="/planning"
-          className={
-            isActive('/planning')
-              ? 'active'
-              : ''
-          }
-        >
-          Planning
-        </Link>
-        */}
-
-        <Link
-          href="/results"
-          className={
-            isActive('/results')
-              ? 'active'
-              : ''
-          }
-        >
-          Résultats
-        </Link>
-
-        <Link
-          href="/stats"
-          className={
-            isActive('/stats')
-              ? 'active'
-              : ''
-          }
-        >
-          Stats
-        </Link>
-
-        <Link
-          href="/head-to-head"
-          className={
-            isActive('/head-to-head')
-              ? 'active'
-              : ''
-          }
-        >
-          Head to Head
-        </Link>
-
-        {/* Hall of Fame masqué pour le moment (page encore vide).
-        <Link
-          href="/hall-of-fame"
-          className={
-            isActive('/hall-of-fame')
-              ? 'active'
-              : ''
-          }
-        >
-          Hall of Fame
-        </Link>
-        */}
-
-        {/* ADMIN visible uniquement pour les admins */}
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className={
-              isActive('/admin')
-                ? 'active'
-                : ''
-            }
-          >
-            Admin
-          </Link>
-        )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </header>
   );
 }
