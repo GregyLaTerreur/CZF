@@ -265,9 +265,9 @@
   padding: var(--space-block) 0 0;
 }
 
-/* En-tête des listes (équipes, joueurs) : un peu plus d'air autour */
+/* En-tête des listes (équipes, joueurs) : un peu plus d'air au-dessus */
 .headerAiry {
-  padding: var(--space-section) 0 var(--space-block);
+  padding: var(--space-section) 0 0;
 }
 
 .headerGrid {
