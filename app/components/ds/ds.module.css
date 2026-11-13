@@ -560,6 +560,14 @@
   box-shadow: 6px 6px 0 var(--dark);
 }
 
+/* Recherche placée sous le titre de l'en-tête */
+.headerSearch {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  margin-top: var(--space-block);
+}
+
 .search:focus {
   outline: none;
   background: #fff;

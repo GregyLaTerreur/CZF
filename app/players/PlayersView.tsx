@@ -250,6 +250,14 @@ export default function PlayersView() {
           <div>
             <div className={ds.sectionLabel}>Saison 1 · Joueurs</div>
             <h1 className={ds.h1}>Les joueurs</h1>
+
+            <input
+              type="search"
+              className={`${ds.search} ${ds.headerSearch}`}
+              placeholder="Rechercher un joueur, un pseudo Discord, une équipe..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
           <ProfileCard user={user} myPlayer={myPlayer} onCreated={loadData} />
@@ -263,13 +271,27 @@ export default function PlayersView() {
       <section className={ds.section}>
         <div className={ds.container}>
           <div className={ds.toolbar}>
-            <input
-              type="search"
-              className={ds.search}
-              placeholder="Rechercher un joueur, un pseudo Discord, une équipe..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className={ds.tabs}>
+              <button
+                type="button"
+                className={divisionFilter === null ? ds.tabActive : ds.tab}
+                onClick={() => chooseDivision(null)}
+              >
+                Toutes les divisions
+              </button>
+
+              {DIVISIONS.map((division) => (
+                <button
+                  key={division}
+                  type="button"
+                  className={divisionFilter === division ? ds.tabActive : ds.tab}
+                  onClick={() => chooseDivision(divisionFilter === division ? null : division)}
+                >
+                  <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
+                  {division}
+                </button>
+              ))}
+            </div>
 
             <div className={ds.tabs}>
               <button
@@ -291,28 +313,6 @@ export default function PlayersView() {
                 LFT
               </button>
             </div>
-          </div>
-
-          <div className={`${ds.tabs} ${ds.filterRow}`}>
-            <button
-              type="button"
-              className={divisionFilter === null ? ds.tabActive : ds.tab}
-              onClick={() => chooseDivision(null)}
-            >
-              Toutes les divisions
-            </button>
-
-            {DIVISIONS.map((division) => (
-              <button
-                key={division}
-                type="button"
-                className={divisionFilter === division ? ds.tabActive : ds.tab}
-                onClick={() => chooseDivision(divisionFilter === division ? null : division)}
-              >
-                <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
-                {division}
-              </button>
-            ))}
           </div>
 
           <div className={`${ds.tabs} ${ds.filterRowLast}`}>
