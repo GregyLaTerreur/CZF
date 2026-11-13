@@ -7,6 +7,9 @@ import { usePathname } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
 import { getMyDivision } from '@/app/components/ds/myDivision';
+import { DISCORD_URL, RULEBOOK_URL } from '@/app/components/links';
+import { fontVariables } from '@/app/fonts';
+import styles from './nav.module.css';
 
 // Statut admin gardé pour la visite : la Nav est remontée à chaque page,
 // on ne redemande pas is_admin à chaque navigation.
@@ -45,10 +48,65 @@ function loadIsAdmin(userId: string) {
   return adminCache.isAdmin;
 }
 
+// Même principe pour « Mon équipe » : le lien n'est montré qu'au capitaine d'une équipe.
+let captainCache: {
+  userId: string;
+  isCaptain: Promise<boolean>;
+  value?: boolean;
+} | null = null;
+
+function loadIsCaptain(userId: string) {
+  if (captainCache?.userId !== userId) {
+    const entry: NonNullable<typeof captainCache> = {
+      userId,
+
+      isCaptain: (async () => {
+        const { data: player, error } = await supabase
+          .from('players')
+          .select('id')
+          .eq('profile_id', userId)
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!player) return false;
+
+        const { data: team, error: teamError } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('captain_player_id', player.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (teamError) throw teamError;
+        return Boolean(team);
+      })().then(
+        (value) => {
+          entry.value = value;
+          return value;
+        },
+        () => {
+          // En cas d'erreur, on redemandera à la prochaine page.
+          if (captainCache === entry) captainCache = null;
+          return false;
+        }
+      ),
+    };
+
+    captainCache = entry;
+  }
+
+  return captainCache.isCaptain;
+}
+
 export default function Nav() {
   // Valeur déjà connue : pas de clignotement du lien Admin entre deux pages.
   const [isAdmin, setIsAdmin] = useState(
     adminCache?.value === true
+  );
+
+  const [isCaptain, setIsCaptain] = useState(
+    captainCache?.value === true
   );
 
   const pathname = usePathname();
@@ -73,12 +131,17 @@ export default function Nav() {
 
     if (!user) {
       setIsAdmin(false);
+      setIsCaptain(false);
       return;
     }
 
-    setIsAdmin(
-      await loadIsAdmin(user.id)
-    );
+    const [admin, captain] = await Promise.all([
+      loadIsAdmin(user.id),
+      loadIsCaptain(user.id),
+    ]);
+
+    setIsAdmin(admin);
+    setIsCaptain(captain);
   }
 
   function isActive(path: string) {
@@ -89,179 +152,77 @@ export default function Nav() {
     return pathname.startsWith(path);
   }
 
+  // Pages publiques de la barre principale.
+  // Planning et Hall of Fame masqués pour le moment (pages pas prêtes).
+  const links = [
+    { href: '/', label: 'Accueil' },
+    { href: '/players', label: 'Joueurs' },
+    { href: '/teams', label: 'Équipes' },
+    { href: '/results', label: 'Résultats' },
+    { href: '/stats', label: 'Stats' },
+    { href: '/head-to-head', label: 'Head to Head' },
+  ];
+
+  const cls = (...names: (string | false)[]) => names.filter(Boolean).join(' ');
+
   return (
-    <nav className="nav">
-      {/* ÉCLAIRS — CHAOS MAÎTRISÉ */}
-      <div
-        className="navChaos"
-        aria-hidden="true"
-      >
-        <img
-          src="/assets/eclairs/eclair_czf_01.png"
-          alt=""
-          className="navBolt navBolt1"
-        />
+    <header className={cls(styles.header, fontVariables)}>
+      {/* ÉTAGE DU HAUT : liens secondaires */}
+      <div className={styles.top}>
+        <div className={cls(styles.inner, styles.topInner)}>
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className={styles.topLink}>
+            Discord
+          </a>
 
-        <img
-          src="/assets/eclairs/eclair_czf_02.png"
-          alt=""
-          className="navBolt navBolt2"
-        />
+          <a href={RULEBOOK_URL} target="_blank" rel="noopener noreferrer" className={styles.topLink}>
+            Règlement
+          </a>
 
-        <img
-          src="/assets/eclairs/eclair_czf_01.png"
-          alt=""
-          className="navBolt navBolt3"
-        />
-
-        <img
-          src="/assets/eclairs/eclair_czf_02.png"
-          alt=""
-          className="navBolt navBolt4"
-        />
+          {/* ADMIN visible uniquement pour les admins */}
+          {isAdmin && (
+            <Link href="/admin" className={cls(styles.topLink, isActive('/admin') && styles.active)}>
+              Admin
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* LOGO CZF */}
-      <Link
-        href="/"
-        className="navLogo"
-      >
-        <img
-          src="/assets/czf-logo.png"
-          alt="CZF"
-        />
-      </Link>
-
-      {/* NAVIGATION */}
-      <div className="navLinks">
-        <Link
-          href="/"
-          className={
-            isActive('/')
-              ? 'active'
-              : ''
-          }
-        >
-          Accueil
+      {/* BARRE PRINCIPALE */}
+      <nav className={cls(styles.inner, styles.bar)}>
+        <Link href="/" className={styles.logo}>
+          <img src="/assets/czf-logo.png" alt="CZF" />
         </Link>
 
-        <Link
-          href="/profile"
-          className={
-            isActive('/profile')
-              ? 'active'
-              : ''
-          }
-        >
-          Mon profil
-        </Link>
+        <div className={styles.links}>
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cls(styles.link, isActive(link.href) && styles.active)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
-        <Link
-          href="/my-team"
-          className={
-            isActive('/my-team')
-              ? 'active'
-              : ''
-          }
-        >
-          Mon équipe
-        </Link>
+        <div className={styles.account}>
+          {isCaptain && (
+            <Link
+              href="/my-team"
+              className={cls(styles.btn, styles.btnCream, isActive('/my-team') && styles.active)}
+            >
+              Mon équipe
+            </Link>
+          )}
 
-        <Link
-          href="/players"
-          className={
-            isActive('/players')
-              ? 'active'
-              : ''
-          }
-        >
-          Joueurs
-        </Link>
-
-        <Link
-          href="/teams"
-          className={
-            isActive('/teams')
-              ? 'active'
-              : ''
-          }
-        >
-          Équipes
-        </Link>
-
-        {/* Planning masqué pour le moment.
-        <Link
-          href="/planning"
-          className={
-            isActive('/planning')
-              ? 'active'
-              : ''
-          }
-        >
-          Planning
-        </Link>
-        */}
-
-        <Link
-          href="/results"
-          className={
-            isActive('/results')
-              ? 'active'
-              : ''
-          }
-        >
-          Résultats
-        </Link>
-
-        <Link
-          href="/stats"
-          className={
-            isActive('/stats')
-              ? 'active'
-              : ''
-          }
-        >
-          Stats
-        </Link>
-
-        <Link
-          href="/head-to-head"
-          className={
-            isActive('/head-to-head')
-              ? 'active'
-              : ''
-          }
-        >
-          Head to Head
-        </Link>
-
-        {/* Hall of Fame masqué pour le moment (page encore vide).
-        <Link
-          href="/hall-of-fame"
-          className={
-            isActive('/hall-of-fame')
-              ? 'active'
-              : ''
-          }
-        >
-          Hall of Fame
-        </Link>
-        */}
-
-        {/* ADMIN visible uniquement pour les admins */}
-        {isAdmin && (
           <Link
-            href="/admin"
-            className={
-              isActive('/admin')
-                ? 'active'
-                : ''
-            }
+            href="/profile"
+            className={cls(styles.btn, styles.btnOrange, isActive('/profile') && styles.active)}
           >
-            Admin
+            Mon profil
           </Link>
-        )}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </header>
   );
 }

@@ -318,6 +318,33 @@
   padding: 22px 22px 26px;
 }
 
+/* Version resserrée pour l'en-tête des listes (équipes, joueurs) */
+.sideCardCompact {
+  gap: 12px;
+  padding: 18px 20px 22px;
+}
+
+.sideCardCompact .cardTitle {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: var(--orange);
+}
+
+.sideCardCompact .myName {
+  font-size: 1.3rem;
+}
+
+.sideCardCompact .body {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.sideCardCompact .btnPrimary,
+.sideCardCompact .btnOutline {
+  padding: 7px 14px;
+  font-size: 0.78rem;
+}
+
 .cardTitle {
   font-family: var(--condensed);
   font-weight: 800;
@@ -531,6 +558,27 @@
   font-family: var(--font-barlow), sans-serif;
   font-size: 0.95rem;
   box-shadow: 6px 6px 0 var(--dark);
+}
+
+/* Colonne gauche de l'en-tête, aussi haute que la carte de droite */
+.headerMain {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Recherche calée en bas de l'en-tête, juste au-dessus des filtres */
+.headerSearch {
+  display: block;
+  flex: none;
+  width: 100%;
+  max-width: 640px;
+  margin-top: auto;
+}
+
+/* Écart minimal titre / recherche quand la carte est courte ou passe dessous */
+.headerMain .h1 {
+  margin-bottom: var(--space-block);
 }
 
 .search:focus {

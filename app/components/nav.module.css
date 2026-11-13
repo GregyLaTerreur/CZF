@@ -1,0 +1,213 @@
+/* Header du site (piste « I droit ») : étage du haut + barre dark + liseré orange.
+   Contenu calé sur le conteneur des pages (1180px, marges 32px / 16px mobile). */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  font-family: var(--font-barlow-condensed), 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+
+  background: #081428;
+  border-bottom: 6px solid #F05010;
+}
+
+.inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+/* ---------- Étage du haut ---------- */
+
+.top {
+  background: #040C18;
+}
+
+.topInner {
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  gap: 22px;
+
+  font-weight: 700;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.topLink {
+  color: #E0D8CC;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.topLink:hover,
+.topLink.active {
+  color: #F05010;
+}
+
+/* ---------- Barre principale ---------- */
+
+.bar {
+  height: 80px;
+
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.logo {
+  flex: 0 0 auto;
+  display: flex;
+}
+
+.logo img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.links {
+  flex-grow: 1;
+
+  display: flex;
+  align-items: center;
+  gap: 30px;
+
+  font-size: 16px;
+  letter-spacing: 0.08em;
+}
+
+.link {
+  position: relative;
+  padding: 6px 0;
+
+  color: #E0D8CC;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: #F05010;
+}
+
+.link.active {
+  color: #FFFFFF;
+}
+
+/* Trait orange incliné sous la page active */
+.link.active::after {
+  content: '';
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 3px;
+  background: #F05010;
+  transform: skewX(-24deg);
+  box-shadow: 6px 0 0 rgba(240, 80, 16, 0.35);
+}
+
+/* ---------- Compte ---------- */
+
+.account {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  transform: skewX(-8deg);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.btn:hover,
+.btn.active {
+  transform: skewX(-8deg) translate(2px, 2px);
+}
+
+.btnCream {
+  color: #081428;
+  background: #F4E2C9;
+  box-shadow: 4px 4px 0 #F05010;
+}
+
+.btnCream:hover,
+.btnCream.active {
+  box-shadow: 2px 2px 0 #F05010;
+}
+
+.btnOrange {
+  color: #FFFFFF;
+  background: #F05010;
+  box-shadow: 4px 4px 0 #040C18;
+}
+
+.btnOrange:hover,
+.btnOrange.active {
+  box-shadow: 2px 2px 0 #040C18;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 960px) {
+  .header {
+    position: relative;
+  }
+
+  .inner {
+    padding: 0 16px;
+  }
+
+  .bar {
+    gap: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .logo img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .links {
+    gap: 18px;
+    font-size: 14px;
+  }
+
+  .account {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 520px) {
+  .topInner {
+    gap: 16px;
+    font-size: 11px;
+  }
+}

@@ -437,14 +437,14 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 0;
+  padding: 8px 0;
   border-top: 1px solid rgba(8, 20, 40, 0.15);
   border-bottom: 1px solid rgba(8, 20, 40, 0.15);
 }
 
 .myRankIcon {
-  width: 46px;
-  height: 46px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   flex-shrink: 0;
 }

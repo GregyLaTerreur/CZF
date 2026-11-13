@@ -145,7 +145,8 @@ button,
 
   gap: 30px;
 
-  padding: 10px 5vw;
+  /* Contenu aligné sur le conteneur des pages (.container : 1180px, 32px de marge). */
+  padding: 10px max(32px, calc((100% - 1180px) / 2 + 32px));
 
   color: white;
 
@@ -4331,7 +4332,7 @@ input:checked +
     width: 100%;
     min-height: auto;
 
-    padding: 10px 14px;
+    padding: 10px 16px;
 
     gap: 14px;
 

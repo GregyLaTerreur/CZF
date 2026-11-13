@@ -168,17 +168,6 @@ export default function PlayersView() {
     [players]
   );
 
-  const counts = useMemo(
-    () => ({
-      total: players.length,
-      participants: players.filter(
-        (player) => teamByPlayer.get(Number(player.id))?.validated_by_admin === true
-      ).length,
-      lft: players.filter((player) => player.lft).length,
-    }),
-    [players, teamByPlayer]
-  );
-
   const filteredPlayers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -258,24 +247,17 @@ export default function PlayersView() {
 
       <header className={ds.header}>
         <div className={`${ds.container} ${ds.headerGrid}`}>
-          <div>
+          <div className={ds.headerMain}>
             <div className={ds.sectionLabel}>Saison 1 · Joueurs</div>
             <h1 className={ds.h1}>Les joueurs</h1>
 
-            <div className={ds.counters}>
-              <div className={ds.counter}>
-                <strong>{loading ? '—' : counts.total}</strong>
-                <span>Inscrits</span>
-              </div>
-              <div className={ds.counter}>
-                <strong>{loading ? '—' : counts.participants}</strong>
-                <span>En équipe validée</span>
-              </div>
-              <div className={ds.counter}>
-                <strong className={ds.teal}>{loading ? '—' : counts.lft}</strong>
-                <span>LFT</span>
-              </div>
-            </div>
+            <input
+              type="search"
+              className={`${ds.search} ${ds.headerSearch}`}
+              placeholder="Rechercher un joueur, un pseudo Discord, une équipe..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
           <ProfileCard user={user} myPlayer={myPlayer} onCreated={loadData} />
@@ -289,13 +271,27 @@ export default function PlayersView() {
       <section className={ds.section}>
         <div className={ds.container}>
           <div className={ds.toolbar}>
-            <input
-              type="search"
-              className={ds.search}
-              placeholder="Rechercher un joueur, un pseudo Discord, une équipe..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className={ds.tabs}>
+              <button
+                type="button"
+                className={divisionFilter === null ? ds.tabActive : ds.tab}
+                onClick={() => chooseDivision(null)}
+              >
+                Toutes les divisions
+              </button>
+
+              {DIVISIONS.map((division) => (
+                <button
+                  key={division}
+                  type="button"
+                  className={divisionFilter === division ? ds.tabActive : ds.tab}
+                  onClick={() => chooseDivision(divisionFilter === division ? null : division)}
+                >
+                  <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
+                  {division}
+                </button>
+              ))}
+            </div>
 
             <div className={ds.tabs}>
               <button
@@ -317,28 +313,6 @@ export default function PlayersView() {
                 LFT
               </button>
             </div>
-          </div>
-
-          <div className={`${ds.tabs} ${ds.filterRow}`}>
-            <button
-              type="button"
-              className={divisionFilter === null ? ds.tabActive : ds.tab}
-              onClick={() => chooseDivision(null)}
-            >
-              Toutes les divisions
-            </button>
-
-            {DIVISIONS.map((division) => (
-              <button
-                key={division}
-                type="button"
-                className={divisionFilter === division ? ds.tabActive : ds.tab}
-                onClick={() => chooseDivision(divisionFilter === division ? null : division)}
-              >
-                <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
-                {division}
-              </button>
-            ))}
           </div>
 
           <div className={`${ds.tabs} ${ds.filterRowLast}`}>
@@ -718,7 +692,7 @@ function ProfileCard({
 
   if (!user) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Rejoindre la CZF</div>
         <p className={ds.body}>
           Connecte-toi avec Discord pour créer ton profil joueur et rejoindre une équipe.
@@ -735,7 +709,7 @@ function ProfileCard({
     const rank = formatRank(myPlayer.soloq_tier, myPlayer.soloq_rank, myPlayer.soloq_lp);
 
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Mon profil</div>
         <div className={ds.myName}>
           {name}
@@ -774,7 +748,7 @@ function ProfileCard({
   // Connecté sans profil : le formulaire ne s'ouvre qu'au clic.
   if (!formOpen) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Rejoindre la CZF</div>
         <p className={ds.body}>
           Tu n&apos;as pas encore de profil joueur. Crée-le pour apparaître dans la liste et
