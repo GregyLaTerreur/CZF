@@ -1,8 +1,11 @@
 // Envoie des images sur Cloudinary, tout sous le dossier racine "czf/", en écrasant les versions existantes.
 // Lit .env.local : NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.
 //
-//   npm run assets:upload                          public/assets          -> czf/…
+//   npm run assets:upload -- <dossier>             ex. ~/Images/czf-site        -> czf/…  (images du site)
 //   npm run assets:upload -- <dossier> <cible>     ex. ~/Images/cartes-s1 cards/s1 -> czf/cards/s1/…
+//
+// Les images ne sont pas dans le repo : Cloudinary est la référence. Un fichier envoyé au même chemin
+// remplace l'ancien (le CDN est purgé).
 //
 // Les sous-dossiers sont conservés, les espaces des noms deviennent des "_", l'extension est retirée.
 // Ex. cartes-s1/rare/Dragon Rouge.png -> czf/cards/s1/rare/Dragon_Rouge.
@@ -12,7 +15,11 @@ import { homedir } from 'node:os';
 import { join, posix, relative, resolve, sep } from 'node:path';
 
 const [sourceArg, targetArg = ''] = process.argv.slice(2);
-const ASSETS_DIR = sourceArg ? resolve(sourceArg.replace(/^~(?=\/|$)/, homedir())) : join(process.cwd(), 'public', 'assets');
+if (!sourceArg) {
+  console.error('Usage : npm run assets:upload -- <dossier> [cible]   (ex. ~/Images/cartes-s1 cards/s1)');
+  process.exit(1);
+}
+const ASSETS_DIR = resolve(sourceArg.replace(/^~(?=\/|$)/, homedir()));
 const TARGET = targetArg.replace(/^\/+|\/+$/g, '').replace(/^czf\//, '');
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif|svg|avif)$/i;
 

@@ -1,15 +1,16 @@
-// Assets statiques (public/assets) servis par le CDN Cloudinary quand
-// NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME est défini, sinon depuis /public (dev, fallback).
-// Les fichiers sont envoyés sur Cloudinary par `npm run assets:upload`.
+// Images du site servies par le CDN Cloudinary (dossier racine "czf/"). Elles ne sont plus dans le repo :
+// on les envoie avec `npm run assets:upload -- <dossier> [cible]`.
+// Les chemins "/assets/…" du code sont conservés comme noms logiques et convertis en URL Cloudinary.
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+// Le cloud name n'est pas secret (il apparaît dans chaque URL d'image) : valeur par défaut = compte CZF.
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dn70nvtqk';
 const ROOT_FOLDER = 'czf';
 
 // Format et qualité choisis par Cloudinary selon le navigateur (AVIF/WebP) : les PNG de plusieurs Mo fondent.
 const DEFAULT_TRANSFORM = 'f_auto,q_auto';
 
 // Chemin local (ex. "/assets/eclairs/eclair_czf_01.png") -> identifiant Cloudinary ("czf/eclairs/eclair_czf_01").
-// Utilisé aussi par scripts/upload-assets.mjs : garder les deux en phase.
+// Même règle que publicId() dans scripts/upload-assets.mjs : garder les deux en phase.
 export function assetPublicId(path: string): string {
   const relative = path.replace(/^\/?assets\//, '');
   const id = relative.replace(/\.[a-z0-9]+$/i, '').replace(/\s+/g, '_');
@@ -17,7 +18,7 @@ export function assetPublicId(path: string): string {
 }
 
 export function asset(path: string, transform: string = DEFAULT_TRANSFORM): string {
-  if (!CLOUD_NAME || !path.startsWith('/assets/')) return path;
+  if (!path.startsWith('/assets/')) return path;
 
   const publicId = assetPublicId(path).split('/').map(encodeURIComponent).join('/');
 
@@ -28,9 +29,8 @@ export function asset(path: string, transform: string = DEFAULT_TRANSFORM): stri
 }
 
 // Image rangée directement sur Cloudinary (hors public/assets), par son chemin sous "czf/".
-// Ex. cdnImage('cards/s1/Dragon_Rouge', 'f_auto,q_auto,w_400'). Sans cloud configuré : chaîne vide.
+// Ex. cdnImage('cards/s1/Dragon_Rouge', 'f_auto,q_auto,w_400').
 export function cdnImage(path: string, transform: string = DEFAULT_TRANSFORM): string {
-  if (!CLOUD_NAME) return '';
   const id = `${ROOT_FOLDER}/${path.replace(/^\/+|^czf\//g, '')}`.split('/').map(encodeURIComponent).join('/');
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transform}/${id}`;
 }
