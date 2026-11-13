@@ -598,8 +598,8 @@ export function computeStandings<T extends StandingTeam>(
 }
 
 // Égalités parfaites tranchées par les orgas (id d'équipe, du mieux classé au moins bien).
-// Targon S1 : MoselleLAN Project, Unfold Winterfall, MG King, SuperNovas.
-const MANUAL_TIEBREAK: number[] = [90, 105, 27, 61];
+// Targon S1 : Unfold Winterfall, MoselleLAN Project, MG King, SuperNovas.
+const MANUAL_TIEBREAK: number[] = [105, 90, 27, 61];
 
 function manualTiebreak(team: { id: number | string }): number {
   const index = MANUAL_TIEBREAK.indexOf(Number(team.id));
