@@ -567,12 +567,13 @@
   flex-direction: column;
 }
 
-/* Recherche centrée entre le titre et les filtres */
+/* Recherche calée en bas de l'en-tête, juste au-dessus des filtres */
 .headerSearch {
   display: block;
+  flex: none;
   width: 100%;
   max-width: 640px;
-  margin: auto 0;
+  margin-top: auto;
 }
 
 /* Écart minimal titre / recherche quand la carte est courte ou passe dessous */
