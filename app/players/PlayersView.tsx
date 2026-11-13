@@ -245,7 +245,7 @@ export default function PlayersView() {
           EN-TÊTE
       ================================================= */}
 
-      <header className={`${ds.header} ${ds.headerAiry}`}>
+      <header className={ds.header}>
         <div className={`${ds.container} ${ds.headerGrid}`}>
           <div>
             <div className={ds.sectionLabel}>Saison 1 · Joueurs</div>

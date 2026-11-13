@@ -265,11 +265,6 @@
   padding: var(--space-block) 0 0;
 }
 
-/* En-tête des listes (équipes, joueurs) : un peu plus d'air au-dessus */
-.headerAiry {
-  padding: var(--space-section) 0 0;
-}
-
 .headerGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
