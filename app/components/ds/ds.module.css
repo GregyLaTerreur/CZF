@@ -265,6 +265,11 @@
   padding: var(--space-block) 0 0;
 }
 
+/* En-tête des listes (équipes, joueurs) : un peu plus d'air autour */
+.headerAiry {
+  padding: var(--space-section) 0 var(--space-block);
+}
+
 .headerGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
@@ -320,8 +325,8 @@
 
 /* Version resserrée pour l'en-tête des listes (équipes, joueurs) */
 .sideCardCompact {
-  gap: 10px;
-  padding: 14px 18px 18px;
+  gap: 12px;
+  padding: 18px 20px 22px;
 }
 
 .sideCardCompact .cardTitle {

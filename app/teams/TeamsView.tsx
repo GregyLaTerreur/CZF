@@ -194,7 +194,7 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
           EN-TÊTE
       ================================================= */}
 
-      <header className={ds.header}>
+      <header className={`${ds.header} ${ds.headerAiry}`}>
         <div className={`${ds.container} ${ds.headerGrid}`}>
           <div>
             <div className={ds.sectionLabel}>Saison 1 · Équipes</div>
