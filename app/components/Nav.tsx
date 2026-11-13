@@ -45,10 +45,65 @@ function loadIsAdmin(userId: string) {
   return adminCache.isAdmin;
 }
 
+// Même principe pour « Mon équipe » : le lien n'est montré qu'au capitaine d'une équipe.
+let captainCache: {
+  userId: string;
+  isCaptain: Promise<boolean>;
+  value?: boolean;
+} | null = null;
+
+function loadIsCaptain(userId: string) {
+  if (captainCache?.userId !== userId) {
+    const entry: NonNullable<typeof captainCache> = {
+      userId,
+
+      isCaptain: (async () => {
+        const { data: player, error } = await supabase
+          .from('players')
+          .select('id')
+          .eq('profile_id', userId)
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!player) return false;
+
+        const { data: team, error: teamError } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('captain_player_id', player.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (teamError) throw teamError;
+        return Boolean(team);
+      })().then(
+        (value) => {
+          entry.value = value;
+          return value;
+        },
+        () => {
+          // En cas d'erreur, on redemandera à la prochaine page.
+          if (captainCache === entry) captainCache = null;
+          return false;
+        }
+      ),
+    };
+
+    captainCache = entry;
+  }
+
+  return captainCache.isCaptain;
+}
+
 export default function Nav() {
   // Valeur déjà connue : pas de clignotement du lien Admin entre deux pages.
   const [isAdmin, setIsAdmin] = useState(
     adminCache?.value === true
+  );
+
+  const [isCaptain, setIsCaptain] = useState(
+    captainCache?.value === true
   );
 
   const pathname = usePathname();
@@ -73,12 +128,17 @@ export default function Nav() {
 
     if (!user) {
       setIsAdmin(false);
+      setIsCaptain(false);
       return;
     }
 
-    setIsAdmin(
-      await loadIsAdmin(user.id)
-    );
+    const [admin, captain] = await Promise.all([
+      loadIsAdmin(user.id),
+      loadIsCaptain(user.id),
+    ]);
+
+    setIsAdmin(admin);
+    setIsCaptain(captain);
   }
 
   function isActive(path: string) {
@@ -156,16 +216,18 @@ export default function Nav() {
           Mon profil
         </Link>
 
-        <Link
-          href="/my-team"
-          className={
-            isActive('/my-team')
-              ? 'active'
-              : ''
-          }
-        >
-          Mon équipe
-        </Link>
+        {isCaptain && (
+          <Link
+            href="/my-team"
+            className={
+              isActive('/my-team')
+                ? 'active'
+                : ''
+            }
+          >
+            Mon équipe
+          </Link>
+        )}
 
         <Link
           href="/players"
