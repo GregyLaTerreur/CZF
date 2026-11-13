@@ -28,6 +28,14 @@ export function asset(path: string, transform: string = DEFAULT_TRANSFORM): stri
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transform}/${publicId}`;
 }
 
+// Image rangée directement sur Cloudinary (hors public/assets), par son chemin sous "czf/".
+// Ex. cdnImage('cards/s1/Dragon_Rouge', 'f_auto,q_auto,w_400'). Sans cloud configuré : chaîne vide.
+export function cdnImage(path: string, transform: string = DEFAULT_TRANSFORM): string {
+  if (!CLOUD_NAME) return '';
+  const id = `${ROOT_FOLDER}/${path.replace(/^\/+|^czf\//g, '')}`.split('/').map(encodeURIComponent).join('/');
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${transform}/${id}`;
+}
+
 // Images utilisées en `background` dans le CSS : exposées en variables CSS (--asset-…) par app/layout.tsx.
 export const CSS_ASSETS = {
   'bg-wide': '/assets/czf-bg-wide.png',

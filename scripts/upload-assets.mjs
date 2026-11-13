@@ -1,11 +1,19 @@
-// Envoie public/assets sur Cloudinary (dossier "czf/"), en écrasant les versions existantes.
-// Usage : npm run assets:upload   (lit .env.local : NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-//         CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET). Relancer après tout ajout/modif d'un asset.
+// Envoie des images sur Cloudinary, tout sous le dossier racine "czf/", en écrasant les versions existantes.
+// Lit .env.local : NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET.
+//
+//   npm run assets:upload                          public/assets          -> czf/…
+//   npm run assets:upload -- <dossier> <cible>     ex. ~/Images/cartes-s1 cards/s1 -> czf/cards/s1/…
+//
+// Les sous-dossiers sont conservés, les espaces des noms deviennent des "_", l'extension est retirée
+// (sauf SVG). Ex. cartes-s1/rare/Dragon Rouge.png -> czf/cards/s1/rare/Dragon_Rouge.
 import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
+import { homedir } from 'node:os';
+import { join, posix, relative, resolve, sep } from 'node:path';
 
-const ASSETS_DIR = join(process.cwd(), 'public', 'assets');
+const [sourceArg, targetArg = ''] = process.argv.slice(2);
+const ASSETS_DIR = sourceArg ? resolve(sourceArg.replace(/^~(?=\/|$)/, homedir())) : join(process.cwd(), 'public', 'assets');
+const TARGET = targetArg.replace(/^\/+|\/+$/g, '').replace(/^czf\//, '');
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif|svg|avif)$/i;
 
 async function loadEnv(file) {
@@ -20,7 +28,8 @@ async function loadEnv(file) {
 // Même règle que assetPublicId() dans lib/assets.ts.
 function publicId(rel) {
   const isSvg = /\.svg$/i.test(rel);
-  return `czf/${(isSvg ? rel : rel.replace(/\.[a-z0-9]+$/i, '')).replace(/\s+/g, '_')}`;
+  const id = (isSvg ? rel : rel.replace(/\.[a-z0-9]+$/i, '')).replace(/\s+/g, '_');
+  return posix.join('czf', TARGET, id);
 }
 
 async function walk(dir) {
@@ -48,7 +57,9 @@ let failed = 0;
 
 for (const file of files) {
   const rel = relative(ASSETS_DIR, file).split(sep).join('/');
-  const params = { invalidate: 'true', overwrite: 'true', public_id: publicId(rel), timestamp: String(Math.floor(Date.now() / 1000)) };
+  const id = publicId(rel);
+  // asset_folder : range le fichier dans le bon dossier de la médiathèque Cloudinary (comptes en "dynamic folders").
+  const params = { asset_folder: posix.dirname(id), invalidate: 'true', overwrite: 'true', public_id: id, timestamp: String(Math.floor(Date.now() / 1000)) };
   const toSign = Object.keys(params).sort().map((k) => `${k}=${params[k]}`).join('&');
   const signature = createHash('sha1').update(toSign + secret).digest('hex');
 
