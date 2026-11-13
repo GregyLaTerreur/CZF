@@ -29,7 +29,7 @@
 }
 
 .topInner {
-  height: 34px;
+  height: 38px;
 
   display: flex;
   align-items: center;
@@ -55,7 +55,7 @@
 /* ---------- Barre principale ---------- */
 
 .bar {
-  height: 66px;
+  height: 80px;
 
   display: flex;
   align-items: center;
@@ -78,7 +78,7 @@
 
   display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 30px;
 
   font-size: 16px;
   letter-spacing: 0.08em;
