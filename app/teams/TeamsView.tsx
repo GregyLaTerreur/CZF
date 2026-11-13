@@ -487,14 +487,19 @@ function TeamActionCard({
     setMessage('');
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       const res = await fetch('/api/teams', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+        },
+        // Le capitaine est déduit du compte connecté côté serveur.
         body: JSON.stringify({
           name,
-          captain_riot_id: myPlayer.riot_id,
-          captain_profile_id: user.id,
-          captain_player_id: myPlayer.id,
           description,
           logo_url: logoUrl,
         }),

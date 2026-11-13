@@ -312,12 +312,20 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
   }
 
   function jsonRequest(url: string, method: string, body: unknown) {
-    return () =>
-      fetch(url, {
+    return async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      return fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify(body),
       });
+    };
   }
 
   function leaveTeam() {

@@ -330,6 +330,7 @@ export default function AdminView() {
         headers: {
           'Content-Type':
             'application/json',
+          Authorization: `Bearer ${await getToken()}`,
         },
         body: JSON.stringify({
           team_id: teamId,
@@ -382,6 +383,7 @@ export default function AdminView() {
         headers: {
           'Content-Type':
             'application/json',
+          Authorization: `Bearer ${await getToken()}`,
         },
         body: JSON.stringify({
           team_id: teamId,
