@@ -560,12 +560,24 @@
   box-shadow: 6px 6px 0 var(--dark);
 }
 
-/* Recherche placée sous le titre de l'en-tête */
+/* Colonne gauche de l'en-tête, aussi haute que la carte de droite */
+.headerMain {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Recherche centrée entre le titre et les filtres */
 .headerSearch {
   display: block;
   width: 100%;
   max-width: 640px;
-  margin-top: var(--space-block);
+  margin: auto 0;
+}
+
+/* Écart minimal titre / recherche quand la carte est courte ou passe dessous */
+.headerMain .h1 {
+  margin-bottom: var(--space-block);
 }
 
 .search:focus {
