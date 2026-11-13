@@ -1,13 +1,38 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import sharp from 'sharp';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { LOGO_SIZES } from '@/lib/logo';
+import { LOGO_SIZES, isAllowedLogoUrl } from '@/lib/logo';
 
 // Logo d'équipe redimensionné en WebP (transparence gardée), mis en cache un an par le CDN.
 // Seules les URLs enregistrées comme logo d'une équipe sont servies : pas de proxy ouvert.
 
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 8000;
+
+const MAX_REDIRECTS = 3;
+
+// Suit les redirections à la main : chaque étape doit rester chez un hébergeur autorisé
+// (sinon imgur.com → adresse interne serait possible).
+async function fetchAllowed(url: string) {
+  let current = url;
+
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    // Certains hébergeurs (imgur) refusent les clients sans User-Agent de navigateur.
+    const res = await fetch(current, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (CZF logo resizer)' },
+      redirect: 'manual',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
+
+    if (res.status < 300 || res.status >= 400) return res;
+
+    const next = new URL(res.headers.get('location') || '', current).toString();
+    if (!isAllowedLogoUrl(next)) throw new Error(`Redirection refusée vers ${next}`);
+    current = next;
+  }
+
+  throw new Error('Trop de redirections');
+}
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -27,12 +52,13 @@ export async function GET(request: NextRequest) {
 
   if (!team) return new NextResponse('Logo inconnu', { status: 404 });
 
+  // Hébergeur inconnu (ancien logo) : le navigateur le charge lui-même, le serveur n'y touche pas.
+  if (!isAllowedLogoUrl(url)) {
+    return NextResponse.redirect(url, { status: 302, headers: { 'Cache-Control': 'no-store' } });
+  }
+
   try {
-    // Certains hébergeurs (imgur) refusent les clients sans User-Agent de navigateur.
-    const source = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (CZF logo resizer)' },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    const source = await fetchAllowed(url);
 
     const length = Number(source.headers.get('content-length') || 0);
 

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
@@ -18,11 +19,16 @@ export async function GET(request: Request) {
        SÉCURITÉ CRON
     ===================================================== */
 
-    const authHeader = request.headers.get('authorization');
+    // Sans CRON_SECRET, la route reste fermée (avant, elle s'ouvrait à tout le monde).
+    // Vercel envoie « Authorization: Bearer <CRON_SECRET> » à chaque exécution du cron.
+    const secret = process.env.CRON_SECRET || '';
+    const received = Buffer.from(request.headers.get('authorization') || '');
+    const expected = Buffer.from(`Bearer ${secret}`);
 
     if (
-      process.env.CRON_SECRET &&
-      authHeader !== `Bearer ${process.env.CRON_SECRET}`
+      !secret ||
+      received.length !== expected.length ||
+      !timingSafeEqual(received, expected)
     ) {
       return NextResponse.json(
         {
