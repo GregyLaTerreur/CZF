@@ -140,15 +140,6 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
     });
   }, [teams, teamMembers, players]);
 
-  const counts = useMemo(
-    () => ({
-      total: teamViews.length,
-      validated: teamViews.filter((view) => view.validated).length,
-      recruiting: teamViews.filter((view) => !view.complete).length,
-    }),
-    [teamViews]
-  );
-
   const filteredTeams = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -208,21 +199,6 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
           <div>
             <div className={ds.sectionLabel}>Saison 1 · Équipes</div>
             <h1 className={ds.h1}>Les équipes</h1>
-
-            <div className={ds.counters}>
-              <div className={ds.counter}>
-                <strong>{counts.total}</strong>
-                <span>Équipes</span>
-              </div>
-              <div className={ds.counter}>
-                <strong>{counts.validated}</strong>
-                <span>Validées</span>
-              </div>
-              <div className={ds.counter}>
-                <strong className={ds.teal}>{counts.recruiting}</strong>
-                <span>En recrutement</span>
-              </div>
-            </div>
           </div>
 
           <TeamActionCard
@@ -544,7 +520,7 @@ function TeamActionCard({
 
   if (!user) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Monter une équipe</div>
         <p className={ds.body}>Connecte-toi avec Discord pour créer ou rejoindre une équipe.</p>
         <Link href="/login" className={ds.btnPrimary}>
@@ -556,7 +532,7 @@ function TeamActionCard({
 
   if (!myPlayer) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Monter une équipe</div>
         <p className={ds.body}>Crée d&apos;abord ton profil joueur pour créer ou rejoindre une équipe.</p>
         <Link href="/players" className={ds.btnPrimary}>
@@ -570,7 +546,7 @@ function TeamActionCard({
     const { team } = myTeamView;
 
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Mon équipe</div>
         <div className={styles.myTeam}>
           {team.logo_url && <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} />}
@@ -588,7 +564,7 @@ function TeamActionCard({
 
   if (!formOpen) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Monter une équipe</div>
         <p className={ds.body}>
           Tu n&apos;as pas encore d&apos;équipe. Crée la tienne et deviens capitaine, ou postule

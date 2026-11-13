@@ -168,17 +168,6 @@ export default function PlayersView() {
     [players]
   );
 
-  const counts = useMemo(
-    () => ({
-      total: players.length,
-      participants: players.filter(
-        (player) => teamByPlayer.get(Number(player.id))?.validated_by_admin === true
-      ).length,
-      lft: players.filter((player) => player.lft).length,
-    }),
-    [players, teamByPlayer]
-  );
-
   const filteredPlayers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -261,21 +250,6 @@ export default function PlayersView() {
           <div>
             <div className={ds.sectionLabel}>Saison 1 · Joueurs</div>
             <h1 className={ds.h1}>Les joueurs</h1>
-
-            <div className={ds.counters}>
-              <div className={ds.counter}>
-                <strong>{loading ? '—' : counts.total}</strong>
-                <span>Inscrits</span>
-              </div>
-              <div className={ds.counter}>
-                <strong>{loading ? '—' : counts.participants}</strong>
-                <span>En équipe validée</span>
-              </div>
-              <div className={ds.counter}>
-                <strong className={ds.teal}>{loading ? '—' : counts.lft}</strong>
-                <span>LFT</span>
-              </div>
-            </div>
           </div>
 
           <ProfileCard user={user} myPlayer={myPlayer} onCreated={loadData} />
@@ -718,7 +692,7 @@ function ProfileCard({
 
   if (!user) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Rejoindre la CZF</div>
         <p className={ds.body}>
           Connecte-toi avec Discord pour créer ton profil joueur et rejoindre une équipe.
@@ -735,7 +709,7 @@ function ProfileCard({
     const rank = formatRank(myPlayer.soloq_tier, myPlayer.soloq_rank, myPlayer.soloq_lp);
 
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Mon profil</div>
         <div className={ds.myName}>
           {name}
@@ -774,7 +748,7 @@ function ProfileCard({
   // Connecté sans profil : le formulaire ne s'ouvre qu'au clic.
   if (!formOpen) {
     return (
-      <div className={`${ds.card} ${ds.sideCard}`}>
+      <div className={`${ds.card} ${ds.sideCard} ${ds.sideCardCompact}`}>
         <div className={ds.cardTitle}>Rejoindre la CZF</div>
         <p className={ds.body}>
           Tu n&apos;as pas encore de profil joueur. Crée-le pour apparaître dans la liste et
