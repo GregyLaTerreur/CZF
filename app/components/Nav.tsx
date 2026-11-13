@@ -167,14 +167,9 @@ export default function Nav() {
 
   return (
     <header className={cls(styles.header, fontVariables)}>
-      {/* ÉTAGE DU HAUT : saison + liens secondaires */}
+      {/* ÉTAGE DU HAUT : liens secondaires */}
       <div className={styles.top}>
         <div className={cls(styles.inner, styles.topInner)}>
-          <span className={styles.season}>
-            <span className={styles.seasonDot} aria-hidden="true" />
-            Saison 1 en cours
-          </span>
-
           <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className={styles.topLink}>
             Discord
           </a>

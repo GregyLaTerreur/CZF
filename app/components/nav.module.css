@@ -41,23 +41,6 @@
   letter-spacing: 0.14em;
 }
 
-.season {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-
-  color: #F05010;
-  font-weight: 800;
-  font-style: italic;
-}
-
-.seasonDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #00C9A0;
-}
-
 .topLink {
   color: #E0D8CC;
   text-decoration: none;
