@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { invalidateResults } from '@/lib/results/cache';
+import { requireUser } from '@/lib/auth';
+import { lookupRiot } from '@/lib/riot/link-account';
+
+const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+const PEAK_TIERS = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
+const PEAK_RANKS = ['I', 'II', 'III', 'IV'];
+const DESCRIPTION_MAX = 500;
+
+function fail(message: string, status: number) {
+  return NextResponse.json({ success: false, message }, { status });
+}
 
 // Colonnes affichées par les pages Joueurs et Équipes (?view=list).
 const LIST_COLUMNS =
@@ -252,88 +263,78 @@ if (memberRes && !memberRes.ok) {
   );
 }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => ({}));
 
-  const {
-    riot_id,
-    main_role,
-    secondary_role,
-    description,
+  const riot_id = String(body.riot_id ?? '').trim();
+  const main_role = body.main_role;
+  const secondary_role = body.secondary_role || null;
+  const description = String(body.description ?? '').trim().slice(0, DESCRIPTION_MAX) || null;
 
-    puuid,
-    summoner_level,
-    profile_icon_id,
+  if (!/^.{3,16}#.{2,5}$/.test(riot_id)) {
+    return fail('Riot ID invalide. Format attendu : Pseudo#TAG', 400);
+  }
+  if (!ROLES.includes(main_role)) return fail('Choisis un rôle principal.', 400);
+  if (secondary_role && !ROLES.includes(secondary_role)) return fail('Rôle secondaire invalide.', 400);
 
-    soloq_tier,
-    soloq_rank,
-    soloq_lp,
-    soloq_wins,
-    soloq_losses,
-
-    flex_tier,
-    flex_rank,
-    flex_lp,
-
-    peak_tier,
-    peak_rank,
-    peak_lp,
-
-    czf_points,
-    top_champions,
-  } = body;
-
-const { data: existingPlayer, error: existingError } = await supabaseAdmin    .from('players')
-    .select('*')
+  const { data: existingPlayer, error: existingError } = await supabaseAdmin
+    .from('players')
+    .select('id')
     .eq('profile_id', profile_id)
     .maybeSingle();
 
   if (existingError) {
-    return NextResponse.json(
-      { success: false, error: existingError },
-      { status: 500 }
-    );
+    console.error('[players POST]', existingError);
+    return fail('Erreur lors de la vérification du profil.', 500);
   }
 
-  if (existingPlayer) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Tu as déjà un profil joueur.',
-      },
-      { status: 400 }
-    );
-  }
+  if (existingPlayer) return fail('Tu as déjà un profil joueur.', 400);
 
-const { data, error } = await supabaseAdmin
-  .from('players')
-  .insert([
+  // Rang, points CZF et PUUID viennent de Riot, jamais du navigateur.
+  const riot = await lookupRiot(new URL(request.url).origin, { riot_id });
+  if (!riot.ok) return fail(riot.message, riot.status);
+
+  const riotData = riot.data;
+
+  // Un compte Riot ne peut appartenir qu'à un seul compte Discord.
+  const { data: samePuuid } = await supabaseAdmin
+    .from('players')
+    .select('id')
+    .eq('puuid', riotData.puuid)
+    .not('profile_id', 'is', null)
+    .limit(1);
+
+  if (samePuuid?.length) return fail('Ce compte Riot est déjà lié à un autre joueur.', 409);
+
+  const { data, error } = await supabaseAdmin
+    .from('players')
+    .insert([
       {
-        riot_id,
+        riot_id: riotData.riot_id || riot_id,
         main_role,
         secondary_role,
         description,
         profile_id,
 
-        puuid,
-        summoner_level,
-        profile_icon_id,
+        puuid: riotData.puuid,
+        summoner_level: riotData.summoner_level,
+        profile_icon_id: riotData.profile_icon_id,
 
-        soloq_tier,
-        soloq_rank,
-        soloq_lp,
-        soloq_wins,
-        soloq_losses,
+        soloq_tier: riotData.soloq_tier,
+        soloq_rank: riotData.soloq_rank,
+        soloq_lp: riotData.soloq_lp,
+        soloq_wins: riotData.soloq_wins,
+        soloq_losses: riotData.soloq_losses,
 
-        flex_tier,
-        flex_rank,
-        flex_lp,
+        flex_tier: riotData.flex_tier,
+        flex_rank: riotData.flex_rank,
+        flex_lp: riotData.flex_lp,
 
-        peak_tier,
-        peak_rank,
-        peak_lp,
+        peak_tier: riotData.peak_tier,
+        peak_rank: riotData.peak_rank,
+        peak_lp: riotData.peak_lp,
 
-        czf_points,
-        top_champions,
+        czf_points: riotData.czf_points,
+        top_champions: riotData.top_champions,
 
         lft: false,
       },
@@ -341,10 +342,8 @@ const { data, error } = await supabaseAdmin
     .select();
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error },
-      { status: 500 }
-    );
+    console.error('[players POST]', error);
+    return fail('Erreur lors de la création du profil.', 500);
   }
 
   return NextResponse.json({
@@ -353,61 +352,73 @@ const { data, error } = await supabaseAdmin
   });
 }
 
+// Le joueur (ou un admin) modifie son profil : LFT, rôles, description, peak. Champ absent = inchangé.
 export async function PATCH(request: Request) {
-  const body = await request.json();
+  const auth = await requireUser(request);
+  if (auth.error) return auth.error;
 
-  const {
-    player_id,
-    lft,
-    main_role,
-    secondary_role,
-    description,
-    peak_tier,
-    peak_rank,
-    peak_lp,
-  } = body;
+  const body = await request.json().catch(() => ({}));
+  const playerId = Number(body.player_id);
+  if (!Number.isInteger(playerId) || playerId <= 0) return fail('player_id manquant', 400);
 
-  const updates: any = {};
+  const { data: player } = await supabaseAdmin
+    .from('players')
+    .select('id, profile_id')
+    .eq('id', playerId)
+    .maybeSingle();
 
-  if (lft !== undefined) {
-    updates.lft = lft;
+  if (!player) return fail('Joueur introuvable.', 404);
+  if (player.profile_id !== auth.user.id && !auth.isAdmin) {
+    return fail('Tu ne peux modifier que ton propre profil.', 403);
   }
 
-  if (main_role !== undefined) {
-    updates.main_role = main_role;
+  const updates: Record<string, unknown> = {};
+
+  if (body.lft !== undefined) updates.lft = body.lft === true;
+
+  if (body.main_role !== undefined) {
+    if (!ROLES.includes(body.main_role)) return fail('Rôle principal invalide.', 400);
+    updates.main_role = body.main_role;
   }
 
-  if (secondary_role !== undefined) {
-    updates.secondary_role = secondary_role;
+  if (body.secondary_role !== undefined) {
+    if (body.secondary_role && !ROLES.includes(body.secondary_role)) return fail('Rôle secondaire invalide.', 400);
+    updates.secondary_role = body.secondary_role || null;
   }
 
-  if (description !== undefined) {
-    updates.description = description;
+  if (body.description !== undefined) {
+    updates.description = String(body.description ?? '').trim().slice(0, DESCRIPTION_MAX) || null;
   }
 
-  if (peak_tier !== undefined) {
-    updates.peak_tier = peak_tier;
+  if (body.peak_tier !== undefined) {
+    if (body.peak_tier && !PEAK_TIERS.includes(String(body.peak_tier).toUpperCase())) {
+      return fail('Peak invalide.', 400);
+    }
+    updates.peak_tier = body.peak_tier ? String(body.peak_tier).toUpperCase() : null;
   }
 
-  if (peak_rank !== undefined) {
-    updates.peak_rank = peak_rank;
+  if (body.peak_rank !== undefined) {
+    if (body.peak_rank && !PEAK_RANKS.includes(body.peak_rank)) return fail('Division du peak invalide.', 400);
+    updates.peak_rank = body.peak_rank || null;
   }
 
-  if (peak_lp !== undefined) {
-    updates.peak_lp = peak_lp;
+  if (body.peak_lp !== undefined) {
+    const lp = Number(body.peak_lp) || 0;
+    if (lp < 0 || lp > 5000) return fail('LP du peak invalides.', 400);
+    updates.peak_lp = Math.round(lp);
   }
+
+  if (!Object.keys(updates).length) return fail('Rien à modifier.', 400);
 
   const { data, error } = await supabaseAdmin
     .from('players')
     .update(updates)
-    .eq('id', player_id)
+    .eq('id', playerId)
     .select();
 
   if (error) {
-    return NextResponse.json(
-      { success: false, error },
-      { status: 500 }
-    );
+    console.error('[players PATCH]', error);
+    return fail('Erreur lors de la modification du profil.', 500);
   }
 
   invalidateResults();

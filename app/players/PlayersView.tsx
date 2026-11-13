@@ -612,18 +612,6 @@ function ProfileCard({
     setMessage('Recherche Riot en cours…');
 
     try {
-      const riotRes = await fetch('/api/riot/player', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ riot_id: riotId }),
-      });
-
-      const riot = await riotRes.json();
-
-      if (!riot.success) throw new Error(riot.message || 'Erreur Riot API');
-
-      const riotData = riot.data;
-
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -639,27 +627,6 @@ function ProfileCard({
           main_role: mainRole,
           secondary_role: secondaryRole || null,
           description: description || null,
-
-          puuid: riotData.puuid,
-          summoner_level: riotData.summoner_level,
-          profile_icon_id: riotData.profile_icon_id,
-
-          soloq_tier: riotData.soloq_tier,
-          soloq_rank: riotData.soloq_rank,
-          soloq_lp: riotData.soloq_lp,
-          soloq_wins: riotData.soloq_wins,
-          soloq_losses: riotData.soloq_losses,
-
-          flex_tier: riotData.flex_tier,
-          flex_rank: riotData.flex_rank,
-          flex_lp: riotData.flex_lp,
-
-          peak_tier: riotData.peak_tier,
-          peak_rank: riotData.peak_rank,
-          peak_lp: riotData.peak_lp,
-
-          czf_points: riotData.czf_points,
-          top_champions: riotData.top_champions,
         }),
       });
 

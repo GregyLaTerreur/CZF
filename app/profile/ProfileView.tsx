@@ -179,10 +179,21 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
     }
   }
 
+  async function authHeaders() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token ?? ''}`,
+    };
+  }
+
   async function patchPlayer(body: Record<string, unknown>) {
     const res = await fetch('/api/players', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ player_id: player.id, ...body }),
     });
 
@@ -193,7 +204,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
   async function refreshRiot() {
     const res = await fetch('/api/players/riot-refresh', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ player_id: player.id }),
     });
     const data = await res.json();
@@ -277,7 +288,7 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
         peak_lp: Number(peakLp) || 0,
       });
 
-      if (!data.success) throw new Error('Impossible d’enregistrer le profil.');
+      if (!data.success) throw new Error(data.message || 'Impossible d’enregistrer le profil.');
 
       // Le peak compte dans les points CZF : on recalcule.
       await refreshRiot();

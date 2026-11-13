@@ -2,17 +2,18 @@
 // Partagé par le profil (/api/players/riot-account) et le capitaine (/api/team-members/riot-id).
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { internalHeaders } from '@/lib/riot/internal';
 
 type Result = { ok: true; riotId: string } | { ok: false; message: string; status: number };
 
 const normalizeRiotId = (value: any) => String(value || '').trim().toLowerCase();
 
 // Recherche Riot (format, existence, rang, points CZF) via la route existante.
-async function lookupRiot(origin: string, body: Record<string, unknown>) {
+export async function lookupRiot(origin: string, body: Record<string, unknown>) {
   try {
     const res = await fetch(`${origin}/api/riot/player`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...internalHeaders() },
       body: JSON.stringify(body),
     });
     const text = await res.text();

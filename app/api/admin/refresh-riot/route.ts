@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { internalHeaders } from '@/lib/riot/internal';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import {
@@ -442,6 +443,7 @@ export async function PATCH(request: Request) {
                 headers: {
                   'Content-Type':
                     'application/json',
+                  ...internalHeaders(),
                 },
 
                 body:

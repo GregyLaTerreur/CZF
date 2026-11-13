@@ -1,80 +1,48 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { requireUser } from '@/lib/auth';
+import { rateLimit } from '@/lib/rateLimit';
+import { lookupRiot } from '@/lib/riot/link-account';
 
+function fail(message: string, status: number) {
+  return NextResponse.json({ success: false, message }, { status });
+}
+
+// « Actualiser Riot » sur son profil : rang, points CZF et champion pool. Réservé au joueur ou à un admin.
 export async function PATCH(request: Request) {
-  const body = await request.json();
+  const auth = await requireUser(request);
+  if (auth.error) return auth.error;
 
-  const { player_id } = body;
+  const body = await request.json().catch(() => ({}));
+  const playerId = Number(body.player_id);
+  if (!Number.isInteger(playerId) || playerId <= 0) return fail('player_id manquant', 400);
 
-  const { data: player, error: playerError } = await supabase
-    .from('players')
-    .select('*')
-    .eq('id', player_id)
-    .single();
+  const { data: player } = await supabaseAdmin.from('players').select('*').eq('id', playerId).maybeSingle();
+  if (!player) return fail('Joueur introuvable.', 404);
 
-  if (playerError || !player) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Joueur introuvable.',
-      },
-      { status: 404 }
-    );
+  if (player.profile_id !== auth.user.id && !auth.isAdmin) {
+    return fail('Tu ne peux actualiser que ton propre profil.', 403);
   }
 
-  let riotData: any;
-
-  try {
-    // Origine de la requête plutôt que NEXT_PUBLIC_SITE_URL : marche quel que soit le domaine ou le port.
-    const riotRes = await fetch(
-      `${new URL(request.url).origin}/api/riot/player`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          riot_id: String(player.riot_id).trim(),
-          peak_tier: player.peak_tier,
-          peak_rank: player.peak_rank,
-          peak_lp: player.peak_lp,
-          // « Actualiser Riot » met aussi à jour le champion pool.
-          skip_top_champions: false,
-        }),
-      }
-    );
-
-    const text = await riotRes.text();
-    riotData = text ? JSON.parse(text) : null;
-
-    if (!riotData) {
-      throw new Error(`Réponse vide de /api/riot/player (${riotRes.status}).`);
-    }
-  } catch (error: any) {
-    console.log('RIOT REFRESH ERROR:', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: error?.message || 'Impossible de contacter le service Riot.',
-      },
-      { status: 502 }
-    );
+  // Chaque appel coûte plusieurs requêtes Riot : 3 actualisations par joueur toutes les 2 minutes.
+  if (!auth.isAdmin && !rateLimit(`riot-refresh:${playerId}`, 3, 120_000)) {
+    return fail('Profil déjà actualisé il y a peu. Réessaie dans 2 minutes.', 429);
   }
 
-  if (!riotData.success) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: riotData.message || 'Erreur Riot.',
-      },
-      { status: 500 }
-    );
-  }
+  const riot = await lookupRiot(new URL(request.url).origin, {
+    riot_id: String(player.riot_id).trim(),
+    peak_tier: player.peak_tier,
+    peak_rank: player.peak_rank,
+    peak_lp: player.peak_lp,
+    // « Actualiser Riot » met aussi à jour le champion pool.
+    skip_top_champions: false,
+  });
 
-  const data = riotData.data;
+  if (!riot.ok) return fail(riot.message, riot.status);
 
-  const { error } = await supabase
+  const data = riot.data;
+
+  const { error } = await supabaseAdmin
     .from('players')
     .update({
       puuid: data.puuid,
@@ -95,23 +63,15 @@ export async function PATCH(request: Request) {
       peak_rank: data.peak_rank,
       peak_lp: data.peak_lp,
 
-top_champions: data.top_champions ?? player.top_champions,
+      top_champions: data.top_champions ?? player.top_champions,
       czf_points: data.czf_points,
     })
-    .eq('id', player_id);
+    .eq('id', playerId);
 
   if (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error,
-      },
-      { status: 500 }
-    );
+    console.error('[riot-refresh]', error);
+    return fail('Erreur lors de la mise à jour du profil.', 500);
   }
 
-  return NextResponse.json({
-    success: true,
-    message: 'Données Riot actualisées.',
-  });
+  return NextResponse.json({ success: true, message: 'Données Riot actualisées.' });
 }

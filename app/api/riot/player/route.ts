@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth';
+import { isInternalRequest } from '@/lib/riot/internal';
+import { rateLimit } from '@/lib/rateLimit';
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY?.trim();
 
@@ -244,18 +247,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Appel interne (autres routes serveur) ou joueur connecté, avec une limite par compte :
+    // sinon n'importe qui pourrait épuiser la clé Riot.
+    if (!isInternalRequest(request)) {
+      const auth = await requireUser(request);
+      if (auth.error) return auth.error;
+
+      if (!rateLimit(`riot-player:${auth.user.id}`, 10, 60_000)) {
+        return NextResponse.json(
+          { success: false, message: 'Trop de recherches Riot. Réessaie dans une minute.' },
+          { status: 429 }
+        );
+      }
+    }
+
     const body = await request.json();
-
-    console.log('BODY RIOT:', body);
-
-    console.log('RIOT KEY CHECK:', {
-      exists: Boolean(RIOT_API_KEY),
-      prefix: RIOT_API_KEY.slice(0, 6),
-      length: RIOT_API_KEY.length,
-      hasWhitespace:
-        process.env.RIOT_API_KEY !==
-        process.env.RIOT_API_KEY?.trim(),
-    });
 
     const peakTier = body.peak_tier || null;
     const peakRank = body.peak_rank || null;
