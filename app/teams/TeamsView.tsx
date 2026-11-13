@@ -552,9 +552,6 @@ function TeamActionCard({
           {team.logo_url && <img src={logoSrc(team.logo_url)} alt="" className={styles.teamLogo} />}
           <span className={ds.myName}>{team.name}</span>
         </div>
-        <p className={ds.body}>
-          {myTeamView.count}/{TEAM_SIZE} joueurs · {myTeamView.validated ? 'validée' : 'en attente de validation'}
-        </p>
         <Link href="/my-team" className={ds.btnOutline}>
           Voir mon équipe
         </Link>
