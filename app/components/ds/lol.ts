@@ -1,27 +1,28 @@
 // Constantes et helpers League of Legends partagés par les pages refondues.
 // Pas de 'use client' ici : utilisable côté serveur comme côté client.
 
+import { asset } from '@/lib/assets';
 import { DIVISIONS, type DivisionName } from '@/app/components/home/divisions';
 
 export const ROLES = [
-  { name: 'Top', label: 'TOP', image: '/assets/roles/top.png' },
-  { name: 'Jungle', label: 'JGL', image: '/assets/roles/jungle.png' },
-  { name: 'Mid', label: 'MID', image: '/assets/roles/mid.png' },
-  { name: 'ADC', label: 'ADC', image: '/assets/roles/adc.png' },
-  { name: 'Support', label: 'SUP', image: '/assets/roles/sup.png' },
+  { name: 'Top', label: 'TOP', image: asset('/assets/roles/top.png') },
+  { name: 'Jungle', label: 'JGL', image: asset('/assets/roles/jungle.png') },
+  { name: 'Mid', label: 'MID', image: asset('/assets/roles/mid.png') },
+  { name: 'ADC', label: 'ADC', image: asset('/assets/roles/adc.png') },
+  { name: 'Support', label: 'SUP', image: asset('/assets/roles/sup.png') },
 ];
 
 export const TIERS: Record<string, { label: string; icon: string; order: number }> = {
-  IRON: { label: 'Fer', icon: '/assets/ranks/iron.webp', order: 0 },
-  BRONZE: { label: 'Bronze', icon: '/assets/ranks/bronze.webp', order: 1 },
-  SILVER: { label: 'Argent', icon: '/assets/ranks/silver.webp', order: 2 },
-  GOLD: { label: 'Or', icon: '/assets/ranks/gold.webp', order: 3 },
-  PLATINUM: { label: 'Platine', icon: '/assets/ranks/platine.webp', order: 4 },
-  EMERALD: { label: 'Émeraude', icon: '/assets/ranks/Emerald.webp', order: 5 },
-  DIAMOND: { label: 'Diamant', icon: '/assets/ranks/diamant.webp', order: 6 },
-  MASTER: { label: 'Maître', icon: '/assets/ranks/master.webp', order: 7 },
-  GRANDMASTER: { label: 'Grand Maître', icon: '/assets/ranks/gm.webp', order: 8 },
-  CHALLENGER: { label: 'Challenger', icon: '/assets/ranks/chall.webp', order: 9 },
+  IRON: { label: 'Fer', icon: asset('/assets/ranks/iron.webp'), order: 0 },
+  BRONZE: { label: 'Bronze', icon: asset('/assets/ranks/bronze.webp'), order: 1 },
+  SILVER: { label: 'Argent', icon: asset('/assets/ranks/silver.webp'), order: 2 },
+  GOLD: { label: 'Or', icon: asset('/assets/ranks/gold.webp'), order: 3 },
+  PLATINUM: { label: 'Platine', icon: asset('/assets/ranks/platine.webp'), order: 4 },
+  EMERALD: { label: 'Émeraude', icon: asset('/assets/ranks/Emerald.webp'), order: 5 },
+  DIAMOND: { label: 'Diamant', icon: asset('/assets/ranks/diamant.webp'), order: 6 },
+  MASTER: { label: 'Maître', icon: asset('/assets/ranks/master.webp'), order: 7 },
+  GRANDMASTER: { label: 'Grand Maître', icon: asset('/assets/ranks/gm.webp'), order: 8 },
+  CHALLENGER: { label: 'Challenger', icon: asset('/assets/ranks/chall.webp'), order: 9 },
 };
 
 const APEX_TIERS = ['MASTER', 'GRANDMASTER', 'CHALLENGER'];

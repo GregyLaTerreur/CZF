@@ -1,5 +1,6 @@
 'use client';
 
+import { asset } from '@/lib/assets';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
@@ -61,7 +62,7 @@ export default function LoginView() {
             onClick={loginDiscord}
             disabled={checking || redirecting}
           >
-            <img src="/assets/discord.svg" alt="" className={styles.discordIcon} />
+            <img src={asset("/assets/discord.svg")} alt="" className={styles.discordIcon} />
             {redirecting ? 'Redirection…' : 'Se connecter avec Discord'}
           </button>
 

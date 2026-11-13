@@ -63,7 +63,7 @@ body {
       rgba(234, 208, 173, 0.76),
       rgba(234, 208, 173, 0.84)
     ),
-    url('/assets/czf-bg-wide.png');
+    var(--asset-bg-wide);
 
   background-size: cover;
   background-position: center;
@@ -181,7 +181,7 @@ button,
   top: -40px;
 
   background:
-    url('/assets/eclairs/eclair_czf_09.png')
+    var(--asset-eclair-09)
     center / contain
     no-repeat;
 
@@ -206,7 +206,7 @@ button,
   bottom: -52px;
 
   background:
-    url('/assets/eclairs/eclair_czf_04.png')
+    var(--asset-eclair-04)
     center / contain
     no-repeat;
 
@@ -370,7 +370,7 @@ button,
   top: 80px;
 
   background:
-    url('/assets/eclairs/eclair_czf_02.png')
+    var(--asset-eclair-02)
     center / contain
     no-repeat;
 
@@ -397,7 +397,7 @@ button,
   bottom: 55px;
 
   background:
-    url('/assets/eclairs/eclair_czf_07.png')
+    var(--asset-eclair-07)
     center / contain
     no-repeat;
 
@@ -764,7 +764,7 @@ button,
   top: -85px;
 
   background:
-    url('/assets/eclairs/eclair_czf_03.png')
+    var(--asset-eclair-03)
     center / contain
     no-repeat;
 
@@ -793,7 +793,7 @@ button,
   bottom: -105px;
 
   background:
-    url('/assets/eclairs/eclair_czf_05.png')
+    var(--asset-eclair-05)
     center / contain
     no-repeat;
 
@@ -890,7 +890,7 @@ button,
   top: 15px;
 
   background:
-    url('/assets/eclairs/eclair_czf_09.png')
+    var(--asset-eclair-09)
     center / contain
     no-repeat;
 
@@ -919,7 +919,7 @@ button,
   bottom: -50px;
 
   background:
-    url('/assets/eclairs/eclair_czf_08.png')
+    var(--asset-eclair-08)
     center / contain
     no-repeat;
 
@@ -1000,7 +1000,7 @@ button,
   bottom: -65px;
 
   background:
-    url('/assets/eclairs/eclair_czf_01.png')
+    var(--asset-eclair-01)
     center / contain
     no-repeat;
 
@@ -1029,7 +1029,7 @@ button,
   top: 20px;
 
   background:
-    url('/assets/eclairs/eclair_czf_06.png')
+    var(--asset-eclair-06)
     center / contain
     no-repeat;
 
@@ -1083,7 +1083,7 @@ button,
   bottom: -100px;
 
   background:
-    url('/assets/eclairs/eclair_czf_02.png')
+    var(--asset-eclair-02)
     center / contain
     no-repeat;
 
@@ -1112,7 +1112,7 @@ button,
   top: -45px;
 
   background:
-    url('/assets/eclairs/eclair_czf_07.png')
+    var(--asset-eclair-07)
     center / contain
     no-repeat;
 
@@ -1161,7 +1161,7 @@ button,
   bottom: -40px;
 
   background:
-    url('/assets/eclairs/eclair_czf_04.png')
+    var(--asset-eclair-04)
     center / contain
     no-repeat;
 
@@ -1194,7 +1194,7 @@ button,
   top: 15px;
 
   background:
-    url('/assets/eclairs/eclair_czf_03.png')
+    var(--asset-eclair-03)
     center / contain
     no-repeat;
 
@@ -1250,7 +1250,7 @@ button,
   bottom: -55px;
 
   background:
-    url('/assets/eclairs/eclair_czf_10.png')
+    var(--asset-eclair-10)
     center / contain
     no-repeat;
 
@@ -1279,7 +1279,7 @@ button,
   top: -48px;
 
   background:
-    url('/assets/eclairs/eclair_czf_06.png')
+    var(--asset-eclair-06)
     center / contain
     no-repeat;
 
@@ -2336,7 +2336,7 @@ footer {
   top: 80px;
 
   background:
-    url('/assets/eclairs/eclair_czf_06.png')
+    var(--asset-eclair-06)
     center / contain
     no-repeat;
 
@@ -2361,7 +2361,7 @@ footer {
   top: 260px;
 
   background:
-    url('/assets/eclairs/eclair_czf_03.png')
+    var(--asset-eclair-03)
     center / contain
     no-repeat;
 
@@ -2413,7 +2413,7 @@ footer {
   top: -70px;
 
   background:
-    url('/assets/eclairs/eclair_czf_04.png')
+    var(--asset-eclair-04)
     center / contain
     no-repeat;
 
@@ -2439,7 +2439,7 @@ footer {
   bottom: -85px;
 
   background:
-    url('/assets/eclairs/eclair_czf_10.png')
+    var(--asset-eclair-10)
     center / contain
     no-repeat;
 
@@ -2605,7 +2605,7 @@ footer {
   top: -95px;
 
   background:
-    url('/assets/eclairs/eclair_czf_03.png')
+    var(--asset-eclair-03)
     center / contain
     no-repeat;
 
@@ -2630,7 +2630,7 @@ footer {
   bottom: -95px;
 
   background:
-    url('/assets/eclairs/eclair_czf_09.png')
+    var(--asset-eclair-09)
     center / contain
     no-repeat;
 
@@ -2709,7 +2709,7 @@ footer {
   top: -95px;
 
   background:
-    url('/assets/eclairs/eclair_czf_03.png')
+    var(--asset-eclair-03)
     center / contain
     no-repeat;
 
@@ -2735,7 +2735,7 @@ footer {
   bottom: -100px;
 
   background:
-    url('/assets/eclairs/eclair_czf_10.png')
+    var(--asset-eclair-10)
     center / contain
     no-repeat;
 
@@ -2775,7 +2775,7 @@ footer {
   top: 150px;
 
   background:
-    url('/assets/eclairs/eclair_czf_01.png')
+    var(--asset-eclair-01)
     center / contain
     no-repeat;
 
@@ -2801,7 +2801,7 @@ footer {
   top: -65px;
 
   background:
-    url('/assets/eclairs/eclair_czf_07.png')
+    var(--asset-eclair-07)
     center / contain
     no-repeat;
 
@@ -3217,7 +3217,7 @@ footer {
   top: -110px;
 
   background:
-    url('/assets/eclairs/eclair_czf_03.png')
+    var(--asset-eclair-03)
     center / contain
     no-repeat;
 
@@ -3239,7 +3239,7 @@ footer {
   bottom: -105px;
 
   background:
-    url('/assets/eclairs/eclair_czf_10.png')
+    var(--asset-eclair-10)
     center / contain
     no-repeat;
 
@@ -3275,7 +3275,7 @@ footer {
   top: 180px;
 
   background:
-    url('/assets/eclairs/eclair_czf_01.png')
+    var(--asset-eclair-01)
     center / contain
     no-repeat;
 
@@ -3297,7 +3297,7 @@ footer {
   top: -85px;
 
   background:
-    url('/assets/eclairs/eclair_czf_07.png')
+    var(--asset-eclair-07)
     center / contain
     no-repeat;
 
@@ -3323,7 +3323,7 @@ footer {
   top: 650px;
 
   background:
-    url('/assets/eclairs/eclair_czf_06.png')
+    var(--asset-eclair-06)
     center / contain
     no-repeat;
 
@@ -3345,7 +3345,7 @@ footer {
   top: 950px;
 
   background:
-    url('/assets/eclairs/eclair_czf_02.png')
+    var(--asset-eclair-02)
     center / contain
     no-repeat;
 
@@ -3615,7 +3615,7 @@ footer {
   bottom: -78px;
 
   background:
-    url('/assets/eclairs/eclair_czf_07.png')
+    var(--asset-eclair-07)
     center / contain
     no-repeat;
 
@@ -3656,7 +3656,7 @@ footer {
   top: 180px;
 
   background:
-    url('/assets/eclairs/eclair_czf_04.png')
+    var(--asset-eclair-04)
     center / contain
     no-repeat;
 
@@ -4064,7 +4064,7 @@ input:checked +
   bottom: -85px;
 
   background:
-    url('/assets/eclairs/eclair_czf_07.png')
+    var(--asset-eclair-07)
     center / contain
     no-repeat;
 
@@ -4174,7 +4174,7 @@ input:checked +
   top: 120px;
 
   background:
-    url('/assets/eclairs/eclair_czf_04.png')
+    var(--asset-eclair-04)
     center / contain
     no-repeat;
 
@@ -4201,7 +4201,7 @@ input:checked +
   bottom: 85px;
 
   background:
-    url('/assets/eclairs/eclair_czf_06.png')
+    var(--asset-eclair-06)
     center / contain
     no-repeat;
 

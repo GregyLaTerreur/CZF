@@ -1,5 +1,6 @@
 'use client';
 
+import { asset } from '@/lib/assets';
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -81,7 +82,7 @@ export default function OnboardingView() {
           rel="noopener noreferrer"
           className={`${ds.btnOutline} ${styles.action}`}
         >
-          <img src="/assets/discord.svg" alt="" className={styles.discordIcon} />
+          <img src={asset("/assets/discord.svg")} alt="" className={styles.discordIcon} />
           Rejoindre le Discord
         </a>
       ),

@@ -1,3 +1,4 @@
+import { asset } from '@/lib/assets';
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
@@ -474,17 +475,17 @@ export async function GET(request: NextRequest) {
         divisionAssets: {
           Yordle: {
             color: '#51a677',
-            logo: '/assets/divisions/yordle.png',
+            logo: asset('/assets/divisions/yordle.png'),
           },
 
           Ixtal: {
             color: '#4387d8',
-            logo: '/assets/divisions/ixtal.png',
+            logo: asset('/assets/divisions/ixtal.png'),
           },
 
           Targon: {
             color: '#8f6bc7',
-            logo: '/assets/divisions/targon.png',
+            logo: asset('/assets/divisions/targon.png'),
           },
         },
 
@@ -492,31 +493,31 @@ export async function GET(request: NextRequest) {
           {
             id: 'Top',
             label: 'TOP',
-            icon: '/assets/roles/top.png',
+            icon: asset('/assets/roles/top.png'),
           },
 
           {
             id: 'Jungle',
             label: 'JGL',
-            icon: '/assets/roles/jungle.png',
+            icon: asset('/assets/roles/jungle.png'),
           },
 
           {
             id: 'Mid',
             label: 'MID',
-            icon: '/assets/roles/mid.png',
+            icon: asset('/assets/roles/mid.png'),
           },
 
           {
             id: 'ADC',
             label: 'ADC',
-            icon: '/assets/roles/adc.png',
+            icon: asset('/assets/roles/adc.png'),
           },
 
           {
             id: 'Support',
             label: 'SUP',
-            icon: '/assets/roles/sup.png',
+            icon: asset('/assets/roles/sup.png'),
           },
         ],
 

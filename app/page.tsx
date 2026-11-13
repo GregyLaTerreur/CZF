@@ -1,3 +1,4 @@
+import { asset } from '@/lib/assets';
 import Link from 'next/link';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
@@ -66,14 +67,14 @@ export default function Home() {
           </div>
 
           <div className={styles.heroVisual} aria-hidden="true">
-            <img src="/assets/PNG CZF.png" alt="" className={styles.heroLogo} />
+            <img src={asset("/assets/PNG CZF.png")} alt="" className={styles.heroLogo} />
             <img
-              src="/assets/eclairs/eclair_czf_03.png"
+              src={asset("/assets/eclairs/eclair_czf_03.png")}
               alt=""
               className={`${styles.heroBolt} ${styles.heroBoltA}`}
             />
             <img
-              src="/assets/eclairs/eclair_czf_02.png"
+              src={asset("/assets/eclairs/eclair_czf_02.png")}
               alt=""
               className={`${styles.heroBolt} ${styles.heroBoltB}`}
             />

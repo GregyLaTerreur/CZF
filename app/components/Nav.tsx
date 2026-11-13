@@ -1,6 +1,7 @@
 
 'use client';
 
+import { asset } from '@/lib/assets';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -190,7 +191,7 @@ export default function Nav() {
       {/* BARRE PRINCIPALE */}
       <nav className={cls(styles.inner, styles.bar)}>
         <Link href="/" className={styles.logo}>
-          <img src="/assets/czf-logo.png" alt="CZF" />
+          <img src={asset('/assets/czf-logo.png', 'f_auto,q_auto,w_112')} alt="CZF" />
         </Link>
 
         <div className={styles.links}>
