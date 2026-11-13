@@ -182,7 +182,6 @@ export async function POST(request: Request) {
   }
 
   const profile_id = user.id;
-  console.log('SERVICE ROLE EXISTS:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const { error: profileUpsertError } = await supabaseAdmin
   .from('profiles')
@@ -194,9 +193,9 @@ export async function POST(request: Request) {
         user.user_metadata?.name ||
         user.user_metadata?.preferred_username ||
         'Joueur',
-      is_admin: false,
     },
-    { onConflict: 'id' }
+    // Ne touche jamais une ligne existante : sinon un admin perdrait is_admin.
+    { onConflict: 'id', ignoreDuplicates: true }
   );
 
 if (profileUpsertError) {
