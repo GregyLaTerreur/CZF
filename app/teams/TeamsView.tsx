@@ -196,9 +196,17 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
 
       <header className={ds.header}>
         <div className={`${ds.container} ${ds.headerGrid}`}>
-          <div>
+          <div className={ds.headerMain}>
             <div className={ds.sectionLabel}>Saison 1 · Équipes</div>
             <h1 className={ds.h1}>Les équipes</h1>
+
+            <input
+              type="search"
+              className={`${ds.search} ${ds.headerSearch}`}
+              placeholder="Rechercher une équipe, un capitaine, un joueur..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
           <TeamActionCard
@@ -217,13 +225,27 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
       <section className={ds.section}>
         <div className={ds.container}>
           <div className={ds.toolbar}>
-            <input
-              type="search"
-              className={ds.search}
-              placeholder="Rechercher une équipe, un capitaine, un joueur..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div className={ds.tabs}>
+              <button
+                type="button"
+                className={divisionFilter === null ? ds.tabActive : ds.tab}
+                onClick={() => chooseDivision(null)}
+              >
+                Toutes les divisions
+              </button>
+
+              {DIVISIONS.map((division) => (
+                <button
+                  key={division}
+                  type="button"
+                  className={divisionFilter === division ? ds.tabActive : ds.tab}
+                  onClick={() => chooseDivision(divisionFilter === division ? null : division)}
+                >
+                  <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
+                  {division}
+                </button>
+              ))}
+            </div>
 
             <div className={ds.tabs}>
               <button
@@ -254,28 +276,6 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
                 Recrutent
               </button>
             </div>
-          </div>
-
-          <div className={`${ds.tabs} ${ds.filterRowLast}`}>
-            <button
-              type="button"
-              className={divisionFilter === null ? ds.tabActive : ds.tab}
-              onClick={() => chooseDivision(null)}
-            >
-              Toutes les divisions
-            </button>
-
-            {DIVISIONS.map((division) => (
-              <button
-                key={division}
-                type="button"
-                className={divisionFilter === division ? ds.tabActive : ds.tab}
-                onClick={() => chooseDivision(divisionFilter === division ? null : division)}
-              >
-                <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
-                {division}
-              </button>
-            ))}
           </div>
 
           {loadError && <div className={`${ds.card} ${ds.empty}`}>{loadError}</div>}
