@@ -59,6 +59,8 @@ export default function TcgAdminView() {
   const [players, setPlayers] = useState<LinkPlayer[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
   const [linking, setLinking] = useState(false);
+  // Formulaire replié tant qu'on ne crée ou ne modifie pas une carte.
+  const [formOpen, setFormOpen] = useState(false);
   const [champions, setChampions] = useState<Champion[]>([]);
   const [form, setForm] = useState<TcgCard>(EMPTY_CARD);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -171,6 +173,15 @@ export default function TcgAdminView() {
     setForm(EMPTY_CARD);
     setEditingId(null);
     setError('');
+    setFormOpen(false);
+  }
+
+  function openCreate() {
+    setForm(EMPTY_CARD);
+    setEditingId(null);
+    setError('');
+    setMessage('');
+    setFormOpen(true);
   }
 
   async function save() {
@@ -215,6 +226,7 @@ export default function TcgAdminView() {
   function edit(card: TcgCard) {
     setForm(toForm(card));
     setEditingId(card.id ?? null);
+    setFormOpen(true);
     setMessage('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -249,6 +261,14 @@ export default function TcgAdminView() {
       {tab === 'boosters' ? <BoostersAdmin authHeaders={authHeaders} /> : (
       <>
 
+      {!formOpen && (
+        <div className={styles.createBar}>
+          <button type="button" className={ds.btnPrimary} onClick={openCreate}>Créer une carte</button>
+          {message && <p className={ds.formInfo}>{message}</p>}
+        </div>
+      )}
+
+      {formOpen && (
       <div className={styles.editor}>
         <div className={`${ds.card} ${styles.form}`}>
           <div className={ds.cardTitle}>{editingId ? 'Modifier la carte' : 'Créer une carte'}</div>
@@ -398,7 +418,7 @@ export default function TcgAdminView() {
             <button type="button" className={ds.btnPrimary} onClick={save} disabled={saving}>
               {saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Créer la carte'}
             </button>
-            {editingId && <button type="button" className={ds.btnOutline} onClick={reset}>Annuler</button>}
+            <button type="button" className={ds.btnOutline} onClick={reset}>Annuler</button>
           </div>
         </div>
 
@@ -406,6 +426,7 @@ export default function TcgAdminView() {
           <PlayerCard card={{ ...form, name: form.name || 'Pseudo' }} />
         </div>
       </div>
+      )}
 
       <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Cartes créées · {cards.length}</div>
       {!cards.length && <p className={ds.empty}>Aucune carte pour l’instant.</p>}
