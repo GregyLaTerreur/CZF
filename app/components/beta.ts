@@ -40,3 +40,32 @@ export function useIsBetaTester(): boolean {
 
   return beta;
 }
+
+// Boosters pas encore ouverts (pastille du lien Collection). La page Collection envoie
+// l'événement BOOSTERS_CHANGED après une ouverture pour mettre la pastille à jour.
+export const BOOSTERS_CHANGED = 'czf-tcg-boosters-changed';
+
+export function useBoosterCount(enabled: boolean): number {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    const refresh = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const json = await fetch('/api/tcg/boosters-count', { cache: 'no-store', headers: { Authorization: `Bearer ${session.access_token}` } })
+        .then((res) => res.json())
+        .catch(() => null);
+      if (alive && json?.success) setCount(json.count);
+    };
+    void refresh();
+    window.addEventListener(BOOSTERS_CHANGED, refresh);
+    return () => {
+      alive = false;
+      window.removeEventListener(BOOSTERS_CHANGED, refresh);
+    };
+  }, [enabled]);
+
+  return count;
+}

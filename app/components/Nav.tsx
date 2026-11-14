@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { getMyDivision } from '@/app/components/ds/myDivision';
 import { DISCORD_URL, RULEBOOK_URL } from '@/app/components/links';
 import { fontVariables } from '@/app/fonts';
-import { useIsBetaTester } from '@/app/components/beta';
+import { useBoosterCount, useIsBetaTester } from '@/app/components/beta';
 import styles from './nav.module.css';
 
 // Statut admin gardé pour la visite : la Nav est remontée à chaque page,
@@ -112,6 +112,7 @@ export default function Nav() {
   );
 
   const isBetaTester = useIsBetaTester();
+  const boosterCount = useBoosterCount(isBetaTester);
 
   const pathname = usePathname();
 
@@ -207,6 +208,12 @@ export default function Nav() {
               className={cls(styles.link, isActive(link.href) && styles.active)}
             >
               {link.label}
+              {/* Boosters à ouvrir : pastille pour donner envie d'aller les ouvrir. */}
+              {link.href === '/collection' && boosterCount > 0 && (
+                <span className={styles.badge} aria-label={`${boosterCount} booster${boosterCount > 1 ? 's' : ''} à ouvrir`}>
+                  {boosterCount > 99 ? '99+' : boosterCount}
+                </span>
+              )}
             </Link>
           ))}
         </div>

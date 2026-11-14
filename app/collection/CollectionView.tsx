@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
 import Switch from '@/app/components/ds/Switch';
+import { BOOSTERS_CHANGED } from '@/app/components/beta';
 import CardElectric from '@/app/components/tcg/CardElectric';
 import { branching, rand } from '@/app/components/tcg/lightning';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
@@ -279,6 +280,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
       setDrawn(sortedDraw);
       void load();
       void loadLeaderboard();
+      window.dispatchEvent(new Event(BOOSTERS_CHANGED)); // pastille du header
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur.');
     } finally {
