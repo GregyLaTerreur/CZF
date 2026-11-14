@@ -22,7 +22,7 @@ async function authHeaders(): Promise<Record<string, string> | null> {
 const byRarity = (a: OwnedCard, b: OwnedCard) => RARITIES.indexOf(b.card.rarity) - RARITIES.indexOf(a.card.rarity);
 const ownedCard = (item: OwnedCard) => item.card;
 
-type Section = 'boosters' | 'cartes' | 'doublons';
+type Section = 'collection' | 'boosters' | 'cartes' | 'doublons';
 
 const RARITY_PLURALS: Record<Rarity, string> = { commune: 'Communes', rare: 'Rares', epique: 'Épiques', legendaire: 'Légendaires' };
 
@@ -37,6 +37,14 @@ const CardsIcon = () => (
     <path d="M4 7v12a2 2 0 0 0 2 2h9" />
   </svg>
 );
+const GridIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="9" rx="1" />
+    <rect x="14" y="3" width="7" height="9" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
 const DupIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <rect x="3" y="7" width="10" height="14" rx="2" />
@@ -48,6 +56,7 @@ export default function CollectionView() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [boosters, setBoosters] = useState<OwnedBooster[]>([]);
   const [cards, setCards] = useState<OwnedCard[]>([]);
+  const [catalog, setCatalog] = useState<OwnedCard[]>([]);
   const [totalCards, setTotalCards] = useState(0);
   const [totalsByRarity, setTotalsByRarity] = useState<Record<string, number>>({});
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([]);
@@ -56,15 +65,17 @@ export default function CollectionView() {
   const [revealed, setRevealed] = useState(0);
   const [error, setError] = useState('');
   const firstLoad = useRef(true);
-  const [section, setSection] = useState<Section>('cartes');
+  const [section, setSection] = useState<Section>('collection');
   const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
   const dupes = useMemo(() => sorted.filter((item) => item.count > 1), [sorted]);
-  const listItems = section === 'doublons' ? dupes : sorted;
+  const allSorted = useMemo(() => [...catalog].sort(byRarity), [catalog]);
+  const listItems = section === 'collection' ? allSorted : section === 'doublons' ? dupes : sorted;
   const cardFilters = useCardFilters(listItems, ownedCard, seasons);
 
-  // Raccourcis de la sidebar : ouvrir Mes cartes, éventuellement filtrées sur une rareté.
-  function goCards(rarity: Rarity | null) {
-    setSection('cartes');
+  // Raretés de la sidebar : filtrent la Collection ou Mes cartes (la vue ouverte), sinon ouvrent la Collection.
+  const rarityTarget: Section = section === 'cartes' ? 'cartes' : 'collection';
+  function goRarity(target: Section, rarity: Rarity | null) {
+    setSection(target);
     cardFilters.setRarity(rarity);
   }
 
@@ -83,6 +94,7 @@ export default function CollectionView() {
         if (json.boosters.length) setSection('boosters');
       }
       setCards(json.cards);
+      setCatalog(json.catalog || []);
       setTotalCards(json.totalCards);
       setTotalsByRarity(json.totalsByRarity || {});
       setSeasons(json.seasons || []);
@@ -141,7 +153,20 @@ export default function CollectionView() {
 
   const dupCount = cards.filter((item) => item.count > 1).length;
   const legendaryOwned = cards.filter((item) => item.card.rarity === 'legendaire').length;
-  const SECTION_TITLES: Record<Section, string> = { boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
+  const SECTION_TITLES: Record<Section, string> = { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
+
+  const rarityLinks = (target: Section) =>
+    rarityTarget === target &&
+    RARITIES.map((rarity) => (
+      <button
+        key={rarity}
+        type="button"
+        className={section === target && cardFilters.filters.rarity === rarity ? styles.sideSubOn : styles.sideSub}
+        onClick={() => goRarity(target, rarity)}
+      >
+        {RARITY_PLURALS[rarity]}
+      </button>
+    ));
 
   return (
     <div className={styles.full}>
@@ -149,22 +174,17 @@ export default function CollectionView() {
         <aside className={styles.side}>
           <div className={styles.sideInner}>
           <div className={styles.sideTitle}>Ma collection</div>
+          <button type="button" className={section === 'collection' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('collection', null)}>
+            <GridIcon /> Collection <span className={styles.sideCount}>{ownedCount}/{totalCards}</span>
+          </button>
+          {rarityLinks('collection')}
           <button type="button" className={section === 'boosters' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boosters')}>
             <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
           </button>
-          <button type="button" className={section === 'cartes' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goCards(null)}>
+          <button type="button" className={section === 'cartes' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('cartes', null)}>
             <CardsIcon /> Mes cartes <span className={styles.sideCount}>{ownedCount}</span>
           </button>
-          {RARITIES.map((rarity) => (
-            <button
-              key={rarity}
-              type="button"
-              className={section === 'cartes' && cardFilters.filters.rarity === rarity ? styles.sideSubOn : styles.sideSub}
-              onClick={() => goCards(rarity)}
-            >
-              {RARITY_PLURALS[rarity]}
-            </button>
-          ))}
+          {rarityLinks('cartes')}
           <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
             <DupIcon /> Doublons <span className={styles.sideCount}>{dupCount}</span>
           </button>
@@ -223,14 +243,14 @@ export default function CollectionView() {
             <>
               {!listItems.length && (
                 <p className={ds.empty}>
-                  {section === 'doublons' ? 'Aucun doublon pour l’instant.' : 'Ouvre un booster pour obtenir tes premières cartes.'}
+                  {section === 'doublons' ? 'Aucun doublon pour l’instant.' : section === 'collection' ? 'Aucune carte n’existe encore.' : 'Ouvre un booster pour obtenir tes premières cartes.'}
                 </p>
               )}
-              {listItems.length > 0 && <CardFilters {...cardFilters} total={listItems.length} hideRarity />}
+              {listItems.length > 0 && <CardFilters {...cardFilters} total={listItems.length} hideRarity alwaysSeasons />}
               {listItems.length > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}
               <div className={styles.grid}>
                 {cardFilters.visible.map(({ card, count }) => (
-                  <div key={card.id} className={styles.owned}>
+                  <div key={card.id} className={`${styles.owned} ${count === 0 ? styles.missing : ''}`}>
                     <PlayerCard card={card} />
                     {count > 1 && <span className={styles.badge}>x{count}</span>}
                   </div>

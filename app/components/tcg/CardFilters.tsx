@@ -69,7 +69,7 @@ export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard, sea
 }
 
 // hideRarity : la rareté est choisie ailleurs (sidebar de la collection).
-type Props = ReturnType<typeof useCardFilters<any>> & { total: number; hideRarity?: boolean };
+type Props = ReturnType<typeof useCardFilters<any>> & { total: number; hideRarity?: boolean; alwaysSeasons?: boolean };
 
 function Row({ label, all, items, value, onPick }: { label: string; all: string; items: { key: string; label: string }[]; value: string | null; onPick: (v: string | null) => void }) {
   return (
@@ -87,12 +87,12 @@ function Row({ label, all, items, value, onPick }: { label: string; all: string;
   );
 }
 
-export default function CardFilters({ filters, options, filtered, total, hideRarity, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
+export default function CardFilters({ filters, options, filtered, total, hideRarity, alwaysSeasons, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
   const active = Object.values(filters).some(Boolean);
 
   return (
     <div className={styles.filters}>
-      {options.seasons.length > 1 && (
+      {options.seasons.length > (alwaysSeasons ? 0 : 1) && (
         <Row label="Saison" all="Toutes" value={filters.season === null ? null : String(filters.season)} onPick={(v) => setSeason(v === null ? null : Number(v))}
           items={options.seasons.map((s) => ({ key: String(s.id), label: s.name }))} />
       )}

@@ -387,3 +387,13 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Carte pas encore obtenue : grisée dans la Collection. */
+.missing {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.missing:hover {
+  opacity: 0.6;
+}
