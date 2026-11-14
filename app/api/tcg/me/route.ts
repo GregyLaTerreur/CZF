@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { loadSeasons } from '@/lib/tcg/seasons';
+import { withLiveStats } from '@/lib/tcg/liveStats';
+import type { TcgCard } from '@/lib/tcg/cards';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,14 +31,14 @@ export async function GET(request: Request) {
   for (const row of owned.data) counts.set(row.card_id, (counts.get(row.card_id) || 0) + 1);
 
   const cardIds = [...counts.keys()];
-  const cards = cardIds.length
-    ? (await supabaseAdmin.from('czf_tcg_cards').select('*').in('id', cardIds)).data || []
-    : [];
+  const cards = await withLiveStats<TcgCard>(
+    cardIds.length ? (await supabaseAdmin.from('czf_tcg_cards').select('*').in('id', cardIds)).data || [] : []
+  );
 
   return NextResponse.json({
     success: true,
     boosters: boosters.data.filter((row) => row.booster),
-    cards: cards.map((card) => ({ card, count: counts.get(card.id) || 0 })),
+    cards: cards.map((card) => ({ card, count: counts.get(Number(card.id)) || 0 })),
     totalCards: total.count || 0,
     seasons,
   });

@@ -45,6 +45,7 @@ function toForm(card: TcgCard): TcgCard {
   return {
     ...EMPTY_CARD,
     ...card,
+    live_stats: undefined,
     team_name: card.team_name ?? '',
     team_logo: card.team_logo ?? '',
     stats: STAT_LABELS.map((label) => ({ label, value: card.stats.find((stat) => stat.label === label)?.value ?? '' })),
@@ -394,7 +395,11 @@ export default function TcgAdminView() {
 
           {fields.stats && (
             <div className={ds.field}>
-              <span>Stats (facultatif, cases vides masquées)</span>
+              <span>
+                {form.card_type === 'joueur' && form.player_id
+                  ? 'Stats en direct : recalculées depuis ses games CZF à chaque affichage (ces valeurs ne servent que s’il n’a pas encore joué)'
+                  : 'Stats figées (facultatif, cases vides masquées)'}
+              </span>
               <div className={styles.stats}>
                 {form.stats.map((stat, index) => (
                   <label key={stat.label} className={ds.field}>

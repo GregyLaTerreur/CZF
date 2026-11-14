@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { parseCardInput } from '@/lib/tcg/cards';
 import { loadSeasons, resolveSeasonId } from '@/lib/tcg/seasons';
+import { withLiveStats } from '@/lib/tcg/liveStats';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
 
   if (error) return fail('Impossible de charger les cartes (la table czf_tcg_cards existe-t-elle ?).', 500);
 
-  return NextResponse.json({ success: true, cards: data, seasons });
+  return NextResponse.json({ success: true, cards: await withLiveStats(data || []), seasons });
 }
 
 // Un admin crée une carte à la main.

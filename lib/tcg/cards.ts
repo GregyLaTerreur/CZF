@@ -60,6 +60,7 @@ export type TcgCard = {
   division: DivisionName | null;
   note: number | null;
   stats: CardStat[];
+  live_stats?: boolean; // stats recalculées à l'affichage (carte Joueur liée), pas celles enregistrées
 };
 
 // Cadres et icônes provisoires : suffixe _dev = utilisés seulement en dev, à remplacer par ceux de la graphiste.
