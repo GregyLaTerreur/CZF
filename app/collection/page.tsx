@@ -4,18 +4,18 @@ import { fontVariables } from '../fonts';
 import ds from '../components/ds/ds.module.css';
 import PlayerCard, { type PlayerCardData } from '../components/tcg/PlayerCard';
 import { RARITIES, RARITY_LABELS } from '@/lib/tcg/cards';
-import styles from './tcg.module.css';
+import styles from './collection.module.css';
 
-// Page de test des cartes : cadres provisoires (_dev), jamais servie en production.
-export default function TcgPage() {
+// Collection de cartes (test) : cadres provisoires (_dev), jamais servie en production.
+export default function CollectionPage() {
   if (process.env.VERCEL_ENV === 'production') notFound();
 
   return (
     <main className={`${ds.page} ${fontVariables}`}>
       <Nav />
       <div className={`${ds.container} ${styles.wrap}`}>
-        <div className={ds.sectionLabel}>Cartes · Test dev</div>
-        <h1 className={styles.title}>Raretés</h1>
+        <div className={ds.sectionLabel}>Collection · Test dev</div>
+        <h1 className={styles.title}>Collection</h1>
         <p className={styles.sub}>Plus la carte est rare, plus le champion prend de place. Joueurs et stats fictifs.</p>
 
         <div className={styles.grid}>

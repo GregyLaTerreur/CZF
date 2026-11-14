@@ -61,7 +61,7 @@ export default function PlayerCard({ player, rarity }: { player: PlayerCardData;
   return (
     <div
       className={`${styles.card} ${styles[rarity]}`}
-      style={{ aspectRatio: `${CARD_SIZE.w} / ${CARD_SIZE.h}`, borderRadius: `${(CARD_RADIUS / CARD_SIZE.w) * 100}cqw` }}
+      style={{ aspectRatio: `${CARD_SIZE.w} / ${CARD_SIZE.h}`, borderRadius: `${(CARD_RADIUS / CARD_SIZE.w) * 100}% / ${(CARD_RADIUS / CARD_SIZE.h) * 100}%` }}
       onPointerMove={onMove}
       onPointerLeave={(event) => { event.currentTarget.style.transform = ''; }}
     >

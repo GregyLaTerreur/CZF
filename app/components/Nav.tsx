@@ -162,6 +162,8 @@ export default function Nav() {
     { href: '/results', label: 'Résultats' },
     { href: '/stats', label: 'Stats' },
     { href: '/head-to-head', label: 'Head to Head' },
+    // Collection de cartes : en test, masquée en production tant que les vrais cadres ne sont pas prêts.
+    ...(process.env.NEXT_PUBLIC_VERCEL_ENV === 'production' ? [] : [{ href: '/collection', label: 'Collection' }]),
   ];
 
   const cls = (...names: (string | false)[]) => names.filter(Boolean).join(' ');
