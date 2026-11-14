@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
-import { RARITIES, RARITY_LABELS, type Rarity, type TcgCard } from '@/lib/tcg/cards';
+import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
+import { RARITIES, type TcgCard } from '@/lib/tcg/cards';
 import { boosterImage, type TcgBooster } from '@/lib/tcg/boosters';
 import styles from './collection.module.css';
 
@@ -19,17 +20,19 @@ async function authHeaders(): Promise<Record<string, string> | null> {
 }
 
 const byRarity = (a: OwnedCard, b: OwnedCard) => RARITIES.indexOf(b.card.rarity) - RARITIES.indexOf(a.card.rarity);
+const ownedCard = (item: OwnedCard) => item.card;
 
 export default function CollectionView() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [boosters, setBoosters] = useState<OwnedBooster[]>([]);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [totalCards, setTotalCards] = useState(0);
-  const [filter, setFilter] = useState<Rarity | 'toutes'>('toutes');
   const [opening, setOpening] = useState<number | null>(null);
   const [drawn, setDrawn] = useState<TcgCard[] | null>(null);
   const [revealed, setRevealed] = useState(0);
   const [error, setError] = useState('');
+  const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
+  const cardFilters = useCardFilters(sorted, ownedCard);
 
   const load = useCallback(async () => {
     const headers = await authHeaders();
@@ -81,7 +84,6 @@ export default function CollectionView() {
   }
 
   const ownedCount = cards.length;
-  const shown = cards.filter((item) => filter === 'toutes' || item.card.rarity === filter).sort(byRarity);
   const boosterCount = boosters.reduce((sum, item) => sum + item.quantity, 0);
 
   if (loggedIn === null) return <div className={`${ds.container} ${styles.wrap}`}><p className={ds.empty}>Chargement…</p></div>;
@@ -124,26 +126,19 @@ export default function CollectionView() {
         ))}
       </div>
 
-      <div className={styles.cardsHead}>
-        <div className={ds.sectionLabel}>Mes cartes</div>
-        <div className={ds.tabs}>
-          {(['toutes', ...RARITIES] as const).map((key) => (
-            <button key={key} type="button" className={filter === key ? ds.tabActive : ds.tab} onClick={() => setFilter(key)}>
-              {key === 'toutes' ? 'Toutes' : RARITY_LABELS[key]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {!shown.length && <p className={ds.empty}>{ownedCount ? 'Aucune carte de cette rareté.' : 'Ouvre un booster pour obtenir tes premières cartes.'}</p>}
+      <div className={ds.sectionLabel} style={{ marginTop: 8 }}>Mes cartes</div>
+      {!ownedCount && <p className={ds.empty}>Ouvre un booster pour obtenir tes premières cartes.</p>}
+      {ownedCount > 0 && <CardFilters {...cardFilters} total={ownedCount} />}
+      {ownedCount > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}
       <div className={styles.grid}>
-        {shown.map(({ card, count }) => (
+        {cardFilters.visible.map(({ card, count }) => (
           <div key={card.id} className={styles.owned}>
             <PlayerCard card={card} />
             {count > 1 && <span className={styles.badge}>x{count}</span>}
           </div>
         ))}
       </div>
+      <ShowMore hasMore={cardFilters.hasMore} showMore={cardFilters.showMore} shown={cardFilters.visible.length} total={cardFilters.filtered.length} />
 
       {drawn && (
         <div className={styles.overlay} role="dialog" aria-modal="true">

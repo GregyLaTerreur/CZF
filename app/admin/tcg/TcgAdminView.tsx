@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
+import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { DIVISIONS } from '@/app/components/home/divisions';
 import { DDRAGON_FALLBACK } from '@/app/components/ds/lol';
 import {
@@ -22,6 +23,8 @@ import BoostersAdmin from './BoostersAdmin';
 import styles from './tcgAdmin.module.css';
 
 type Champion = { id: string; name: string };
+
+const asCard = (card: TcgCard) => card;
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -50,6 +53,7 @@ export default function TcgAdminView() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const cardFilters = useCardFilters(cards, asCard);
 
   const load = useCallback(async () => {
     try {
@@ -290,8 +294,10 @@ export default function TcgAdminView() {
 
       <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Cartes créées · {cards.length}</div>
       {!cards.length && <p className={ds.empty}>Aucune carte pour l’instant.</p>}
+      {cards.length > 0 && <CardFilters {...cardFilters} total={cards.length} />}
+      {cards.length > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}
       <div className={styles.list}>
-        {cards.map((card) => (
+        {cardFilters.visible.map((card) => (
           <div key={card.id} className={styles.item}>
             <PlayerCard card={card} />
             <div className={styles.itemMeta}>{CARD_TYPE_LABELS[card.card_type]} · {RARITY_LABELS[card.rarity]}</div>
@@ -302,6 +308,7 @@ export default function TcgAdminView() {
           </div>
         ))}
       </div>
+      <ShowMore hasMore={cardFilters.hasMore} showMore={cardFilters.showMore} shown={cardFilters.visible.length} total={cardFilters.filtered.length} />
       </>
       )}
     </div>
