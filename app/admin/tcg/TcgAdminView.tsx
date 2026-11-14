@@ -63,6 +63,9 @@ export default function TcgAdminView() {
   const [tab, setTab] = useState<'cartes' | 'boosters'>('cartes');
   const [cards, setCards] = useState<TcgCard[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
+  // Saisons à numérotation figée (null : SQL tcg-8 pas encore passé).
+  const [numbering, setNumbering] = useState<{ season_id: number; total: number; frozen_at: string }[] | null>([]);
+  const [freezing, setFreezing] = useState(false);
   const [players, setPlayers] = useState<LinkPlayer[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
   const [linking, setLinking] = useState(false);
@@ -87,6 +90,7 @@ export default function TcgAdminView() {
       if (!json.success) throw new Error(json.message);
       setCards(json.cards);
       setSeasons(json.seasons || []);
+      setNumbering(json.numbering ?? null);
     } catch (err) {
       setIsAdmin((current) => current ?? false);
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -228,6 +232,31 @@ export default function TcgAdminView() {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur.');
+    }
+  }
+
+  // Fige la numérotation d'une saison : une seule fois, le bouton reste ensuite bloqué.
+  async function freeze(season: Season, count: number) {
+    if (freezing) return;
+    const ok = window.confirm(
+      `Figer les numéros de « ${season.name} » ?\n\n` +
+        `Les ${count} cartes gardent leur numéro (1 à ${count}) et le total reste ${count}. ` +
+        `Une carte ajoutée ensuite prendra le numéro suivant (${count + 1}/${count}).\n\n` +
+        'Ce bouton ne pourra plus être utilisé : le débloquer se fait uniquement en base.'
+    );
+    if (!ok) return;
+    setFreezing(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/tcg/freeze', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ season_id: season.id }) });
+      const json = await response.json();
+      if (!json.success) throw new Error(json.message);
+      setMessage(`Numéros figés : ${json.total} cartes.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur.');
+    } finally {
+      setFreezing(false);
     }
   }
 
@@ -442,6 +471,34 @@ export default function TcgAdminView() {
           <PlayerCard card={{ ...form, name: form.name || 'Pseudo' }} />
         </div>
       </div>
+      )}
+
+      {/* Numérotation : calculée tant qu'on monte la saison, puis figée une fois pour toutes. */}
+      <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Numérotation</div>
+      {numbering === null ? (
+        <p className={styles.hint}>Base pas à jour : lancer czf-import/tcg-8-numero-fige.sql pour pouvoir figer les numéros.</p>
+      ) : (
+        <div className={styles.numbering}>
+          {seasons.filter((season) => cards.some((card) => card.season_id === season.id)).map((season) => {
+            const count = cards.filter((card) => card.season_id === season.id).length;
+            const done = numbering.find((n) => n.season_id === season.id);
+            return (
+              <div key={season.id} className={styles.numberingRow}>
+                <div>
+                  <b>{season.name}</b>
+                  <span>
+                    {done
+                      ? `Figée le ${new Date(done.frozen_at).toLocaleDateString('fr-FR')} · total ${done.total} · ${count} cartes aujourd’hui`
+                      : `${count} cartes · numéros encore calculés (communes, rares, épiques, légendaires)`}
+                  </span>
+                </div>
+                <button type="button" className={done ? ds.btnOutline : ds.btnPrimary} disabled={Boolean(done) || freezing} onClick={() => freeze(season, count)}>
+                  {done ? 'Numéros figés' : 'Figer les numéros'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Cartes créées · {cards.length}</div>

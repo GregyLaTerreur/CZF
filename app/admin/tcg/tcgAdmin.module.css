@@ -326,3 +326,40 @@
   transform: skewX(-8deg);
   box-shadow: 3px 3px 0 var(--dark);
 }
+
+/* Numérotation par saison : bouton « Figer les numéros » (bloqué une fois cliqué). */
+.numbering {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 900px;
+  margin-top: 14px;
+}
+
+.numberingRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+.numberingRow b {
+  display: block;
+  font: italic 800 1.1rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+}
+
+.numberingRow span {
+  font-size: 0.88rem;
+  color: rgba(8, 20, 40, 0.65);
+}
+
+.numberingRow button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

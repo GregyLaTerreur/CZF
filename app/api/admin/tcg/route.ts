@@ -15,14 +15,16 @@ export async function GET(request: Request) {
   const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
-  const [{ data, error }, seasons] = await Promise.all([
+  const [{ data, error }, seasons, numbering] = await Promise.all([
     supabaseAdmin.from('czf_tcg_cards').select('*').order('created_at', { ascending: false }),
     loadSeasons(),
+    supabaseAdmin.from('czf_tcg_numbering').select('season_id, total, frozen_at'),
   ]);
 
   if (error) return fail('Impossible de charger les cartes (la table czf_tcg_cards existe-t-elle ?).', 500);
 
-  return NextResponse.json({ success: true, cards: await decorateCards(data || []), seasons });
+  // Saisons dont la numérotation est figée (table absente tant que le SQL tcg-8 n'est pas passé).
+  return NextResponse.json({ success: true, cards: await decorateCards(data || []), seasons, numbering: numbering.error ? null : numbering.data });
 }
 
 // Un admin crée une carte à la main.

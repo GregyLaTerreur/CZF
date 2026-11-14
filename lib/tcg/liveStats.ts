@@ -77,22 +77,38 @@ export async function withLiveStats<T extends TcgCard>(cards: T[]): Promise<T[]>
   }
 }
 
-// Numéro de la carte dans sa saison (« 12 / 82 ») : des communes aux plus rares (légendaires en dernier), puis par ordre de création.
+// Numéro de la carte dans sa saison (« 12 / 90 »).
+// Saison pas encore figée : calculé (communes, rares, épiques, légendaires, puis par création), total = nombre de cartes.
+// Saison figée (czf_tcg_numbering, bouton de l'admin) : numéro enregistré et total figé ; une carte ajoutée
+// ensuite prend le numéro suivant (91/90). Sans les tables du SQL tcg-8, toujours le calcul.
 export async function withNumbers<T extends TcgCard>(cards: T[]): Promise<T[]> {
   if (!cards.length) return cards;
 
-  const { data } = await supabaseAdmin.from('czf_tcg_cards').select('id, season_id, rarity').limit(10000);
-  const bySeason = new Map<string, { id: number; rarity: Rarity }[]>();
-  for (const row of data || []) {
+  const [stored, numbering] = await Promise.all([
+    supabaseAdmin.from('czf_tcg_cards').select('id, season_id, rarity, number').limit(10000),
+    supabaseAdmin.from('czf_tcg_numbering').select('season_id, total'),
+  ]);
+  const rows: { id: number; season_id: number | null; rarity: Rarity; number: number | null }[] = stored.error
+    ? ((await supabaseAdmin.from('czf_tcg_cards').select('id, season_id, rarity').limit(10000)).data || []).map((r) => ({ ...r, number: null }))
+    : stored.data || [];
+  const frozen = new Map((numbering.error ? [] : numbering.data || []).map((n) => [String(n.season_id), Number(n.total)]));
+
+  const bySeason = new Map<string, typeof rows>();
+  for (const row of rows) {
     const season = String(row.season_id ?? '');
     if (!bySeason.has(season)) bySeason.set(season, []);
-    bySeason.get(season)!.push({ id: Number(row.id), rarity: row.rarity as Rarity });
+    bySeason.get(season)!.push(row);
   }
 
   const numbers = new Map<number, { number: number; total: number }>();
-  for (const list of bySeason.values()) {
+  for (const [season, list] of bySeason) {
+    const total = frozen.get(season);
+    if (total !== undefined) {
+      for (const card of list) if (card.number != null) numbers.set(Number(card.id), { number: Number(card.number), total });
+      continue;
+    }
     list.sort((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity) || a.id - b.id);
-    list.forEach((card, index) => numbers.set(card.id, { number: index + 1, total: list.length }));
+    list.forEach((card, index) => numbers.set(Number(card.id), { number: index + 1, total: list.length }));
   }
 
   return cards.map((card) => {
