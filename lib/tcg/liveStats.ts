@@ -77,7 +77,7 @@ export async function withLiveStats<T extends TcgCard>(cards: T[]): Promise<T[]>
   }
 }
 
-// Numéro de la carte dans sa saison (« 12 / 82 ») : des plus rares aux plus communes, puis par ordre de création.
+// Numéro de la carte dans sa saison (« 12 / 82 ») : des communes aux plus rares (légendaires en dernier), puis par ordre de création.
 export async function withNumbers<T extends TcgCard>(cards: T[]): Promise<T[]> {
   if (!cards.length) return cards;
 
@@ -91,7 +91,7 @@ export async function withNumbers<T extends TcgCard>(cards: T[]): Promise<T[]> {
 
   const numbers = new Map<number, { number: number; total: number }>();
   for (const list of bySeason.values()) {
-    list.sort((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity) || a.id - b.id);
+    list.sort((a, b) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity) || a.id - b.id);
     list.forEach((card, index) => numbers.set(card.id, { number: index + 1, total: list.length }));
   }
 
