@@ -440,6 +440,7 @@ export async function GET(request: NextRequest) {
           matches: allMatches,
           games: allGames,
           currentStats,
+          allStats,
           teamMap,
           playerNames,
           exclusions,

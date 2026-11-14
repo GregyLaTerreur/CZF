@@ -788,12 +788,15 @@ export function computePlayerStats(
     matches: AnyObject[];
     games: AnyObject[];
     currentStats: AnyObject[];
+    // Toutes les stats (czf_game_player_stats) : totaux d'équipe complets
+    // même si des coéquipiers ont quitté l'équipe depuis.
+    allStats: AnyObject[];
     teamMap: Map<number, TeamInfo>;
     playerNames: PlayerNames;
     exclusions: Set<string>;
   }
 ): Record<Role, PlayerStats[]> {
-  const { matches, games, currentStats, teamMap, playerNames, exclusions } =
+  const { matches, games, currentStats, allStats, teamMap, playerNames, exclusions } =
     data;
 
   const isExcluded = (playerId: number, role: Role) =>
@@ -849,7 +852,7 @@ export function computePlayerStats(
   const teamGoldByGame = new Map<string, number>();
   const teamDamageByGame = new Map<string, number>();
 
-  for (const stat of currentStats) {
+  for (const stat of allStats) {
     const gameId = Number(stat.game_id);
     const teamId = Number(stat.team_id);
 
@@ -878,7 +881,7 @@ export function computePlayerStats(
   }
 
   /*
-   * Les remplaçants ne sont pas forcément présents dans currentStats.
+   * Les remplaçants ne sont pas dans czf_game_player_stats.
    * On ajoute donc leurs valeurs stockées directement sur la game.
    */
   for (const gameId of divisionGameIds) {

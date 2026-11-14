@@ -78,6 +78,7 @@ teams: computeStandings(
         matches,
         games,
         currentStats: dataset.stats.filter((stat) => inDivision(stat) && currentIds.has(Number(stat.id))),
+        allStats: dataset.stats.filter(inDivision),
         teamMap,
         playerNames,
         exclusions: parseExclusions(exclusions),

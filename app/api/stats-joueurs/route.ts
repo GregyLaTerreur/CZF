@@ -31,14 +31,14 @@ export async function GET(request: NextRequest) {
 
     const games = await loadGames(
       matches.map((match) => Number(match.id)),
-      'id, match_id, duration_seconds, winner_team_id'
+      'id, match_id, duration_seconds, winner_team_id, substitute_stats'
     );
 
-    const [currentStats, teams, exclusionRows] = await Promise.all([
-      loadStats(
-        'czf_current_player_stats',
-        games.map((game) => Number(game.id))
-      ),
+    const gameIds = games.map((game) => Number(game.id));
+
+    const [currentStats, allStats, teams, exclusionRows] = await Promise.all([
+      loadStats('czf_current_player_stats', gameIds),
+      loadStats('czf_game_player_stats', gameIds),
       loadValidatedTeams(),
       loadExclusions(),
     ]);
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       matches,
       games,
       currentStats,
+      allStats,
       teamMap: toTeamMap(teams),
       playerNames,
       exclusions: parseExclusions(exclusionRows),
