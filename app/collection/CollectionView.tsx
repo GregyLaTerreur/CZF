@@ -27,12 +27,13 @@ export default function CollectionView() {
   const [boosters, setBoosters] = useState<OwnedBooster[]>([]);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [totalCards, setTotalCards] = useState(0);
+  const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([]);
   const [opening, setOpening] = useState<number | null>(null);
   const [drawn, setDrawn] = useState<TcgCard[] | null>(null);
   const [revealed, setRevealed] = useState(0);
   const [error, setError] = useState('');
   const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
-  const cardFilters = useCardFilters(sorted, ownedCard);
+  const cardFilters = useCardFilters(sorted, ownedCard, seasons);
 
   const load = useCallback(async () => {
     const headers = await authHeaders();
@@ -46,6 +47,7 @@ export default function CollectionView() {
       setBoosters(json.boosters);
       setCards(json.cards);
       setTotalCards(json.totalCards);
+      setSeasons(json.seasons || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
     }

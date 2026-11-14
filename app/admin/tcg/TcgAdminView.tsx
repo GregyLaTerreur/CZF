@@ -23,6 +23,7 @@ import BoostersAdmin from './BoostersAdmin';
 import styles from './tcgAdmin.module.css';
 
 type Champion = { id: string; name: string };
+type Season = { id: number; name: string; status: string };
 
 const asCard = (card: TcgCard) => card;
 
@@ -47,13 +48,15 @@ export default function TcgAdminView() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [tab, setTab] = useState<'cartes' | 'boosters'>('cartes');
   const [cards, setCards] = useState<TcgCard[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [champions, setChampions] = useState<Champion[]>([]);
   const [form, setForm] = useState<TcgCard>(EMPTY_CARD);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const cardFilters = useCardFilters(cards, asCard);
+  const cardFilters = useCardFilters(cards, asCard, seasons);
+  const activeSeason = seasons.find((s) => s.status === 'active') ?? seasons[0];
 
   const load = useCallback(async () => {
     try {
@@ -63,6 +66,7 @@ export default function TcgAdminView() {
       setIsAdmin(true);
       if (!json.success) throw new Error(json.message);
       setCards(json.cards);
+      setSeasons(json.seasons || []);
     } catch (err) {
       setIsAdmin((current) => current ?? false);
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -181,6 +185,13 @@ export default function TcgAdminView() {
       <div className={styles.editor}>
         <div className={`${ds.card} ${styles.form}`}>
           <div className={ds.cardTitle}>{editingId ? 'Modifier la carte' : 'Créer une carte'}</div>
+          <label className={ds.field}>
+            <span>Saison</span>
+            <select className={ds.input} value={form.season_id ?? activeSeason?.id ?? ''} onChange={(e) => set('season_id', Number(e.target.value))}>
+              {seasons.map((s) => <option key={s.id} value={s.id}>{s.name}{s.status === 'active' ? ' (en cours)' : ''}</option>)}
+            </select>
+          </label>
+
           <div className={styles.row}>
             <label className={ds.field}>
               <span>Type</span>
@@ -309,7 +320,7 @@ export default function TcgAdminView() {
         {cardFilters.visible.map((card) => (
           <div key={card.id} className={styles.item}>
             <PlayerCard card={card} />
-            <div className={styles.itemMeta}>{CARD_TYPE_LABELS[card.card_type]} · {RARITY_LABELS[card.rarity]}</div>
+            <div className={styles.itemMeta}>{CARD_TYPE_LABELS[card.card_type]} · {RARITY_LABELS[card.rarity]}{seasons.length > 1 ? ` · ${seasons.find((s) => s.id === card.season_id)?.name ?? ''}` : ''}</div>
             <div className={styles.itemActions}>
               <button type="button" className={`${ds.btnOutline} ${ds.btnSmall}`} onClick={() => edit(card)}>Modifier</button>
               <button type="button" className={`${ds.btnDanger} ${ds.btnSmall}`} onClick={() => remove(card)}>Supprimer</button>

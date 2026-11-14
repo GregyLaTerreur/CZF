@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { loadSeasons } from '@/lib/tcg/seasons';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
   const auth = await requireUser(request);
   if (auth.error) return auth.error;
 
-  const [boosters, owned, total] = await Promise.all([
+  const [boosters, owned, total, seasons] = await Promise.all([
     supabaseAdmin
       .from('czf_tcg_user_boosters')
       .select('quantity, booster:czf_tcg_boosters(*)')
@@ -17,6 +18,7 @@ export async function GET(request: Request) {
       .gt('quantity', 0),
     supabaseAdmin.from('czf_tcg_user_cards').select('card_id, obtained_at').eq('profile_id', auth.user.id).limit(10000),
     supabaseAdmin.from('czf_tcg_cards').select('id', { count: 'exact', head: true }),
+    loadSeasons(),
   ]);
 
   if (boosters.error || owned.error) {
@@ -36,5 +38,6 @@ export async function GET(request: Request) {
     boosters: boosters.data.filter((row) => row.booster),
     cards: cards.map((card) => ({ card, count: counts.get(card.id) || 0 })),
     totalCards: total.count || 0,
+    seasons,
   });
 }

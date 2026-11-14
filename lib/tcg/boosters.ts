@@ -18,6 +18,7 @@ export const BOOSTER_TYPE_LABELS: Record<BoosterType, string> = {
 // Une ligne de czf_tcg_boosters.
 export type TcgBooster = {
   id?: number;
+  season_id?: number | null;
   name: string;
   card_type: BoosterType;
   cards_per_pack: number;
@@ -32,7 +33,7 @@ export type TcgBooster = {
 export const rateKey = (rarity: Rarity) => `rate_${rarity}` as const;
 
 export const EMPTY_BOOSTER: TcgBooster = {
-  name: '', card_type: 'tout', cards_per_pack: 5,
+  season_id: null, name: '', card_type: 'tout', cards_per_pack: 5,
   rate_commune: 70, rate_rare: 20, rate_epique: 8, rate_legendaire: 2,
   image_url: null, active: true,
 };

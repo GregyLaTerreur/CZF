@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { parseCardInput } from '@/lib/tcg/cards';
+import { resolveSeasonId } from '@/lib/tcg/seasons';
 
 const fail = (message: string, status: number) => NextResponse.json({ success: false, message }, { status });
 
@@ -18,12 +19,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const id = await cardId(params);
   if (!id) return fail('Carte introuvable.', 404);
 
-  const parsed = parseCardInput(await request.json().catch(() => ({})));
+  const body = await request.json().catch(() => ({}));
+  const parsed = parseCardInput(body);
   if (parsed.error) return fail(parsed.error, 400);
+
+  const seasonId = await resolveSeasonId(body.season_id);
+  if (!seasonId) return fail('Aucune saison en base.', 400);
 
   const { data, error } = await supabaseAdmin
     .from('czf_tcg_cards')
-    .update({ ...parsed.card, updated_at: new Date().toISOString() })
+    .update({ ...parsed.card, season_id: seasonId, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select('*')
     .maybeSingle();

@@ -6,17 +6,19 @@ import { DIVISIONS } from '@/app/components/home/divisions';
 import { RARITIES, RARITY_LABELS, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 import styles from './cardFilters.module.css';
 
-type Filters = { rarity: Rarity | null; division: string | null; team: string | null; player: string | null };
+type Filters = { season: number | null; rarity: Rarity | null; division: string | null; team: string | null; player: string | null };
 
-const NONE: Filters = { rarity: null, division: null, team: null, player: null };
+export type SeasonOption = { id: number; name: string };
+
+const NONE: Filters = { season: null, rarity: null, division: null, team: null, player: null };
 const PAGE = 24;
 
 const uniqueSorted = (values: (string | null)[]) =>
   [...new Set(values.filter((v): v is string => Boolean(v)))].sort((a, b) => a.localeCompare(b, 'fr'));
 
-// Filtres en cascade (rareté, puis division -> équipe -> joueur) + affichage par pages de 24.
+// Filtres en cascade (saison, rareté, puis division -> équipe -> joueur) + affichage par pages de 24.
 // Les choix proposés viennent des cartes elles-mêmes : seulement ce qui existe.
-export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard) {
+export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard, seasons: SeasonOption[] = []) {
   const [filters, setFilters] = useState<Filters>(NONE);
   const [limit, setLimit] = useState(PAGE);
 
@@ -26,17 +28,20 @@ export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard) {
     const cards = items.map(getCard);
     const inDivision = cards.filter((c) => c.division === filters.division);
     const inTeam = inDivision.filter((c) => c.team_name === filters.team);
+    const seasonIds = new Set(cards.map((c) => c.season_id));
     return {
+      seasons: seasons.filter((s) => seasonIds.has(s.id)),
       divisions: DIVISIONS.filter((d) => cards.some((c) => c.division === d)),
       teams: filters.division ? uniqueSorted(inDivision.map((c) => c.team_name)) : [],
       players: filters.team ? uniqueSorted(inTeam.map((c) => c.name)) : [],
     };
-  }, [items, getCard, filters.division, filters.team]);
+  }, [items, getCard, seasons, filters.division, filters.team]);
 
   const filtered = useMemo(
     () =>
       items.filter((item) => {
         const card = getCard(item);
+        if (filters.season && card.season_id !== filters.season) return false;
         if (filters.rarity && card.rarity !== filters.rarity) return false;
         if (filters.division && card.division !== filters.division) return false;
         if (filters.team && card.team_name !== filters.team) return false;
@@ -53,6 +58,7 @@ export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard) {
     visible: filtered.slice(0, limit),
     hasMore: filtered.length > limit,
     showMore: () => setLimit((current) => current + PAGE),
+    setSeason: (season: number | null) => setFilters((f) => ({ ...f, season })),
     setRarity: (rarity: Rarity | null) => setFilters((f) => ({ ...f, rarity })),
     // Changer un niveau remet à zéro les niveaux en dessous.
     setDivision: (division: string | null) => setFilters((f) => ({ ...f, division, team: null, player: null })),
@@ -80,11 +86,15 @@ function Row({ label, all, items, value, onPick }: { label: string; all: string;
   );
 }
 
-export default function CardFilters({ filters, options, filtered, total, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
+export default function CardFilters({ filters, options, filtered, total, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
   const active = Object.values(filters).some(Boolean);
 
   return (
     <div className={styles.filters}>
+      {options.seasons.length > 1 && (
+        <Row label="Saison" all="Toutes" value={filters.season === null ? null : String(filters.season)} onPick={(v) => setSeason(v === null ? null : Number(v))}
+          items={options.seasons.map((s) => ({ key: String(s.id), label: s.name }))} />
+      )}
       <Row label="Rareté" all="Toutes" value={filters.rarity} onPick={(v) => setRarity(v as Rarity | null)}
         items={RARITIES.map((r) => ({ key: r, label: RARITY_LABELS[r] }))} />
       {options.divisions.length > 0 && (

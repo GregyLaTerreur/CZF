@@ -19,6 +19,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
   const [boosters, setBoosters] = useState<TcgBooster[]>([]);
   const [profiles, setProfiles] = useState<GiveProfile[]>([]);
   const [teams, setTeams] = useState<GiveTeam[]>([]);
+  const [seasons, setSeasons] = useState<{ id: number; name: string; status: string }[]>([]);
   const [unopened, setUnopened] = useState<Record<number, number>>({});
   const [form, setForm] = useState<TcgBooster>(EMPTY_BOOSTER);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -36,6 +37,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
       setBoosters(json.boosters);
       setProfiles(json.profiles);
       setTeams(json.teams);
+      setSeasons(json.seasons || []);
       setUnopened(json.unopened);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -48,6 +50,8 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
 
   const set = <K extends keyof TcgBooster>(key: K, value: TcgBooster[K]) => setForm((current) => ({ ...current, [key]: value }));
   const total = ratesTotal(form);
+  const activeSeason = seasons.find((s) => s.status === 'active') ?? seasons[0];
+  const seasonName = (id?: number | null) => seasons.find((s) => s.id === id)?.name ?? '';
 
   async function call(url: string, method: string, body?: unknown) {
     const response = await fetch(url, { method, headers: await authHeaders(), body: body ? JSON.stringify(body) : undefined });
@@ -100,6 +104,13 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
       <div className={styles.editor}>
         <div className={`${ds.card} ${styles.form}`}>
           <div className={ds.cardTitle}>{editingId ? 'Modifier le booster' : 'Créer un booster'}</div>
+
+          <label className={ds.field}>
+            <span>Saison (le booster ne tire que des cartes de cette saison)</span>
+            <select className={ds.input} value={form.season_id ?? activeSeason?.id ?? ''} onChange={(e) => set('season_id', Number(e.target.value))}>
+              {seasons.map((s) => <option key={s.id} value={s.id}>{s.name}{s.status === 'active' ? ' (en cours)' : ''}</option>)}
+            </select>
+          </label>
 
           <div className={styles.row}>
             <label className={ds.field}>
@@ -183,7 +194,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
           <div key={booster.id} className={styles.item}>
             <img className={styles.boosterImg} src={boosterImage(booster, 300)} alt="" style={{ opacity: booster.active ? 1 : 0.45 }} />
             <div className={styles.itemMeta}>
-              {booster.name} · {BOOSTER_TYPE_LABELS[booster.card_type]} · {booster.cards_per_pack} cartes{!booster.active && ' · inactif'}
+              {booster.name} · {seasonName(booster.season_id)} · {BOOSTER_TYPE_LABELS[booster.card_type]} · {booster.cards_per_pack} cartes{!booster.active && ' · inactif'}
             </div>
             <div className={styles.itemMeta}>
               {RARITIES.map((rarity) => `${RARITY_LABELS[rarity]} ${Number(booster[rateKey(rarity)])} %`).join(' · ')}

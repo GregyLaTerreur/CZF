@@ -47,6 +47,7 @@ export type CardStat = { label: string; value: string };
 // Une ligne de czf_tcg_cards.
 export type TcgCard = {
   id?: number;
+  season_id?: number | null;
   card_type: CardType;
   rarity: Rarity;
   name: string;
@@ -193,7 +194,7 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 }
 
 export const EMPTY_CARD: TcgCard = {
-  card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
+  season_id: null, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
   team_name: '', team_logo: '', role: 'Mid', division: 'Yordle', note: null,
   stats: STAT_LABELS.map((label) => ({ label, value: '' })),
 };

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { parseBoosterInput } from '@/lib/tcg/boosters';
+import { resolveSeasonId } from '@/lib/tcg/seasons';
 
 const fail = (message: string, status: number) => NextResponse.json({ success: false, message }, { status });
 
@@ -18,10 +19,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const id = await boosterId(params);
   if (!id) return fail('Booster introuvable.', 404);
 
-  const parsed = parseBoosterInput(await request.json().catch(() => ({})));
+  const body = await request.json().catch(() => ({}));
+  const parsed = parseBoosterInput(body);
   if (!parsed.booster) return fail(parsed.error, 400);
 
-  const { data, error } = await supabaseAdmin.from('czf_tcg_boosters').update(parsed.booster).eq('id', id).select('*').maybeSingle();
+  const seasonId = await resolveSeasonId(body.season_id);
+  if (!seasonId) return fail('Aucune saison en base.', 400);
+
+  const { data, error } = await supabaseAdmin.from('czf_tcg_boosters').update({ ...parsed.booster, season_id: seasonId }).eq('id', id).select('*').maybeSingle();
   if (error) return fail('Impossible d’enregistrer le booster.', 500);
   if (!data) return fail('Booster introuvable.', 404);
 
