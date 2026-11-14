@@ -1129,6 +1129,15 @@ export default function AdminView() {
               >
                 Gérer les BO Riot
               </Link>
+
+              <Link
+                href="/admin/tcg"
+                className={
+                  ds.btnOutline
+                }
+              >
+                Gérer le TCG
+              </Link>
             </div>
 
             {message && (
