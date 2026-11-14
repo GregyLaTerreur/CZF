@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseCardInput } from '@/lib/tcg/cards';
@@ -14,7 +14,7 @@ async function cardId(params: Promise<{ id: string }>) {
 
 // Un admin modifie une carte.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const id = await cardId(params);
@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 // Un admin supprime une carte.
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const id = await cardId(params);

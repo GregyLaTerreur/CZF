@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { getMyDivision } from '@/app/components/ds/myDivision';
 import { DISCORD_URL, RULEBOOK_URL } from '@/app/components/links';
 import { fontVariables } from '@/app/fonts';
+import { useIsBetaTester } from '@/app/components/beta';
 import styles from './nav.module.css';
 
 // Statut admin gardé pour la visite : la Nav est remontée à chaque page,
@@ -110,6 +111,8 @@ export default function Nav() {
     captainCache?.value === true
   );
 
+  const isBetaTester = useIsBetaTester();
+
   const pathname = usePathname();
 
   useEffect(() => {
@@ -162,8 +165,8 @@ export default function Nav() {
     { href: '/results', label: 'Résultats' },
     { href: '/stats', label: 'Stats' },
     { href: '/head-to-head', label: 'Head to Head' },
-    // Collection de cartes : en test, masquée en production tant que les vrais cadres ne sont pas prêts.
-    ...(process.env.NEXT_PUBLIC_VERCEL_ENV === 'production' ? [] : [{ href: '/collection', label: 'Collection' }]),
+    // Collection de cartes (TCG) : en bêta, visible seulement par les bêta-testeurs.
+    ...(isBetaTester ? [{ href: '/collection', label: 'Collection' }] : []),
   ];
 
   const cls = (...names: (string | false)[]) => names.filter(Boolean).join(' ');

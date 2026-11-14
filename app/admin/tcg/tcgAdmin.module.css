@@ -304,3 +304,25 @@
   gap: 20px;
   flex-wrap: wrap;
 }
+
+/* Mention bêta (TCG réservé aux bêta-testeurs, visuels provisoires). */
+.betaNote {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-block);
+  font: 500 0.9rem var(--font-barlow), sans-serif;
+  color: rgba(8, 20, 40, 0.7);
+}
+
+.betaNote b {
+  flex: none;
+  padding: 3px 10px;
+  background: var(--orange);
+  color: #fff;
+  font: italic 800 0.78rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 var(--dark);
+}

@@ -246,7 +246,7 @@ export default function TcgAdminView() {
       <div className={`${ds.container} ${styles.wrap}`}>
         <div className={ds.sectionLabel}>Administration</div>
         <h1 className={ds.h1}>Gérer le TCG</h1>
-        <p className={ds.body}>Accès réservé aux admins.</p>
+        <p className={ds.body}>Accès réservé aux admins bêta-testeurs (le TCG est en bêta).</p>
       </div>
     );
   }
@@ -260,6 +260,10 @@ export default function TcgAdminView() {
         </div>
         <Link href="/admin" className={`${ds.btnOutline} ${ds.btnSmall}`}>Retour admin</Link>
       </div>
+
+      <p className={styles.betaNote}>
+        <b>Bêta</b> Le TCG n’est visible que par les bêta-testeurs (profiles.is_betatest). Les cadres, boosters et icônes « _dev » sont provisoires, en attendant le rendu de la graphiste.
+      </p>
 
       <div className={`${ds.tabs} ${styles.tabs}`}>
         <button type="button" className={tab === 'cartes' ? ds.tabActive : ds.tab} onClick={() => setTab('cartes')}>Cartes · {cards.length}</button>

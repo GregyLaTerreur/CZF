@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
 // Joueurs en équipe, pour lier une carte à un joueur et pré-remplir ses infos.
 export async function GET(request: Request) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const [players, members, teams] = await Promise.all([

@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { loadCatalog, loadCollection } from '@/lib/tcg/collection';
-import { hasRiotAccount } from '@/lib/tcg/access';
+import { hasRiotAccount, requireTcgBeta } from '@/lib/tcg/access';
 
 export const dynamic = 'force-dynamic';
 
 // Collection du joueur connecté : ses boosters non ouverts et ses cartes (avec le nombre d'exemplaires).
 export async function GET(request: Request) {
-  const auth = await requireUser(request);
+  const auth = await requireTcgBeta(request);
   if (auth.error) return auth.error;
 
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseCardInput } from '@/lib/tcg/cards';
@@ -12,7 +12,7 @@ const fail = (message: string, status: number) => NextResponse.json({ success: f
 
 // Liste des cartes pour l'admin (les plus récentes d'abord).
 export async function GET(request: Request) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const [{ data, error }, seasons] = await Promise.all([
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
 // Un admin crée une carte à la main.
 export async function POST(request: Request) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const body = await request.json().catch(() => ({}));

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useIsBetaTester } from '@/app/components/beta';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
@@ -53,6 +54,7 @@ function discordNameOf(user: any) {
 // Sans playerId : le profil du joueur connecté (/profile).
 // Avec playerId : le profil public d'un joueur (/players/[id]), en lecture seule sauf si c'est le sien.
 export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: number } = {}) {
+  const isBetaTester = useIsBetaTester();
   const [user, setUser] = useState<any>(null);
   const [player, setPlayer] = useState<any>(null);
   const [team, setTeam] = useState<any>(null);
@@ -452,8 +454,8 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
               </a>
             )}
 
-            {/* Collection TCG (en test : masquée en production, comme la page). */}
-            {player.profile_id && process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
+            {/* Collection TCG (bêta : seulement pour les bêta-testeurs). */}
+            {player.profile_id && isBetaTester && (
               <Link
                 href={isOwn ? '/collection' : `/collection?profil=${player.profile_id}`}
                 className={`${ds.btnOutline} ${styles.dpmLink}`}

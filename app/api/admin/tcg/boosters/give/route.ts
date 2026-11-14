@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { boosterSqlError } from '@/lib/tcg/boosters';
 import { eligibleProfiles } from '@/lib/tcg/access';
@@ -9,7 +9,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Un admin donne des boosters à une liste de profils (profile_ids), ou à tous (all: true).
 export async function POST(request: Request) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const body = await request.json().catch(() => ({}));

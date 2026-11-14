@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseBoosterInput } from '@/lib/tcg/boosters';
@@ -11,7 +11,7 @@ const fail = (message: string, status: number) => NextResponse.json({ success: f
 
 // Boosters + profils et équipes (pour la distribution) + boosters non ouverts par booster.
 export async function GET(request: Request) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const [boosters, profiles, stock, players, teams, members, seasons] = await Promise.all([
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
 
 // Un admin crée un booster.
 export async function POST(request: Request) {
-  const auth = await requireAdmin(request);
+  const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
   const body = await request.json().catch(() => ({}));

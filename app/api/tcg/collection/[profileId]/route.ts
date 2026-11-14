@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
+import { requireTcgBeta } from '@/lib/tcg/access';
 import { isProfileId, loadCollection, loadProfileNames } from '@/lib/tcg/collection';
 
 export const dynamic = 'force-dynamic';
 
 // Collection d'un autre joueur, en lecture seule (sans ses boosters).
-export async function GET(_request: Request, { params }: { params: Promise<{ profileId: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ profileId: string }> }) {
+  const auth = await requireTcgBeta(request);
+  if (auth.error) return auth.error;
+
   const { profileId } = await params;
   if (!isProfileId(profileId)) return NextResponse.json({ success: false, message: 'Profil introuvable.' }, { status: 404 });
 

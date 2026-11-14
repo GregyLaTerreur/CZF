@@ -122,7 +122,9 @@ function Avatar({ entry }: { entry: LeaderboardEntry }) {
 export default function CollectionView({ viewProfileId }: { viewProfileId?: string }) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   // Accès aux boosters et aux cartes : connecté avec Discord ET compte Riot lié.
-  const [access, setAccess] = useState<'full' | 'riot' | 'login'>('full');
+  const [access, setAccess] = useState<'full' | 'riot'>('full');
+  // TCG en bêta : page fermée si on n'est pas connecté ou pas bêta-testeur.
+  const [gate, setGate] = useState<'login' | 'beta' | null>(null);
   const [myId, setMyId] = useState<string | null>(null);
   const [owner, setOwner] = useState<string | null>(null); // nom du joueur consulté (null = ma collection)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -171,18 +173,18 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
     setMyId(me);
     const viewingOther = Boolean(viewProfileId && viewProfileId !== me);
     setLoggedIn(Boolean(headers));
+    if (!headers) return setGate('login');
 
     try {
-      // Visiteur : le catalogue public. Connecté : sa collection (catalogue seul sans compte Riot).
+      // Sa collection (catalogue seul sans compte Riot), ou celle d'un autre joueur.
       const response = viewingOther
-        ? await fetch(`/api/tcg/collection/${viewProfileId}`, { cache: 'no-store' })
-        : headers
-          ? await fetch('/api/tcg/me', { cache: 'no-store', headers })
-          : await fetch('/api/tcg/catalog', { cache: 'no-store' });
+        ? await fetch(`/api/tcg/collection/${viewProfileId}`, { cache: 'no-store', headers })
+        : await fetch('/api/tcg/me', { cache: 'no-store', headers });
       const json = await response.json();
+      if (json.code === 'BETA_REQUISE') return setGate('beta');
       if (!json.success) throw new Error(json.message);
       if (!viewingOther) {
-        const nextAccess = !headers ? 'login' : json.linked === false ? 'riot' : 'full';
+        const nextAccess = json.linked === false ? 'riot' : 'full';
         setAccess(nextAccess);
         if (nextAccess !== 'full') setSection('collection');
       }
@@ -204,7 +206,9 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
 
   // Classement des collectionneurs (sidebar), rechargé après chaque ouverture.
   const loadLeaderboard = useCallback(async () => {
-    const json = await fetch('/api/tcg/leaderboard', { cache: 'no-store' }).then((res) => res.json()).catch(() => null);
+    const headers = await authHeaders();
+    if (!headers) return;
+    const json = await fetch('/api/tcg/leaderboard', { cache: 'no-store', headers }).then((res) => res.json()).catch(() => null);
     if (json?.success) setLeaderboard(json.leaderboard);
   }, []);
 
@@ -323,11 +327,26 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   const ownedCount = cards.length;
   const boosterCount = boosters.reduce((sum, item) => sum + item.quantity, 0);
 
+  if (gate) {
+    return (
+      <div className={`${ds.container} ${styles.wrap}`}>
+        <div className={ds.sectionLabel}>Collection · Bêta</div>
+        <h1 className={styles.title}>Collection</h1>
+        <p className={styles.sub}>
+          {gate === 'login'
+            ? 'Le jeu de cartes est en bêta. Connecte-toi pour y accéder si tu fais partie des bêta-testeurs.'
+            : 'Le jeu de cartes est en bêta : il est réservé pour l’instant aux bêta-testeurs.'}
+        </p>
+        {gate === 'login' && <Link href="/login" className={ds.btnPrimary}>Se connecter</Link>}
+      </div>
+    );
+  }
+
   if (loggedIn === null) return <div className={`${ds.container} ${styles.wrap}`}><p className={ds.empty}>Chargement…</p></div>;
 
   const viewingOther = owner !== null;
 
-  // Sans accès (visiteur ou pas de compte Riot) : collection globale et classement seulement.
+  // Pas de compte Riot lié : collection globale et classement seulement.
   const limited = !viewingOther && access !== 'full';
 
   const dupCount = cards.filter((item) => item.count > 1).length;
@@ -391,7 +410,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
         </aside>
 
         <div className={styles.main}>
-          <div className={ds.sectionLabel}>{section === 'classement' ? 'Collection · Tous les joueurs' : viewingOther ? `Collection de ${owner}` : 'Collection · Test dev'}</div>
+          <div className={ds.sectionLabel}>{section === 'classement' ? 'Collection · Tous les joueurs' : viewingOther ? `Collection de ${owner}` : 'Collection · Bêta'}</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
           {section === 'boosters' || section === 'classement' || limited ? null : (
             <div className={styles.tiles}>
@@ -414,17 +433,16 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
             </div>
           )}
 
+          {/* Bêta : visuels provisoires en attendant ceux de la graphiste. */}
+          <p className={styles.betaNote}>
+            <b>Bêta</b> Les cadres, les boosters et les icônes sont des visuels provisoires, en attendant le rendu de la graphiste.
+          </p>
+
           {/* Pas d'accès aux cartes : on explique quoi faire. */}
           {limited && (
             <div className={styles.access}>
-              <p>
-                {access === 'login'
-                  ? 'Connecte-toi avec Discord et lie ton compte Riot pour recevoir des boosters et collectionner les cartes.'
-                  : 'Lie ton compte Riot à ton profil pour recevoir des boosters et collectionner les cartes.'}
-              </p>
-              <Link href={access === 'login' ? '/login' : '/onboarding'} className={ds.btnPrimary}>
-                {access === 'login' ? 'Se connecter' : 'Lier mon compte Riot'}
-              </Link>
+              <p>Lie ton compte Riot à ton profil pour recevoir des boosters et collectionner les cartes.</p>
+              <Link href="/onboarding" className={ds.btnPrimary}>Lier mon compte Riot</Link>
             </div>
           )}
 

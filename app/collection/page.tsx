@@ -1,15 +1,12 @@
-import { notFound } from 'next/navigation';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import { fontVariables } from '../fonts';
 import ds from '../components/ds/ds.module.css';
 import CollectionView from './CollectionView';
 
-// Collection de cartes (test) : cadres provisoires (_dev), jamais servie en production.
+// Collection de cartes (TCG, en bêta) : réservée aux bêta-testeurs, vérifié par les routes /api/tcg.
 // ?profil=<uuid> : collection d'un autre joueur (depuis son profil ou le classement).
 export default async function CollectionPage({ searchParams }: { searchParams: Promise<{ profil?: string }> }) {
-  if (process.env.VERCEL_ENV === 'production') notFound();
-
   const { profil } = await searchParams;
 
   return (

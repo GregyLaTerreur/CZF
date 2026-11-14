@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useIsBetaTester } from '@/app/components/beta';
 
 import { supabase } from '@/lib/supabase';
 import { logoSrc } from '@/lib/logo';
@@ -21,6 +22,7 @@ import styles from './admin.module.css';
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
 export default function AdminView() {
+  const isBetaTester = useIsBetaTester();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -1130,14 +1132,17 @@ export default function AdminView() {
                 Gérer les BO Riot
               </Link>
 
-              <Link
-                href="/admin/tcg"
-                className={
-                  ds.btnOutline
-                }
-              >
-                Gérer le TCG
-              </Link>
+              {/* TCG en bêta : seulement pour les admins bêta-testeurs. */}
+              {isBetaTester && (
+                <Link
+                  href="/admin/tcg"
+                  className={
+                    ds.btnOutline
+                  }
+                >
+                  Gérer le TCG
+                </Link>
+              )}
             </div>
 
             {message && (
