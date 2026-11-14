@@ -40,6 +40,8 @@ npx tsc --noEmit   # pas de tests automatisés dans le repo ; c'est la vérifica
 | `CRON_SECRET` | protège les routes cron / traitement Riot |
 | `CZF_ENABLE_RIOT_CRON` | `true` uniquement en PROD ; sinon `/api/cron/sync-riot-ids` répond 403 |
 | `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID` | vérifie qu'un joueur est sur le serveur Discord avant de créer son profil |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | compte Cloudinary des images (`lib/assets.ts`) ; facultatif, `dn70nvtqk` par défaut |
+| `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | uniquement pour `npm run assets:upload` (pas besoin sur Vercel) |
 | `CZF_SKIP_DISCORD_CHECK` | `true` en local seulement, sans le vrai bot : saute cette vérification (ignoré si `NODE_ENV=production`) |
 
 `lib/supabase.ts` crée le client au chargement : sans URL Supabase valide, tout le site plante.
@@ -48,6 +50,7 @@ npx tsc --noEmit   # pas de tests automatisés dans le repo ; c'est la vérifica
 
 - Remote : `github.com/GregyLaTerreur/CZF`. Branches `main` (PROD) et `dev` (DEV), chacune déployée sur Vercel avec sa propre base Supabase. Mainteneur principal : GregyLaTerreur (Grégoire).
 - Base PROD Supabase : projet `ikxstcmjagiiwxijkgaj`.
+- Branche `secret_project` : le TCG (voir la section dédiée), pas encore en PROD.
 - Le cron Vercel (`vercel.json`) appelle `/api/cron/sync-riot-ids` chaque jour à 4h.
 - Le **schéma SQL n'est pas versionné** : tables, vues, fonctions et policies ont été créées à la main dans Supabase. Toute évolution de schéma doit être donnée comme SQL à exécuter à la main (et signalée pour DEV *et* PROD).
 
@@ -79,6 +82,7 @@ Les résultats peuvent aussi être saisis à la main par un admin (`/admin/resul
 - `app/api/**/route.ts` : route handlers. Les routes protégées lisent `Authorization: Bearer <access_token>` (envoyé par le front via `supabase.auth.getSession()`), vérifient l'utilisateur avec `supabaseAdmin.auth.getUser(token)`, puis `profiles.is_admin` pour l'admin.
 - **Données publiques** : routes dédiées, toutes filtrables par `?division=` : `/api/classement` (classement des poules), `/api/historique` (liste des BO sans détail, `?limit=`), `/api/historique/[id]` (games d'un BO, chargées à l'ouverture), `/api/stats-joueurs` (stats par rôle, vue `czf_current_player_stats` + exclusions), `/api/stats-champions`. La homepage et `/results` n'utilisent qu'elles.
 - Les calculs sont dans `lib/results/core.ts` (fonctions pures) et les requêtes dans `lib/results/load.ts` (`fetchAll` gère la limite de 1000 lignes de Supabase, `fetchByIds` découpe les filtres `in`). Toute règle de classement ou de stats se modifie là.
+- **API collaborateurs** (`app/api/ext/*`, publique, GET seulement, CORS ouvert, helpers dans `lib/ext/games.ts`) : `/api/ext/matches` (BO → games → joueurs avec dégâts, vision, KP% ; `?id_team=`, `?team=`) et `/api/ext/joueurs` (stats agrégées par joueur : KDA, KP, DPM, vision/min… ; `?id_player=`, `?riot_id=`). Les deux acceptent `?division=`.
 - `app/api/results/route.ts` : réponse complète historique (≈ 1 Mo), réutilise `lib/results/core.ts`. Encore utilisée par `/admin/results` pour les équipes avec roster et la liste des champions.
 - `lib/riot/build-czf-game.ts`, `lib/riot/build-czf-bo.ts` : transforment une partie Riot en game CZF / calculent le score d'un BO.
 - `app/components/Nav.tsx` : navigation commune (client ; affiche « Admin » si `is_admin`).
@@ -90,6 +94,20 @@ Les résultats peuvent aussi être saisis à la main par un admin (`/admin/resul
 - `czf_current_player_stats` : vue sur `czf_game_player_stats` limitée aux joueurs encore dans la même équipe, au même rôle, dans une équipe validée.
 - `active_tournament_players` : vue (non utilisée par le code).
 - `czf_publish_riot_bo(p_fixture_id, p_games jsonb, p_bracket, p_round)` : publication atomique d'un BO Riot.
+- `czf_tcg_open_booster`, `czf_tcg_give_boosters` : ouverture et distribution des boosters TCG (voir la section TCG).
+
+## TCG (cartes à collectionner) — branche `secret_project`, en test
+
+Statut : en développement. `/collection` répond 404 si `VERCEL_ENV=production`, et le lien « Collection » du header est masqué si `NEXT_PUBLIC_VERCEL_ENV=production`.
+
+- **Cartes** (`czf_tcg_cards`) créées à la main par un admin dans `/admin/tcg` (bouton « Gérer le TCG » sur `/admin`). Trois types : `joueur` (équipe, logo, rôle, division, stats, **pas de note**), `mvp` (pareil **avec** la note 0–99), `simple` (juste le nom et le personnage). Quatre raretés : `commune | rare | epique | legendaire`. **Plus la carte est rare, plus l'artwork prend de place et moins il y a de texte** (légendaire = full art, stats au survol).
+- **Boosters** (`czf_tcg_boosters`) : nom, type de cartes (`tout` par défaut, ou `joueur | mvp | simple`), cartes par booster (1–10), chances par rareté en % (**total = 100**, contrainte SQL), illustration, actif. L'admin les distribue depuis une pop-in (`GiveBoostersModal`) : plusieurs joueurs cochés, une équipe entière (membres liés à un compte), ou tout le monde.
+- **Possession** : chaque profil commence à **0 carte**. `czf_tcg_user_boosters` (profil + booster → quantité non ouverte) et `czf_tcg_user_cards` (une ligne par carte tirée, les doublons comptent). Suppression d'une carte → elle disparaît des collections (cascade) ; d'un booster → les non ouverts disparaissent, les cartes tirées restent (`booster_id` à null).
+- **Fonctions SQL** (`security definer`, exécutables seulement par `service_role`) : `czf_tcg_open_booster(p_profile_id, p_booster_id)` retire 1 booster et tire les cartes dans la même transaction (rareté selon les %, puis carte au hasard du type ; s'il n'existe aucune carte de la rareté tirée, carte au hasard du type) ; `czf_tcg_give_boosters(p_booster_id, p_quantity, p_profile_ids uuid[] | null)` (null = tous les profils).
+- **SQL hors repo**, à exécuter à la main dans l'ordre : `~/www/czf-import/tcg-1-cartes.sql`, `tcg-2-boosters.sql`, `tcg-3-distribution-multi.sql` (correctif si `tcg-2` a été lancé avec l'ancienne signature à un seul profil). Les catalogues sont en lecture publique ; les tables `czf_tcg_user_*` et les fonctions ne sont accessibles qu'au serveur.
+- **Code** : `lib/tcg/cards.ts` (types, `LAYOUTS` par rareté sur le gabarit 1500×2100, `TYPE_FIELDS`, `parseCardInput`), `lib/tcg/boosters.ts` (`parseBoosterInput`, `boosterSqlError`), `app/components/tcg/PlayerCard.tsx` (rendu d'une carte), `app/components/tcg/CardFilters.tsx` (filtres en cascade rareté + division → équipe → joueur, pages de 24, partagés par l'admin et la collection), `app/admin/tcg/*`, `app/collection/*`. API : `/api/admin/tcg` et `/api/admin/tcg/[id]` (cartes), `/api/admin/tcg/boosters`, `/[id]`, `/give` (admin), `/api/tcg/me` (collection du joueur connecté), `/api/tcg/open` (ouverture, limitée à 20/min).
+- **Images** : tous les assets de test sur Cloudinary portent le suffixe **`_dev`** (utilisés seulement en dev) : `czf/cards/s1/cadres/{commune,rare,epique,legendaire}_dev`, `czf/cards/s1/divisions/{targon,ixtal,yordle}_dev`, `czf/cards/s1/boosters/booster_dev`. Le suffixe est défini une seule fois (`ASSET_SUFFIX` dans `lib/tcg/cards.ts`). Une graphiste fera les vrais cadres. Les PNG de cadre ne contiennent que la bordure et l'habillage du bas : l'onglet note/rôle et la pilule des stats sont en CSS car ils dépendent du type. `LAYOUTS` doit rester aligné sur les PNG. Les générateurs des visuels provisoires sont hors repo, dans `~/www/czf-tcg` (`gen.mjs`, `gen-booster.mjs`). L'artwork par défaut est le *loading art* Data Dragon (308×560, basse définition) ; `art_url` (Cloudinary) permet une illustration perso.
+- **À décider** : calcul de la note, choix des stats, illustrations définitives, façon dont les joueurs gagnent des boosters.
 
 ## Styles & design system
 
@@ -103,6 +121,7 @@ Les résultats peuvent aussi être saisis à la main par un admin (`/admin/resul
   - séparations beige/dark en diagonale (`clip-path`), bandeau orange en `skewY(-1deg)`.
 - Pour une nouvelle page au design system : CSS Module dédié (comme `home.module.css`), sans toucher à `globals.css`.
 - Une constante exportée d'un module `'use client'` vaut `undefined` côté composant serveur : mettre les constantes partagées dans un module sans directive (ex. `app/components/home/divisions.ts`).
+- **Images du site** : sur Cloudinary (`czf/…`), **plus dans le repo** (`public/` ne garde que `riot.txt`, vérification Riot). Dans le code, toujours `asset('/assets/…')` de `lib/assets.ts` (le chemin est un nom logique → `czf/…` en `f_auto,q_auto`) ; dans le CSS, les variables `--asset-…` de `CSS_ASSETS` (injectées par `app/layout.tsx`). Images hors site (ex. cartes TCG) : `cdnImage('cards/s1/<nom>')`. Envoi / remplacement : `npm run assets:upload -- <dossier> [cible]` (ex. `~/Images/cartes-s1 cards/s1` → `czf/cards/s1/…`). Les originaux restent dans l'historique git (avant suppression de `public/assets`).
 - Les logos d'équipe sont des URLs externes (imgur, noelshack…) : utiliser `<img>` (pas `next/image`, `images.unoptimized: true`).
 
 ## Pièges connus
@@ -110,6 +129,9 @@ Les résultats peuvent aussi être saisis à la main par un admin (`/admin/resul
 - `/api/historique` et `/api/results` peuvent renvoyer `team1`/`team2` à `null` quand une équipe n'est plus validée : toujours gérer ce cas.
 - En poules (BO2), `winner` peut être `null` (match nul 1-1).
 - Les compteurs `mvp` de `/api/stats-joueurs` ne comptent que les joueurs encore dans leur roster (vue `czf_current_player_stats`), donc leur total peut être inférieur au nombre de matchs.
-- **Sécurité** : toute route d'écriture doit vérifier le token (`Authorization: Bearer`) et utiliser `supabaseAdmin`, comme `/api/mvp` ou `/api/admin/riot-publish`. Ne jamais écrire en base depuis une route sans authentification, ni ouvrir une policy RLS en écriture à `anon`.
+- **Sécurité** : toute route d'écriture doit vérifier l'appelant avec `requireUser` / `requireAdmin` (`lib/auth.ts`, token `Authorization: Bearer`) et écrire avec `supabaseAdmin`, comme `/api/mvp`, `/api/admin/riot-publish` ou `/api/admin/tcg`. Ne jamais écrire en base depuis une route sans authentification, ni ouvrir une policy RLS en écriture à `anon` (les tables `teams`, `team_members`, `team_join_requests`, `players` et `profiles` ont été verrouillées le 13/11/2026 : une écriture depuis le navigateur avec la clé anon y est refusée).
 - En prod, `service_role` n'a pas le droit `SELECT` sur `team_join_requests`.
 - En prod (nov. 2026), `service_role` n'avait pas le droit `DELETE` sur `czf_mvp_proposals` : la suppression d'un BO (`/api/admin/results/[id]`) échouait avec « permission denied ». À corriger par `GRANT DELETE`.
+- **Carte TCG** : `container-type: inline-size` sur un élément ne s'applique qu'à ses enfants ; une unité `cqw` dans le style de l'élément lui-même est calculée sur un conteneur parent ou sur l'écran. D'où `border-radius` en `%` sur `.card`, et `cqw` seulement pour les enfants.
+- **Visuels générés avec sharp** : le rendu SVG de sharp ignore les polices ajoutées (fontconfig) ; pour écrire en Barlow Condensed, convertir le texte en tracés (`opentype.js`, voir `~/www/czf-tcg/gen-booster.mjs`). Les images d'un SVG doivent être en `data:` URI.
+- **Fonction SQL modifiée** : si sa signature change, l'API Supabase (PostgREST) renvoie `PGRST202 Could not find the function` tant que l'ancienne version est en base ; supprimer l'ancienne (`drop function … (types)`) puis `notify pgrst, 'reload schema';`.
