@@ -378,7 +378,7 @@
 
 .main {
   min-width: 0;
-  max-width: 1180px;
+  /* Toute la largeur à droite du menu : sur grand écran, la grille ajoute des colonnes. */
   padding: var(--space-section) 40px;
 }
 
@@ -431,6 +431,7 @@
 /* Tuiles de stats sous le titre (maquette compteur n°3). */
 .tiles {
   display: grid;
+  max-width: 1100px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin: 6px 0 var(--space-block);
