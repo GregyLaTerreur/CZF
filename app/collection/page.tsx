@@ -6,13 +6,16 @@ import ds from '../components/ds/ds.module.css';
 import CollectionView from './CollectionView';
 
 // Collection de cartes (test) : cadres provisoires (_dev), jamais servie en production.
-export default function CollectionPage() {
+// ?profil=<uuid> : collection d'un autre joueur (depuis son profil ou le classement).
+export default async function CollectionPage({ searchParams }: { searchParams: Promise<{ profil?: string }> }) {
   if (process.env.VERCEL_ENV === 'production') notFound();
+
+  const { profil } = await searchParams;
 
   return (
     <main className={`${ds.page} ${fontVariables}`}>
       <Nav />
-      <CollectionView />
+      <CollectionView key={profil ?? 'moi'} viewProfileId={profil} />
       <Footer />
     </main>
   );

@@ -451,6 +451,16 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                 Profil DPM
               </a>
             )}
+
+            {/* Collection TCG (en test : masquée en production, comme la page). */}
+            {player.profile_id && process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
+              <Link
+                href={isOwn ? '/collection' : `/collection?profil=${player.profile_id}`}
+                className={`${ds.btnOutline} ${styles.dpmLink}`}
+              >
+                {isOwn ? 'Ma collection' : 'Voir sa collection'}
+              </Link>
+            )}
           </div>
         </div>
       </header>

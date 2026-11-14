@@ -771,3 +771,72 @@
   justify-content: flex-end;
   margin: 4px 0 -6px;
 }
+
+/* Classement des collectionneurs, sous le menu de la sidebar. */
+.board {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(224, 216, 204, 0.12);
+}
+
+.boardHead,
+.boardRow,
+.boardRowOn {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 42px 42px;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px;
+}
+
+.boardHead {
+  grid-template-columns: minmax(0, 1fr) 42px 42px;
+  padding-left: 46px;
+  font: 700 0.6rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.45);
+}
+
+.boardHead span:not(:first-child),
+.boardRow span:nth-child(n + 3),
+.boardRowOn span:nth-child(n + 3) {
+  text-align: right;
+}
+
+.boardRow,
+.boardRowOn {
+  font: 700 0.82rem var(--font-barlow-condensed), sans-serif;
+  color: var(--on-dark);
+  text-decoration: none;
+}
+
+.boardRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.boardRowOn {
+  background: #040c18;
+  color: #fff;
+  box-shadow: inset 4px 0 0 var(--orange);
+}
+
+.boardRank {
+  font-style: italic;
+  font-weight: 800;
+  color: var(--orange);
+}
+
+.boardName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+@media (max-width: 860px) {
+  .board {
+    display: none;
+  }
+}

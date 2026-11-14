@@ -66,6 +66,11 @@ const SoundOffIcon = () => (
     <path d="m17 9 5 6M22 9l-5 6" />
   </svg>
 );
+const BackIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M15 5 8 12l7 7" />
+  </svg>
+);
 const DupIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <rect x="3" y="7" width="10" height="14" rx="2" />
@@ -73,8 +78,14 @@ const DupIcon = () => (
   </svg>
 );
 
-export default function CollectionView() {
+type LeaderboardEntry = { profileId: string; name: string; cards: number; boosters: number };
+
+// viewProfileId : collection d'un autre joueur (lecture seule, sans ses boosters). Absent : la mienne.
+export default function CollectionView({ viewProfileId }: { viewProfileId?: string }) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const [myId, setMyId] = useState<string | null>(null);
+  const [owner, setOwner] = useState<string | null>(null); // nom du joueur consulté (null = ma collection)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [boosters, setBoosters] = useState<OwnedBooster[]>([]);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [catalog, setCatalog] = useState<OwnedCard[]>([]);
@@ -112,14 +123,21 @@ export default function CollectionView() {
 
   const load = useCallback(async () => {
     const headers = await authHeaders();
-    if (!headers) return setLoggedIn(false);
-    setLoggedIn(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    const me = session?.user.id ?? null;
+    setMyId(me);
+    const viewingOther = Boolean(viewProfileId && viewProfileId !== me);
+    if (!headers && !viewingOther) return setLoggedIn(false);
+    setLoggedIn(Boolean(headers));
 
     try {
-      const response = await fetch('/api/tcg/me', { cache: 'no-store', headers });
+      const response = viewingOther
+        ? await fetch(`/api/tcg/collection/${viewProfileId}`, { cache: 'no-store' })
+        : await fetch('/api/tcg/me', { cache: 'no-store', headers: headers! });
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
-      setBoosters(json.boosters);
+      setOwner(viewingOther ? json.owner?.name ?? 'Joueur' : null);
+      setBoosters(json.boosters || []);
       setCards(json.cards);
       setCatalog(json.catalog || []);
       setTotalCards(json.totalCards);
@@ -133,6 +151,21 @@ export default function CollectionView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Classement des collectionneurs (sidebar), rechargé après chaque ouverture.
+  const loadLeaderboard = useCallback(async () => {
+    const json = await fetch('/api/tcg/leaderboard', { cache: 'no-store' }).then((res) => res.json()).catch(() => null);
+    if (json?.success) setLeaderboard(json.leaderboard);
+  }, []);
+
+  useEffect(() => {
+    void loadLeaderboard();
+  }, [loadLeaderboard]);
+
+  // En changeant de joueur, on revient sur ses cartes.
+  useEffect(() => {
+    setSection('cartes');
+  }, [viewProfileId]);
 
   const [muted, setMutedState] = useState(false);
   useEffect(() => setMutedState(isMuted()), []);
@@ -177,6 +210,7 @@ export default function CollectionView() {
       setPhase('pack');
       setDrawn(sortedDraw);
       void load();
+      void loadLeaderboard();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur.');
     } finally {
@@ -241,7 +275,9 @@ export default function CollectionView() {
 
   if (loggedIn === null) return <div className={`${ds.container} ${styles.wrap}`}><p className={ds.empty}>Chargement…</p></div>;
 
-  if (!loggedIn) {
+  const viewingOther = owner !== null;
+
+  if (!loggedIn && !viewingOther) {
     return (
       <div className={`${ds.container} ${styles.wrap}`}>
         <div className={ds.sectionLabel}>Collection</div>
@@ -256,7 +292,9 @@ export default function CollectionView() {
   const legendaryOwned = cards.filter((item) => item.card.rarity === 'legendaire').length;
   // Cartes différentes possédées par rareté, affichées sous Mes cartes.
   const ownedByRarity = cards.reduce<Record<string, number>>((acc, item) => ({ ...acc, [item.card.rarity]: (acc[item.card.rarity] || 0) + 1 }), {});
-  const SECTION_TITLES: Record<Section, string> = { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
+  const SECTION_TITLES: Record<Section, string> = viewingOther
+    ? { collection: `Collection de ${owner}`, boosters: 'Boosters', cartes: `Cartes de ${owner}`, doublons: `Doublons de ${owner}` }
+    : { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
 
   const rarityLinks = (target: Section) =>
     rarityTarget === target &&
@@ -277,12 +315,19 @@ export default function CollectionView() {
       <div className={styles.layout}>
         <aside className={styles.side}>
           <div className={styles.sideInner}>
-          <div className={styles.sideTitle}>Ma collection</div>
-          <button type="button" className={section === 'boosters' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boosters')}>
-            <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
-          </button>
+          <div className={styles.sideTitle}>{viewingOther ? `Collection de ${owner}` : 'Ma collection'}</div>
+          {viewingOther && loggedIn && (
+            <Link href="/collection" className={styles.sideLink}>
+              <BackIcon /> Ma collection
+            </Link>
+          )}
+          {!viewingOther && (
+            <button type="button" className={section === 'boosters' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boosters')}>
+              <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
+            </button>
+          )}
           <button type="button" className={section === 'cartes' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('cartes', null)}>
-            <CardsIcon /> Mes cartes
+            <CardsIcon /> {viewingOther ? 'Ses cartes' : 'Mes cartes'}
           </button>
           {rarityLinks('cartes')}
           <button type="button" className={section === 'collection' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('collection', null)}>
@@ -292,11 +337,37 @@ export default function CollectionView() {
           <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
             <DupIcon /> Doublons
           </button>
+
+          {leaderboard.length > 0 && (
+            <div className={styles.board}>
+              <div className={styles.sideTitle}>Classement</div>
+              <div className={styles.boardHead}>
+                <span>Joueur</span>
+                <span title="Cartes différentes possédées">Cartes</span>
+                <span title="Boosters acquis (ouverts ou non)">Boost.</span>
+              </div>
+              {leaderboard.map((entry, index) => {
+                const current = entry.profileId === (viewProfileId ?? myId);
+                return (
+                  <Link
+                    key={entry.profileId}
+                    href={entry.profileId === myId ? '/collection' : `/collection?profil=${entry.profileId}`}
+                    className={current ? styles.boardRowOn : styles.boardRow}
+                  >
+                    <span className={styles.boardRank}>{index + 1}</span>
+                    <span className={styles.boardName}>{entry.name}</span>
+                    <span>{entry.cards}</span>
+                    <span>{entry.boosters}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
           </div>
         </aside>
 
         <div className={styles.main}>
-          <div className={ds.sectionLabel}>Collection · Test dev</div>
+          <div className={ds.sectionLabel}>{viewingOther ? `Collection de ${owner}` : 'Collection · Test dev'}</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
           {section === 'boosters' ? null : (
             <div className={styles.tiles}>
@@ -350,7 +421,7 @@ export default function CollectionView() {
             <>
               {!listItems.length && (
                 <p className={ds.empty}>
-                  {section === 'doublons' ? 'Aucun doublon pour l’instant.' : section === 'collection' ? (catalog.length ? (missingOnly ? 'Tu as toutes les cartes !' : 'Aucune carte possédée pour l’instant.') : 'Aucune carte n’existe encore.') : 'Ouvre un booster pour obtenir tes premières cartes.'}
+                  {section === 'doublons' ? 'Aucun doublon pour l’instant.' : section === 'collection' ? (catalog.length ? (missingOnly ? 'Tu as toutes les cartes !' : 'Aucune carte possédée pour l’instant.') : 'Aucune carte n’existe encore.') : (viewingOther ? 'Aucune carte pour l’instant.' : 'Ouvre un booster pour obtenir tes premières cartes.')}
                 </p>
               )}
               {section === 'collection' && catalog.length > 0 && (
