@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       .eq('profile_id', auth.user.id)
       .gt('quantity', 0),
     supabaseAdmin.from('czf_tcg_user_cards').select('card_id, obtained_at').eq('profile_id', auth.user.id).limit(10000),
-    supabaseAdmin.from('czf_tcg_cards').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('czf_tcg_cards').select('rarity').limit(10000),
     loadSeasons(),
   ]);
 
@@ -39,7 +39,9 @@ export async function GET(request: Request) {
     success: true,
     boosters: boosters.data.filter((row) => row.booster),
     cards: cards.map((card) => ({ card, count: counts.get(Number(card.id)) || 0 })),
-    totalCards: total.count || 0,
+    totalCards: (total.data || []).length,
+    // Nombre de cartes existantes par rareté (tuile Légendaires : 1 / 2).
+    totalsByRarity: (total.data || []).reduce<Record<string, number>>((acc, row) => ({ ...acc, [row.rarity]: (acc[row.rarity] || 0) + 1 }), {}),
     seasons,
   });
 }

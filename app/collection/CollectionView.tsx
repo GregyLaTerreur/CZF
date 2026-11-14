@@ -49,6 +49,7 @@ export default function CollectionView() {
   const [boosters, setBoosters] = useState<OwnedBooster[]>([]);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [totalCards, setTotalCards] = useState(0);
+  const [totalsByRarity, setTotalsByRarity] = useState<Record<string, number>>({});
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([]);
   const [opening, setOpening] = useState<number | null>(null);
   const [drawn, setDrawn] = useState<TcgCard[] | null>(null);
@@ -83,6 +84,7 @@ export default function CollectionView() {
       }
       setCards(json.cards);
       setTotalCards(json.totalCards);
+      setTotalsByRarity(json.totalsByRarity || {});
       setSeasons(json.seasons || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -138,6 +140,7 @@ export default function CollectionView() {
   }
 
   const dupCount = cards.filter((item) => item.count > 1).length;
+  const legendaryOwned = cards.filter((item) => item.card.rarity === 'legendaire').length;
   const SECTION_TITLES: Record<Section, string> = { boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
 
   return (
@@ -171,13 +174,28 @@ export default function CollectionView() {
         <div className={styles.main}>
           <div className={ds.sectionLabel}>Collection · Test dev</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
-          <p className={styles.sub}>
-            {section === 'boosters'
-              ? `${boosterCount} booster${boosterCount > 1 ? 's' : ''} à ouvrir`
-              : section === 'doublons'
-                ? `${dupCount} carte${dupCount > 1 ? 's' : ''} en plusieurs exemplaires`
-                : `${ownedCount} carte${ownedCount > 1 ? 's' : ''} différente${ownedCount > 1 ? 's' : ''} sur ${totalCards}`}
-          </p>
+          {section === 'boosters' ? (
+            <p className={styles.sub}>{boosterCount} booster{boosterCount > 1 ? 's' : ''} à ouvrir</p>
+          ) : (
+            <div className={styles.tiles}>
+              <div className={styles.tile}>
+                <small>Cartes</small>
+                <b>{ownedCount}<span> / {totalCards}</span></b>
+              </div>
+              <div className={styles.tile}>
+                <small>Complété</small>
+                <b>{totalCards ? Math.round((ownedCount / totalCards) * 100) : 0}<span> %</span></b>
+              </div>
+              <div className={styles.tileCream}>
+                <small>Doublons</small>
+                <b>{dupCount}</b>
+              </div>
+              <div className={styles.tileCream}>
+                <small>Légendaires</small>
+                <b>{legendaryOwned}<span> / {totalsByRarity.legendaire || 0}</span></b>
+              </div>
+            </div>
+          )}
 
           {error && <p className={ds.formError}>{error}</p>}
 
