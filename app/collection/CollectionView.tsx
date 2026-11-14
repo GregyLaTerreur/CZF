@@ -155,6 +155,8 @@ export default function CollectionView() {
 
   const dupCount = cards.filter((item) => item.count > 1).length;
   const legendaryOwned = cards.filter((item) => item.card.rarity === 'legendaire').length;
+  // Cartes différentes possédées par rareté, affichées sous Mes cartes.
+  const ownedByRarity = cards.reduce<Record<string, number>>((acc, item) => ({ ...acc, [item.card.rarity]: (acc[item.card.rarity] || 0) + 1 }), {});
   const SECTION_TITLES: Record<Section, string> = { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
 
   const rarityLinks = (target: Section) =>
@@ -167,6 +169,7 @@ export default function CollectionView() {
         onClick={() => goRarity(target, rarity)}
       >
         {RARITY_PLURALS[rarity]}
+        {target === 'cartes' && <span className={styles.sideSubCount}>{ownedByRarity[rarity] || 0}</span>}
       </button>
     ));
 
@@ -184,7 +187,7 @@ export default function CollectionView() {
             <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
           </button>
           <button type="button" className={section === 'cartes' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('cartes', null)}>
-            <CardsIcon /> Mes cartes <span className={styles.sideCount}>{ownedCount}</span>
+            <CardsIcon /> Mes cartes
           </button>
           {rarityLinks('cartes')}
           <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>

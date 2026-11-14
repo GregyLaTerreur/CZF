@@ -399,3 +399,13 @@
 .missing:hover {
   opacity: 0.6;
 }
+
+.sideSubCount {
+  margin-left: auto;
+  color: rgba(224, 216, 204, 0.5);
+  font: italic 800 0.8rem var(--font-barlow-condensed), sans-serif;
+}
+
+.sideSubOn .sideSubCount {
+  color: var(--orange);
+}
