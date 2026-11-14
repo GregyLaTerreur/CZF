@@ -86,6 +86,7 @@ export function boosterSqlError(message: string | undefined) {
   if (message?.includes('PAS_DE_BOOSTER')) return { message: 'Tu n’as plus de booster de ce type.', status: 409 };
   if (message?.includes('BOOSTER_VIDE')) return { message: 'Ce booster ne contient encore aucune carte.', status: 409 };
   if (message?.includes('BOOSTER_INTROUVABLE')) return { message: 'Booster introuvable.', status: 404 };
+  if (message?.includes('Could not find the function')) return { message: 'Fonction SQL pas à jour en base : lancer czf-import/tcg-3-distribution-multi.sql.', status: 500 };
   if (message?.includes('QUANTITE_INVALIDE')) return { message: 'Quantité invalide (1 à 100).', status: 400 };
   return null;
 }
