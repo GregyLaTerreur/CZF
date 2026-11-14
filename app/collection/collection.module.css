@@ -169,6 +169,8 @@
 .flipFront {
   position: absolute;
   inset: 0;
+  /* Au-dessus du halo et du courant électrique (z 0-1), sous les décharges (z 4). */
+  z-index: 2;
   backface-visibility: hidden;
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -201,145 +203,13 @@
   transform: rotateY(0deg);
 }
 
-.back_rare .flipBack {
-  box-shadow: 0 0 0 3px #c9d0d9, 0 0 14px 2px rgba(201, 208, 217, 0.5);
-}
-
-.back_epique .flipBack {
-  box-shadow: 0 0 0 3px #f05010;
-  animation: glowEpique 1.4s ease-in-out infinite;
-}
-
-.back_legendaire .flipBack {
-  box-shadow: 0 0 0 3px #f2c14e;
-  animation: glowLegendaire 1.8s ease-in-out infinite;
-}
-
-/* Reflet doré qui balaie le dos d'une légendaire. */
-.back_legendaire .flipBack::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255, 236, 170, 0.75) 48%, transparent 66%);
-  background-size: 250% 100%;
-  mix-blend-mode: screen;
-  animation: shimmer 2.2s linear infinite;
-}
-
-.back_legendaire {
-  animation: floatCard 2.6s ease-in-out infinite;
-}
-
-@keyframes glowEpique {
-  0%, 100% { box-shadow: 0 0 0 3px #f05010, 0 0 12px 2px rgba(240, 80, 16, 0.45); }
-  50% { box-shadow: 0 0 0 3px #f05010, 0 0 30px 8px rgba(240, 80, 16, 0.85); }
-}
-
-@keyframes glowLegendaire {
-  0%, 100% { box-shadow: 0 0 0 3px #f2c14e, 0 0 20px 6px rgba(242, 193, 78, 0.55); }
-  50% { box-shadow: 0 0 0 4px #ffe38a, 0 0 46px 14px rgba(242, 193, 78, 0.95); }
-}
-
-@keyframes shimmer {
-  from { background-position: 150% 0; }
-  to { background-position: -100% 0; }
-}
-
-@keyframes floatCard {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* Révélation : éclat, onde et (légendaire) rayons, déclenchés à mi-retournement. */
-.burst,
-.ring,
-.rays {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0;
-  z-index: 3;
-}
-
-.burst {
-  inset: -25%;
-  border-radius: 50%;
-  animation: burst 0.9s ease-out 0.25s forwards;
-}
-
-.ring {
-  inset: 8%;
-  border-radius: 50%;
-  border: 4px solid currentColor;
-  animation: ring 0.8s ease-out 0.3s forwards;
-}
-
-.rays {
-  inset: -70%;
-  z-index: 0;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 227, 138, 0.55) 0deg 7deg, transparent 7deg 22deg);
-  -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%);
-  mask: radial-gradient(circle, #000 18%, transparent 62%);
-  animation: rays 1.8s ease-out 0.3s forwards;
-}
-
-.reveal_rare .burst {
-  background: radial-gradient(circle, rgba(236, 241, 247, 0.9), rgba(201, 208, 217, 0.35) 35%, transparent 62%);
-}
-
-.reveal_rare .ring {
-  color: #e6eaf0;
-}
-
-.reveal_epique {
-  z-index: 4;
-}
-
-.reveal_epique .burst {
-  background: radial-gradient(circle, rgba(255, 170, 110, 1), rgba(240, 80, 16, 0.55) 35%, transparent 65%);
-}
-
-.reveal_epique .ring {
-  color: #f05010;
-}
-
+/* Rebond à la révélation d'une épique / légendaire (l'effet électrique est dans CardElectric). */
 .reveal_epique .flipFront {
   animation: pop 0.55s ease-out 0.6s;
 }
 
-.reveal_legendaire {
-  z-index: 5;
-}
-
-.reveal_legendaire .burst {
-  inset: -45%;
-  background: radial-gradient(circle, #fff 0%, rgba(255, 227, 138, 1) 18%, rgba(242, 193, 78, 0.6) 38%, transparent 66%);
-  animation-duration: 1.2s;
-}
-
-.reveal_legendaire .ring {
-  color: #ffe38a;
-  border-width: 6px;
-}
-
 .reveal_legendaire .flipFront {
   animation: popBig 0.8s cubic-bezier(0.2, 1.4, 0.4, 1) 0.6s;
-}
-
-@keyframes burst {
-  0% { opacity: 0; transform: scale(0.4); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.5); }
-}
-
-@keyframes ring {
-  0% { opacity: 1; transform: scale(0.5); }
-  100% { opacity: 0; transform: scale(2.2); }
-}
-
-@keyframes rays {
-  0% { opacity: 0; transform: scale(0.5) rotate(0deg); }
-  25% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.3) rotate(70deg); }
 }
 
 @keyframes pop {
@@ -360,10 +230,6 @@
     transition: none;
   }
 
-  .back_epique .flipBack,
-  .back_legendaire .flipBack,
-  .back_legendaire .flipBack::after,
-  .back_legendaire,
   .reveal_epique .flipFront,
   .reveal_legendaire .flipFront {
     animation: none;

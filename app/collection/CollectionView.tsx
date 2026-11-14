@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
+import CardElectric from '@/app/components/tcg/CardElectric';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { RARITIES, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 import { boosterImage, type TcgBooster } from '@/lib/tcg/boosters';
@@ -382,7 +383,7 @@ export default function CollectionView() {
                   <button
                     key={`${card.id}-${index}`}
                     type="button"
-                    className={`${styles.flip} ${isRevealed ? `${styles.flipped} ${styles[`reveal_${card.rarity}`]}` : styles[`back_${card.rarity}`]}`}
+                    className={`${styles.flip} ${isRevealed ? `${styles.flipped} ${styles[`reveal_${card.rarity}`] ?? ''}` : ''}`}
                     onClick={() => !isRevealed && reveal(index)}
                     aria-label={isRevealed ? card.name : 'Retourner la carte'}
                   >
@@ -392,14 +393,8 @@ export default function CollectionView() {
                     <div className={styles.flipFront}>
                       <PlayerCard card={card} />
                     </div>
-                    {/* Effet de révélation selon la rareté (joué une fois, au retournement). */}
-                    {isRevealed && card.rarity !== 'commune' && (
-                      <>
-                        <span className={styles.burst} aria-hidden="true" />
-                        <span className={styles.ring} aria-hidden="true" />
-                        {card.rarity === 'legendaire' && <span className={styles.rays} aria-hidden="true" />}
-                      </>
-                    )}
+                    {/* Effet électrique selon la rareté : annonce la carte sur le dos, l'accompagne une fois révélée. */}
+                    <CardElectric rarity={card.rarity} />
                   </button>
                 );
               })}

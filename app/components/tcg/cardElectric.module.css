@@ -1,0 +1,100 @@
+/* Effet électrique « E2 » : couleur et vitesse selon la rareté. */
+@property --czf-current {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.electric {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --c: #bfe3ff;
+  --c2: #ffffff;
+  --spd: 8s;
+}
+
+.epique {
+  --c: #ff6a1f;
+  --c2: #ffd0a8;
+  --spd: 6s;
+}
+
+.legendaire {
+  --c: #ffd34d;
+  --c2: #fff4c2;
+  --spd: 4.5s;
+}
+
+.glow {
+  position: absolute;
+  inset: -16%;
+  z-index: 0;
+  border-radius: 18%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 35%, transparent), transparent);
+  opacity: 0.6;
+}
+
+/* Contour allumé en permanence (légendaire). */
+.base {
+  position: absolute;
+  inset: -2.5%;
+  z-index: 1;
+  border-radius: 6% / 4.5%;
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--c) 25%, transparent);
+}
+
+/* Courant qui fait le tour de la carte. */
+.current {
+  position: absolute;
+  inset: -3%;
+  z-index: 1;
+  border-radius: 6.5% / 4.8%;
+  padding: 3px;
+  background: conic-gradient(from var(--czf-current), transparent 0 55%, var(--c2) 62%, var(--c) 66%, transparent 72% 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 5px var(--c)) drop-shadow(0 0 10px color-mix(in srgb, var(--c) 60%, transparent));
+  animation: current var(--spd) linear infinite;
+}
+
+/* Décharges : le SVG déborde de 30 % autour de la carte (même marge que dans CardElectric). */
+.arcs {
+  position: absolute;
+  left: -30%;
+  top: -21.43%;
+  width: 160%;
+  height: 142.86%;
+  z-index: 4;
+  overflow: visible;
+}
+
+.arcs path {
+  fill: none;
+  stroke: var(--c2);
+  stroke-width: 1.6;
+  stroke-linejoin: bevel;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 7px color-mix(in srgb, var(--c) 70%, transparent));
+  animation: arcFade 0.45s ease-out forwards;
+}
+
+@keyframes current {
+  to {
+    --czf-current: 360deg;
+  }
+}
+
+@keyframes arcFade {
+  0% { opacity: 1; }
+  60% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .current {
+    animation: none;
+  }
+}
