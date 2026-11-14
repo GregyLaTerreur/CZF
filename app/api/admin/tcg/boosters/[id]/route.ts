@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseBoosterInput } from '@/lib/tcg/boosters';
 import { resolveSeasonId } from '@/lib/tcg/seasons';
 
@@ -27,7 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!seasonId) return fail('Aucune saison en base.', 400);
 
   const { data, error } = await supabaseAdmin.from('czf_tcg_boosters').update({ ...parsed.booster, season_id: seasonId }).eq('id', id).select('*').maybeSingle();
-  if (error) return fail('Impossible d’enregistrer le booster.', 500);
+  if (error) return fail(tcgDbMessage(error, 'Impossible d’enregistrer le booster.'), 500);
   if (!data) return fail('Booster introuvable.', 404);
 
   return NextResponse.json({ success: true, booster: data });

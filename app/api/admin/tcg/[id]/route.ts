@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseCardInput } from '@/lib/tcg/cards';
 import { resolveSeasonId } from '@/lib/tcg/seasons';
 
@@ -33,7 +34,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .select('*')
     .maybeSingle();
 
-  if (error) return fail('Impossible d’enregistrer la carte.', 500);
+  if (error) return fail(tcgDbMessage(error, 'Impossible d’enregistrer la carte.'), 500);
   if (!data) return fail('Carte introuvable.', 404);
 
   return NextResponse.json({ success: true, card: data });

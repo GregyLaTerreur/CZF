@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseBoosterInput } from '@/lib/tcg/boosters';
 import { loadSeasons, resolveSeasonId } from '@/lib/tcg/seasons';
 
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
   if (!seasonId) return fail('Aucune saison en base.', 400);
 
   const { data, error } = await supabaseAdmin.from('czf_tcg_boosters').insert({ ...parsed.booster, season_id: seasonId }).select('*').single();
-  if (error) return fail('Impossible de créer le booster.', 500);
+  if (error) return fail(tcgDbMessage(error, 'Impossible de créer le booster.'), 500);
 
   return NextResponse.json({ success: true, booster: data });
 }

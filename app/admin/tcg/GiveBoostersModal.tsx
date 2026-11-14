@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import ds from '@/app/components/ds/ds.module.css';
 import type { TcgBooster } from '@/lib/tcg/boosters';
+import NumberField from './NumberField';
 import styles from './tcgAdmin.module.css';
 
 export type GiveProfile = { id: string; discord_name: string | null; riot_id: string | null };
@@ -92,7 +93,7 @@ export default function GiveBoostersModal({ boosters, profiles, teams, initialBo
           </label>
           <label className={ds.field}>
             <span>Boosters par joueur</span>
-            <input className={ds.input} type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
+            <NumberField className={ds.input} min={1} max={100} value={quantity} onChange={(v) => setQuantity(Math.round(v))} />
           </label>
         </div>
 
@@ -157,7 +158,7 @@ export default function GiveBoostersModal({ boosters, profiles, teams, initialBo
         {error && <p className={ds.formError}>{error}</p>}
 
         <div className={ds.formActions}>
-          <button type="button" className={ds.btnPrimary} onClick={submit} disabled={sending || !boosterId || !count}>
+          <button type="button" className={ds.btnPrimary} onClick={submit} disabled={sending || !boosterId || !count || quantity < 1 || quantity > 100}>
             {sending ? 'Envoi…' : `Donner ${quantity} booster${quantity > 1 ? 's' : ''} à ${count} joueur${count > 1 ? 's' : ''}`}
           </button>
         </div>

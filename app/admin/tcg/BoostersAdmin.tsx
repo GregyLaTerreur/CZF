@@ -12,6 +12,7 @@ import {
   ratesTotal,
   type TcgBooster,
 } from '@/lib/tcg/boosters';
+import NumberField from './NumberField';
 import GiveBoostersModal, { type GiveProfile, type GiveTeam } from './GiveBoostersModal';
 import styles from './tcgAdmin.module.css';
 
@@ -128,7 +129,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
           <div className={styles.row}>
             <label className={ds.field}>
               <span>Cartes par booster</span>
-              <input className={ds.input} type="number" min={1} max={100} value={form.cards_per_pack} onChange={(e) => set('cards_per_pack', Number(e.target.value))} />
+              <NumberField className={ds.input} min={1} max={100} value={form.cards_per_pack} onChange={(v) => set('cards_per_pack', v)} />
             </label>
             <label className={ds.field}>
               <span>Illustration (facultatif, URL Cloudinary)</span>
@@ -142,14 +143,13 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
               {RARITIES.map((rarity) => (
                 <label key={rarity} className={ds.field}>
                   <span>{RARITY_LABELS[rarity]}</span>
-                  <input
+                  <NumberField
                     className={ds.input}
-                    type="number"
                     min={0}
                     max={100}
                     step={0.5}
                     value={form[rateKey(rarity)]}
-                    onChange={(e) => set(rateKey(rarity), Number(e.target.value))}
+                    onChange={(v) => set(rateKey(rarity), v)}
                   />
                 </label>
               ))}

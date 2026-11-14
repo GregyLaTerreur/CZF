@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseCardInput } from '@/lib/tcg/cards';
 import { loadSeasons, resolveSeasonId } from '@/lib/tcg/seasons';
 import { withLiveStats } from '@/lib/tcg/liveStats';
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     .select('*')
     .single();
 
-  if (error) return fail('Impossible de créer la carte.', 500);
+  if (error) return fail(tcgDbMessage(error, 'Impossible de créer la carte.'), 500);
 
   return NextResponse.json({ success: true, card: data });
 }
