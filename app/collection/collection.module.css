@@ -164,22 +164,30 @@
   }
 }
 
-/* Sidebar sombre (maquette G1) : Mes boosters, Mes cartes + raretés, Doublons. */
+/* Sidebar sombre pleine hauteur, collée à gauche (maquette G1). */
+.full {
+  width: 100%;
+}
+
 .layout {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr);
-  gap: 36px;
-  align-items: start;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: calc(100vh - 120px);
 }
 
 .side {
+  background: var(--dark);
+  border-right: 4px solid var(--orange);
+}
+
+/* Le menu reste visible quand on descend dans la page. */
+.sideInner {
   position: sticky;
-  top: 20px;
+  top: 0;
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
-  background: var(--dark);
-  box-shadow: 6px 6px 0 var(--orange);
+  padding: 28px 0;
 }
 
 .sideTitle {
@@ -273,20 +281,31 @@
 
 .main {
   min-width: 0;
+  max-width: 1180px;
+  padding: var(--space-section) 40px;
 }
 
 /* Téléphone : la sidebar devient une barre qui défile horizontalement. */
 @media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;
-    gap: 22px;
+    min-height: 0;
   }
 
   .side {
+    border-right: none;
+    border-bottom: 4px solid var(--orange);
+  }
+
+  .sideInner {
     position: static;
     flex-direction: row;
     overflow-x: auto;
     padding: 0;
+  }
+
+  .main {
+    padding: 24px 16px;
   }
 
   .sideTitle {

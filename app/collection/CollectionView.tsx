@@ -141,9 +141,10 @@ export default function CollectionView() {
   const SECTION_TITLES: Record<Section, string> = { boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
 
   return (
-    <div className={`${ds.container} ${styles.wrap}`}>
+    <div className={styles.full}>
       <div className={styles.layout}>
         <aside className={styles.side}>
+          <div className={styles.sideInner}>
           <div className={styles.sideTitle}>Ma collection</div>
           <button type="button" className={section === 'boosters' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boosters')}>
             <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
@@ -164,6 +165,7 @@ export default function CollectionView() {
           <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
             <DupIcon /> Doublons <span className={styles.sideCount}>{dupCount}</span>
           </button>
+          </div>
         </aside>
 
         <div className={styles.main}>
