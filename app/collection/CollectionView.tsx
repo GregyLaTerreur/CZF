@@ -107,10 +107,12 @@ function Ring({ value, dark = false }: { value: number; dark?: boolean }) {
   );
 }
 
-// Avatar Discord, ou initiale du pseudo si on ne l'a pas.
+// Avatar Discord (celui de la dernière connexion), ou initiale du pseudo si on ne l'a pas
+// ou si l'image n'existe plus chez Discord (avatar changé depuis).
 function Avatar({ entry }: { entry: LeaderboardEntry }) {
-  return entry.avatar ? (
-    <img className={styles.avatar} src={`${entry.avatar}?size=64`} alt="" loading="lazy" />
+  const [broken, setBroken] = useState(false);
+  return entry.avatar && !broken ? (
+    <img className={styles.avatar} src={`${entry.avatar}?size=64`} alt="" loading="lazy" onError={() => setBroken(true)} />
   ) : (
     <span className={styles.avatar}>{entry.name.charAt(0).toUpperCase()}</span>
   );
