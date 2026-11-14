@@ -13,10 +13,10 @@ import {
   CARD_TYPES,
   CARD_TYPE_LABELS,
   EMPTY_CARD,
-  RARITIES,
   RARITY_LABELS,
   STAT_LABELS,
   TYPE_FIELDS,
+  TYPE_RARITIES,
   type TcgCard,
 } from '@/lib/tcg/cards';
 import BoostersAdmin from './BoostersAdmin';
@@ -86,6 +86,15 @@ export default function TcgAdminView() {
 
   const set = <K extends keyof TcgCard>(key: K, value: TcgCard[K]) => setForm((current) => ({ ...current, [key]: value }));
   const fields = TYPE_FIELDS[form.card_type];
+
+  // Changer de type ramène la rareté sur une valeur autorisée (joueur = commune, MVP = rare par défaut).
+  function changeType(cardType: TcgCard['card_type']) {
+    setForm((current) => ({
+      ...current,
+      card_type: cardType,
+      rarity: TYPE_RARITIES[cardType].includes(current.rarity) ? current.rarity : TYPE_RARITIES[cardType][0],
+    }));
+  }
 
   function reset() {
     setForm(EMPTY_CARD);
@@ -175,21 +184,21 @@ export default function TcgAdminView() {
           <div className={styles.row}>
             <label className={ds.field}>
               <span>Type</span>
-              <select className={ds.input} value={form.card_type} onChange={(e) => set('card_type', e.target.value as TcgCard['card_type'])}>
+              <select className={ds.input} value={form.card_type} onChange={(e) => changeType(e.target.value as TcgCard['card_type'])}>
                 {CARD_TYPES.map((type) => <option key={type} value={type}>{CARD_TYPE_LABELS[type]}</option>)}
               </select>
             </label>
             <label className={ds.field}>
               <span>Rareté</span>
               <select className={ds.input} value={form.rarity} onChange={(e) => set('rarity', e.target.value as TcgCard['rarity'])}>
-                {RARITIES.map((rarity) => <option key={rarity} value={rarity}>{RARITY_LABELS[rarity]}</option>)}
+                {TYPE_RARITIES[form.card_type].map((rarity) => <option key={rarity} value={rarity}>{RARITY_LABELS[rarity]}</option>)}
               </select>
             </label>
           </div>
           <p className={styles.hint}>
-            {form.card_type === 'simple' && 'Carte simple : seulement le nom et le personnage.'}
-            {form.card_type === 'joueur' && 'Carte joueur : équipe, rôle, division et stats, sans note.'}
-            {form.card_type === 'mvp' && 'Carte MVP : comme une carte joueur, avec la note.'}
+            {form.card_type === 'simple' && 'Carte simple : toutes raretés, seulement le nom et le personnage.'}
+            {form.card_type === 'joueur' && 'Carte joueur : toujours Commune. Équipe, rôle, division et stats, sans note.'}
+            {form.card_type === 'mvp' && 'Carte MVP : Rare ou Épique (Légendaire sur décision). Comme une carte joueur, avec la note.'}
           </p>
 
           <div className={styles.row}>

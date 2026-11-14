@@ -32,6 +32,14 @@ export const TYPE_FIELDS: Record<CardType, { team: boolean; note: boolean; stats
   simple: { team: false, note: false, stats: false },
 };
 
+// Raretés autorisées par type : une carte joueur est toujours commune, une MVP rare ou épique
+// (légendaire sur décision de l'admin), une simple peut tout être.
+export const TYPE_RARITIES: Record<CardType, Rarity[]> = {
+  joueur: ['commune'],
+  mvp: ['rare', 'epique', 'legendaire'],
+  simple: ['commune', 'rare', 'epique', 'legendaire'],
+};
+
 export const STAT_LABELS = ['KDA', 'KP%', 'DPM', 'VIS/M', 'WR%'];
 
 export type CardStat = { label: string; value: string };
@@ -139,6 +147,9 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 
   if (!CARD_TYPES.includes(cardType)) return { error: 'Type de carte invalide.' };
   if (!RARITIES.includes(rarity)) return { error: 'Rareté invalide.' };
+  if (!TYPE_RARITIES[cardType].includes(rarity)) {
+    return { error: cardType === 'joueur' ? 'Une carte Joueur est toujours Commune.' : 'Une carte MVP est Rare, Épique ou Légendaire.' };
+  }
 
   const name = text(body.name, 40);
   if (!name) return { error: 'Le pseudo est obligatoire.' };
