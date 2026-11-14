@@ -12,17 +12,18 @@ import {
   ratesTotal,
   type TcgBooster,
 } from '@/lib/tcg/boosters';
+import GiveBoostersModal, { type GiveProfile, type GiveTeam } from './GiveBoostersModal';
 import styles from './tcgAdmin.module.css';
-
-type Profile = { id: string; discord_name: string | null };
 
 export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Promise<Record<string, string>> }) {
   const [boosters, setBoosters] = useState<TcgBooster[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<GiveProfile[]>([]);
+  const [teams, setTeams] = useState<GiveTeam[]>([]);
   const [unopened, setUnopened] = useState<Record<number, number>>({});
   const [form, setForm] = useState<TcgBooster>(EMPTY_BOOSTER);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [give, setGive] = useState({ booster_id: '', quantity: 1, profile_id: '' });
+  // null = pop-in fermée ; sinon booster présélectionné (0 = aucun).
+  const [giving, setGiving] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -34,6 +35,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
       if (!json.success) throw new Error(json.message);
       setBoosters(json.boosters);
       setProfiles(json.profiles);
+      setTeams(json.teams);
       setUnopened(json.unopened);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -86,14 +88,12 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
     });
   };
 
-  const distribute = () => {
-    const target = give.profile_id ? profiles.find((p) => p.id === give.profile_id)?.discord_name || 'ce profil' : `tous les profils (${profiles.length})`;
-    if (!give.profile_id && !window.confirm(`Donner ${give.quantity} booster(s) à ${target} ?`)) return;
-    void run(async () => {
-      const json = await call('/api/admin/tcg/boosters/give', 'POST', { ...give, profile_id: give.profile_id || null });
-      return `${give.quantity} booster(s) donné(s) à ${json.served} profil(s).`;
-    });
-  };
+  async function give(payload: { booster_id: number; quantity: number; profile_ids: string[]; all: boolean }) {
+    const json = await call('/api/admin/tcg/boosters/give', 'POST', payload);
+    setError('');
+    setMessage(`${payload.quantity} booster(s) donné(s) à ${json.served} joueur(s).`);
+    await load();
+  }
 
   return (
     <>
@@ -168,37 +168,15 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
         </div>
       </div>
 
-      <div className={`${ds.card} ${styles.form}`} style={{ marginTop: 32 }}>
-        <div className={ds.cardTitle}>Distribuer des boosters</div>
-        <div className={styles.giveRow}>
-          <label className={ds.field}>
-            <span>Booster</span>
-            <select className={ds.input} value={give.booster_id} onChange={(e) => setGive({ ...give, booster_id: e.target.value })}>
-              <option value="">Choisir…</option>
-              {boosters.filter((b) => b.active).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-          </label>
-          <label className={ds.field}>
-            <span>Quantité</span>
-            <input className={ds.input} type="number" min={1} max={100} value={give.quantity} onChange={(e) => setGive({ ...give, quantity: Number(e.target.value) })} />
-          </label>
-          <label className={ds.field}>
-            <span>À qui</span>
-            <select className={ds.input} value={give.profile_id} onChange={(e) => setGive({ ...give, profile_id: e.target.value })}>
-              <option value="">Tous les profils ({profiles.length})</option>
-              {profiles.map((p) => <option key={p.id} value={p.id}>{p.discord_name || p.id}</option>)}
-            </select>
-          </label>
-          <button type="button" className={ds.btnPrimary} onClick={distribute} disabled={busy || !give.booster_id}>
-            Donner
-          </button>
-        </div>
-      </div>
-
       {error && <p className={ds.formError}>{error}</p>}
       {message && <p className={ds.formInfo}>{message}</p>}
 
-      <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Boosters · {boosters.length}</div>
+      <div className={styles.listHead}>
+        <div className={ds.sectionLabel}>Boosters · {boosters.length}</div>
+        <button type="button" className={ds.btnPrimary} onClick={() => setGiving(0)} disabled={!boosters.some((b) => b.active)}>
+          Distribuer des boosters
+        </button>
+      </div>
       {!boosters.length && <p className={ds.empty}>Aucun booster pour l’instant.</p>}
       <div className={styles.list}>
         {boosters.map((booster) => (
@@ -219,11 +197,25 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
               >
                 Modifier
               </button>
+              {booster.active && (
+                <button type="button" className={`${ds.btnPrimary} ${ds.btnSmall}`} onClick={() => setGiving(booster.id ?? 0)}>Donner</button>
+              )}
               <button type="button" className={`${ds.btnDanger} ${ds.btnSmall}`} onClick={() => remove(booster)}>Supprimer</button>
             </div>
           </div>
         ))}
       </div>
+
+      {giving !== null && (
+        <GiveBoostersModal
+          boosters={boosters}
+          profiles={profiles}
+          teams={teams}
+          initialBoosterId={giving || null}
+          onClose={() => setGiving(null)}
+          onGive={give}
+        />
+      )}
     </>
   );
 }
