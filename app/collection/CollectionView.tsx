@@ -179,10 +179,6 @@ export default function CollectionView() {
         <aside className={styles.side}>
           <div className={styles.sideInner}>
           <div className={styles.sideTitle}>Ma collection</div>
-          <button type="button" className={section === 'collection' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('collection', null)}>
-            <GridIcon /> Collection <span className={styles.sideCount}>{ownedCount}/{totalCards}</span>
-          </button>
-          {rarityLinks('collection')}
           <button type="button" className={section === 'boosters' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boosters')}>
             <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
           </button>
@@ -190,6 +186,10 @@ export default function CollectionView() {
             <CardsIcon /> Mes cartes
           </button>
           {rarityLinks('cartes')}
+          <button type="button" className={section === 'collection' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('collection', null)}>
+            <GridIcon /> Collection <span className={styles.sideCount}>{ownedCount}/{totalCards}</span>
+          </button>
+          {rarityLinks('collection')}
           <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
             <DupIcon /> Doublons
           </button>
