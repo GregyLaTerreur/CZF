@@ -226,7 +226,7 @@ export default function CollectionView() {
                   {section === 'doublons' ? 'Aucun doublon pour l’instant.' : 'Ouvre un booster pour obtenir tes premières cartes.'}
                 </p>
               )}
-              {listItems.length > 0 && <CardFilters {...cardFilters} total={listItems.length} />}
+              {listItems.length > 0 && <CardFilters {...cardFilters} total={listItems.length} hideRarity />}
               {listItems.length > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}
               <div className={styles.grid}>
                 {cardFilters.visible.map(({ card, count }) => (

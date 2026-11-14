@@ -68,7 +68,8 @@ export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard, sea
   };
 }
 
-type Props = ReturnType<typeof useCardFilters<any>> & { total: number };
+// hideRarity : la rareté est choisie ailleurs (sidebar de la collection).
+type Props = ReturnType<typeof useCardFilters<any>> & { total: number; hideRarity?: boolean };
 
 function Row({ label, all, items, value, onPick }: { label: string; all: string; items: { key: string; label: string }[]; value: string | null; onPick: (v: string | null) => void }) {
   return (
@@ -86,7 +87,7 @@ function Row({ label, all, items, value, onPick }: { label: string; all: string;
   );
 }
 
-export default function CardFilters({ filters, options, filtered, total, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
+export default function CardFilters({ filters, options, filtered, total, hideRarity, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
   const active = Object.values(filters).some(Boolean);
 
   return (
@@ -95,8 +96,10 @@ export default function CardFilters({ filters, options, filtered, total, setSeas
         <Row label="Saison" all="Toutes" value={filters.season === null ? null : String(filters.season)} onPick={(v) => setSeason(v === null ? null : Number(v))}
           items={options.seasons.map((s) => ({ key: String(s.id), label: s.name }))} />
       )}
-      <Row label="Rareté" all="Toutes" value={filters.rarity} onPick={(v) => setRarity(v as Rarity | null)}
-        items={RARITIES.map((r) => ({ key: r, label: RARITY_LABELS[r] }))} />
+      {!hideRarity && (
+        <Row label="Rareté" all="Toutes" value={filters.rarity} onPick={(v) => setRarity(v as Rarity | null)}
+          items={RARITIES.map((r) => ({ key: r, label: RARITY_LABELS[r] }))} />
+      )}
       {options.divisions.length > 0 && (
         <Row label="Division" all="Toutes" value={filters.division} onPick={setDivision}
           items={options.divisions.map((d) => ({ key: d, label: d }))} />
