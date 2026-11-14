@@ -23,9 +23,9 @@ async function authHeaders(): Promise<Record<string, string> | null> {
   return { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
 }
 
-// Des plus rares aux plus communes, puis dans l'ordre de numérotation de la saison.
+// Par numéro de carte croissant (1, 2, 3…) ; sans numéro, des communes aux légendaires.
 const byRarity = (a: OwnedCard, b: OwnedCard) =>
-  RARITIES.indexOf(b.card.rarity) - RARITIES.indexOf(a.card.rarity) || (a.card.number ?? 1e9) - (b.card.number ?? 1e9);
+  (a.card.number ?? 1e9) - (b.card.number ?? 1e9) || RARITIES.indexOf(a.card.rarity) - RARITIES.indexOf(b.card.rarity);
 const ownedCard = (item: OwnedCard) => item.card;
 
 type Section = 'collection' | 'boosters' | 'cartes' | 'doublons' | 'classement';
