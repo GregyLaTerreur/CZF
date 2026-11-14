@@ -1,65 +1,65 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { Rarity } from '@/lib/tcg/cards';
+import { branching, rand } from './lightning';
 import styles from './cardElectric.module.css';
 
-// Effet électrique autour d'une carte (maquette « E2 ») : un courant lent fait le tour,
-// décharges seulement en épique et légendaire, contour allumé en légendaire. Rien en commune.
-// À poser dans un parent en position relative, de la taille de la carte.
+// Effet électrique autour d'une carte : un courant lent fait le tour (maquette « E2 »), et en épique /
+// légendaire des veines électriques partent des bords, parcourues de temps en temps par une lumière (« L5 »).
+// Rien en commune. À poser dans un parent en position relative, de la taille de la carte.
 
-type Config = { every: number; chance: number; count: number; length: number } | null;
-
-// Unités du SVG : carte de 100 x 140, marge de 30 autour pour que les décharges débordent.
+// Unités du SVG : carte de 100 x 140, marge de 30 autour pour que les veines débordent.
 const CW = 100;
 const CH = 140;
 const M = 30;
 
-const DISCHARGES: Record<Rarity, Config> = {
+type Veins = { count: number; every: number } | null;
+
+const VEINS: Record<Rarity, Veins> = {
   commune: null,
   rare: null,
-  epique: { every: 520, chance: 0.22, count: 1, length: 11 },
-  legendaire: { every: 520, chance: 0.4, count: 2, length: 14 },
+  epique: { count: 5, every: 3000 },
+  legendaire: { count: 8, every: 1900 },
 };
 
-// Point du bord de la carte à un angle donné (0 = haut, sens horaire) et sa normale vers l'extérieur.
-function edgeAt(deg: number): [number, number, number, number] {
+// Point du bord de la carte à un angle donné (0 = haut, sens horaire) et direction vers l'extérieur.
+function edgeAt(deg: number): [number, number, number] {
   const a = ((deg - 90) * Math.PI) / 180;
   const dx = Math.cos(a);
   const dy = Math.sin(a);
   const k = Math.min(Math.abs(CW / 2 / (dx || 1e-9)), Math.abs(CH / 2 / (dy || 1e-9)));
-  const x = M + CW / 2 + dx * k;
-  const y = M + CH / 2 + dy * k;
-  const onSide = Math.abs(Math.abs(x - M - CW / 2) - CW / 2) < 0.5;
-  return [x, y, onSide ? Math.sign(dx) : 0, onSide ? 0 : Math.sign(dy)];
+  return [M + CW / 2 + dx * k, M + CH / 2 + dy * k, Math.atan2(dy, dx)];
 }
 
-// Décharge en zigzag qui part du bord vers l'extérieur.
-function bolt(length: number) {
-  const [x, y, nx, ny] = edgeAt(Math.random() * 360);
-  const len = length * (0.75 + Math.random() * 0.5);
-  let d = `M${x.toFixed(1)} ${y.toFixed(1)}`;
-  for (let i = 1; i <= 5; i++) {
-    const k = (i / 5) * len;
-    const j = (Math.random() - 0.5) * len * 0.4;
-    d += ` L${(x + nx * k + ny * j).toFixed(1)} ${(y + ny * k + nx * j).toFixed(1)}`;
-  }
-  return d;
+// Veines : petits éclairs ramifiés qui partent du bord, vers l'intérieur ou l'extérieur.
+function makeVeins(count: number): string[] {
+  return Array.from({ length: count }, () => {
+    const [x, y, out] = edgeAt(rand(0, 360));
+    const angle = (Math.random() < 0.5 ? out : out + Math.PI) + rand(-0.5, 0.5);
+    return branching(x, y, angle, rand(14, 22), 1).join(' ');
+  });
 }
 
 export default function CardElectric({ rarity }: { rarity: Rarity }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const config = DISCHARGES[rarity];
+  const pulseRef = useRef<SVGGElement>(null);
+  const config = VEINS[rarity];
+  const veins = useMemo(() => (config ? makeVeins(config.count) : []), [config]);
 
+  // Une lumière parcourt une veine au hasard, à intervalle un peu irrégulier.
   useEffect(() => {
     if (!config || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = window.setInterval(() => {
-      const svg = svgRef.current;
-      if (!svg || Math.random() >= config.chance) return;
-      svg.innerHTML = Array.from({ length: config.count }, () => `<path d="${bolt(config.length)}"/>`).join('');
-    }, config.every);
-    return () => window.clearInterval(timer);
-  }, [config]);
+    let timer = 0;
+    const loop = () => {
+      const g = pulseRef.current;
+      if (g && veins.length) {
+        g.innerHTML = `<path pathLength="1" d="${veins[Math.floor(Math.random() * veins.length)]}"/>`;
+      }
+      timer = window.setTimeout(loop, config.every * rand(0.7, 1.3));
+    };
+    timer = window.setTimeout(loop, rand(200, config.every));
+    return () => window.clearTimeout(timer);
+  }, [config, veins]);
 
   if (rarity === 'commune') return null;
 
@@ -68,7 +68,14 @@ export default function CardElectric({ rarity }: { rarity: Rarity }) {
       <div className={styles.glow} />
       {rarity === 'legendaire' && <div className={styles.base} />}
       <div className={styles.current} />
-      {config && <svg ref={svgRef} className={styles.arcs} viewBox={`0 0 ${CW + 2 * M} ${CH + 2 * M}`} />}
+      {config && (
+        <svg className={styles.arcs} viewBox={`0 0 ${CW + 2 * M} ${CH + 2 * M}`}>
+          <g className={styles.veins}>
+            {veins.map((d, i) => <path key={i} d={d} />)}
+          </g>
+          <g ref={pulseRef} className={styles.pulse} />
+        </svg>
+      )}
     </div>
   );
 }

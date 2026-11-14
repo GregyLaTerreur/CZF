@@ -60,7 +60,7 @@
   animation: current var(--spd) linear infinite;
 }
 
-/* Décharges : le SVG déborde de 30 % autour de la carte (même marge que dans CardElectric). */
+/* Veines : le SVG déborde de 30 % autour de la carte (même marge que dans CardElectric). */
 .arcs {
   position: absolute;
   left: -30%;
@@ -71,14 +71,28 @@
   overflow: visible;
 }
 
-.arcs path {
+.veins path {
   fill: none;
   stroke: var(--c2);
-  stroke-width: 1.6;
+  stroke-width: 1.3;
   stroke-linejoin: bevel;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 7px color-mix(in srgb, var(--c) 70%, transparent));
-  animation: arcFade 0.45s ease-out forwards;
+  opacity: 0.4;
+  filter: drop-shadow(0 0 2px var(--c)) drop-shadow(0 0 5px color-mix(in srgb, var(--c) 60%, transparent));
+}
+
+/* Lumière qui parcourt une veine (pathLength = 1 : le tiret fait 30 % de la veine). */
+.pulse path {
+  fill: none;
+  stroke: var(--c2);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: bevel;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 0.3 1;
+  stroke-dashoffset: 1.3;
+  filter: drop-shadow(0 0 4px var(--c)) drop-shadow(0 0 10px var(--c));
+  animation: pulseRun 1.8s ease-in-out forwards;
 }
 
 @keyframes current {
@@ -87,10 +101,11 @@
   }
 }
 
-@keyframes arcFade {
-  0% { opacity: 1; }
-  60% { opacity: 0.9; }
-  100% { opacity: 0; }
+@keyframes pulseRun {
+  0% { stroke-dashoffset: 1.3; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
