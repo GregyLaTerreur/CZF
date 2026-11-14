@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
+import Switch from '@/app/components/ds/Switch';
 import CardElectric from '@/app/components/tcg/CardElectric';
 import { branching, rand } from '@/app/components/tcg/lightning';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
@@ -353,11 +354,9 @@ export default function CollectionView() {
                 </p>
               )}
               {section === 'collection' && catalog.length > 0 && (
-                <label className={styles.switchRow}>
-                  <span>Non possédées</span>
-                  <input type="checkbox" className={styles.switchInput} checked={missingOnly} onChange={(e) => setMissingOnly(e.target.checked)} />
-                  <span className={styles.switch} aria-hidden="true" />
-                </label>
+                <div className={styles.switchRow}>
+                  <Switch label="Non possédées" checked={missingOnly} onChange={setMissingOnly} />
+                </div>
               )}
               {listItems.length > 0 && <CardFilters {...cardFilters} total={listItems.length} hideRarity alwaysSeasons hideCount />}
               {listItems.length > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}

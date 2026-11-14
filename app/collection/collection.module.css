@@ -765,64 +765,9 @@
   }
 }
 
-/* Collection : interrupteur « Non possédées », aligné à droite. */
+/* Collection : interrupteur « Non possédées » (composant Switch), aligné à droite. */
 .switchRow {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
   margin: 4px 0 -6px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.switchRow > span:first-child {
-  font: 700 0.78rem var(--font-barlow-condensed), sans-serif;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--dark);
-}
-
-.switchInput {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-}
-
-.switch {
-  position: relative;
-  width: 46px;
-  height: 24px;
-  background: var(--cream);
-  border: 2px solid var(--dark);
-  transform: skewX(-8deg);
-  box-shadow: 3px 3px 0 var(--dark);
-  transition: background 0.2s;
-}
-
-.switch::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  background: var(--dark);
-  transition: transform 0.2s, background 0.2s;
-}
-
-.switchInput:checked + .switch {
-  background: var(--dark);
-  box-shadow: 3px 3px 0 var(--orange);
-}
-
-.switchInput:checked + .switch::after {
-  transform: translateX(22px);
-  background: var(--orange);
-}
-
-.switchInput:focus-visible + .switch {
-  outline: 2px solid var(--orange);
-  outline-offset: 3px;
 }

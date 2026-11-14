@@ -732,3 +732,72 @@
     gap: 26px;
   }
 }
+
+/* =========================================================
+   INTERRUPTEUR (composant Switch)
+   Éteint : case cream + ombre dark ; allumé : case dark + ombre orange, curseur orange.
+========================================================= */
+
+.switch,
+.switch:hover,
+.switch:active {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
+  filter: none;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dark);
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.switchBox {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 var(--dark);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.switchBox::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--dark);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.switchOn .switchBox {
+  background: var(--dark);
+  box-shadow: 3px 3px 0 var(--orange);
+}
+
+.switchOn .switchBox::after {
+  transform: translateX(22px);
+  background: var(--orange);
+}
+
+.switch:focus-visible .switchBox {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}

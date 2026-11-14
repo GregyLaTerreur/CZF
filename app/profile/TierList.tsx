@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import CloseIcon from '@/app/components/icons/CloseIcon';
 import { TIER_COLORS, TIER_KEYS, emptyTierList, type TierKey, type TierListData } from '@/lib/tierList';
+import Switch from '@/app/components/ds/Switch';
 import styles from './tier-list.module.css';
 
 type Champion = { id: string; name: string };
@@ -384,19 +385,12 @@ export default function TierList({
           </button>
 
           {saved && (
-            <button
-              type="button"
-              role="switch"
-              aria-checked={visibility.isPublic}
-              className={`${styles.switch} ${visibility.isPublic ? styles.switchOn : ''}`}
+            <Switch
+              label="Publique"
+              checked={visibility.isPublic}
               disabled={savingVisibility}
-              onClick={() => togglePublic(!visibility.isPublic)}
-            >
-              <span className={styles.switchTrack}>
-                <span className={styles.switchThumb} />
-              </span>
-              Publique
-            </button>
+              onChange={(isPublic) => togglePublic(isPublic)}
+            />
           )}
         </div>
       )}

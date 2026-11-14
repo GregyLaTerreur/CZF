@@ -91,6 +91,12 @@
   .tab-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
   .btn-note { font-size: .75rem; color: #aaa; }
 
+  /* ── INTERRUPTEUR ── */
+  .ds-switch { display: inline-flex; align-items: center; gap: 12px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--dark); }
+  .ds-switch-box { position: relative; width: 46px; height: 24px; background: var(--cream); border: 2px solid var(--dark); transform: skewX(-8deg); box-shadow: 3px 3px 0 var(--dark); }
+  .ds-switch-box::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--dark); }
+  .ds-switch.on .ds-switch-box { background: var(--dark); box-shadow: 3px 3px 0 var(--orange); }
+  .ds-switch.on .ds-switch-box::after { transform: translateX(22px); background: var(--orange); }
   /* ── BADGE ── */
   .hero-badge { display: inline-flex; align-items: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-style: italic; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
   .hero-badge-left { background: var(--dark); color: #fff; padding: 6px 22px 6px 14px; display: flex; align-items: center; gap: 7px; clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%); }
@@ -243,6 +249,22 @@
     <div class="btn-note" style="margin-top:16px;">Tous les boutons : skewX(-8deg) · shadow 6px · hover press → shadow 2px + translate(4px,4px)</div>
   </div>
 
+  <!-- INTERRUPTEUR -->
+  <div class="ds-section">
+    <div class="ds-title">Interrupteur</div>
+    <div class="ds-row" style="align-items:center;gap:40px;">
+      <div class="ds-col">
+        <span class="ds-switch">Non possédées <span class="ds-switch-box"></span></span>
+        <div class="ds-label">Éteint — case cream · border dark · shadow dark 3px · curseur dark</div>
+      </div>
+      <div class="ds-col">
+        <span class="ds-switch on">Publique <span class="ds-switch-box"></span></span>
+        <div class="ds-label">Allumé — case dark · shadow orange 3px · curseur orange à droite</div>
+      </div>
+    </div>
+    <div class="btn-note" style="margin-top:16px;">Libellé avant la case (Barlow Condensed 700, uppercase, letter-spacing .14em) · case en skewX(-8deg) comme les boutons · composant React : app/components/ds/Switch.tsx</div>
+  </div>
+
   <!-- BADGE HERO -->
   <div class="ds-section">
     <div class="ds-title">Badge Hero</div>
@@ -355,6 +377,7 @@
         <li>Tous les éléments interactifs utilisent <strong>skewX(-8deg)</strong> pour l'effet parallelogramme et <strong>box-shadow 6px 6px</strong> partout. Hover press : shadow → 2px 2px + translate(4px, 4px).</li>
         <li><strong>Règle des ombres (sans exception) :</strong> fond clair (cream #F4E2C9, beige, blanc, orange) → ombre <strong>dark #081428</strong>. Fond sombre (dark navy) → ombre <strong>orange #F05010</strong>.</li>
         <li><strong>Filtres/Tabs :</strong> inactif = fond cream + shadow dark. Actif = fond dark + shadow orange. Les deux en skewX(-8deg).</li>
+        <li><strong>Interrupteur :</strong> éteint = case cream + shadow dark + curseur dark ; allumé = case dark + shadow orange + curseur orange. Case en skewX(-8deg), libellé avant la case. Toujours via le composant <strong>Switch</strong>.</li>
         <li>La couleur <strong>orange #F05010</strong> est réservée aux accents, CTA et ombres sur fond sombre. Ne pas l'utiliser comme fond de section.</li>
         <li>La couleur <strong>teal #00C9A0</strong> est réservée à la division Ixtal et aux indicateurs positifs. Sur fond dark, le chip Ixtal est dark bg + texte teal.</li>
         <li>Les <strong>séparations entre sections</strong> beige et dark utilisent clip-path diagonal dans le même sens que le ticker (haut-droite vers bas-gauche).</li>
