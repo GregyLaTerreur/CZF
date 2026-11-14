@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Nav from '../components/Nav';
+import Footer from '../components/Footer';
 import { fontVariables } from '../fonts';
 import ds from '../components/ds/ds.module.css';
 import CollectionView from './CollectionView';
@@ -12,6 +13,7 @@ export default function CollectionPage() {
     <main className={`${ds.page} ${fontVariables}`}>
       <Nav />
       <CollectionView />
+      <Footer />
     </main>
   );
 }
