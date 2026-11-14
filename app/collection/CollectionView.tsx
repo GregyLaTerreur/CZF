@@ -8,6 +8,7 @@ import PlayerCard from '@/app/components/tcg/PlayerCard';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { RARITIES, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 import { boosterImage, type TcgBooster } from '@/lib/tcg/boosters';
+import { isMuted, playOpen, playReveal, setMuted } from './sounds';
 import styles from './collection.module.css';
 
 type OwnedBooster = { quantity: number; booster: TcgBooster };
@@ -45,6 +46,18 @@ const GridIcon = () => (
     <rect x="14" y="3" width="7" height="9" rx="1" />
     <rect x="3" y="14" width="7" height="7" rx="1" />
     <rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+const SoundOnIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M4 9h4l5-4v14l-5-4H4Z" />
+    <path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" />
+  </svg>
+);
+const SoundOffIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M4 9h4l5-4v14l-5-4H4Z" />
+    <path d="m17 9 5 6M22 9l-5 6" />
   </svg>
 );
 const DupIcon = () => (
@@ -105,10 +118,32 @@ export default function CollectionView() {
     void load();
   }, [load]);
 
-  const reveal = (index: number) => setRevealed((current) => new Set(current).add(index));
+  const [muted, setMutedState] = useState(false);
+  useEffect(() => setMutedState(isMuted()), []);
+
+  function toggleMute() {
+    setMuted(!muted);
+    setMutedState(!muted);
+  }
+
+  // Tout révéler : un seul son, celui de la meilleure carte encore cachée.
+  function revealAll() {
+    if (!drawn) return;
+    const hidden = drawn.filter((_, i) => !revealed.has(i));
+    const best = hidden.reduce<Rarity | null>((top, card) => (!top || RARITIES.indexOf(card.rarity) > RARITIES.indexOf(top) ? card.rarity : top), null);
+    if (best) playReveal(best);
+    setRevealed(new Set(drawn.map((_, i) => i)));
+  }
+
+  function reveal(index: number) {
+    if (!drawn || revealed.has(index)) return;
+    playReveal(drawn[index].rarity);
+    setRevealed((current) => new Set(current).add(index));
+  }
 
   async function open(boosterId: number) {
     if (opening !== null) return;
+    playOpen();
     setOpening(boosterId);
     setError('');
 
@@ -260,7 +295,13 @@ export default function CollectionView() {
       {drawn && (
         <div className={styles.overlay} role="dialog" aria-modal="true">
           <div className={styles.overlayInner}>
-            <div className={styles.overlayTitle}>Booster ouvert</div>
+            <div className={styles.overlayHead}>
+              <div className={styles.overlayTitle}>Booster ouvert</div>
+              <button type="button" className={styles.mute} onClick={toggleMute} aria-label={muted ? 'Activer le son' : 'Couper le son'}>
+                {muted ? <SoundOffIcon /> : <SoundOnIcon />}
+                {muted ? 'Son coupé' : 'Son'}
+              </button>
+            </div>
             <p className={styles.overlayHint}>
               {revealed.size < drawn.length ? `Clique sur une carte pour la retourner · ${drawn.length - revealed.size} restante${drawn.length - revealed.size > 1 ? 's' : ''}` : 'Toutes tes cartes sont révélées.'}
             </p>
@@ -295,7 +336,7 @@ export default function CollectionView() {
             </div>
             <div className={ds.formActions}>
               {revealed.size < drawn.length ? (
-                <button type="button" className={ds.btnOutline} onClick={() => setRevealed(new Set(drawn.map((_, i) => i)))}>Tout révéler</button>
+                <button type="button" className={ds.btnOutline} onClick={revealAll}>Tout révéler</button>
               ) : (
                 <button type="button" className={ds.btnPrimary} onClick={() => setDrawn(null)}>Ajouter à ma collection</button>
               )}

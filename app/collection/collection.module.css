@@ -615,3 +615,35 @@
 .sideSubOn .sideSubCount {
   color: var(--orange);
 }
+
+.overlayHead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mute {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 2px solid rgba(224, 216, 204, 0.4);
+  background: none;
+  color: var(--on-dark);
+  font: italic 800 0.78rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: skewX(-8deg);
+}
+
+.mute:hover,
+.mute:active {
+  border-color: var(--orange);
+  color: #fff;
+  transform: skewX(-8deg);
+  box-shadow: none;
+  filter: none;
+}
