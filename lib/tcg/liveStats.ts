@@ -7,22 +7,27 @@ import { loadResultsDataset } from '@/lib/results/load';
 import { buildGamePlayers, loadTeamNames, percent } from '@/lib/ext/games';
 import type { CardStat, TcgCard } from '@/lib/tcg/cards';
 
-// Pas encore de saison sur les matchs : toutes les games officielles comptent (une seule saison à ce jour).
-async function computeStats(playerIds: Set<number>): Promise<Map<number, CardStat[]>> {
+// Clé joueur + saison : une carte ne compte que les games des matchs de sa saison (czf_matches.season_id).
+const key = (playerId: number, seasonId: number | null | undefined) => `${playerId}:${seasonId ?? ''}`;
+
+async function computeStats(playerIds: Set<number>): Promise<Map<string, CardStat[]>> {
   const [dataset, teamNames] = await Promise.all([loadResultsDataset(), loadTeamNames()]);
   const playerNames = new Map(dataset.playerNames);
   const statsByGame = groupBy(dataset.stats, (stat) => Number(stat.game_id));
+  const seasonByMatch = new Map(dataset.matches.map((match) => [Number(match.id), match.season_id == null ? null : Number(match.season_id)]));
 
   type Row = { kills: number; deaths: number; assists: number; damage: number; vision: number; teamKills: number; seconds: number; won: boolean };
-  const rows = new Map<number, Row[]>();
+  const rows = new Map<string, Row[]>();
 
   for (const game of dataset.games) {
+    const season = seasonByMatch.get(Number(game.match_id)) ?? null;
     const { players, teamKills } = buildGamePlayers(game, statsByGame.get(Number(game.id)) || [], playerNames, teamNames);
 
     for (const player of players) {
       if (player.isSub || !player.id_player || !playerIds.has(player.id_player)) continue;
-      if (!rows.has(player.id_player)) rows.set(player.id_player, []);
-      rows.get(player.id_player)!.push({
+      const k = key(player.id_player, season);
+      if (!rows.has(k)) rows.set(k, []);
+      rows.get(k)!.push({
         kills: player.kills,
         deaths: player.deaths,
         assists: player.assists,
@@ -35,7 +40,7 @@ async function computeStats(playerIds: Set<number>): Promise<Map<number, CardSta
     }
   }
 
-  const result = new Map<number, CardStat[]>();
+  const result = new Map<string, CardStat[]>();
   for (const [id, list] of rows) {
     const sum = (pick: (row: Row) => number) => list.reduce((total, row) => total + pick(row), 0);
     const games = list.length;
@@ -62,7 +67,7 @@ export async function withLiveStats<T extends TcgCard>(cards: T[]): Promise<T[]>
   try {
     const live = await computeStats(ids);
     return cards.map((card) => {
-      const stats = card.card_type === 'joueur' && card.player_id ? live.get(Number(card.player_id)) : undefined;
+      const stats = card.card_type === 'joueur' && card.player_id ? live.get(key(Number(card.player_id), card.season_id)) : undefined;
       return stats ? { ...card, stats, live_stats: true } : card;
     });
   } catch (error) {

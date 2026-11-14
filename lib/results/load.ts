@@ -15,7 +15,7 @@ import {
 } from './core';
 
 export const MATCH_COLUMNS =
-  'id, division, team1_id, team2_id, winner_team_id, stage, bracket, round, best_of, played_at, mvp_player_id, created_at';
+  'id, division, team1_id, team2_id, winner_team_id, stage, bracket, round, best_of, played_at, mvp_player_id, created_at, season_id';
 
 export const GAME_COLUMNS =
   'id, match_id, game_number, duration_seconds, winner_team_id, substitute_stats';
@@ -244,7 +244,7 @@ async function fetchResultsDataset(): Promise<ResultsDataset> {
 
 // Les résultats ne changent qu'à la publication d'un match : cache partagé
 // entre divisions et requêtes, invalidé par invalidateResults().
-const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v2'], {
+const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v3'], {
   revalidate: RESULTS_TTL_SECONDS,
   tags: [RESULTS_TAG],
 });
