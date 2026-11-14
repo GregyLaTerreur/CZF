@@ -167,6 +167,8 @@
 /* Sidebar sombre pleine hauteur, collée à gauche (maquette G1). */
 .full {
   width: 100%;
+  /* Le footer a une marge haute (--space-diagonal) : la sidebar doit le toucher. */
+  margin-bottom: calc(-1 * var(--space-diagonal));
 }
 
 .layout {
