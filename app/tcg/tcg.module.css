@@ -1,0 +1,37 @@
+.wrap {
+  padding-top: var(--space-section);
+  padding-bottom: var(--space-section);
+}
+
+.title {
+  font: italic 800 clamp(2.2rem, 5vw, 3rem) / 1 var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  color: var(--dark);
+  margin: 10px 0 6px;
+}
+
+.sub {
+  color: rgba(8, 20, 40, 0.65);
+  margin-bottom: var(--space-block);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.item figcaption {
+  font: italic 800 1.05rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  color: var(--dark);
+}
