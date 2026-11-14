@@ -77,6 +77,9 @@ export default function CollectionView() {
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([]);
   const [opening, setOpening] = useState<number | null>(null);
   const [drawn, setDrawn] = useState<TcgCard[] | null>(null);
+  // Avant les cartes : le sachet à déchirer, qui annonce sa meilleure carte (halo épique / légendaire).
+  const [pack, setPack] = useState<{ image: string; best: Rarity } | null>(null);
+  const [phase, setPhase] = useState<'pack' | 'tearing' | 'cards'>('cards');
   // Index des cartes tirées déjà retournées (c'est le joueur qui clique).
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
@@ -143,7 +146,6 @@ export default function CollectionView() {
 
   async function open(boosterId: number) {
     if (opening !== null) return;
-    playOpen();
     setOpening(boosterId);
     setError('');
 
@@ -155,13 +157,25 @@ export default function CollectionView() {
       if (!json.success) throw new Error(json.message);
       setRevealed(new Set());
       // Les plus rares à la fin, pour garder le suspense.
-      setDrawn([...json.cards].sort((a: TcgCard, b: TcgCard) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity)));
+      const sortedDraw = [...json.cards].sort((a: TcgCard, b: TcgCard) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
+      const booster = boosters.find((item) => item.booster.id === boosterId)?.booster;
+      setPack({ image: boosterImage(booster ?? { image_url: null }, 500), best: sortedDraw[sortedDraw.length - 1]?.rarity ?? 'commune' });
+      setPhase('pack');
+      setDrawn(sortedDraw);
       void load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur.');
     } finally {
       setOpening(null);
     }
+  }
+
+  // Clic sur le sachet : il se déchire (plus longtemps s'il cache une légendaire), puis les cartes arrivent.
+  function tearPack() {
+    if (phase !== 'pack' || !pack) return;
+    playOpen();
+    setPhase('tearing');
+    window.setTimeout(() => setPhase('cards'), pack.best === 'legendaire' ? 1200 : pack.best === 'epique' ? 900 : 650);
   }
 
   const ownedCount = cards.length;
@@ -292,7 +306,28 @@ export default function CollectionView() {
         </div>
       </div>
 
-      {drawn && (
+      {drawn && pack && phase !== 'cards' && (
+        <div className={styles.overlay} role="dialog" aria-modal="true">
+          <div className={styles.packStage}>
+            <p className={styles.packHint}>
+              {pack.best === 'legendaire' ? 'Ce booster rayonne…' : pack.best === 'epique' ? 'Ce booster brille…' : 'Ton booster est prêt'}
+            </p>
+            <button
+              type="button"
+              className={`${styles.pack} ${styles[`aura_${pack.best}`]} ${phase === 'tearing' ? styles.tearing : ''}`}
+              onClick={tearPack}
+              aria-label="Ouvrir le booster"
+            >
+              {(pack.best === 'legendaire' || pack.best === 'epique') && <span className={styles.packRays} aria-hidden="true" />}
+              <img src={pack.image} alt="" />
+            </button>
+            <p className={styles.packCta}>Clique sur le booster pour l’ouvrir</p>
+          </div>
+          {phase === 'tearing' && <span className={`${styles.flash} ${styles[`flash_${pack.best}`]}`} aria-hidden="true" />}
+        </div>
+      )}
+
+      {drawn && phase === 'cards' && (
         <div className={styles.overlay} role="dialog" aria-modal="true">
           <div className={styles.overlayInner}>
             <div className={styles.overlayHead}>
@@ -338,7 +373,7 @@ export default function CollectionView() {
               {revealed.size < drawn.length ? (
                 <button type="button" className={ds.btnOutline} onClick={revealAll}>Tout révéler</button>
               ) : (
-                <button type="button" className={ds.btnPrimary} onClick={() => setDrawn(null)}>Ajouter à ma collection</button>
+                <button type="button" className={ds.btnPrimary} onClick={() => { setDrawn(null); setPack(null); }}>Ajouter à ma collection</button>
               )}
             </div>
           </div>
