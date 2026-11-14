@@ -18,6 +18,7 @@ import {
   TYPE_FIELDS,
   type TcgCard,
 } from '@/lib/tcg/cards';
+import BoostersAdmin from './BoostersAdmin';
 import styles from './tcgAdmin.module.css';
 
 type Champion = { id: string; name: string };
@@ -41,6 +42,7 @@ function toForm(card: TcgCard): TcgCard {
 
 export default function TcgAdminView() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [tab, setTab] = useState<'cartes' | 'boosters'>('cartes');
   const [cards, setCards] = useState<TcgCard[]>([]);
   const [champions, setChampions] = useState<Champion[]>([]);
   const [form, setForm] = useState<TcgCard>(EMPTY_CARD);
@@ -112,7 +114,7 @@ export default function TcgAdminView() {
   }
 
   async function remove(card: TcgCard) {
-    if (!card.id || !window.confirm(`Supprimer la carte de ${card.name} ?`)) return;
+    if (!card.id || !window.confirm(`Supprimer la carte de ${card.name} ? Elle disparaît aussi des collections des joueurs.`)) return;
 
     try {
       const response = await fetch(`/api/admin/tcg/${card.id}`, { method: 'DELETE', headers: await authHeaders() });
@@ -150,13 +152,22 @@ export default function TcgAdminView() {
       <div className={styles.top}>
         <div>
           <div className={ds.sectionLabel}>Administration · TCG</div>
-          <h1 className={ds.h1}>{editingId ? 'Modifier la carte' : 'Créer une carte'}</h1>
+          <h1 className={ds.h1}>Gérer le TCG</h1>
         </div>
         <Link href="/admin" className={`${ds.btnOutline} ${ds.btnSmall}`}>Retour admin</Link>
       </div>
 
+      <div className={`${ds.tabs} ${styles.tabs}`}>
+        <button type="button" className={tab === 'cartes' ? ds.tabActive : ds.tab} onClick={() => setTab('cartes')}>Cartes · {cards.length}</button>
+        <button type="button" className={tab === 'boosters' ? ds.tabActive : ds.tab} onClick={() => setTab('boosters')}>Boosters</button>
+      </div>
+
+      {tab === 'boosters' ? <BoostersAdmin authHeaders={authHeaders} /> : (
+      <>
+
       <div className={styles.editor}>
         <div className={`${ds.card} ${styles.form}`}>
+          <div className={ds.cardTitle}>{editingId ? 'Modifier la carte' : 'Créer une carte'}</div>
           <div className={styles.row}>
             <label className={ds.field}>
               <span>Type</span>
@@ -291,6 +302,8 @@ export default function TcgAdminView() {
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }
