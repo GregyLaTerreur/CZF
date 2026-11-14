@@ -69,7 +69,7 @@ export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard, sea
 }
 
 // hideRarity : la rareté est choisie ailleurs (sidebar de la collection).
-type Props = ReturnType<typeof useCardFilters<any>> & { total: number; hideRarity?: boolean; alwaysSeasons?: boolean };
+type Props = ReturnType<typeof useCardFilters<any>> & { total: number; hideRarity?: boolean; alwaysSeasons?: boolean; hideCount?: boolean };
 
 function Row({ label, all, items, value, onPick }: { label: string; all: string; items: { key: string; label: string }[]; value: string | null; onPick: (v: string | null) => void }) {
   return (
@@ -87,7 +87,7 @@ function Row({ label, all, items, value, onPick }: { label: string; all: string;
   );
 }
 
-export default function CardFilters({ filters, options, filtered, total, hideRarity, alwaysSeasons, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
+export default function CardFilters({ filters, options, filtered, total, hideRarity, alwaysSeasons, hideCount, setSeason, setRarity, setDivision, setTeam, setPlayer, reset }: Props) {
   const active = Object.values(filters).some(Boolean);
 
   return (
@@ -112,10 +112,12 @@ export default function CardFilters({ filters, options, filtered, total, hideRar
         <Row label="Joueur" all="Toute l’équipe" value={filters.player} onPick={setPlayer}
           items={options.players.map((p) => ({ key: p, label: p }))} />
       )}
-      <div className={styles.summary}>
-        {filtered.length} carte{filtered.length > 1 ? 's' : ''}{active ? ` sur ${total}` : ''}
-        {active && <button type="button" className={styles.reset} onClick={reset}>Retirer les filtres</button>}
-      </div>
+      {(!hideCount || active) && (
+        <div className={styles.summary}>
+          {!hideCount && <>{filtered.length} carte{filtered.length > 1 ? 's' : ''}{active ? ` sur ${total}` : ''}</>}
+          {active && <button type="button" className={styles.reset} onClick={reset}>Retirer les filtres</button>}
+        </div>
+      )}
     </div>
   );
 }
