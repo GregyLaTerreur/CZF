@@ -191,9 +191,7 @@ export default function CollectionView() {
         <div className={styles.main}>
           <div className={ds.sectionLabel}>Collection · Test dev</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
-          {section === 'boosters' ? (
-            <p className={styles.sub}>{boosterCount} booster{boosterCount > 1 ? 's' : ''} à ouvrir</p>
-          ) : (
+          {section === 'boosters' ? null : (
             <div className={styles.tiles}>
               <div className={styles.tile}>
                 <small>Cartes</small>
