@@ -85,6 +85,8 @@
 
 .owned {
   position: relative;
+  /* Garde le halo électrique sous la carte et ses décharges au-dessus, sans déborder sur les voisines. */
+  isolation: isolate;
 }
 
 /* Ouverture d'un booster : cartes face cachée, le joueur les retourne une à une.

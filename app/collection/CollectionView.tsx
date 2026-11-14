@@ -328,6 +328,8 @@ export default function CollectionView() {
               <div className={styles.grid}>
                 {cardFilters.visible.map(({ card, count }) => (
                   <div key={card.id} className={`${styles.owned} ${count === 0 ? styles.missing : ''}`}>
+                    {/* Effet électrique de la rareté, seulement sur les cartes possédées. */}
+                    {count > 0 && <CardElectric rarity={card.rarity} />}
                     <PlayerCard card={card} />
                     {count > 1 && <span className={styles.badge}>x{count}</span>}
                   </div>
