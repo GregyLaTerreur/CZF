@@ -50,11 +50,65 @@ export async function loadCollection(profileId: string) {
   };
 }
 
-export type LeaderboardEntry = { profileId: string; name: string; playerId: number | null; cards: number; boosters: number };
+export type LeaderboardEntry = {
+  profileId: string;
+  name: string;
+  playerId: number | null;
+  avatar: string | null; // avatar Discord (métadonnées du compte), null sinon
+  teamId: number | null;
+  teamName: string | null;
+  division: string | null;
+  cards: number;
+  boosters: number;
+};
+
+// Avatars Discord : stockés par Supabase dans les métadonnées des comptes (connexion Discord).
+// Lus avec l'API admin, gardés 10 minutes en mémoire (un appel par page de 1000 comptes).
+let avatarCache: { at: number; map: Map<string, string> } | null = null;
+
+async function loadAvatars(): Promise<Map<string, string>> {
+  if (avatarCache && Date.now() - avatarCache.at < 10 * 60 * 1000) return avatarCache.map;
+  const map = new Map<string, string>();
+  for (let page = 1; page < 50; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error || !data) break;
+    for (const user of data.users) {
+      const url = user.user_metadata?.avatar_url;
+      if (typeof url === 'string' && url.startsWith('https://cdn.discordapp.com/')) map.set(user.id, url);
+    }
+    if (data.users.length < 1000) break;
+  }
+  avatarCache = { at: Date.now(), map };
+  return map;
+}
+
+// Équipe et division de chaque profil (équipe validée en priorité).
+async function loadTeams(profileIds: string[]): Promise<Map<string, { teamId: number; teamName: string; division: string | null }>> {
+  const out = new Map<string, { teamId: number; teamName: string; division: string | null }>();
+  if (!profileIds.length) return out;
+  const { data: players } = await supabaseAdmin.from('players').select('id, profile_id').in('profile_id', profileIds);
+  const playerIds = (players || []).map((p) => p.id);
+  if (!playerIds.length) return out;
+  const [{ data: members }, { data: teams }] = await Promise.all([
+    supabaseAdmin.from('team_members').select('team_id, player_id').in('player_id', playerIds),
+    supabaseAdmin.from('teams').select('id, name, division, validated_by_admin'),
+  ]);
+  const teamById = new Map((teams || []).map((t) => [t.id, t]));
+  const profileByPlayer = new Map((players || []).map((p) => [p.id, p.profile_id as string]));
+  for (const m of members || []) {
+    const profileId = profileByPlayer.get(m.player_id);
+    const team = teamById.get(m.team_id);
+    if (!profileId || !team) continue;
+    const current = out.get(profileId);
+    if (current && teamById.get(current.teamId)?.validated_by_admin) continue;
+    out.set(profileId, { teamId: team.id, teamName: team.name, division: team.division ?? null });
+  }
+  return out;
+}
 
 // Classement : cartes différentes possédées, puis boosters acquis (ouverts + pas encore ouverts).
 // Les cartes d'une même ouverture partagent leur obtained_at (même transaction) : une date = un booster ouvert.
-export async function loadLeaderboard(limit = 30): Promise<LeaderboardEntry[]> {
+export async function loadLeaderboard(limit = 500): Promise<LeaderboardEntry[]> {
   const [owned, unopened] = await Promise.all([
     supabaseAdmin.from('czf_tcg_user_cards').select('profile_id, card_id, obtained_at').limit(100000),
     supabaseAdmin.from('czf_tcg_user_boosters').select('profile_id, quantity').gt('quantity', 0).limit(50000),
@@ -79,6 +133,15 @@ export async function loadLeaderboard(limit = 30): Promise<LeaderboardEntry[]> {
     .sort((a, b) => b.cards - a.cards || b.boosters - a.boosters)
     .slice(0, limit);
 
-  const names = await loadProfileNames(ranked.map((e) => e.profileId));
-  return ranked.map((e) => ({ ...e, name: names.get(e.profileId)?.name ?? 'Joueur', playerId: names.get(e.profileId)?.playerId ?? null }));
+  const ids = ranked.map((e) => e.profileId);
+  const [names, avatars, teams] = await Promise.all([loadProfileNames(ids), loadAvatars(), loadTeams(ids)]);
+  return ranked.map((e) => ({
+    ...e,
+    name: names.get(e.profileId)?.name ?? 'Joueur',
+    playerId: names.get(e.profileId)?.playerId ?? null,
+    avatar: avatars.get(e.profileId) ?? null,
+    teamId: teams.get(e.profileId)?.teamId ?? null,
+    teamName: teams.get(e.profileId)?.teamName ?? null,
+    division: teams.get(e.profileId)?.division ?? null,
+  }));
 }

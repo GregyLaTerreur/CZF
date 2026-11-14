@@ -772,50 +772,69 @@
   margin: 4px 0 -6px;
 }
 
-/* Classement des collectionneurs (vue « Classement »). */
-.board {
-  max-width: 760px;
-  border: 2px solid var(--dark);
-  background: var(--cream);
-  box-shadow: 6px 6px 0 var(--dark);
-}
-
-.boardHead,
-.boardRow,
-.boardRowOn {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 110px 90px;
+/* Classement des collectionneurs (vue « Classement », maquette B : anneau + barre + avatar Discord). */
+.boardTools {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 
-.boardHead {
+.boardSearch {
+  max-width: 260px;
+}
+
+.boardPin {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 900px;
+  margin-bottom: 14px;
+  padding: 10px 16px;
   background: var(--dark);
-  font: 700 0.7rem var(--font-barlow-condensed), sans-serif;
-  letter-spacing: 0.16em;
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.boardPin b {
+  font: italic 800 1.6rem/1 var(--font-barlow-condensed), sans-serif;
+  color: var(--orange);
+}
+
+.boardPin span {
+  font: 700 0.8rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--on-dark);
 }
 
-.boardHead span:nth-child(n + 3),
-.boardRow span:nth-child(n + 3),
-.boardRowOn span:nth-child(n + 3) {
-  text-align: right;
+.boardList {
+  max-width: 900px;
+  border: 2px solid var(--dark);
+  box-shadow: 6px 6px 0 var(--dark);
 }
 
 .boardRow,
 .boardRowOn {
-  border-top: 1px solid rgba(8, 20, 40, 0.1);
-  font: italic 800 1.05rem var(--font-barlow-condensed), sans-serif;
+  display: grid;
+  grid-template-columns: 40px 38px 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 16px;
+  background: var(--cream);
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
   color: var(--dark);
   text-decoration: none;
 }
 
-.boardRow small,
-.boardRowOn small {
-  font-size: 0.8rem;
-  color: rgba(8, 20, 40, 0.45);
+.boardRow:last-child,
+.boardRowOn:last-child {
+  border-bottom: none;
 }
 
 .boardRow:hover {
@@ -828,26 +847,106 @@
   box-shadow: inset 5px 0 0 var(--orange);
 }
 
-.boardRowOn small {
-  color: rgba(224, 216, 204, 0.55);
-}
-
 .boardRank {
+  font: italic 800 1.05rem var(--font-barlow-condensed), sans-serif;
   color: var(--orange);
 }
 
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: var(--dark);
+  color: var(--cream);
+  font: italic 800 1rem var(--font-barlow-condensed), sans-serif;
+  border: 2px solid var(--dark);
+}
+
+.boardRowOn .avatar {
+  border-color: var(--orange);
+}
+
+.ring {
+  width: 46px;
+  height: 46px;
+}
+
+.ringText {
+  font: italic 800 12px var(--font-barlow-condensed), sans-serif;
+}
+
+.boardMain {
+  min-width: 0;
+}
+
 .boardName {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font: italic 800 1.02rem var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
 }
 
+.boardBar {
+  display: block;
+  height: 5px;
+  margin-top: 5px;
+  background: rgba(8, 20, 40, 0.12);
+}
+
+.boardRowOn .boardBar {
+  background: rgba(224, 216, 204, 0.15);
+}
+
+.boardBar i {
+  display: block;
+  height: 100%;
+  background: var(--orange);
+}
+
+.boardNums {
+  text-align: right;
+  white-space: nowrap;
+  font: italic 800 0.98rem var(--font-barlow-condensed), sans-serif;
+}
+
+.boardNums small {
+  display: block;
+  font: 700 0.7rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.boardRowOn .boardNums small {
+  color: rgba(224, 216, 204, 0.6);
+}
+
+.boardMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 26px;
+}
+
 @media (max-width: 600px) {
-  .boardHead,
   .boardRow,
   .boardRowOn {
-    grid-template-columns: 32px minmax(0, 1fr) 70px 60px;
-    padding: 10px 12px;
+    grid-template-columns: 28px 32px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 8px 10px;
+  }
+
+  .boardRow .ring,
+  .boardRowOn .ring {
+    display: none;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
   }
 }

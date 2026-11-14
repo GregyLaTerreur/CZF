@@ -84,7 +84,37 @@ const DupIcon = () => (
   </svg>
 );
 
-type LeaderboardEntry = { profileId: string; name: string; cards: number; boosters: number };
+type LeaderboardEntry = {
+  profileId: string;
+  name: string;
+  avatar: string | null;
+  teamId: number | null;
+  division: string | null;
+  cards: number;
+  boosters: number;
+};
+
+// Anneau de complétion (pourcentage de la collection).
+function Ring({ value, dark = false }: { value: number; dark?: boolean }) {
+  const r = 20;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg className={styles.ring} viewBox="0 0 46 46" aria-hidden="true">
+      <circle cx="23" cy="23" r={r} fill="none" stroke={dark ? 'rgba(224,216,204,.18)' : 'rgba(8,20,40,.14)'} strokeWidth="5" />
+      <circle cx="23" cy="23" r={r} fill="none" stroke="#F05010" strokeWidth="5" strokeDasharray={`${(value / 100) * c} ${c}`} transform="rotate(-90 23 23)" />
+      <text x="23" y="27" textAnchor="middle" className={styles.ringText} fill={dark ? '#fff' : '#081428'}>{value}%</text>
+    </svg>
+  );
+}
+
+// Avatar Discord, ou initiale du pseudo si on ne l'a pas.
+function Avatar({ entry }: { entry: LeaderboardEntry }) {
+  return entry.avatar ? (
+    <img className={styles.avatar} src={`${entry.avatar}?size=64`} alt="" loading="lazy" />
+  ) : (
+    <span className={styles.avatar}>{entry.name.charAt(0).toUpperCase()}</span>
+  );
+}
 
 // viewProfileId : collection d'un autre joueur (lecture seule, sans ses boosters). Absent : la mienne.
 export default function CollectionView({ viewProfileId }: { viewProfileId?: string }) {
@@ -92,6 +122,9 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   const [myId, setMyId] = useState<string | null>(null);
   const [owner, setOwner] = useState<string | null>(null); // nom du joueur consulté (null = ma collection)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [boardFilter, setBoardFilter] = useState<'tous' | 'equipe' | 'division'>('tous');
+  const [boardSearch, setBoardSearch] = useState('');
+  const [boardLimit, setBoardLimit] = useState(30);
   const [boosters, setBoosters] = useState<OwnedBooster[]>([]);
   const [cards, setCards] = useState<OwnedCard[]>([]);
   const [catalog, setCatalog] = useState<OwnedCard[]>([]);
@@ -401,40 +434,85 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
             </>
           )}
 
-          {section === 'classement' && (
-            <>
-              <p className={styles.sub}>Cartes différentes possédées, puis boosters acquis (ouverts ou non). Clique sur un joueur pour voir sa collection.</p>
-              {!leaderboard.length && <p className={ds.empty}>Personne n’a encore de cartes.</p>}
-              {leaderboard.length > 0 && (
-                <div className={styles.board}>
-                  <div className={styles.boardHead}>
-                    <span>#</span>
-                    <span>Joueur</span>
-                    <span>Cartes</span>
-                    <span>Boosters</span>
-                  </div>
-                  {leaderboard.map((entry, index) => {
-                    const current = entry.profileId === (viewProfileId ?? myId);
-                    return (
-                      <Link
-                        key={entry.profileId}
-                        href={entry.profileId === myId ? '/collection' : `/collection?profil=${entry.profileId}`}
-                        className={current ? styles.boardRowOn : styles.boardRow}
+          {section === 'classement' && (() => {
+            const pct = (n: number) => (totalCards ? Math.round((n / totalCards) * 100) : 0);
+            const mine = leaderboard.find((entry) => entry.profileId === myId);
+            const myRank = mine ? leaderboard.indexOf(mine) + 1 : 0;
+            const query = boardSearch.trim().toLowerCase();
+            const rows = leaderboard
+              .map((entry, index) => ({ entry, rank: index + 1 }))
+              .filter(({ entry }) => boardFilter !== 'equipe' || (mine?.teamId != null && entry.teamId === mine.teamId))
+              .filter(({ entry }) => boardFilter !== 'division' || (mine?.division != null && entry.division === mine.division))
+              .filter(({ entry }) => !query || entry.name.toLowerCase().includes(query));
+
+            return (
+              <>
+                <div className={styles.boardTools}>
+                  <div className={ds.tabs}>
+                    {([['tous', 'Tous'], ['equipe', 'Mon équipe'], ['division', 'Ma division']] as const).map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={boardFilter === key ? ds.tabActive : ds.tab}
+                        disabled={key !== 'tous' && !(key === 'equipe' ? mine?.teamId : mine?.division)}
+                        onClick={() => { setBoardFilter(key); setBoardLimit(30); }}
                       >
-                        <span className={styles.boardRank}>{index + 1}</span>
-                        <span className={styles.boardName}>{entry.name}{entry.profileId === myId ? ' (toi)' : ''}</span>
-                        <span>
-                          {entry.cards}
-                          <small> / {totalCards}</small>
-                        </span>
-                        <span>{entry.boosters}</span>
-                      </Link>
-                    );
-                  })}
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    className={`${ds.input} ${styles.boardSearch}`}
+                    value={boardSearch}
+                    onChange={(e) => { setBoardSearch(e.target.value); setBoardLimit(30); }}
+                    placeholder="Chercher un joueur"
+                  />
                 </div>
-              )}
-            </>
-          )}
+
+                {/* Ta place, épinglée en haut pendant qu'on descend. */}
+                {mine && (
+                  <div className={styles.boardPin}>
+                    <b>{myRank}e</b>
+                    <Ring value={pct(mine.cards)} dark />
+                    <span>Ta place · {mine.cards} / {totalCards} cartes · {mine.boosters} boosters</span>
+                  </div>
+                )}
+
+                {!rows.length && <p className={ds.empty}>{leaderboard.length ? 'Aucun joueur trouvé.' : 'Personne n’a encore de cartes.'}</p>}
+                {rows.length > 0 && (
+                  <div className={styles.boardList}>
+                    {rows.slice(0, boardLimit).map(({ entry, rank }) => {
+                      const current = entry.profileId === (viewProfileId ?? myId);
+                      return (
+                        <Link
+                          key={entry.profileId}
+                          href={entry.profileId === myId ? '/collection' : `/collection?profil=${entry.profileId}`}
+                          className={current ? styles.boardRowOn : styles.boardRow}
+                        >
+                          <span className={styles.boardRank}>{rank}</span>
+                          <Avatar entry={entry} />
+                          <Ring value={pct(entry.cards)} dark={current} />
+                          <span className={styles.boardMain}>
+                            <span className={styles.boardName}>{entry.name}{entry.profileId === myId ? ' (toi)' : ''}</span>
+                            <span className={styles.boardBar}><i style={{ width: `${pct(entry.cards)}%` }} /></span>
+                          </span>
+                          <span className={styles.boardNums}>
+                            {entry.cards} / {totalCards}
+                            <small>{entry.boosters} boosters</small>
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+                {rows.length > boardLimit && (
+                  <div className={styles.boardMore}>
+                    <button type="button" className={ds.btnOutline} onClick={() => setBoardLimit((n) => n + 30)}>Voir plus</button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {section !== 'boosters' && section !== 'classement' && (
             <>
