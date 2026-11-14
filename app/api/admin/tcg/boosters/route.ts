@@ -47,7 +47,8 @@ export async function GET(request: Request) {
     boosters: boosters.data,
     seasons,
     unopened,
-    profiles: (profiles.data || []).map((p) => ({ ...p, riot_id: riotByProfile.get(p.id) || null })),
+    // Seuls les profils liés à un compte Riot peuvent recevoir des boosters.
+    profiles: (profiles.data || []).filter((p) => riotByProfile.get(p.id)).map((p) => ({ ...p, riot_id: riotByProfile.get(p.id) || null })),
     teams: (teams.data || [])
       .map((t) => ({ id: t.id, name: t.name, division: t.division, validated: t.validated_by_admin === true, profile_ids: [...(teamProfiles.get(t.id) || [])] }))
       .filter((t) => t.profile_ids.length),

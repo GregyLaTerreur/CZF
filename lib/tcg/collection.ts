@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { loadSeasons } from '@/lib/tcg/seasons';
 import { decorateCards } from '@/lib/tcg/liveStats';
 import type { TcgCard } from '@/lib/tcg/cards';
+import { eligibleProfiles } from '@/lib/tcg/access';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isProfileId = (value: unknown): value is string => typeof value === 'string' && UUID.test(value);
@@ -45,6 +46,20 @@ export async function loadCollection(profileId: string) {
     cards: catalog.filter((item) => item.count > 0),
     totalCards: catalog.length,
     // Nombre de cartes existantes par rareté (tuile Légendaires : 1 / 2).
+    totalsByRarity: allCards.reduce<Record<string, number>>((acc, card) => ({ ...acc, [card.rarity]: (acc[card.rarity] || 0) + 1 }), {}),
+    seasons,
+  };
+}
+
+// Catalogue seul (visiteur, ou joueur sans compte Riot) : toutes les cartes, aucune possédée.
+export async function loadCatalog() {
+  const [all, seasons] = await Promise.all([supabaseAdmin.from('czf_tcg_cards').select('*').limit(10000), loadSeasons()]);
+  if (all.error) throw new Error('Impossible de charger les cartes.');
+  const allCards = await decorateCards<TcgCard>((all.data || []) as TcgCard[]);
+  return {
+    catalog: allCards.map((card) => ({ card, count: 0 })),
+    cards: [],
+    totalCards: allCards.length,
     totalsByRarity: allCards.reduce<Record<string, number>>((acc, card) => ({ ...acc, [card.rarity]: (acc[card.rarity] || 0) + 1 }), {}),
     seasons,
   };
@@ -127,7 +142,9 @@ export async function loadLeaderboard(limit = 500): Promise<LeaderboardEntry[]> 
   }
   for (const row of unopened.data || []) get(row.profile_id).unopened += row.quantity;
 
+  const eligible = new Set(await eligibleProfiles());
   const ranked = [...stats.entries()]
+    .filter(([profileId]) => eligible.has(profileId))
     .map(([profileId, s]) => ({ profileId, cards: s.cards.size, boosters: s.openings.size + s.unopened }))
     .filter((e) => e.cards > 0 || e.boosters > 0)
     .sort((a, b) => b.cards - a.cards || b.boosters - a.boosters)

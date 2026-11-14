@@ -96,7 +96,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
   async function give(payload: { booster_id: number; quantity: number; profile_ids: string[]; all: boolean }) {
     const json = await call('/api/admin/tcg/boosters/give', 'POST', payload);
     setError('');
-    setMessage(`${payload.quantity} booster(s) donné(s) à ${json.served} joueur(s).`);
+    setMessage(`${payload.quantity} booster(s) donné(s) à ${json.served} joueur(s).${json.skipped ? ` ${json.skipped} ignoré(s) : compte Riot non lié.` : ''}`);
     await load();
   }
 

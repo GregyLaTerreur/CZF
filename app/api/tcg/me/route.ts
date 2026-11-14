@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { loadCollection } from '@/lib/tcg/collection';
+import { loadCatalog, loadCollection } from '@/lib/tcg/collection';
+import { hasRiotAccount } from '@/lib/tcg/access';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,12 @@ export async function GET(request: Request) {
   if (auth.error) return auth.error;
 
   try {
+    // Pas de compte Riot lié : on montre le catalogue (tout grisé), sans boosters ni cartes.
+    if (!(await hasRiotAccount(auth.user.id))) {
+      const catalog = await loadCatalog();
+      return NextResponse.json({ success: true, profileId: auth.user.id, linked: false, boosters: [], ...catalog });
+    }
+
     const [boosters, collection] = await Promise.all([
       supabaseAdmin
         .from('czf_tcg_user_boosters')
@@ -25,6 +32,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       profileId: auth.user.id,
+      linked: true,
       boosters: boosters.data.filter((row) => row.booster),
       ...collection,
     });

@@ -950,3 +950,23 @@
     height: 32px;
   }
 }
+
+/* Bandeau « connecte-toi / lie ton compte Riot » (pas d'accès aux boosters ni aux cartes). */
+.access {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  max-width: 900px;
+  margin-bottom: var(--space-block);
+  padding: 16px 20px;
+  background: var(--dark);
+  color: var(--on-dark);
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.access p {
+  font: 600 0.98rem var(--font-barlow), sans-serif;
+  max-width: 560px;
+}

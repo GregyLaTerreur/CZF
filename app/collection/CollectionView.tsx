@@ -121,6 +121,8 @@ function Avatar({ entry }: { entry: LeaderboardEntry }) {
 // viewProfileId : collection d'un autre joueur (lecture seule, sans ses boosters). Absent : la mienne.
 export default function CollectionView({ viewProfileId }: { viewProfileId?: string }) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  // Accès aux boosters et aux cartes : connecté avec Discord ET compte Riot lié.
+  const [access, setAccess] = useState<'full' | 'riot' | 'login'>('full');
   const [myId, setMyId] = useState<string | null>(null);
   const [owner, setOwner] = useState<string | null>(null); // nom du joueur consulté (null = ma collection)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -168,15 +170,22 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
     const me = session?.user.id ?? null;
     setMyId(me);
     const viewingOther = Boolean(viewProfileId && viewProfileId !== me);
-    if (!headers && !viewingOther) return setLoggedIn(false);
     setLoggedIn(Boolean(headers));
 
     try {
+      // Visiteur : le catalogue public. Connecté : sa collection (catalogue seul sans compte Riot).
       const response = viewingOther
         ? await fetch(`/api/tcg/collection/${viewProfileId}`, { cache: 'no-store' })
-        : await fetch('/api/tcg/me', { cache: 'no-store', headers: headers! });
+        : headers
+          ? await fetch('/api/tcg/me', { cache: 'no-store', headers })
+          : await fetch('/api/tcg/catalog', { cache: 'no-store' });
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
+      if (!viewingOther) {
+        const nextAccess = !headers ? 'login' : json.linked === false ? 'riot' : 'full';
+        setAccess(nextAccess);
+        if (nextAccess !== 'full') setSection('collection');
+      }
       setOwner(viewingOther ? json.owner?.name ?? 'Joueur' : null);
       setBoosters(json.boosters || []);
       setCards(json.cards);
@@ -318,16 +327,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
 
   const viewingOther = owner !== null;
 
-  if (!loggedIn && !viewingOther) {
-    return (
-      <div className={`${ds.container} ${styles.wrap}`}>
-        <div className={ds.sectionLabel}>Collection</div>
-        <h1 className={styles.title}>Ma collection</h1>
-        <p className={styles.sub}>Connecte-toi pour ouvrir tes boosters et voir tes cartes.</p>
-        <Link href="/login" className={ds.btnPrimary}>Se connecter</Link>
-      </div>
-    );
-  }
+  // Sans accès (visiteur ou pas de compte Riot) : collection globale et classement seulement.
+  const limited = !viewingOther && access !== 'full';
 
   const dupCount = cards.filter((item) => item.count > 1).length;
   const legendaryOwned = cards.filter((item) => item.card.rarity === 'legendaire').length;
@@ -356,28 +357,32 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
       <div className={styles.layout}>
         <aside className={styles.side}>
           <div className={styles.sideInner}>
-          <div className={styles.sideTitle}>{viewingOther ? `Collection de ${owner}` : 'Ma collection'}</div>
+          <div className={styles.sideTitle}>{viewingOther ? `Collection de ${owner}` : limited ? 'Collection' : 'Ma collection'}</div>
           {viewingOther && loggedIn && (
             <Link href="/collection" className={styles.sideLink}>
               <BackIcon /> Ma collection
             </Link>
           )}
-          {!viewingOther && (
+          {!viewingOther && !limited && (
             <button type="button" className={section === 'boosters' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boosters')}>
               <PackIcon /> Mes boosters <span className={styles.sideCount}>{boosterCount}</span>
             </button>
           )}
-          <button type="button" className={section === 'cartes' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('cartes', null)}>
-            <CardsIcon /> {viewingOther ? 'Ses cartes' : 'Mes cartes'}
-          </button>
-          {rarityLinks('cartes')}
+          {!limited && (
+            <button type="button" className={section === 'cartes' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('cartes', null)}>
+              <CardsIcon /> {viewingOther ? 'Ses cartes' : 'Mes cartes'}
+            </button>
+          )}
+          {!limited && rarityLinks('cartes')}
           <button type="button" className={section === 'collection' && !cardFilters.filters.rarity ? styles.sideOn : styles.sideLink} onClick={() => goRarity('collection', null)}>
             <GridIcon /> Collection <span className={styles.sideCount}>{ownedCount}/{totalCards}</span>
           </button>
           {rarityLinks('collection')}
-          <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
-            <DupIcon /> Doublons
-          </button>
+          {!limited && (
+            <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
+              <DupIcon /> Doublons
+            </button>
+          )}
 
           <button type="button" className={section === 'classement' ? styles.sideOn : styles.sideLink} onClick={() => setSection('classement')}>
             <TrophyIcon /> Classement
@@ -388,7 +393,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
         <div className={styles.main}>
           <div className={ds.sectionLabel}>{section === 'classement' ? 'Collection · Tous les joueurs' : viewingOther ? `Collection de ${owner}` : 'Collection · Test dev'}</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
-          {section === 'boosters' || section === 'classement' ? null : (
+          {section === 'boosters' || section === 'classement' || limited ? null : (
             <div className={styles.tiles}>
               <div className={styles.tile}>
                 <small>Cartes</small>
@@ -406,6 +411,20 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                 <small>Légendaires</small>
                 <b>{legendaryOwned}<span> / {totalsByRarity.legendaire || 0}</span></b>
               </div>
+            </div>
+          )}
+
+          {/* Pas d'accès aux cartes : on explique quoi faire. */}
+          {limited && (
+            <div className={styles.access}>
+              <p>
+                {access === 'login'
+                  ? 'Connecte-toi avec Discord et lie ton compte Riot pour recevoir des boosters et collectionner les cartes.'
+                  : 'Lie ton compte Riot à ton profil pour recevoir des boosters et collectionner les cartes.'}
+              </p>
+              <Link href={access === 'login' ? '/login' : '/onboarding'} className={ds.btnPrimary}>
+                {access === 'login' ? 'Se connecter' : 'Lier mon compte Riot'}
+              </Link>
             </div>
           )}
 
@@ -523,7 +542,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                   {section === 'doublons' ? 'Aucun doublon pour l’instant.' : section === 'collection' ? (catalog.length ? (missingOnly ? 'Tu as toutes les cartes !' : 'Aucune carte possédée pour l’instant.') : 'Aucune carte n’existe encore.') : (viewingOther ? 'Aucune carte pour l’instant.' : 'Ouvre un booster pour obtenir tes premières cartes.')}
                 </p>
               )}
-              {section === 'collection' && catalog.length > 0 && (
+              {section === 'collection' && catalog.length > 0 && !limited && (
                 <div className={styles.switchRow}>
                   <Switch label="Non possédées" checked={missingOnly} onChange={setMissingOnly} />
                 </div>

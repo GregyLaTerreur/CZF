@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/auth';
+import { requireTcgPlayer } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { rateLimit } from '@/lib/rateLimit';
 import { boosterSqlError } from '@/lib/tcg/boosters';
@@ -10,7 +10,7 @@ const fail = (message: string, status: number) => NextResponse.json({ success: f
 
 // Le joueur connecté ouvre un de ses boosters : le tirage se fait en base (czf_tcg_open_booster).
 export async function POST(request: Request) {
-  const auth = await requireUser(request);
+  const auth = await requireTcgPlayer(request);
   if (auth.error) return auth.error;
 
   if (!rateLimit(`tcg-open:${auth.user.id}`, 20, 60_000)) return fail('Doucement : attends un peu avant d’ouvrir d’autres boosters.', 429);
