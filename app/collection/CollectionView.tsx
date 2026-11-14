@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
@@ -66,8 +66,7 @@ export default function CollectionView() {
   const [drawn, setDrawn] = useState<TcgCard[] | null>(null);
   const [revealed, setRevealed] = useState(0);
   const [error, setError] = useState('');
-  const firstLoad = useRef(true);
-  const [section, setSection] = useState<Section>('collection');
+  const [section, setSection] = useState<Section>('cartes');
   const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
   const dupes = useMemo(() => sorted.filter((item) => item.count > 1), [sorted]);
   const allSorted = useMemo(() => [...catalog].sort(byRarity), [catalog]);
@@ -91,10 +90,6 @@ export default function CollectionView() {
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
       setBoosters(json.boosters);
-      if (firstLoad.current) {
-        firstLoad.current = false;
-        if (json.boosters.length) setSection('boosters');
-      }
       setCards(json.cards);
       setCatalog(json.catalog || []);
       setTotalCards(json.totalCards);
