@@ -93,7 +93,13 @@ export default function CollectionView() {
   const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
   const dupes = useMemo(() => sorted.filter((item) => item.count > 1), [sorted]);
   const allSorted = useMemo(() => [...catalog].sort(byRarity), [catalog]);
-  const listItems = section === 'collection' ? allSorted : section === 'doublons' ? dupes : sorted;
+  // Collection : toutes les cartes, seulement celles possédées, ou seulement celles qui manquent.
+  const [ownership, setOwnership] = useState<'toutes' | 'possedees' | 'manquantes'>('toutes');
+  const collectionItems = useMemo(
+    () => allSorted.filter((item) => ownership === 'toutes' || (ownership === 'possedees' ? item.count > 0 : item.count === 0)),
+    [allSorted, ownership]
+  );
+  const listItems = section === 'collection' ? collectionItems : section === 'doublons' ? dupes : sorted;
   const cardFilters = useCardFilters(listItems, ownedCard, seasons);
 
   // Raretés de la sidebar : filtrent la Collection ou Mes cartes (la vue ouverte), sinon ouvrent la Collection.
@@ -343,8 +349,20 @@ export default function CollectionView() {
             <>
               {!listItems.length && (
                 <p className={ds.empty}>
-                  {section === 'doublons' ? 'Aucun doublon pour l’instant.' : section === 'collection' ? 'Aucune carte n’existe encore.' : 'Ouvre un booster pour obtenir tes premières cartes.'}
+                  {section === 'doublons' ? 'Aucun doublon pour l’instant.' : section === 'collection' ? (catalog.length ? (ownership === 'manquantes' ? 'Tu as toutes les cartes !' : 'Aucune carte possédée pour l’instant.') : 'Aucune carte n’existe encore.') : 'Ouvre un booster pour obtenir tes premières cartes.'}
                 </p>
+              )}
+              {section === 'collection' && catalog.length > 0 && (
+                <div className={styles.ownership}>
+                  <span>Cartes</span>
+                  <div className={ds.tabs}>
+                    {([['toutes', 'Toutes'], ['possedees', 'Possédées'], ['manquantes', 'Non possédées']] as const).map(([key, label]) => (
+                      <button key={key} type="button" className={ownership === key ? ds.tabActive : ds.tab} onClick={() => setOwnership(key)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
               {listItems.length > 0 && <CardFilters {...cardFilters} total={listItems.length} hideRarity alwaysSeasons />}
               {listItems.length > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}

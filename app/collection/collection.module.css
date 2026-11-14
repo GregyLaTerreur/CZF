@@ -764,3 +764,20 @@
     animation: none;
   }
 }
+
+/* Collection : Toutes / Possédées / Non possédées (même présentation que les filtres). */
+.ownership {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 6px 0 4px;
+}
+
+.ownership > span {
+  min-width: 70px;
+  font: 700 0.72rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.55);
+}
