@@ -87,26 +87,28 @@
   position: relative;
 }
 
-/* Ouverture d'un booster : les cartes arrivent face cachée puis se retournent. */
+/* Ouverture d'un booster : cartes face cachée, le joueur les retourne une à une.
+   Le dos annonce la rareté (rare = liseré argent, épique = halo orange, légendaire = or animé). */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: rgba(4, 12, 24, 0.88);
+  background: rgba(4, 12, 24, 0.9);
   overflow-y: auto;
 }
 
+/* margin auto : centré quand ça tient, défilable depuis le haut sinon (15 cartes). */
 .overlayInner {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
+  margin: auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: 18px;
 }
 
 .overlayTitle {
@@ -115,19 +117,52 @@
   color: var(--cream);
 }
 
+.overlayHint {
+  font: 700 0.85rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.7);
+}
+
 .drawn {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
   width: 100%;
+  padding: 10px 0;
 }
 
 .flip {
   position: relative;
-  width: min(190px, 42vw);
+  width: min(180px, 42vw);
   aspect-ratio: 1500 / 2100;
+  padding: 0;
+  border: none;
+  background: none;
   perspective: 1200px;
+  cursor: pointer;
+}
+
+/* Beaucoup de cartes : plus petites pour tenir à l'écran. */
+.drawnMany {
+  gap: 14px;
+}
+
+.drawnMany .flip {
+  width: min(128px, 28vw);
+}
+
+/* globals.css anime tous les <button> : on neutralise. */
+.flip:hover,
+.flip:active {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.flipped {
+  cursor: default;
 }
 
 .flipBack,
@@ -138,11 +173,20 @@
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.flipBack {
+  border-radius: 3.5% / 2.5%;
+  overflow: hidden;
+  background: var(--dark);
+}
+
 .flipBack img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 3.5% / 2.5%;
+}
+
+.flip:not(.flipped):hover .flipBack {
+  transform: translateY(-6px) rotate(-1.5deg);
 }
 
 .flipFront {
@@ -157,10 +201,66 @@
   transform: rotateY(0deg);
 }
 
+.back_rare .flipBack {
+  box-shadow: 0 0 0 3px #c9d0d9, 0 0 14px 2px rgba(201, 208, 217, 0.5);
+}
+
+.back_epique .flipBack {
+  box-shadow: 0 0 0 3px #f05010;
+  animation: glowEpique 1.4s ease-in-out infinite;
+}
+
+.back_legendaire .flipBack {
+  box-shadow: 0 0 0 3px #f2c14e;
+  animation: glowLegendaire 1.8s ease-in-out infinite;
+}
+
+/* Reflet doré qui balaie le dos d'une légendaire. */
+.back_legendaire .flipBack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 236, 170, 0.75) 48%, transparent 66%);
+  background-size: 250% 100%;
+  mix-blend-mode: screen;
+  animation: shimmer 2.2s linear infinite;
+}
+
+.back_legendaire {
+  animation: floatCard 2.6s ease-in-out infinite;
+}
+
+@keyframes glowEpique {
+  0%, 100% { box-shadow: 0 0 0 3px #f05010, 0 0 12px 2px rgba(240, 80, 16, 0.45); }
+  50% { box-shadow: 0 0 0 3px #f05010, 0 0 30px 8px rgba(240, 80, 16, 0.85); }
+}
+
+@keyframes glowLegendaire {
+  0%, 100% { box-shadow: 0 0 0 3px #f2c14e, 0 0 20px 6px rgba(242, 193, 78, 0.55); }
+  50% { box-shadow: 0 0 0 4px #ffe38a, 0 0 46px 14px rgba(242, 193, 78, 0.95); }
+}
+
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -100% 0; }
+}
+
+@keyframes floatCard {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flipBack,
   .flipFront {
     transition: none;
+  }
+
+  .back_epique .flipBack,
+  .back_legendaire .flipBack,
+  .back_legendaire .flipBack::after,
+  .back_legendaire {
+    animation: none;
   }
 }
 

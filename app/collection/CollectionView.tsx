@@ -64,7 +64,8 @@ export default function CollectionView() {
   const [seasons, setSeasons] = useState<{ id: number; name: string }[]>([]);
   const [opening, setOpening] = useState<number | null>(null);
   const [drawn, setDrawn] = useState<TcgCard[] | null>(null);
-  const [revealed, setRevealed] = useState(0);
+  // Index des cartes tirées déjà retournées (c'est le joueur qui clique).
+  const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
   const [section, setSection] = useState<Section>('cartes');
   const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
@@ -104,12 +105,7 @@ export default function CollectionView() {
     void load();
   }, [load]);
 
-  // Les cartes tirées se retournent une par une.
-  useEffect(() => {
-    if (!drawn || revealed >= drawn.length) return;
-    const timer = window.setTimeout(() => setRevealed((count) => count + 1), revealed === 0 ? 500 : 650);
-    return () => window.clearTimeout(timer);
-  }, [drawn, revealed]);
+  const reveal = (index: number) => setRevealed((current) => new Set(current).add(index));
 
   async function open(boosterId: number) {
     if (opening !== null) return;
@@ -122,8 +118,9 @@ export default function CollectionView() {
       const response = await fetch('/api/tcg/open', { method: 'POST', headers, body: JSON.stringify({ booster_id: boosterId }) });
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
-      setRevealed(0);
-      setDrawn(json.cards);
+      setRevealed(new Set());
+      // Les plus rares à la fin, pour garder le suspense.
+      setDrawn([...json.cards].sort((a: TcgCard, b: TcgCard) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity)));
       void load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur.');
@@ -266,21 +263,33 @@ export default function CollectionView() {
         <div className={styles.overlay} role="dialog" aria-modal="true">
           <div className={styles.overlayInner}>
             <div className={styles.overlayTitle}>Booster ouvert</div>
-            <div className={styles.drawn}>
-              {drawn.map((card, index) => (
-                <div key={`${card.id}-${index}`} className={`${styles.flip} ${index < revealed ? styles.flipped : ''}`}>
-                  <div className={styles.flipBack}>
-                    <img src={boosterImage({ image_url: null }, 300)} alt="" />
-                  </div>
-                  <div className={styles.flipFront}>
-                    <PlayerCard card={card} />
-                  </div>
-                </div>
-              ))}
+            <p className={styles.overlayHint}>
+              {revealed.size < drawn.length ? `Clique sur une carte pour la retourner · ${drawn.length - revealed.size} restante${drawn.length - revealed.size > 1 ? 's' : ''}` : 'Toutes tes cartes sont révélées.'}
+            </p>
+            <div className={`${styles.drawn} ${drawn.length > 8 ? styles.drawnMany : ''}`}>
+              {drawn.map((card, index) => {
+                const isRevealed = revealed.has(index);
+                return (
+                  <button
+                    key={`${card.id}-${index}`}
+                    type="button"
+                    className={`${styles.flip} ${isRevealed ? styles.flipped : styles[`back_${card.rarity}`]}`}
+                    onClick={() => !isRevealed && reveal(index)}
+                    aria-label={isRevealed ? card.name : 'Retourner la carte'}
+                  >
+                    <div className={styles.flipBack}>
+                      <img src={boosterImage({ image_url: null }, 300)} alt="" />
+                    </div>
+                    <div className={styles.flipFront}>
+                      <PlayerCard card={card} />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
             <div className={ds.formActions}>
-              {revealed < drawn.length ? (
-                <button type="button" className={ds.btnOutline} onClick={() => setRevealed(drawn.length)}>Tout révéler</button>
+              {revealed.size < drawn.length ? (
+                <button type="button" className={ds.btnOutline} onClick={() => setRevealed(new Set(drawn.map((_, i) => i)))}>Tout révéler</button>
               ) : (
                 <button type="button" className={ds.btnPrimary} onClick={() => setDrawn(null)}>Ajouter à ma collection</button>
               )}
