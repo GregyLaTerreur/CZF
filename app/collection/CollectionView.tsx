@@ -191,7 +191,7 @@ export default function CollectionView() {
           </button>
           {rarityLinks('cartes')}
           <button type="button" className={section === 'doublons' ? styles.sideOn : styles.sideLink} onClick={() => setSection('doublons')}>
-            <DupIcon /> Doublons <span className={styles.sideCount}>{dupCount}</span>
+            <DupIcon /> Doublons
           </button>
           </div>
         </aside>
