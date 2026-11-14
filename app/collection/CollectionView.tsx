@@ -319,16 +319,21 @@ export default function CollectionView() {
               {!boosters.length && <p className={ds.empty}>Aucun booster pour l’instant.</p>}
               <div className={styles.boosters}>
                 {boosters.map(({ booster, quantity }) => (
-                  <div key={booster.id} className={styles.booster}>
+                  // Clic direct sur le sachet pour l'ouvrir.
+                  <button
+                    key={booster.id}
+                    type="button"
+                    className={styles.booster}
+                    disabled={opening !== null}
+                    onClick={() => booster.id && open(booster.id)}
+                    aria-label={`Ouvrir un booster ${booster.name}`}
+                  >
                     <div className={styles.boosterPack}>
                       <img src={boosterImage(booster, 400)} alt="" />
                       <span className={styles.badge}>x{quantity}</span>
                     </div>
-                    <div className={styles.boosterName}>{booster.name}</div>
-                    <button type="button" className={ds.btnPrimary} disabled={opening !== null} onClick={() => booster.id && open(booster.id)}>
-                      {opening === booster.id ? 'Ouverture…' : 'Ouvrir'}
-                    </button>
-                  </div>
+                    <div className={styles.boosterName}>{opening === booster.id ? 'Ouverture…' : booster.name}</div>
+                  </button>
                 ))}
               </div>
             </>
