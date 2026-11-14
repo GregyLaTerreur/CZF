@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { DIVISIONS, DIVISION_COLORS, type DivisionName } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
 import styles from './matchManager.module.css';
+import MatchEditor from './MatchEditor';
 
 type Side = { id: number; shortName: string; name: string; score: number } | null;
 
@@ -28,6 +29,7 @@ export default function MatchManager() {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [message, setMessage] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const load = useCallback(async (target: DivisionName) => {
     setMatches(null);
@@ -47,6 +49,7 @@ export default function MatchManager() {
 
   useEffect(() => {
     setConfirmId(null);
+    setEditingId(null);
     load(division);
   }, [division, load]);
 
@@ -147,6 +150,16 @@ export default function MatchManager() {
                 </span>
               ) : (
                 <span className={styles.actions}>
+                  <button
+                    type="button"
+                    className={`${editingId === match.id ? ds.btnPrimary : ds.btnOutline} ${ds.btnSmall}`}
+                    onClick={() => {
+                      setMessage('');
+                      setEditingId(editingId === match.id ? null : match.id);
+                    }}
+                  >
+                    Modifier
+                  </button>
                   <button type="button" className={`${ds.btnDanger} ${ds.btnSmall}`} onClick={() => setConfirmId(match.id)}>
                     Supprimer
                   </button>
@@ -155,6 +168,19 @@ export default function MatchManager() {
             </li>
           ))}
         </ul>
+      )}
+
+      {editingId !== null && (
+        <MatchEditor
+          key={editingId}
+          matchId={editingId}
+          onClose={() => setEditingId(null)}
+          onSaved={(text) => {
+            setEditingId(null);
+            setMessage(text);
+            load(division);
+          }}
+        />
       )}
     </section>
   );
