@@ -28,7 +28,10 @@ const byRarity = (a: OwnedCard, b: OwnedCard) =>
   (a.card.number ?? 1e9) - (b.card.number ?? 1e9) || RARITIES.indexOf(a.card.rarity) - RARITIES.indexOf(b.card.rarity);
 const ownedCard = (item: OwnedCard) => item.card;
 
-type Section = 'collection' | 'boosters' | 'cartes' | 'doublons' | 'classement';
+type Section = 'collection' | 'boosters' | 'cartes' | 'doublons' | 'classement' | 'echanges' | 'boutique';
+
+// Onglets pas encore prêts : page « en travaux ».
+const WIP: Section[] = ['echanges', 'boutique'];
 
 // Clics nécessaires pour ouvrir un sachet selon sa meilleure carte (paliers cumulés).
 const TAPS = { commune: 5, epique: 11, legendaire: 18 } as const;
@@ -69,6 +72,17 @@ const SoundOffIcon = () => (
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <path d="M15 5 8 12l7 7" />
+  </svg>
+);
+const SwapIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M4 8h13l-3-3M20 16H7l3 3" />
+  </svg>
+);
+const ShopIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M5 8h14l-1 12H6L5 8Z" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
   </svg>
 );
 const TrophyIcon = () => (
@@ -354,8 +368,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   // Cartes différentes possédées par rareté, affichées sous Mes cartes.
   const ownedByRarity = cards.reduce<Record<string, number>>((acc, item) => ({ ...acc, [item.card.rarity]: (acc[item.card.rarity] || 0) + 1 }), {});
   const SECTION_TITLES: Record<Section, string> = viewingOther
-    ? { collection: `Collection de ${owner}`, boosters: 'Boosters', cartes: `Cartes de ${owner}`, doublons: `Doublons de ${owner}`, classement: 'Classement' }
-    : { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons', classement: 'Classement' };
+    ? { collection: `Collection de ${owner}`, boosters: 'Boosters', cartes: `Cartes de ${owner}`, doublons: `Doublons de ${owner}`, classement: 'Classement', echanges: 'Échanges', boutique: 'Boutique' }
+    : { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons', classement: 'Classement', echanges: 'Échanges', boutique: 'Boutique' };
 
   const rarityLinks = (target: Section) =>
     rarityTarget === target &&
@@ -406,13 +420,19 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
           <button type="button" className={section === 'classement' ? styles.sideOn : styles.sideLink} onClick={() => setSection('classement')}>
             <TrophyIcon /> Classement
           </button>
+          <button type="button" className={section === 'echanges' ? styles.sideOn : styles.sideLink} onClick={() => setSection('echanges')}>
+            <SwapIcon /> Échanges
+          </button>
+          <button type="button" className={section === 'boutique' ? styles.sideOn : styles.sideLink} onClick={() => setSection('boutique')}>
+            <ShopIcon /> Boutique
+          </button>
           </div>
         </aside>
 
         <div className={styles.main}>
           <div className={ds.sectionLabel}>{section === 'classement' ? 'Collection · Tous les joueurs' : viewingOther ? `Collection de ${owner}` : 'Collection · Bêta'}</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
-          {section === 'boosters' || section === 'classement' || limited ? null : (
+          {section === 'boosters' || section === 'classement' || WIP.includes(section) || limited ? null : (
             <div className={styles.tiles}>
               <div className={styles.tile}>
                 <small>Cartes</small>
@@ -553,7 +573,18 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
             );
           })()}
 
-          {section !== 'boosters' && section !== 'classement' && (
+          {WIP.includes(section) && (
+            <div className={styles.wip}>
+              <span className={styles.wipBadge}>En travaux</span>
+              <p>
+                {section === 'echanges'
+                  ? 'Bientôt : échange tes doublons avec les autres joueurs.'
+                  : 'Bientôt : de nouveaux boosters et des récompenses à débloquer.'}
+              </p>
+            </div>
+          )}
+
+          {section !== 'boosters' && section !== 'classement' && !WIP.includes(section) && (
             <>
               {!listItems.length && (
                 <p className={ds.empty}>

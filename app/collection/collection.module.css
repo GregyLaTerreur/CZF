@@ -993,3 +993,28 @@
   transform: skewX(-8deg);
   box-shadow: 3px 3px 0 var(--dark);
 }
+
+/* Onglets pas encore prêts (Échanges, Boutique). */
+.wip {
+  max-width: 640px;
+  padding: 28px 30px;
+  background: var(--dark);
+  color: var(--on-dark);
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.wip p {
+  margin-top: 14px;
+  font: 500 1rem var(--font-barlow), sans-serif;
+}
+
+.wipBadge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: var(--orange);
+  color: #fff;
+  font: italic 800 1.1rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: skewX(-8deg);
+}
