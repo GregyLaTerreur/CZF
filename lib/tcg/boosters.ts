@@ -55,7 +55,7 @@ export function parseBoosterInput(body: any): { booster: TcgBooster; error?: und
   if (!BOOSTER_TYPES.includes(cardType)) return { error: 'Type de booster invalide.' };
 
   const cardsPerPack = Number(body?.cards_per_pack);
-  if (!Number.isInteger(cardsPerPack) || cardsPerPack < 1 || cardsPerPack > 10) return { error: 'Un booster contient de 1 à 10 cartes.' };
+  if (!Number.isInteger(cardsPerPack) || cardsPerPack < 1 || cardsPerPack > 100) return { error: 'Nombre de cartes par booster invalide.' };
 
   const rates = Object.fromEntries(
     RARITIES.map((rarity) => [rateKey(rarity), Math.round(Number(body?.[rateKey(rarity)] ?? 0) * 100) / 100])

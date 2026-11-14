@@ -116,8 +116,8 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
 
           <div className={styles.row}>
             <label className={ds.field}>
-              <span>Cartes par booster (1 à 10)</span>
-              <input className={ds.input} type="number" min={1} max={10} value={form.cards_per_pack} onChange={(e) => set('cards_per_pack', Number(e.target.value))} />
+              <span>Cartes par booster</span>
+              <input className={ds.input} type="number" min={1} max={100} value={form.cards_per_pack} onChange={(e) => set('cards_per_pack', Number(e.target.value))} />
             </label>
             <label className={ds.field}>
               <span>Illustration (facultatif, URL Cloudinary)</span>
