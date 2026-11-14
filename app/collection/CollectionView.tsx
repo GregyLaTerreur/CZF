@@ -186,7 +186,7 @@ export default function CollectionView() {
         : 'commune';
   const tapsNeeded = pack ? TAPS[pack.best === 'legendaire' ? 'legendaire' : pack.best === 'epique' ? 'epique' : 'commune'] : 1;
 
-  // Jauge par palier : elle se remplit, puis repart de zéro quand le sachet résiste (ne trahit rien au départ).
+  // Avancée dans le palier en cours (0 à 1) : fait grossir le sachet et monter son halo.
   const bounds = [0, TAPS.commune, TAPS.epique, TAPS.legendaire].filter((b) => b <= tapsNeeded);
   const segStart = [...bounds].reverse().find((b) => b <= taps && b < tapsNeeded) ?? 0;
   const segEnd = bounds.find((b) => b > segStart) ?? tapsNeeded;
@@ -357,9 +357,6 @@ export default function CollectionView() {
                 <img src={pack.image} alt="" />
               </span>
             </button>
-            <div className={styles.packMeter} aria-hidden="true">
-              <i className={styles[`meter_${packStage}`]} style={{ width: `${phase === 'tearing' ? 100 : meter * 100}%` }} />
-            </div>
           </div>
           {phase === 'tearing' && <span className={`${styles.flash} ${styles[`flash_${pack.best}`]}`} aria-hidden="true" />}
         </div>

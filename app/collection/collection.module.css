@@ -752,28 +752,6 @@
   animation-duration: 4s;
 }
 
-.packMeter {
-  width: min(260px, 60vw);
-  height: 10px;
-  background: rgba(224, 216, 204, 0.15);
-  transform: skewX(-8deg);
-}
-
-.packMeter i {
-  display: block;
-  height: 100%;
-  background: var(--cream);
-  transition: width 0.12s, background 0.3s;
-}
-
-.packMeter .meter_epique {
-  background: #f05010;
-}
-
-.packMeter .meter_legendaire {
-  background: #f2c14e;
-}
-
 /* Déchirure : le sachet gonfle et disparaît dans un éclat. */
 .tearing {
   animation: packTear 0.7s ease-in forwards;
