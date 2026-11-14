@@ -28,7 +28,7 @@ const byRarity = (a: OwnedCard, b: OwnedCard) =>
   RARITIES.indexOf(b.card.rarity) - RARITIES.indexOf(a.card.rarity) || (a.card.number ?? 1e9) - (b.card.number ?? 1e9);
 const ownedCard = (item: OwnedCard) => item.card;
 
-type Section = 'collection' | 'boosters' | 'cartes' | 'doublons';
+type Section = 'collection' | 'boosters' | 'cartes' | 'doublons' | 'classement';
 
 // Clics nécessaires pour ouvrir un sachet selon sa meilleure carte (paliers cumulés).
 const TAPS = { commune: 5, epique: 11, legendaire: 18 } as const;
@@ -69,6 +69,12 @@ const SoundOffIcon = () => (
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <path d="M15 5 8 12l7 7" />
+  </svg>
+);
+const TrophyIcon = () => (
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+    <path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8" />
   </svg>
 );
 const DupIcon = () => (
@@ -293,8 +299,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   // Cartes différentes possédées par rareté, affichées sous Mes cartes.
   const ownedByRarity = cards.reduce<Record<string, number>>((acc, item) => ({ ...acc, [item.card.rarity]: (acc[item.card.rarity] || 0) + 1 }), {});
   const SECTION_TITLES: Record<Section, string> = viewingOther
-    ? { collection: `Collection de ${owner}`, boosters: 'Boosters', cartes: `Cartes de ${owner}`, doublons: `Doublons de ${owner}` }
-    : { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons' };
+    ? { collection: `Collection de ${owner}`, boosters: 'Boosters', cartes: `Cartes de ${owner}`, doublons: `Doublons de ${owner}`, classement: 'Classement' }
+    : { collection: 'Collection', boosters: 'Mes boosters', cartes: 'Mes cartes', doublons: 'Doublons', classement: 'Classement' };
 
   const rarityLinks = (target: Section) =>
     rarityTarget === target &&
@@ -338,38 +344,16 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
             <DupIcon /> Doublons
           </button>
 
-          {leaderboard.length > 0 && (
-            <div className={styles.board}>
-              <div className={styles.sideTitle}>Classement</div>
-              <div className={styles.boardHead}>
-                <span>Joueur</span>
-                <span title="Cartes différentes possédées">Cartes</span>
-                <span title="Boosters acquis (ouverts ou non)">Boost.</span>
-              </div>
-              {leaderboard.map((entry, index) => {
-                const current = entry.profileId === (viewProfileId ?? myId);
-                return (
-                  <Link
-                    key={entry.profileId}
-                    href={entry.profileId === myId ? '/collection' : `/collection?profil=${entry.profileId}`}
-                    className={current ? styles.boardRowOn : styles.boardRow}
-                  >
-                    <span className={styles.boardRank}>{index + 1}</span>
-                    <span className={styles.boardName}>{entry.name}</span>
-                    <span>{entry.cards}</span>
-                    <span>{entry.boosters}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          <button type="button" className={section === 'classement' ? styles.sideOn : styles.sideLink} onClick={() => setSection('classement')}>
+            <TrophyIcon /> Classement
+          </button>
           </div>
         </aside>
 
         <div className={styles.main}>
-          <div className={ds.sectionLabel}>{viewingOther ? `Collection de ${owner}` : 'Collection · Test dev'}</div>
+          <div className={ds.sectionLabel}>{section === 'classement' ? 'Collection · Tous les joueurs' : viewingOther ? `Collection de ${owner}` : 'Collection · Test dev'}</div>
           <h1 className={styles.title}>{SECTION_TITLES[section]}</h1>
-          {section === 'boosters' ? null : (
+          {section === 'boosters' || section === 'classement' ? null : (
             <div className={styles.tiles}>
               <div className={styles.tile}>
                 <small>Cartes</small>
@@ -417,7 +401,42 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
             </>
           )}
 
-          {section !== 'boosters' && (
+          {section === 'classement' && (
+            <>
+              <p className={styles.sub}>Cartes différentes possédées, puis boosters acquis (ouverts ou non). Clique sur un joueur pour voir sa collection.</p>
+              {!leaderboard.length && <p className={ds.empty}>Personne n’a encore de cartes.</p>}
+              {leaderboard.length > 0 && (
+                <div className={styles.board}>
+                  <div className={styles.boardHead}>
+                    <span>#</span>
+                    <span>Joueur</span>
+                    <span>Cartes</span>
+                    <span>Boosters</span>
+                  </div>
+                  {leaderboard.map((entry, index) => {
+                    const current = entry.profileId === (viewProfileId ?? myId);
+                    return (
+                      <Link
+                        key={entry.profileId}
+                        href={entry.profileId === myId ? '/collection' : `/collection?profil=${entry.profileId}`}
+                        className={current ? styles.boardRowOn : styles.boardRow}
+                      >
+                        <span className={styles.boardRank}>{index + 1}</span>
+                        <span className={styles.boardName}>{entry.name}{entry.profileId === myId ? ' (toi)' : ''}</span>
+                        <span>
+                          {entry.cards}
+                          <small> / {totalCards}</small>
+                        </span>
+                        <span>{entry.boosters}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {section !== 'boosters' && section !== 'classement' && (
             <>
               {!listItems.length && (
                 <p className={ds.empty}>
