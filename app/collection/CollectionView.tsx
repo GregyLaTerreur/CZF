@@ -19,7 +19,9 @@ async function authHeaders(): Promise<Record<string, string> | null> {
   return { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
 }
 
-const byRarity = (a: OwnedCard, b: OwnedCard) => RARITIES.indexOf(b.card.rarity) - RARITIES.indexOf(a.card.rarity);
+// Des plus rares aux plus communes, puis dans l'ordre de numérotation de la saison.
+const byRarity = (a: OwnedCard, b: OwnedCard) =>
+  RARITIES.indexOf(b.card.rarity) - RARITIES.indexOf(a.card.rarity) || (a.card.number ?? 1e9) - (b.card.number ?? 1e9);
 const ownedCard = (item: OwnedCard) => item.card;
 
 type Section = 'collection' | 'boosters' | 'cartes' | 'doublons';

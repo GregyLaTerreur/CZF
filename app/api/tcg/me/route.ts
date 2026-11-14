@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { loadSeasons } from '@/lib/tcg/seasons';
-import { withLiveStats } from '@/lib/tcg/liveStats';
+import { decorateCards } from '@/lib/tcg/liveStats';
 import type { TcgCard } from '@/lib/tcg/cards';
 
 export const dynamic = 'force-dynamic';
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   for (const row of owned.data) counts.set(row.card_id, (counts.get(row.card_id) || 0) + 1);
 
   // Tout le catalogue : la collection montre aussi, en grisé, les cartes pas encore obtenues.
-  const allCards = await withLiveStats<TcgCard>((total.data || []) as TcgCard[]);
+  const allCards = await decorateCards<TcgCard>((total.data || []) as TcgCard[]);
   const catalog = allCards.map((card) => ({ card, count: counts.get(Number(card.id)) || 0 }));
 
   return NextResponse.json({

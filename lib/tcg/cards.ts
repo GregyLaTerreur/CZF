@@ -61,6 +61,8 @@ export type TcgCard = {
   note: number | null;
   stats: CardStat[];
   live_stats?: boolean; // stats recalculées à l'affichage (carte Joueur liée), pas celles enregistrées
+  number?: number; // numéro dans la saison, calculé à l'affichage (withNumbers)
+  season_total?: number;
 };
 
 // Cadres et icônes provisoires : suffixe _dev = utilisés seulement en dev, à remplacer par ceux de la graphiste.

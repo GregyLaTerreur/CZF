@@ -124,7 +124,7 @@ export function ShowMore({ hasMore, showMore, shown, total }: { hasMore: boolean
   if (!hasMore) return null;
   return (
     <div className={styles.more}>
-      <button type="button" className={ds.btnOutline} onClick={showMore}>Voir plus ({shown} / {total})</button>
+      <button type="button" className={ds.btnOutline} onClick={showMore}>Voir plus</button>
     </div>
   );
 }

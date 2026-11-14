@@ -145,6 +145,23 @@
   object-fit: cover;
 }
 
+/* Numéro dans la saison, en haut à droite (« 12/82 »). */
+.number {
+  top: 4%;
+  right: 4.5%;
+  padding: 0.6cqw 1.8cqw;
+  background: rgba(8, 20, 40, 0.82);
+  color: #fff;
+  font: italic 800 3.6cqw/1 var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.04em;
+  transform: skewX(-8deg);
+  box-shadow: 0.5cqw 0.5cqw 0 var(--accent);
+}
+
+.number span {
+  color: rgba(224, 216, 204, 0.6);
+}
+
 /* Effets de rareté, du plus discret au plus fort. */
 .fx {
   inset: 0;

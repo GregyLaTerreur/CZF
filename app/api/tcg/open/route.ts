@@ -3,7 +3,7 @@ import { requireUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { rateLimit } from '@/lib/rateLimit';
 import { boosterSqlError } from '@/lib/tcg/boosters';
-import { withLiveStats } from '@/lib/tcg/liveStats';
+import { decorateCards } from '@/lib/tcg/liveStats';
 import type { TcgCard } from '@/lib/tcg/cards';
 
 const fail = (message: string, status: number) => NextResponse.json({ success: false, message }, { status });
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
   const ids: number[] = (data || []).map((row: { drawn_card_id: number }) => row.drawn_card_id);
   const { data: rows } = await supabaseAdmin.from('czf_tcg_cards').select('*').in('id', ids);
-  const byId = new Map((await withLiveStats<TcgCard>(rows || [])).map((card) => [Number(card.id), card]));
+  const byId = new Map((await decorateCards<TcgCard>(rows || [])).map((card) => [Number(card.id), card]));
 
   return NextResponse.json({ success: true, cards: ids.map((id) => byId.get(id)).filter(Boolean) });
 }

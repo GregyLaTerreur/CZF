@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
@@ -15,6 +15,7 @@ import {
   CARD_TYPE_LABELS,
   EMPTY_CARD,
   RARITY_LABELS,
+  RARITIES,
   STAT_LABELS,
   TYPE_FIELDS,
   TYPE_RARITIES,
@@ -33,6 +34,9 @@ type LinkPlayer = {
 const fixed = (value: unknown, digits: number) => (Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : '');
 
 const asCard = (card: TcgCard) => card;
+// Même ordre que la collection : des plus rares aux plus communes, puis par numéro.
+const byRarity = (a: TcgCard, b: TcgCard) =>
+  RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity) || (a.number ?? 1e9) - (b.number ?? 1e9);
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -46,6 +50,8 @@ function toForm(card: TcgCard): TcgCard {
     ...EMPTY_CARD,
     ...card,
     live_stats: undefined,
+    number: undefined,
+    season_total: undefined,
     team_name: card.team_name ?? '',
     team_logo: card.team_logo ?? '',
     stats: STAT_LABELS.map((label) => ({ label, value: card.stats.find((stat) => stat.label === label)?.value ?? '' })),
@@ -68,7 +74,8 @@ export default function TcgAdminView() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const cardFilters = useCardFilters(cards, asCard, seasons);
+  const sortedCards = useMemo(() => [...cards].sort(byRarity), [cards]);
+  const cardFilters = useCardFilters(sortedCards, asCard, seasons);
   const activeSeason = seasons.find((s) => s.status === 'active') ?? seasons[0];
 
   const load = useCallback(async () => {

@@ -108,6 +108,12 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
         <img className={`${styles.c} ${styles.logo}`} style={{ ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
       )}
 
+      {card.number && card.season_total && (
+        <div className={styles.number}>
+          {card.number}<span>/{card.season_total}</span>
+        </div>
+      )}
+
       <div className={styles.fx} />
     </div>
   );

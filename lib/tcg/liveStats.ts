@@ -5,7 +5,8 @@
 import { groupBy, round2 } from '@/lib/results/core';
 import { loadResultsDataset } from '@/lib/results/load';
 import { buildGamePlayers, loadTeamNames, percent } from '@/lib/ext/games';
-import type { CardStat, TcgCard } from '@/lib/tcg/cards';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { RARITIES, type CardStat, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 
 // Clé joueur + saison : une carte ne compte que les games des matchs de sa saison (czf_matches.season_id).
 const key = (playerId: number, seasonId: number | null | undefined) => `${playerId}:${seasonId ?? ''}`;
@@ -74,4 +75,33 @@ export async function withLiveStats<T extends TcgCard>(cards: T[]): Promise<T[]>
     console.error('[TCG] stats en direct indisponibles', error);
     return cards;
   }
+}
+
+// Numéro de la carte dans sa saison (« 12 / 82 ») : des plus rares aux plus communes, puis par ordre de création.
+export async function withNumbers<T extends TcgCard>(cards: T[]): Promise<T[]> {
+  if (!cards.length) return cards;
+
+  const { data } = await supabaseAdmin.from('czf_tcg_cards').select('id, season_id, rarity').limit(10000);
+  const bySeason = new Map<string, { id: number; rarity: Rarity }[]>();
+  for (const row of data || []) {
+    const season = String(row.season_id ?? '');
+    if (!bySeason.has(season)) bySeason.set(season, []);
+    bySeason.get(season)!.push({ id: Number(row.id), rarity: row.rarity as Rarity });
+  }
+
+  const numbers = new Map<number, { number: number; total: number }>();
+  for (const list of bySeason.values()) {
+    list.sort((a, b) => RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity) || a.id - b.id);
+    list.forEach((card, index) => numbers.set(card.id, { number: index + 1, total: list.length }));
+  }
+
+  return cards.map((card) => {
+    const n = numbers.get(Number(card.id));
+    return n ? { ...card, number: n.number, season_total: n.total } : card;
+  });
+}
+
+// Stats en direct + numérotation, pour tout ce qui affiche des cartes aux joueurs ou à l'admin.
+export async function decorateCards<T extends TcgCard>(cards: T[]): Promise<T[]> {
+  return withNumbers(await withLiveStats(cards));
 }
