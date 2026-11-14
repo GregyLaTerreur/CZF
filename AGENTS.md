@@ -50,7 +50,7 @@ npx tsc --noEmit   # pas de tests automatisés dans le repo ; c'est la vérifica
 
 - Remote : `github.com/GregyLaTerreur/CZF`. Branches `main` (PROD) et `dev` (DEV), chacune déployée sur Vercel avec sa propre base Supabase. Mainteneur principal : GregyLaTerreur (Grégoire).
 - Base PROD Supabase : projet `ikxstcmjagiiwxijkgaj`.
-- Branche `secret_project` : le TCG (voir la section dédiée), pas encore en PROD.
+- Branche `secret_project` : le TCG (voir la section dédiée), déployé en PROD en bêta (visible seulement des profils `is_betatest`).
 - Le cron Vercel (`vercel.json`) appelle `/api/cron/sync-riot-ids` chaque jour à 4h.
 - Le **schéma SQL n'est pas versionné** : tables, vues, fonctions et policies ont été créées à la main dans Supabase. Toute évolution de schéma doit être donnée comme SQL à exécuter à la main (et signalée pour DEV *et* PROD).
 
