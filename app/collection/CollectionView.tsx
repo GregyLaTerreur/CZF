@@ -8,7 +8,7 @@ import PlayerCard from '@/app/components/tcg/PlayerCard';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { RARITIES, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 import { boosterImage, type TcgBooster } from '@/lib/tcg/boosters';
-import { isMuted, playOpen, playReveal, setMuted } from './sounds';
+import { isMuted, playCharge, playOpen, playReveal, playTap, setMuted } from './sounds';
 import styles from './collection.module.css';
 
 type OwnedBooster = { quantity: number; booster: TcgBooster };
@@ -26,6 +26,9 @@ const byRarity = (a: OwnedCard, b: OwnedCard) =>
 const ownedCard = (item: OwnedCard) => item.card;
 
 type Section = 'collection' | 'boosters' | 'cartes' | 'doublons';
+
+// Clics nécessaires pour ouvrir un sachet selon sa meilleure carte (paliers cumulés).
+const TAPS = { commune: 5, epique: 11, legendaire: 18 } as const;
 
 const RARITY_PLURALS: Record<Rarity, string> = { commune: 'Communes', rare: 'Rares', epique: 'Épiques', legendaire: 'Légendaires' };
 
@@ -80,6 +83,7 @@ export default function CollectionView() {
   // Avant les cartes : le sachet à déchirer, qui annonce sa meilleure carte (halo épique / légendaire).
   const [pack, setPack] = useState<{ image: string; best: Rarity } | null>(null);
   const [phase, setPhase] = useState<'pack' | 'tearing' | 'cards'>('cards');
+  const [taps, setTaps] = useState(0);
   // Index des cartes tirées déjà retournées (c'est le joueur qui clique).
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
@@ -160,6 +164,7 @@ export default function CollectionView() {
       const sortedDraw = [...json.cards].sort((a: TcgCard, b: TcgCard) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
       const booster = boosters.find((item) => item.booster.id === boosterId)?.booster;
       setPack({ image: boosterImage(booster ?? { image_url: null }, 500), best: sortedDraw[sortedDraw.length - 1]?.rarity ?? 'commune' });
+      setTaps(0);
       setPhase('pack');
       setDrawn(sortedDraw);
       void load();
@@ -170,12 +175,39 @@ export default function CollectionView() {
     }
   }
 
-  // Clic sur le sachet : il se déchire (plus longtemps s'il cache une légendaire), puis les cartes arrivent.
-  function tearPack() {
+  // Ouvrir le sachet en cliquant vite : il résiste plus longtemps s'il cache une épique, encore plus une légendaire.
+  // Il ne trahit son contenu qu'en cours de route (passe en orange, puis en or).
+  const packStage: Rarity = !pack
+    ? 'commune'
+    : pack.best === 'legendaire' && taps >= TAPS.epique
+      ? 'legendaire'
+      : (pack.best === 'legendaire' || pack.best === 'epique') && taps >= TAPS.commune
+        ? 'epique'
+        : 'commune';
+  const tapsNeeded = pack ? TAPS[pack.best === 'legendaire' ? 'legendaire' : pack.best === 'epique' ? 'epique' : 'commune'] : 1;
+
+  // Jauge par palier : elle se remplit, puis repart de zéro quand le sachet résiste (ne trahit rien au départ).
+  const bounds = [0, TAPS.commune, TAPS.epique, TAPS.legendaire].filter((b) => b <= tapsNeeded);
+  const segStart = [...bounds].reverse().find((b) => b <= taps && b < tapsNeeded) ?? 0;
+  const segEnd = bounds.find((b) => b > segStart) ?? tapsNeeded;
+  const meter = Math.min(1, (taps - segStart) / Math.max(1, segEnd - segStart));
+
+  function tapPack() {
     if (phase !== 'pack' || !pack) return;
-    playOpen();
-    setPhase('tearing');
-    window.setTimeout(() => setPhase('cards'), pack.best === 'legendaire' ? 1200 : pack.best === 'epique' ? 900 : 650);
+    const next = taps + 1;
+    setTaps(next);
+
+    if (next >= tapsNeeded) {
+      playOpen();
+      setPhase('tearing');
+      window.setTimeout(() => setPhase('cards'), pack.best === 'legendaire' ? 1200 : pack.best === 'epique' ? 900 : 650);
+      return;
+    }
+
+    // Paliers : le sachet change de couleur quand il « résiste ».
+    if (next === TAPS.commune && (pack.best === 'epique' || pack.best === 'legendaire')) playCharge('epique');
+    else if (next === TAPS.epique && pack.best === 'legendaire') playCharge('legendaire');
+    else playTap(next / tapsNeeded);
   }
 
   const ownedCount = cards.length;
@@ -310,18 +342,24 @@ export default function CollectionView() {
         <div className={styles.overlay} role="dialog" aria-modal="true">
           <div className={styles.packStage}>
             <p className={styles.packHint}>
-              {pack.best === 'legendaire' ? 'Ce booster rayonne…' : pack.best === 'epique' ? 'Ce booster brille…' : 'Ton booster est prêt'}
+              {packStage === 'legendaire' ? 'Encore ! Quelque chose de légendaire…' : packStage === 'epique' ? 'Ça résiste… continue !' : 'Clique vite pour l’ouvrir !'}
             </p>
             <button
               type="button"
-              className={`${styles.pack} ${styles[`aura_${pack.best}`]} ${phase === 'tearing' ? styles.tearing : ''}`}
-              onClick={tearPack}
-              aria-label="Ouvrir le booster"
+              className={`${styles.pack} ${styles[`stage_${packStage}`]} ${phase === 'tearing' ? styles.tearing : ''}`}
+              style={{ ['--p' as string]: meter }}
+              onClick={tapPack}
+              aria-label="Cliquer pour ouvrir le booster"
             >
-              {(pack.best === 'legendaire' || pack.best === 'epique') && <span className={styles.packRays} aria-hidden="true" />}
-              <img src={pack.image} alt="" />
+              <span className={styles.packRays} aria-hidden="true" />
+              {/* Clé = nombre de clics : relance la secousse à chaque clic. */}
+              <span key={taps} className={taps ? styles.packHit : undefined}>
+                <img src={pack.image} alt="" />
+              </span>
             </button>
-            <p className={styles.packCta}>Clique sur le booster pour l’ouvrir</p>
+            <div className={styles.packMeter} aria-hidden="true">
+              <i className={styles[`meter_${packStage}`]} style={{ width: `${phase === 'tearing' ? 100 : meter * 100}%` }} />
+            </div>
           </div>
           {phase === 'tearing' && <span className={`${styles.flash} ${styles[`flash_${pack.best}`]}`} aria-hidden="true" />}
         </div>

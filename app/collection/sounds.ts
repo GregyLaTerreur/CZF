@@ -199,3 +199,20 @@ export function playReveal(rarity: Rarity) {
     }
   });
 }
+
+// Clic sur le sachet pendant qu'on le force : froissement, plus appuyé à mesure qu'on avance (0 à 1).
+export function playTap(level: number) {
+  play((c, now) => {
+    crinkle(c, now, 0.08, 4 + Math.round(level * 6), 0.15 + level * 0.2);
+    rustle(c, now, 0.07, 0.12 + level * 0.15, 'lowpass', 900, 300, 0.05, 0.002);
+  });
+}
+
+// Le sachet « résiste » : il passe en épique ou en légendaire (souffle qui monte + coup sourd).
+export function playCharge(rarity: Rarity) {
+  play((c, now) => {
+    rustle(c, now, 0.6, rarity === 'legendaire' ? 0.2 : 0.14, 'bandpass', 300, 2600, 0.5, 0.3);
+    thump(c, now + 0.05, rarity === 'legendaire' ? 0.45 : 0.3, rarity === 'legendaire' ? 90 : 120, 40, 0.6);
+    bell(c, rarity === 'legendaire' ? 783.99 : 587.33, now + 0.1, 1.6, 0.05);
+  });
+}
