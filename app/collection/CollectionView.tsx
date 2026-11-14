@@ -273,7 +273,7 @@ export default function CollectionView() {
                   <button
                     key={`${card.id}-${index}`}
                     type="button"
-                    className={`${styles.flip} ${isRevealed ? styles.flipped : styles[`back_${card.rarity}`]}`}
+                    className={`${styles.flip} ${isRevealed ? `${styles.flipped} ${styles[`reveal_${card.rarity}`]}` : styles[`back_${card.rarity}`]}`}
                     onClick={() => !isRevealed && reveal(index)}
                     aria-label={isRevealed ? card.name : 'Retourner la carte'}
                   >
@@ -283,6 +283,14 @@ export default function CollectionView() {
                     <div className={styles.flipFront}>
                       <PlayerCard card={card} />
                     </div>
+                    {/* Effet de révélation selon la rareté (joué une fois, au retournement). */}
+                    {isRevealed && card.rarity !== 'commune' && (
+                      <>
+                        <span className={styles.burst} aria-hidden="true" />
+                        <span className={styles.ring} aria-hidden="true" />
+                        {card.rarity === 'legendaire' && <span className={styles.rays} aria-hidden="true" />}
+                      </>
+                    )}
                   </button>
                 );
               })}
