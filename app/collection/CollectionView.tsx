@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
 import CardElectric from '@/app/components/tcg/CardElectric';
+import { branching, rand } from '@/app/components/tcg/lightning';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { RARITIES, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 import { boosterImage, type TcgBooster } from '@/lib/tcg/boosters';
@@ -193,10 +194,27 @@ export default function CollectionView() {
   const segEnd = bounds.find((b) => b > segStart) ?? tapsNeeded;
   const meter = Math.min(1, (taps - segStart) / Math.max(1, segEnd - segStart));
 
-  function tapPack() {
+  const packFx = useRef<SVGGElement>(null);
+
+  // Éclair ramifié qui part de l'endroit cliqué, plus dense à mesure qu'on avance (repère du sachet : 200 x 300).
+  function strike(event: MouseEvent<HTMLButtonElement>, next: number) {
+    const g = packFx.current;
+    if (!g) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const inside = event.clientX > 0 || event.clientY > 0; // clic clavier : centre du sachet
+    const x = inside ? ((event.clientX - box.left) / box.width) * 200 : 100;
+    const y = inside ? ((event.clientY - box.top) / box.height) * 300 : 150;
+    const level = Math.min(1, next / TAPS.legendaire);
+    const paths: string[] = [];
+    for (let k = 0; k < 2 + Math.round(level * 2); k++) branching(x, y, rand(0, Math.PI * 2), rand(28, 45), 2 + Math.round(level * 2), paths);
+    g.innerHTML = paths.map((d) => `<path d="${d}"/>`).join('');
+  }
+
+  function tapPack(event: MouseEvent<HTMLButtonElement>) {
     if (phase !== 'pack' || !pack) return;
     const next = taps + 1;
     setTaps(next);
+    strike(event, next);
 
     if (next >= tapsNeeded) {
       playOpen();
@@ -354,11 +372,14 @@ export default function CollectionView() {
               onClick={tapPack}
               aria-label="Cliquer pour ouvrir le booster"
             >
-              <span className={styles.packRays} aria-hidden="true" />
               {/* Clé = nombre de clics : relance la secousse à chaque clic. */}
               <span key={taps} className={taps ? styles.packHit : undefined}>
                 <img src={pack.image} alt="" />
               </span>
+              {/* Éclairs du clic : blancs, puis orange (palier épique), puis or (palier légendaire). */}
+              <svg className={styles.packBolts} viewBox="-24 -36 248 372" aria-hidden="true">
+                <g ref={packFx} />
+              </svg>
             </button>
           </div>
           {phase === 'tearing' && <span className={`${styles.flash} ${styles[`flash_${pack.best}`]}`} aria-hidden="true" />}
