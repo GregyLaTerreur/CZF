@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import Nav from '../../components/Nav';
 import { supabase } from '@/lib/supabase';
 import { logoSrc } from '@/lib/logo';
 
@@ -277,7 +276,6 @@ export default function RiotAdminPage() {
 
   return (
     <>
-      <Nav />
 
       <main className="section">
         <div className="sectionTitle">

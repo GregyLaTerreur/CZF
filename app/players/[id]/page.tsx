@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import { fontVariables } from '../../fonts';
 import ds from '../../components/ds/ds.module.css';
@@ -14,7 +13,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className={`${ds.page} ${styles.page} ${fontVariables}`}>
-      <Nav />
       <ProfileView playerId={playerId} />
       <Footer />
     </main>

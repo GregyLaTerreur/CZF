@@ -10,4 +10,6 @@
   --space-block: 22px;
   /* Hauteur des transitions diagonales beige/dark */
   --space-diagonal: 36px;
+  /* Hauteur du header (étage du haut 38 + barre 80 + liseré 6) */
+  --nav-height: 124px;
 }

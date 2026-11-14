@@ -1,9 +1,7 @@
-import Nav from '../components/Nav';
 
 export default function HallOfFamePage() {
   return (
     <>
-      <Nav />
 
       <main className="section">
 

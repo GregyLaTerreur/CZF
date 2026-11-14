@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Nav from '../../components/Nav';
 import Footer from '../../components/Footer';
 import { fontVariables } from '../../fonts';
 import ds from '../../components/ds/ds.module.css';
@@ -14,7 +13,6 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
 
   return (
     <main className={`${ds.page} ${styles.page} ${fontVariables}`}>
-      <Nav />
       <MyTeamView teamId={teamId} />
       <Footer />
     </main>

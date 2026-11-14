@@ -17,7 +17,8 @@
   --loss: #E05050;
   --condensed: var(--font-barlow-condensed), sans-serif;
 
-  min-height: 100vh;
+  /* Le header est au-dessus de la page (layout) : pas de scroll en trop. */
+  min-height: calc(100vh - var(--nav-height));
   font-family: var(--font-barlow), sans-serif;
   color: var(--dark);
   background-color: var(--beige-l);

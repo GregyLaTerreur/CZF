@@ -3,6 +3,7 @@ import './spacing.css';
 import type { Metadata } from 'next';
 import { Anton } from 'next/font/google';
 import { asset, cssAssetVariables } from '@/lib/assets';
+import Nav from './components/Nav';
 
 const anton = Anton({
   subsets: ['latin'],
@@ -46,6 +47,8 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: cssAssetVariables() }} />
       </head>
       <body className={anton.className}>
+        {/* Header dans le layout : il reste monté d'une page à l'autre au lieu d'être rechargé. */}
+        <Nav />
         {children}
       </body>
     </html>

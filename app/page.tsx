@@ -1,6 +1,5 @@
 import { asset } from '@/lib/assets';
 import Link from 'next/link';
-import Nav from './components/Nav';
 import Footer from './components/Footer';
 import { DISCORD_URL, RULEBOOK_URL } from './components/links';
 import { fontVariables } from './fonts';
@@ -24,7 +23,6 @@ const DIVISION_INFO: { name: DivisionName; level: string; points: string }[] = [
 export default function Home() {
   return (
     <main className={`${styles.home} ${fontVariables}`}>
-      <Nav />
 
       {/* HERO */}
       <header id="home-accueil" className={styles.hero}>

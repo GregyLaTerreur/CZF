@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Nav from '../components/Nav';
 import { logoSrc } from '@/lib/logo';
 
 type Team = {
@@ -203,7 +202,6 @@ export default function PlanningPage() {
 
   return (
     <>
-      <Nav />
 
       <main className="section">
         <div className="sectionTitle">

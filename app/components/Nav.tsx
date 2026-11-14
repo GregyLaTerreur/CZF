@@ -2,7 +2,7 @@
 'use client';
 
 import { asset } from '@/lib/assets';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -10,11 +10,10 @@ import { supabase } from '@/lib/supabase';
 import { getMyDivision } from '@/app/components/ds/myDivision';
 import { DISCORD_URL, RULEBOOK_URL } from '@/app/components/links';
 import { fontVariables } from '@/app/fonts';
-import { useBoosterCount, useIsBetaTester } from '@/app/components/beta';
+import { BOOSTERS_CHANGED, useBoosterCount, useIsBetaTester } from '@/app/components/beta';
 import styles from './nav.module.css';
 
-// Statut admin gardé pour la visite : la Nav est remontée à chaque page,
-// on ne redemande pas is_admin à chaque navigation.
+// Statut admin gardé pour la visite : on ne redemande pas is_admin à chaque chargement.
 let adminCache: {
   userId: string;
   isAdmin: Promise<boolean>;
@@ -123,6 +122,18 @@ export default function Nav() {
     // prête pour les filtres.
     void getMyDivision();
   }, []);
+
+  // La Nav reste montée (layout) : la pastille des boosters se remet à jour à chaque page.
+  const firstPath = useRef(true);
+
+  useEffect(() => {
+    if (firstPath.current) {
+      firstPath.current = false;
+      return;
+    }
+
+    window.dispatchEvent(new Event(BOOSTERS_CHANGED));
+  }, [pathname]);
 
   async function checkAdmin() {
     // Session locale : pas d'appel réseau

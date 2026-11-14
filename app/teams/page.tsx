@@ -1,4 +1,3 @@
-import Nav from '../components/Nav';
 import { fontVariables } from '../fonts';
 import ds from '../components/ds/ds.module.css';
 import TeamsView from './TeamsView';
@@ -15,7 +14,6 @@ export default async function TeamsPage() {
 
   return (
     <main className={`${ds.page} ${fontVariables}`}>
-      <Nav />
       <TeamsView directory={directory} />
     </main>
   );
