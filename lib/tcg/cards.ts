@@ -48,6 +48,7 @@ export type CardStat = { label: string; value: string };
 export type TcgCard = {
   id?: number;
   season_id?: number | null;
+  player_id?: number | null; // joueur lié (données pré-remplies depuis players + stats CZF)
   card_type: CardType;
   rarity: Rarity;
   name: string;
@@ -162,7 +163,9 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
   if (artUrl && !isAllowedArtUrl(artUrl)) return { error: 'L’illustration doit être une image Cloudinary (https://res.cloudinary.com/…).' };
 
   const fields = TYPE_FIELDS[cardType];
+  const playerId = Number(body.player_id);
   const card: TcgCard = {
+    player_id: Number.isInteger(playerId) && playerId > 0 ? playerId : null,
     card_type: cardType, rarity, name, champion, art_url: artUrl,
     team_name: null, team_logo: null, role: null, division: null, note: null, stats: [],
   };
@@ -194,7 +197,7 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 }
 
 export const EMPTY_CARD: TcgCard = {
-  season_id: null, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
+  season_id: null, player_id: null, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
   team_name: '', team_logo: '', role: 'Mid', division: 'Yordle', note: null,
   stats: STAT_LABELS.map((label) => ({ label, value: '' })),
 };

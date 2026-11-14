@@ -237,3 +237,63 @@
   transform: skewX(-8deg);
   box-shadow: none;
 }
+
+/* Lier un joueur à la carte */
+.linked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 2px solid var(--dark);
+  background: #fff;
+}
+
+.linked span {
+  color: rgba(8, 20, 40, 0.6);
+  font-size: 0.9rem;
+}
+
+.playerSearch {
+  position: relative;
+}
+
+.playerResults {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--dark);
+  background: #fff;
+  box-shadow: 6px 6px 0 var(--dark);
+}
+
+.playerResult {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border: none;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
+  background: #fff;
+  color: var(--dark);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.playerResult span {
+  color: rgba(8, 20, 40, 0.55);
+  font-size: 0.85rem;
+}
+
+.playerResult:hover,
+.playerResult:active {
+  background: var(--cream);
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}

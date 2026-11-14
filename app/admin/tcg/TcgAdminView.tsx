@@ -8,6 +8,7 @@ import PlayerCard from '@/app/components/tcg/PlayerCard';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { DIVISIONS } from '@/app/components/home/divisions';
 import { DDRAGON_FALLBACK } from '@/app/components/ds/lol';
+import { isAllowedLogoUrl } from '@/lib/logo';
 import {
   CARD_ROLES,
   CARD_TYPES,
@@ -24,6 +25,12 @@ import styles from './tcgAdmin.module.css';
 
 type Champion = { id: string; name: string };
 type Season = { id: number; name: string; status: string };
+type LinkPlayer = {
+  id: number; riot_id: string; role: string | null; team_name: string | null;
+  team_logo: string | null; division: string | null; champions: string[];
+};
+
+const fixed = (value: unknown, digits: number) => (Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : '');
 
 const asCard = (card: TcgCard) => card;
 
@@ -49,6 +56,9 @@ export default function TcgAdminView() {
   const [tab, setTab] = useState<'cartes' | 'boosters'>('cartes');
   const [cards, setCards] = useState<TcgCard[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
+  const [players, setPlayers] = useState<LinkPlayer[]>([]);
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [linking, setLinking] = useState(false);
   const [champions, setChampions] = useState<Champion[]>([]);
   const [form, setForm] = useState<TcgCard>(EMPTY_CARD);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -77,6 +87,16 @@ export default function TcgAdminView() {
     void load();
   }, [load]);
 
+  // Joueurs à lier aux cartes (chargés une fois, quand l'accès admin est confirmé).
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const response = await fetch('/api/admin/tcg/players', { cache: 'no-store', headers: await authHeaders() });
+      const json = await response.json();
+      if (json.success) setPlayers(json.players);
+    })().catch(() => {});
+  }, [isAdmin]);
+
   // Liste des champions depuis Data Dragon (noms en français).
   useEffect(() => {
     (async () => {
@@ -99,6 +119,53 @@ export default function TcgAdminView() {
       rarity: TYPE_RARITIES[cardType].includes(current.rarity) ? current.rarity : TYPE_RARITIES[cardType][0],
     }));
   }
+
+  // Lie la carte à un joueur et remplit pseudo, équipe, logo, rôle, division, champion et stats CZF.
+  async function linkPlayer(player: LinkPlayer) {
+    setLinking(true);
+    setError('');
+    setPlayerSearch('');
+
+    let stats = form.stats;
+    try {
+      const json = await fetch(`/api/ext/joueurs?id_player=${player.id}`, { cache: 'no-store' }).then((res) => res.json());
+      const line = json.joueurs?.[0];
+      stats = STAT_LABELS.map((label) => ({ label, value: '' }));
+      if (line?.games) {
+        stats = [
+          { label: 'KDA', value: fixed(line.kda, 1) },
+          { label: 'KP%', value: fixed(line.killParticipation, 0) },
+          { label: 'DPM', value: fixed(line.dpm, 0) },
+          { label: 'VIS/M', value: fixed(line.visionPerMin, 1) },
+          { label: 'WR%', value: fixed(line.winrate, 0) },
+        ];
+      } else {
+        setMessage(`${player.riot_id} n’a pas encore de games CZF : stats à remplir à la main.`);
+      }
+    } catch {
+      setError('Stats CZF indisponibles : le reste est rempli.');
+    }
+
+    setForm((current) => ({
+      ...current,
+      player_id: player.id,
+      card_type: current.card_type === 'simple' ? 'joueur' : current.card_type,
+      rarity: current.card_type === 'simple' ? 'commune' : current.rarity,
+      name: player.riot_id.split('#')[0].slice(0, 40),
+      team_name: player.team_name ?? '',
+      team_logo: player.team_logo && isAllowedLogoUrl(player.team_logo) ? player.team_logo : '',
+      role: player.role,
+      division: (player.division as TcgCard['division']) ?? null,
+      champion: player.champions[0] ?? current.champion,
+      stats,
+    }));
+    setLinking(false);
+  }
+
+  const linkedPlayer = players.find((p) => p.id === form.player_id);
+  const playerResults = playerSearch.trim().length < 2
+    ? []
+    : players.filter((p) => `${p.riot_id} ${p.team_name ?? ''}`.toLowerCase().includes(playerSearch.trim().toLowerCase())).slice(0, 8);
 
   function reset() {
     setForm(EMPTY_CARD);
@@ -185,6 +252,34 @@ export default function TcgAdminView() {
       <div className={styles.editor}>
         <div className={`${ds.card} ${styles.form}`}>
           <div className={ds.cardTitle}>{editingId ? 'Modifier la carte' : 'Créer une carte'}</div>
+          <div className={ds.field}>
+            <span>Lier un joueur (remplit tout depuis ses données et ses stats CZF)</span>
+            {linkedPlayer ? (
+              <div className={styles.linked}>
+                <b>{linkedPlayer.riot_id}</b>
+                {linkedPlayer.team_name && <span>{linkedPlayer.team_name}</span>}
+                <button type="button" className={`${ds.btnOutline} ${ds.btnSmall}`} onClick={() => linkPlayer(linkedPlayer)} disabled={linking}>
+                  {linking ? 'Chargement…' : 'Recharger ses données'}
+                </button>
+                <button type="button" className={`${ds.btnDanger} ${ds.btnSmall}`} onClick={() => set('player_id', null)}>Délier</button>
+              </div>
+            ) : (
+              <div className={styles.playerSearch}>
+                <input className={ds.input} value={playerSearch} onChange={(e) => setPlayerSearch(e.target.value)} placeholder="Riot ID ou équipe (2 lettres min.)" />
+                {playerResults.length > 0 && (
+                  <div className={styles.playerResults}>
+                    {playerResults.map((p) => (
+                      <button key={p.id} type="button" className={styles.playerResult} onClick={() => linkPlayer(p)}>
+                        <b>{p.riot_id}</b>
+                        <span>{[p.team_name, p.role, p.division].filter(Boolean).join(' · ') || 'Sans équipe'}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <label className={ds.field}>
             <span>Saison</span>
             <select className={ds.input} value={form.season_id ?? activeSeason?.id ?? ''} onChange={(e) => set('season_id', Number(e.target.value))}>
