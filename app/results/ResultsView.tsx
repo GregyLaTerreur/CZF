@@ -174,7 +174,7 @@ export default function ResultsView() {
                 />
               </div>
 
-              <Agenda />
+              <Agenda division={division} />
 
               <History
                 key={division}
@@ -405,9 +405,9 @@ function NextMatchBanner({ tree }: { tree: BracketTree }) {
   );
 }
 
-// Agenda des playoffs sous l'arbre : matchs programmés à venir, toutes divisions, groupés par jour.
-function Agenda() {
-  const matches = useUpcomingMatches();
+// Agenda des playoffs sous l'arbre : matchs programmés à venir de la division affichée, par jour.
+function Agenda({ division }: { division: string }) {
+  const matches = useUpcomingMatches()?.filter((match) => match.division === division);
   const hasMatches = Boolean(matches?.length);
 
   // Lien « Tout le programme » du bandeau : l'agenda n'existe qu'une fois chargé.
@@ -454,7 +454,7 @@ function Agenda() {
 
   return (
     <div id="programme" className={`${ds.card} ${styles.agenda}`}>
-      <BlockHead label="Phase finale" title="Programme" aside="Toutes divisions" />
+      <BlockHead label="Phase finale" title="Programme" aside={division} />
 
       {weeks.map((week) => (
         <div key={week[0].key} className={styles.agendaDays}>
@@ -499,7 +499,7 @@ function Agenda() {
                     </div>
 
                     <span className={styles.agendaTag}>
-                      {match.division} · {match.name} · {match.format}
+                      {match.name} · {match.format}
                     </span>
                   </div>
                 ))}
