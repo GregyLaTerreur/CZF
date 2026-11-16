@@ -124,6 +124,14 @@ export type ResultsData = {
   teams: Team[];
   lastUpdate: string | null;
   history: HistoryMatch[];
+  schedule?: BracketScheduleEntry[];
+};
+
+// Date et lien de stream d'un match de l'arbre, saisis par un admin.
+export type BracketScheduleEntry = {
+  key: string;
+  scheduledAt: string | null;
+  streamUrl: string | null;
 };
 
 export type StatsData = {
@@ -184,6 +192,11 @@ function loadDivision<V extends DivisionView>(division: DivisionName, view: V): 
   return remember(divisionRequests, `${view}:${division}`, () =>
     getJson(`/api/resultats?division=${division}&view=${view}`)
   );
+}
+
+// Après une saisie admin : la prochaine visite recharge les données au lieu du cache de 60 s.
+export function forgetDivisionData() {
+  divisionRequests.clear();
 }
 
 export function loadGames(matchId: number): Promise<Game[]> {

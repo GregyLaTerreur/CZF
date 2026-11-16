@@ -49,6 +49,27 @@ function loadIsAdmin(userId: string) {
   return adminCache.isAdmin;
 }
 
+// Le compte connecté est-il admin ? (false tant qu'on ne sait pas, ou sans session)
+// N'affiche que des boutons : les routes API vérifient elles-mêmes (requireAdmin).
+export function useIsAdmin(): boolean {
+  const [isAdmin, setIsAdmin] = useState(adminCache?.value === true);
+
+  useEffect(() => {
+    let alive = true;
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const value = session?.user ? await loadIsAdmin(session.user.id) : false;
+      if (alive) setIsAdmin(value);
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return isAdmin;
+}
+
 // Même principe pour « Mon équipe » : le lien n'est montré qu'au capitaine d'une équipe.
 let captainCache: {
   userId: string;

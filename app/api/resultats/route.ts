@@ -71,6 +71,14 @@ teams: computeStandings(
       history: matches.map((match) =>
         buildMatchSummary(match, teamMap, gamesByMatch.get(Number(match.id)) || [], playerNames)
       ),
+      // Date et stream des matchs de l'arbre, par id de match (QF1, SF2…).
+      schedule: dataset.schedule
+        .filter((row) => row.division === division)
+        .map((row) => ({
+          key: row.match_key,
+          scheduledAt: row.scheduled_at ?? null,
+          streamUrl: row.stream_url ?? null,
+        })),
     };
 
     const stats = withStats && {

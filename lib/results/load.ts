@@ -194,12 +194,28 @@ export type ResultsDataset = {
   currentStatIds: number[];
   // Paires [id, riot_id] : le cache n'accepte que du JSON.
   playerNames: [number, string | null][];
+  // Date et stream des matchs de l'arbre (czf_bracket_schedule), toutes divisions.
+  schedule: AnyObject[];
 };
+
+// Table ajoutée après coup : si elle manque (SQL pas encore passé), l'arbre s'affiche sans dates.
+async function loadBracketSchedule(): Promise<AnyObject[]> {
+  const { data, error } = await supabaseAdmin
+    .from('czf_bracket_schedule')
+    .select('division, match_key, scheduled_at, stream_url');
+
+  if (error) {
+    console.warn('[resultats] czf_bracket_schedule illisible :', error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
 
 // Toutes les tables lues en parallèle : quelques milliers de lignes au plus,
 // moins coûteux qu'une cascade de requêtes filtrées.
 async function fetchResultsDataset(): Promise<ResultsDataset> {
-  const [matches, teams, exclusions, games, currentStats, stats, players] = await Promise.all([
+  const [matches, teams, exclusions, games, currentStats, stats, players, schedule] = await Promise.all([
     loadFinishedMatches(),
     loadValidatedTeams(),
     loadExclusions(),
@@ -223,6 +239,7 @@ async function fetchResultsDataset(): Promise<ResultsDataset> {
     fetchAllPages((from, to) =>
       supabaseAdmin.from('players').select('id, riot_id').order('id', { ascending: true }).range(from, to)
     ),
+    loadBracketSchedule(),
   ]);
 
   // Seulement les games des BO terminés, comme loadGames(matchIds).
@@ -239,12 +256,13 @@ async function fetchResultsDataset(): Promise<ResultsDataset> {
     stats: stats.filter(inFinishedGame),
     currentStatIds: currentStats.filter(inFinishedGame).map((stat) => Number(stat.id)),
     playerNames: players.map((player) => [Number(player.id), player.riot_id ?? null]),
+    schedule,
   };
 }
 
 // Les résultats ne changent qu'à la publication d'un match : cache partagé
 // entre divisions et requêtes, invalidé par invalidateResults().
-const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v3'], {
+const cachedResultsDataset = unstable_cache(fetchResultsDataset, ['resultats-dataset-v4'], {
   revalidate: RESULTS_TTL_SECONDS,
   tags: [RESULTS_TAG],
 });

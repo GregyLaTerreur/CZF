@@ -3,6 +3,9 @@
 import { memo, useMemo, useState } from 'react';
 import Link from 'next/link';
 
+import { useIsAdmin } from '@/app/components/Nav';
+import { supabase } from '@/lib/supabase';
+
 import {
   DIVISION_COLORS,
   displayRank,
@@ -19,10 +22,12 @@ import {
   BlockHead,
   ChevronIcon,
   DivisionTabs,
+  forgetDivisionData,
   LastUpdate,
   loadGames,
   TeamLogo,
   useDivisionData,
+  type BracketScheduleEntry,
   type Game,
   type HistoryMatch,
   type MatchSide,
@@ -65,16 +70,34 @@ export default function ResultsView() {
     loading,
   } = useDivisionData('resultats');
 
-  const tree = useMemo(
-    () =>
-      data
-        ? buildBracket(
-            data.teams,
-            data.history
-          )
-        : null,
-    [data]
-  );
+  const isAdmin = useIsAdmin();
+
+  // Saisies admin de la visite, par « division:match » : affichées sans attendre un rechargement.
+  const [planned, setPlanned] = useState<
+    Record<string, BracketScheduleEntry>
+  >({});
+
+  const tree = useMemo(() => {
+    if (!data) return null;
+
+    const schedule = new Map(
+      (data.schedule ?? []).map((entry) => [entry.key, entry])
+    );
+
+    for (const [id, entry] of Object.entries(planned)) {
+      if (id.startsWith(`${division}:`)) schedule.set(entry.key, entry);
+    }
+
+    return buildBracket(data.teams, data.history, [...schedule.values()]);
+  }, [data, planned, division]);
+
+  const savePlanned = (entry: BracketScheduleEntry) => {
+    forgetDivisionData();
+    setPlanned((previous) => ({
+      ...previous,
+      [`${division}:${entry.key}`]: entry,
+    }));
+  };
 
   return (
     <div
@@ -133,7 +156,12 @@ export default function ResultsView() {
                   teams={data.teams}
                 />
 
-                <Bracket tree={tree} />
+                <Bracket
+                  tree={tree}
+                  division={division}
+                  isAdmin={isAdmin}
+                  onSaved={savePlanned}
+                />
               </div>
 
               <History
@@ -302,13 +330,172 @@ const Standings = memo(
    double élimination, calculée depuis les matchs saisis
 ========================================================= */
 
+// « Sam 22/11 · 20h », à l'heure de Paris.
+function formatMatchDate(iso: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris',
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+      .formatToParts(new Date(iso))
+      .map((part) => [part.type, part.value])
+  );
+
+  const minutes = parts.minute === '00' ? '' : parts.minute;
+
+  return `${parts.weekday.replace('.', '')} ${parts.day}/${parts.month} · ${parts.hour}h${minutes}`;
+}
+
+// Valeur d'un <input type="datetime-local"> (heure du navigateur).
+function toLocalInput(iso: string | null) {
+  if (!iso) return '';
+
+  const date = new Date(iso);
+  const pad = (value: number) => String(value).padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M2 1l7 4-7 4z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PenIcon() {
+  return (
+    <svg viewBox="0 0 12 12" aria-hidden="true">
+      <path
+        d="M1 11l1-3 6-6 2 2-6 6zM8 2l2 2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+function ScheduleForm({
+  match,
+  division,
+  onClose,
+  onSaved,
+}: {
+  match: BracketNode;
+  division: string;
+  onClose: () => void;
+  onSaved: (entry: BracketScheduleEntry) => void;
+}) {
+  const [date, setDate] = useState(toLocalInput(match.scheduledAt));
+  const [stream, setStream] = useState(match.streamUrl ?? '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const res = await fetch('/api/admin/bracket-schedule', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          division,
+          key: match.id,
+          scheduledAt: date ? new Date(date).toISOString() : null,
+          streamUrl: stream.trim() || null,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Enregistrement impossible.');
+      }
+
+      onSaved(json.entry);
+      onClose();
+    } catch (err: any) {
+      setError(err?.message || 'Enregistrement impossible.');
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className={styles.scheduleBackdrop}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <form className={styles.scheduleForm} onSubmit={save}>
+        <h4>
+          {match.name} · {match.format}
+        </h4>
+
+        <label>
+          Date et heure
+          <input
+            type="datetime-local"
+            value={date}
+            onChange={(event) => setDate(event.target.value)}
+          />
+        </label>
+
+        <label>
+          Lien de stream (facultatif)
+          <input
+            type="url"
+            placeholder="https://twitch.tv/…"
+            value={stream}
+            onChange={(event) => setStream(event.target.value)}
+          />
+        </label>
+
+        {error && <p className={styles.scheduleError}>{error}</p>}
+
+        <div className={styles.scheduleActions}>
+          <button type="button" className={styles.scheduleCancel} onClick={onClose}>
+            Annuler
+          </button>
+          <button type="submit" className={styles.scheduleSave} disabled={saving}>
+            {saving ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function BracketMatch({
   match,
   final = false,
+  division,
+  isAdmin,
+  onSaved,
 }: {
   match: BracketNode;
   final?: boolean;
+  division: string;
+  isAdmin: boolean;
+  onSaved: (entry: BracketScheduleEntry) => void;
 }) {
+  const [editing, setEditing] = useState(false);
+
   return (
     <div
       className={`${styles.bracketMatch} ${
@@ -317,6 +504,52 @@ function BracketMatch({
           : ''
       }`}
     >
+      <div className={styles.bracketStrip}>
+        <span>
+          {match.scheduledAt
+            ? formatMatchDate(match.scheduledAt)
+            : match.name}
+        </span>
+
+        <span className={styles.bracketStripRight}>
+          <b>{match.format}</b>
+
+          {match.streamUrl && (
+            <a
+              className={styles.bracketPlay}
+              href={match.streamUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Voir le stream"
+              aria-label="Voir le stream"
+            >
+              <PlayIcon />
+            </a>
+          )}
+        </span>
+      </div>
+
+      {isAdmin && (
+        <button
+          type="button"
+          className={styles.bracketPen}
+          onClick={() => setEditing((value) => !value)}
+          title="Date et stream du match"
+          aria-label="Date et stream du match"
+        >
+          <PenIcon />
+        </button>
+      )}
+
+      {editing && (
+        <ScheduleForm
+          match={match}
+          division={division}
+          onClose={() => setEditing(false)}
+          onSaved={onSaved}
+        />
+      )}
+
       {[match.top, match.bottom].map(
         (side, index) => (
           <div
@@ -380,11 +613,18 @@ function BracketMatch({
   );
 }
 
+type BracketActions = {
+  division: string;
+  isAdmin: boolean;
+  onSaved: (entry: BracketScheduleEntry) => void;
+};
+
 function BracketLane({
   rounds,
+  ...actions
 }: {
   rounds: BracketRoundData[];
-}) {
+} & BracketActions) {
   return (
     <div className={styles.bracketLane}>
       {rounds.map(
@@ -395,16 +635,7 @@ function BracketLane({
               styles.bracketRound
             }
           >
-            <h3>
-              {round.title}
-              <span
-                className={
-                  styles.bracketFormat
-                }
-              >
-                {round.format}
-              </span>
-            </h3>
+            <h3>{round.title}</h3>
 
             <div
               className={
@@ -416,6 +647,7 @@ function BracketLane({
                   <BracketMatch
                     key={match.id}
                     match={match}
+                    {...actions}
                     final={
                       roundIndex ===
                       rounds.length -
@@ -435,9 +667,10 @@ function BracketLane({
 const Bracket = memo(
   function Bracket({
     tree,
+    ...actions
   }: {
     tree: BracketTree;
-  }) {
+  } & BracketActions) {
     return (
       <div
         className={`${ds.card} ${styles.bracket}`}
@@ -468,6 +701,7 @@ const Bracket = memo(
 
             <BracketLane
               rounds={tree.winner}
+              {...actions}
             />
 
             <div
@@ -488,6 +722,7 @@ const Bracket = memo(
 
             <BracketLane
               rounds={tree.loser}
+              {...actions}
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 // Arbre double élimination (top 8) calculé à partir du classement et des matchs de playoffs saisis.
 // Un match de l'arbre est retrouvé par la paire d'équipes : le champ « round » saisi à la main n'est pas fiable.
 
-import type { HistoryMatch, Team } from './shared';
+import type { BracketScheduleEntry, HistoryMatch, Team } from './shared';
 
 export const QUALIFIED = 8;
 
@@ -25,8 +25,15 @@ export type BracketSlot = {
   won: boolean;
 };
 
+export type MatchFormat = 'BO3' | 'BO5';
+
 export type BracketNode = {
   id: string;
+  // Nom du match (« Demi 1 »), affiché dans le bandeau tant qu'il n'a pas de date.
+  name: string;
+  format: MatchFormat;
+  scheduledAt: string | null;
+  streamUrl: string | null;
   top: BracketSlot;
   bottom: BracketSlot;
   winner: BracketTeam | null;
@@ -34,8 +41,7 @@ export type BracketNode = {
   played: boolean;
 };
 
-// Format du tour : BO3 ou BO5, tous les matchs d'un même tour se jouent au même format.
-export type BracketRoundData = { title: string; format: 'BO3' | 'BO5'; matches: BracketNode[] };
+export type BracketRoundData = { title: string; matches: BracketNode[] };
 
 export type BracketTree = {
   winner: BracketRoundData[];
@@ -51,6 +57,7 @@ type Spec = {
   bracket: 'winner' | 'loser' | 'grand_final';
   name: string;
   label: string;
+  format: MatchFormat;
   top: Source;
   bottom: Source;
 };
@@ -62,20 +69,20 @@ const lose = (match: string): Source => ({ kind: 'loser', match });
 // Ordre de résolution : chaque match ne dépend que de matchs listés avant lui.
 // Loser round 2 croisé (perdant demi 2 contre le haut du tableau) pour éviter les revanches immédiates.
 const SPECS: Spec[] = [
-  { id: 'QF1', name: 'Quart 1', bracket: 'winner', label: 'quart 1', top: seed(1), bottom: seed(8) },
-  { id: 'QF2', name: 'Quart 2', bracket: 'winner', label: 'quart 2', top: seed(4), bottom: seed(5) },
-  { id: 'QF3', name: 'Quart 3', bracket: 'winner', label: 'quart 3', top: seed(2), bottom: seed(7) },
-  { id: 'QF4', name: 'Quart 4', bracket: 'winner', label: 'quart 4', top: seed(3), bottom: seed(6) },
-  { id: 'SF1', name: 'Demi 1', bracket: 'winner', label: 'demi 1', top: win('QF1'), bottom: win('QF2') },
-  { id: 'SF2', name: 'Demi 2', bracket: 'winner', label: 'demi 2', top: win('QF3'), bottom: win('QF4') },
-  { id: 'WF', name: 'Finale winner', bracket: 'winner', label: 'finale WB', top: win('SF1'), bottom: win('SF2') },
-  { id: 'LR1A', name: 'Loser R1', bracket: 'loser', label: 'LB R1', top: lose('QF1'), bottom: lose('QF2') },
-  { id: 'LR1B', name: 'Loser R1', bracket: 'loser', label: 'LB R1', top: lose('QF3'), bottom: lose('QF4') },
-  { id: 'LR2A', name: 'Loser R2', bracket: 'loser', label: 'LB R2', top: win('LR1A'), bottom: lose('SF2') },
-  { id: 'LR2B', name: 'Loser R2', bracket: 'loser', label: 'LB R2', top: win('LR1B'), bottom: lose('SF1') },
-  { id: 'LR3', name: 'Loser R3', bracket: 'loser', label: 'LB R3', top: win('LR2A'), bottom: win('LR2B') },
-  { id: 'LF', name: 'Finale loser', bracket: 'loser', label: 'finale LB', top: win('LR3'), bottom: lose('WF') },
-  { id: 'GF', name: 'Grande finale', bracket: 'grand_final', label: 'grande finale', top: win('WF'), bottom: win('LF') },
+  { id: 'QF1', name: 'Quart 1', bracket: 'winner', label: 'quart 1', format: 'BO3', top: seed(1), bottom: seed(8) },
+  { id: 'QF2', name: 'Quart 2', bracket: 'winner', label: 'quart 2', format: 'BO3', top: seed(4), bottom: seed(5) },
+  { id: 'QF3', name: 'Quart 3', bracket: 'winner', label: 'quart 3', format: 'BO3', top: seed(2), bottom: seed(7) },
+  { id: 'QF4', name: 'Quart 4', bracket: 'winner', label: 'quart 4', format: 'BO3', top: seed(3), bottom: seed(6) },
+  { id: 'SF1', name: 'Demi 1', bracket: 'winner', label: 'demi 1', format: 'BO5', top: win('QF1'), bottom: win('QF2') },
+  { id: 'SF2', name: 'Demi 2', bracket: 'winner', label: 'demi 2', format: 'BO5', top: win('QF3'), bottom: win('QF4') },
+  { id: 'WF', name: 'Finale winner', bracket: 'winner', label: 'finale WB', format: 'BO5', top: win('SF1'), bottom: win('SF2') },
+  { id: 'LR1A', name: 'Loser R1', bracket: 'loser', label: 'LB R1', format: 'BO3', top: lose('QF1'), bottom: lose('QF2') },
+  { id: 'LR1B', name: 'Loser R1', bracket: 'loser', label: 'LB R1', format: 'BO3', top: lose('QF3'), bottom: lose('QF4') },
+  { id: 'LR2A', name: 'Loser R2', bracket: 'loser', label: 'LB R2', format: 'BO3', top: win('LR1A'), bottom: lose('SF2') },
+  { id: 'LR2B', name: 'Loser R2', bracket: 'loser', label: 'LB R2', format: 'BO3', top: win('LR1B'), bottom: lose('SF1') },
+  { id: 'LR3', name: 'Loser R3', bracket: 'loser', label: 'LB R3', format: 'BO3', top: win('LR2A'), bottom: win('LR2B') },
+  { id: 'LF', name: 'Finale loser', bracket: 'loser', label: 'finale LB', format: 'BO5', top: win('LR3'), bottom: lose('WF') },
+  { id: 'GF', name: 'Grande finale', bracket: 'grand_final', label: 'grande finale', format: 'BO5', top: win('WF'), bottom: win('LF') },
 ];
 
 const LABELS = new Map(SPECS.map((spec) => [spec.id, spec.label]));
@@ -89,7 +96,14 @@ function toBracketTeam(team: Team): BracketTeam {
   return { id: team.id, shortName: team.shortName, name: team.name, logo: team.logo };
 }
 
-export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTree {
+export const BRACKET_KEYS = SPECS.map((spec) => spec.id);
+
+export function buildBracket(
+  teams: Team[],
+  history: HistoryMatch[],
+  schedule: BracketScheduleEntry[] = []
+): BracketTree {
+  const planned = new Map(schedule.map((entry) => [entry.key, entry]));
   const byId = new Map(teams.map((team) => [team.id, team]));
   const override = SEED_OVERRIDES.find((ids) => ids.every((id) => byId.has(id)));
   const seeds = override ? override.map((id) => byId.get(id)!) : teams.slice(0, QUALIFIED);
@@ -121,6 +135,10 @@ export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTre
     const bottom = resolve(spec.bottom);
     const node: BracketNode = {
       id: spec.id,
+      name: spec.name,
+      format: spec.format,
+      scheduledAt: planned.get(spec.id)?.scheduledAt ?? null,
+      streamUrl: planned.get(spec.id)?.streamUrl ?? null,
       top: { ...top, placeholder: placeholderOf(spec.top), score: null, won: false },
       bottom: { ...bottom, placeholder: placeholderOf(spec.bottom), score: null, won: false },
       winner: null,
@@ -159,16 +177,16 @@ export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTre
 
   return {
     winner: [
-      { title: 'Quarts', format: 'BO3', matches: pick('QF1', 'QF2', 'QF3', 'QF4') },
-      { title: 'Demi-finales', format: 'BO5', matches: pick('SF1', 'SF2') },
-      { title: 'Finale winner', format: 'BO5', matches: pick('WF') },
-      { title: 'Grande finale', format: 'BO5', matches: pick('GF') },
+      { title: 'Quarts', matches: pick('QF1', 'QF2', 'QF3', 'QF4') },
+      { title: 'Demi-finales', matches: pick('SF1', 'SF2') },
+      { title: 'Finale winner', matches: pick('WF') },
+      { title: 'Grande finale', matches: pick('GF') },
     ],
     loser: [
-      { title: 'Round 1', format: 'BO3', matches: pick('LR1A', 'LR1B') },
-      { title: 'Round 2', format: 'BO3', matches: pick('LR2A', 'LR2B') },
-      { title: 'Round 3', format: 'BO3', matches: pick('LR3') },
-      { title: 'Finale loser', format: 'BO5', matches: pick('LF') },
+      { title: 'Round 1', matches: pick('LR1A', 'LR1B') },
+      { title: 'Round 2', matches: pick('LR2A', 'LR2B') },
+      { title: 'Round 3', matches: pick('LR3') },
+      { title: 'Finale loser', matches: pick('LF') },
     ],
     roundNames,
   };
