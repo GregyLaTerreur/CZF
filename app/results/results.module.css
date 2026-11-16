@@ -1462,10 +1462,36 @@
 
 .agendaDays {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  align-items: start;
-  gap: 16px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
   padding: 20px;
+}
+
+.agendaDays + .agendaDays {
+  padding-top: 0;
+}
+
+.agendaPast {
+  opacity: 0.45;
+}
+
+.agendaEmpty {
+  margin: 0;
+  padding: 14px 8px;
+  text-align: center;
+  font-family: var(--condensed);
+  font-weight: 700;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(8, 20, 40, 0.35);
+}
+
+@media (max-width: 900px) {
+  .agendaDays {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .agendaDay {
@@ -1476,6 +1502,7 @@
 
 .agendaDay h4 {
   display: flex;
+  gap: 6px;
   justify-content: space-between;
   align-items: baseline;
   margin: 0;
@@ -1485,8 +1512,9 @@
   font-family: var(--condensed);
   font-weight: 800;
   font-style: italic;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .agendaDay h4 small {
@@ -1508,7 +1536,7 @@
 .agendaSlot {
   display: grid;
   gap: 5px;
-  padding: 10px 12px;
+  padding: 10px 8px;
 }
 
 .agendaSlot + .agendaSlot {
@@ -1531,7 +1559,7 @@
   font-family: var(--condensed);
   font-weight: 800;
   font-style: italic;
-  font-size: 1rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
 }
 
@@ -1541,6 +1569,10 @@
 
 .agendaTag {
   justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 2px 7px;
   background: var(--dark);
   color: #fff;

@@ -420,62 +420,94 @@ function Agenda() {
   if (!matches?.length) return null;
 
   const today = matchDay(new Date().toISOString()).key;
-  const days: { key: string; label: string; matches: typeof matches }[] = [];
+  const byDay = new Map<string, typeof matches>();
 
   for (const match of matches) {
-    const day = matchDay(match.scheduledAt);
-    const last = days[days.length - 1];
+    const key = matchDay(match.scheduledAt).key;
+    byDay.set(key, [...(byDay.get(key) ?? []), match]);
+  }
 
-    if (last?.key === day.key) last.matches.push(match);
-    else days.push({ key: day.key, label: day.label, matches: [match] });
+  // Semaines complètes (lundi → dimanche), de la semaine en cours à celle du dernier match.
+  const lastKey = matchDay(matches[matches.length - 1].scheduledAt).key;
+  const toUtc = (key: string) => new Date(`${key}T12:00:00Z`);
+  const cursor = toUtc(today);
+  cursor.setUTCDate(cursor.getUTCDate() - ((cursor.getUTCDay() + 6) % 7));
+
+  const weeks: { key: string; label: string; past: boolean }[][] = [];
+
+  while (cursor <= toUtc(lastKey) || weeks.length === 0 || weeks[weeks.length - 1].length < 7) {
+    if (!weeks.length || weeks[weeks.length - 1].length === 7) weeks.push([]);
+
+    const key = cursor.toISOString().slice(0, 10);
+    const label = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'UTC',
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+    })
+      .format(cursor)
+      .replace('.', '');
+
+    weeks[weeks.length - 1].push({ key, label, past: key < today });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
 
   return (
     <div id="programme" className={`${ds.card} ${styles.agenda}`}>
       <BlockHead label="Phase finale" title="Programme" aside="Toutes divisions" />
 
-      <div className={styles.agendaDays}>
-        {days.map((day) => (
-          <div
-            key={day.key}
-            className={`${styles.agendaDay} ${day.key === today ? styles.agendaToday : ''}`}
-          >
-            <h4>
-              {day.label}
-              {day.key === today && <small>Aujourd&apos;hui</small>}
-            </h4>
+      {weeks.map((week) => (
+        <div key={week[0].key} className={styles.agendaDays}>
+          {week.map((day) => {
+            const dayMatches = byDay.get(day.key) ?? [];
 
-            {day.matches.map((match) => (
-              <div key={`${match.division}-${match.key}`} className={styles.agendaSlot}>
-                <div className={styles.agendaHour}>
-                  {matchDay(match.scheduledAt).time}
+            return (
+              <div
+                key={day.key}
+                className={`${styles.agendaDay} ${day.key === today ? styles.agendaToday : ''} ${
+                  day.past ? styles.agendaPast : ''
+                }`}
+              >
+                <h4>
+                  {day.label}
+                  {day.key === today && <small>Auj.</small>}
+                </h4>
 
-                  {match.streamUrl && (
-                    <a
-                      className={styles.bracketPlay}
-                      href={match.streamUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Voir le stream"
-                      aria-label="Voir le stream"
-                    >
-                      <PlayIcon />
-                    </a>
-                  )}
-                </div>
+                {dayMatches.length === 0 && <p className={styles.agendaEmpty}>Pas de match</p>}
 
-                <div className={styles.agendaTeams}>
-                  {sideLabel(match.top)} <span>vs</span> {sideLabel(match.bottom)}
-                </div>
+                {dayMatches.map((match) => (
+                  <div key={`${match.division}-${match.key}`} className={styles.agendaSlot}>
+                    <div className={styles.agendaHour}>
+                      {matchDay(match.scheduledAt).time}
 
-                <span className={styles.agendaTag}>
-                  {match.division} · {match.name} · {match.format}
-                </span>
+                      {match.streamUrl && (
+                        <a
+                          className={styles.bracketPlay}
+                          href={match.streamUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Voir le stream"
+                          aria-label="Voir le stream"
+                        >
+                          <PlayIcon />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className={styles.agendaTeams}>
+                      {sideLabel(match.top)} <span>vs</span> {sideLabel(match.bottom)}
+                    </div>
+
+                    <span className={styles.agendaTag}>
+                      {match.division} · {match.name} · {match.format}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
