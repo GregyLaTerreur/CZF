@@ -1,6 +1,7 @@
 .ticker {
   overflow: hidden;
-  background: var(--orange, #f05010);
+  /* Même orange que le liseré du header, pour qu'ils ne fassent qu'un. */
+  background: #f05010;
 }
 
 .track {

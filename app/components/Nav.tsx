@@ -270,8 +270,8 @@ export default function Nav() {
         </div>
       </nav>
 
-      {/* Prochains matchs de l'arbre (l'accueil les montre déjà dans son haut de page) */}
-      {pathname !== '/' && <UpcomingTicker />}
+      {/* Prochains matchs de l'arbre, sur toutes les pages */}
+      <UpcomingTicker />
     </header>
   );
 }

@@ -12,6 +12,7 @@ import {
   Ticker,
 } from './components/home/HomeLive';
 import { DIVISION_COLORS, type DivisionName } from './components/home/divisions';
+import HomeHero from './components/home/HomeHero';
 
 
 const DIVISION_INFO: { name: DivisionName; level: string; points: string }[] = [
@@ -24,7 +25,8 @@ export default function Home() {
   return (
     <main className={`${styles.home} ${fontVariables}`}>
 
-      {/* HERO */}
+      {/* HERO, précédé du prochain match de l'arbre quand il y en a un */}
+      <HomeHero>
       <header id="home-accueil" className={styles.hero}>
         <div className={`${styles.container} ${styles.heroGrid}`}>
           <div>
@@ -79,6 +81,7 @@ export default function Home() {
           </div>
         </div>
       </header>
+      </HomeHero>
 
       <Ticker />
 
