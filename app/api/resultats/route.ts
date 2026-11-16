@@ -17,6 +17,7 @@ import {
   readDivisionParam,
   toTeamMap,
 } from '@/lib/results/load';
+import { divisionResults } from '@/lib/results/upcoming';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,21 +57,7 @@ export async function GET(request: NextRequest) {
     const gamesByMatch = groupBy(games, (game) => Number(game.match_id));
 
     const results = withResults && {
-      // Classement calculé comme /api/classement : poules, toutes divisions.
-teams: computeStandings(
-  teams.map((team) => ({
-    ...team,
-    wins: 0,
-    losses: 0,
-    gameDiff: 0,
-    points: 0,
-  })),
-  allMatches,
-  gamesByMatch
-).filter((team) => team.division === division),
-      history: matches.map((match) =>
-        buildMatchSummary(match, teamMap, gamesByMatch.get(Number(match.id)) || [], playerNames)
-      ),
+      ...divisionResults(dataset, division),
       // Date et stream des matchs de l'arbre, par id de match (QF1, SF2…).
       schedule: dataset.schedule
         .filter((row) => row.division === division)

@@ -11,6 +11,7 @@ import { getMyDivision } from '@/app/components/ds/myDivision';
 import { DISCORD_URL, RULEBOOK_URL } from '@/app/components/links';
 import { fontVariables } from '@/app/fonts';
 import { BOOSTERS_CHANGED, useBoosterCount, useIsBetaTester } from '@/app/components/beta';
+import UpcomingTicker from './UpcomingTicker';
 import styles from './nav.module.css';
 
 // Statut admin gardé pour la visite : on ne redemande pas is_admin à chaque chargement.
@@ -268,6 +269,9 @@ export default function Nav() {
           </Link>
         </div>
       </nav>
+
+      {/* Prochains matchs de l'arbre (l'accueil les montre déjà dans son haut de page) */}
+      {pathname !== '/' && <UpcomingTicker />}
     </header>
   );
 }

@@ -4,6 +4,7 @@ import { memo, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { useIsAdmin } from '@/app/components/Nav';
+import { formatMatchDate } from '@/app/components/upcoming';
 import { supabase } from '@/lib/supabase';
 
 import {
@@ -148,6 +149,8 @@ export default function ResultsView() {
               <LastUpdate
                 date={data.lastUpdate}
               />
+
+              <NextMatchBanner tree={tree} />
 
               <div
                 className={styles.mainGrid}
@@ -330,24 +333,67 @@ const Standings = memo(
    double élimination, calculée depuis les matchs saisis
 ========================================================= */
 
-// « Sam 22/11 · 20h », à l'heure de Paris.
-function formatMatchDate(iso: string) {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('fr-FR', {
-      timeZone: 'Europe/Paris',
-      weekday: 'short',
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-      .formatToParts(new Date(iso))
-      .map((part) => [part.type, part.value])
+// Un match reste « prochain » 4 h après son heure de début, tant que son score n'est pas saisi.
+const STILL_PLAYING_MS = 4 * 60 * 60 * 1000;
+
+function findNextMatch(tree: BracketTree) {
+  const now = Date.now();
+
+  return [...tree.winner, ...tree.loser]
+    .flatMap((round) => round.matches)
+    .filter(
+      (match) =>
+        !match.played &&
+        match.scheduledAt &&
+        new Date(match.scheduledAt).getTime() >= now - STILL_PLAYING_MS
+    )
+    .sort((a, b) => a.scheduledAt!.localeCompare(b.scheduledAt!))[0];
+}
+
+// Bandeau au-dessus du classement et de l'arbre : prochain match programmé de la division.
+function NextMatchBanner({ tree }: { tree: BracketTree }) {
+  const match = findNextMatch(tree);
+
+  if (!match) return null;
+
+  return (
+    <div className={styles.nextMatch}>
+      <div className={styles.nextWhen}>
+        <small>
+          Prochain match · {match.name} · {match.format}
+        </small>
+        {formatMatchDate(match.scheduledAt!)}
+      </div>
+
+      <div className={styles.nextTeams}>
+        {[match.top, match.bottom].map((side, index) => (
+          <div key={index} className={styles.nextTeam}>
+            {index === 1 && <span className={styles.nextVs}>VS</span>}
+            {side.team ? (
+              <>
+                <TeamLogo logo={side.team.logo} size="sm" />
+                <span title={side.team.name}>{side.team.shortName}</span>
+              </>
+            ) : (
+              <span className={styles.nextPlaceholder}>{side.placeholder}</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {match.streamUrl && (
+        <a
+          className={styles.nextStream}
+          href={match.streamUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <PlayIcon />
+          Regarder sur Twitch
+        </a>
+      )}
+    </div>
   );
-
-  const minutes = parts.minute === '00' ? '' : parts.minute;
-
-  return `${parts.weekday.replace('.', '')} ${parts.day}/${parts.month} · ${parts.hour}h${minutes}`;
 }
 
 // Valeur d'un <input type="datetime-local"> (heure du navigateur).
