@@ -395,7 +395,16 @@ function BracketLane({
               styles.bracketRound
             }
           >
-            <h3>{round.title}</h3>
+            <h3>
+              {round.title}
+              <span
+                className={
+                  styles.bracketFormat
+                }
+              >
+                {round.format}
+              </span>
+            </h3>
 
             <div
               className={

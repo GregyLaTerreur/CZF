@@ -34,7 +34,8 @@ export type BracketNode = {
   played: boolean;
 };
 
-export type BracketRoundData = { title: string; matches: BracketNode[] };
+// Format du tour : BO3 ou BO5, tous les matchs d'un même tour se jouent au même format.
+export type BracketRoundData = { title: string; format: 'BO3' | 'BO5'; matches: BracketNode[] };
 
 export type BracketTree = {
   winner: BracketRoundData[];
@@ -158,16 +159,16 @@ export function buildBracket(teams: Team[], history: HistoryMatch[]): BracketTre
 
   return {
     winner: [
-      { title: 'Quarts', matches: pick('QF1', 'QF2', 'QF3', 'QF4') },
-      { title: 'Demi-finales', matches: pick('SF1', 'SF2') },
-      { title: 'Finale winner', matches: pick('WF') },
-      { title: 'Grande finale', matches: pick('GF') },
+      { title: 'Quarts', format: 'BO3', matches: pick('QF1', 'QF2', 'QF3', 'QF4') },
+      { title: 'Demi-finales', format: 'BO5', matches: pick('SF1', 'SF2') },
+      { title: 'Finale winner', format: 'BO5', matches: pick('WF') },
+      { title: 'Grande finale', format: 'BO5', matches: pick('GF') },
     ],
     loser: [
-      { title: 'Round 1', matches: pick('LR1A', 'LR1B') },
-      { title: 'Round 2', matches: pick('LR2A', 'LR2B') },
-      { title: 'Round 3', matches: pick('LR3') },
-      { title: 'Finale loser', matches: pick('LF') },
+      { title: 'Round 1', format: 'BO3', matches: pick('LR1A', 'LR1B') },
+      { title: 'Round 2', format: 'BO3', matches: pick('LR2A', 'LR2B') },
+      { title: 'Round 3', format: 'BO3', matches: pick('LR3') },
+      { title: 'Finale loser', format: 'BO5', matches: pick('LF') },
     ],
     roundNames,
   };

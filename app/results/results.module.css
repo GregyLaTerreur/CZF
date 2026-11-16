@@ -257,6 +257,17 @@
   color: rgba(8, 20, 40, 0.45);
 }
 
+.bracketFormat {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1.5px solid var(--dark);
+  background: var(--orange);
+  color: var(--dark);
+  letter-spacing: 0.06em;
+  vertical-align: 1px;
+}
+
 .bracketMatches {
   display: flex;
   flex-direction: column;
