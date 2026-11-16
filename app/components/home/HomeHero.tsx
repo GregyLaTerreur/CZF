@@ -1,6 +1,6 @@
 "use client";
 
-// Haut de l'accueil : quand un match de l'arbre est programmé, il s'affiche au-dessus du bloc
+// Haut de l'accueil : prochain match streamé dans les 3 jours, affiché au-dessus du bloc
 // d'intro (titre « KCB vs QGB », date, bouton Twitch, face-à-face des logos).
 import Link from "next/link";
 import { logoSrc } from "@/lib/logo";
@@ -11,6 +11,8 @@ import {
   type UpcomingSide,
 } from "../upcoming";
 import styles from "../../home.module.css";
+
+const SHOW_WITHIN_MS = 3 * 24 * 60 * 60 * 1000;
 
 function HeroLogo({ side }: { side: UpcomingSide }) {
   return (
@@ -26,10 +28,15 @@ function HeroLogo({ side }: { side: UpcomingSide }) {
 
 export default function HomeHero({ children }: { children: React.ReactNode }) {
   const matches = useUpcomingMatches();
-  // De préférence un match dont les deux équipes sont connues (pas « Vainq. quart 1 »).
-  const match =
-    matches?.find((item) => item.top.shortName && item.bottom.shortName) ??
-    matches?.[0];
+  // Seulement un match streamé, aux deux équipes connues, qui commence dans moins de 3 jours.
+  const limit = Date.now() + SHOW_WITHIN_MS;
+  const match = matches?.find(
+    (item) =>
+      item.streamUrl &&
+      item.top.shortName &&
+      item.bottom.shortName &&
+      new Date(item.scheduledAt).getTime() <= limit
+  );
 
   if (!match) return <>{children}</>;
 
