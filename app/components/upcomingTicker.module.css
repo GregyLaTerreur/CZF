@@ -1,7 +1,6 @@
 .ticker {
   overflow: hidden;
   background: var(--orange, #f05010);
-  border-bottom: 2px solid var(--dark, #081428);
 }
 
 .track {
