@@ -1450,3 +1450,105 @@
     justify-self: center;
   }
 }
+
+/* =========================================================
+   PROGRAMME (agenda des playoffs sous l'arbre)
+========================================================= */
+
+.agenda {
+  margin-top: var(--space-section);
+  scroll-margin-top: 140px;
+}
+
+.agendaDays {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  align-items: start;
+  gap: 16px;
+  padding: 20px;
+}
+
+.agendaDay {
+  background: #fff;
+  border: 2px solid var(--dark);
+  box-shadow: 3px 3px 0 var(--dark);
+}
+
+.agendaDay h4 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--dark);
+  color: #fff;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.agendaDay h4 small {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+}
+
+.agendaToday {
+  border-color: var(--orange);
+  box-shadow: 4px 4px 0 var(--orange);
+}
+
+.agendaToday h4 {
+  background: var(--orange);
+}
+
+.agendaSlot {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+}
+
+.agendaSlot + .agendaSlot {
+  border-top: 1px solid rgba(8, 20, 40, 0.12);
+}
+
+.agendaHour {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.agendaTeams {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.agendaTeams span {
+  color: var(--orange);
+}
+
+.agendaTag {
+  justify-self: start;
+  padding: 2px 7px;
+  background: var(--dark);
+  color: #fff;
+  font-family: var(--condensed);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: skewX(-8deg);
+}

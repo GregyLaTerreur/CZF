@@ -2,6 +2,7 @@
 
 // Bandeau orange défilant sous le menu : prochains matchs de l'arbre, avec lien vers le stream.
 // N'apparaît que s'il y a au moins un match programmé.
+import Link from 'next/link';
 import BoltIcon from '@/app/components/icons/BoltIcon';
 import { formatMatchDate, sideLabel, useUpcomingMatches } from './upcoming';
 import styles from './upcomingTicker.module.css';
@@ -38,6 +39,11 @@ export default function UpcomingTicker() {
               >
                 Regarder sur Twitch
               </a>
+            )}
+            {index % items.length === items.length - 1 && (
+              <Link href="/results#programme" className={styles.link} tabIndex={index >= items.length ? -1 : undefined}>
+                Tout le programme
+              </Link>
             )}
           </span>
         ))}

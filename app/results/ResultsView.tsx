@@ -1,10 +1,16 @@
 'use client';
 
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { useIsAdmin } from '@/app/components/Nav';
-import { formatMatchDate } from '@/app/components/upcoming';
+import {
+  forgetUpcoming,
+  formatMatchDate,
+  matchDay,
+  sideLabel,
+  useUpcomingMatches,
+} from '@/app/components/upcoming';
 import { supabase } from '@/lib/supabase';
 
 import {
@@ -94,6 +100,7 @@ export default function ResultsView() {
 
   const savePlanned = (entry: BracketScheduleEntry) => {
     forgetDivisionData();
+    forgetUpcoming();
     setPlanned((previous) => ({
       ...previous,
       [`${division}:${entry.key}`]: entry,
@@ -166,6 +173,8 @@ export default function ResultsView() {
                   onSaved={savePlanned}
                 />
               </div>
+
+              <Agenda />
 
               <History
                 key={division}
@@ -392,6 +401,81 @@ function NextMatchBanner({ tree }: { tree: BracketTree }) {
           Regarder sur Twitch
         </a>
       )}
+    </div>
+  );
+}
+
+// Agenda des playoffs sous l'arbre : matchs programmés à venir, toutes divisions, groupés par jour.
+function Agenda() {
+  const matches = useUpcomingMatches();
+  const hasMatches = Boolean(matches?.length);
+
+  // Lien « Tout le programme » du bandeau : l'agenda n'existe qu'une fois chargé.
+  useEffect(() => {
+    if (hasMatches && window.location.hash === '#programme') {
+      document.getElementById('programme')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [hasMatches]);
+
+  if (!matches?.length) return null;
+
+  const today = matchDay(new Date().toISOString()).key;
+  const days: { key: string; label: string; matches: typeof matches }[] = [];
+
+  for (const match of matches) {
+    const day = matchDay(match.scheduledAt);
+    const last = days[days.length - 1];
+
+    if (last?.key === day.key) last.matches.push(match);
+    else days.push({ key: day.key, label: day.label, matches: [match] });
+  }
+
+  return (
+    <div id="programme" className={`${ds.card} ${styles.agenda}`}>
+      <BlockHead label="Phase finale" title="Programme" aside="Toutes divisions" />
+
+      <div className={styles.agendaDays}>
+        {days.map((day) => (
+          <div
+            key={day.key}
+            className={`${styles.agendaDay} ${day.key === today ? styles.agendaToday : ''}`}
+          >
+            <h4>
+              {day.label}
+              {day.key === today && <small>Aujourd&apos;hui</small>}
+            </h4>
+
+            {day.matches.map((match) => (
+              <div key={`${match.division}-${match.key}`} className={styles.agendaSlot}>
+                <div className={styles.agendaHour}>
+                  {matchDay(match.scheduledAt).time}
+
+                  {match.streamUrl && (
+                    <a
+                      className={styles.bracketPlay}
+                      href={match.streamUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Voir le stream"
+                      aria-label="Voir le stream"
+                    >
+                      <PlayIcon />
+                    </a>
+                  )}
+                </div>
+
+                <div className={styles.agendaTeams}>
+                  {sideLabel(match.top)} <span>vs</span> {sideLabel(match.bottom)}
+                </div>
+
+                <span className={styles.agendaTag}>
+                  {match.division} · {match.name} · {match.format}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

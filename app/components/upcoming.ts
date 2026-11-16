@@ -32,6 +32,11 @@ function loadUpcoming(): Promise<UpcomingMatch[]> {
   return entry.promise;
 }
 
+// Après une saisie admin : la prochaine lecture recharge la liste.
+export function forgetUpcoming() {
+  cache = null;
+}
+
 export function useUpcomingMatches(): UpcomingMatch[] | null {
   const [matches, setMatches] = useState<UpcomingMatch[] | null>(cache?.value ?? null);
 
@@ -70,4 +75,27 @@ export function formatMatchDate(iso: string) {
   const minutes = parts.minute === '00' ? '' : parts.minute;
 
   return `${parts.weekday.replace('.', '')} ${parts.day}/${parts.month} · ${parts.hour}h${minutes}`;
+}
+
+// Jour du match à Paris : clé de tri (« 2026-11-22 ») et libellé (« sam 22/11 »).
+export function matchDay(iso: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris',
+      weekday: 'short',
+      year: 'numeric',
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+      .formatToParts(new Date(iso))
+      .map((part) => [part.type, part.value])
+  );
+
+  return {
+    key: `${parts.year}-${parts.month}-${parts.day}`,
+    label: `${parts.weekday.replace('.', '')} ${parts.day}/${parts.month}`,
+    time: `${parts.hour}h${parts.minute === '00' ? '' : parts.minute}`,
+  };
 }
