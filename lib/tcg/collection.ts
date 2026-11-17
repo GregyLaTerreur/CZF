@@ -162,3 +162,36 @@ export async function loadLeaderboard(limit = 500): Promise<LeaderboardEntry[]> 
     division: teams.get(e.profileId)?.division ?? null,
   }));
 }
+
+export type CardOwner = { profileId: string; name: string; avatar: string | null; count: number };
+
+// Qui possède une carte : les plus gros détenteurs d'abord (à égalité, le premier à l'avoir eue), top `limit`.
+export async function loadCardOwners(cardId: number, limit = 20): Promise<{ owners: CardOwner[]; totalOwners: number; totalCopies: number }> {
+  const { data, error } = await supabaseAdmin.from('czf_tcg_user_cards').select('profile_id, obtained_at').eq('card_id', cardId).limit(100000);
+  if (error) throw error;
+
+  const byProfile = new Map<string, { count: number; first: string }>();
+  for (const row of data || []) {
+    const entry = byProfile.get(row.profile_id);
+    if (!entry) byProfile.set(row.profile_id, { count: 1, first: String(row.obtained_at) });
+    else {
+      entry.count += 1;
+      if (String(row.obtained_at) < entry.first) entry.first = String(row.obtained_at);
+    }
+  }
+
+  const eligible = new Set(await eligibleProfiles());
+  const ranked = [...byProfile.entries()]
+    .filter(([profileId]) => eligible.has(profileId))
+    .sort(([, a], [, b]) => b.count - a.count || a.first.localeCompare(b.first));
+
+  const top = ranked.slice(0, limit);
+  const ids = top.map(([id]) => id);
+  const [names, avatars] = await Promise.all([loadProfileNames(ids), loadAvatars()]);
+
+  return {
+    owners: top.map(([profileId, e]) => ({ profileId, name: names.get(profileId)?.name ?? 'Joueur', avatar: avatars.get(profileId) ?? null, count: e.count })),
+    totalOwners: ranked.length,
+    totalCopies: ranked.reduce((sum, [, e]) => sum + e.count, 0),
+  };
+}
