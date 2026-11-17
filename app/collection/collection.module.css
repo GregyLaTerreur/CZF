@@ -1,5 +1,7 @@
-.wrap {
-  padding-top: var(--space-section);
+/* Même marge sous le header que les autres pages (ds.header : --space-block).
+   « main .wrap » : passe devant le padding de ds.container, posé sur le même élément. */
+main .wrap {
+  padding-top: var(--space-block);
   padding-bottom: var(--space-section);
 }
 
@@ -378,8 +380,9 @@
 
 .main {
   min-width: 0;
-  /* Toute la largeur à droite du menu : sur grand écran, la grille ajoute des colonnes. */
-  padding: var(--space-section) 40px;
+  /* Toute la largeur à droite du menu : sur grand écran, la grille ajoute des colonnes.
+     Marge du haut identique aux autres pages (--space-block). */
+  padding: var(--space-block) 40px var(--space-section);
 }
 
 /* Téléphone : la sidebar devient une barre qui défile horizontalement. */
