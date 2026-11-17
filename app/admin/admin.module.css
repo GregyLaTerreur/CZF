@@ -124,73 +124,125 @@
 /* Tableau de bord */
 .dashGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 28px;
   align-items: start;
 }
 
 .dashCard {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+}
+
+.dashHead {
+  padding: 16px 20px 12px;
+  border-bottom: 2px solid var(--dark);
+}
+
+.dashBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px 22px;
+}
+
+/* Carte sombre : ombre orange (règle des ombres du design system). */
+.dashDark {
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.dashDark .dashHead {
+  border-bottom-color: rgba(224, 216, 204, 0.15);
 }
 
 .dashText {
   margin: 0;
-  font-size: 0.92rem;
-  color: rgba(8, 20, 40, 0.7);
+  font-size: 0.95rem;
+  color: var(--on-dark);
+}
+
+.todoList {
+  display: flex;
+  flex-direction: column;
 }
 
 .todo,
+.todoHot,
 .todo:hover,
-.todo:active {
-  display: flex;
+.todo:active,
+.todoHot:hover,
+.todoHot:active {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 14px 20px;
   border: none;
-  border-left: 4px solid var(--orange);
-  background: var(--dark);
-  color: #fff;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.12);
+  border-left: 4px solid transparent;
+  background: none;
+  color: var(--dark);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transform: none;
   box-shadow: none;
   filter: none;
 }
 
-.todo:hover {
-  background: #040c18;
+.todoList > :last-child {
+  border-bottom: none;
 }
 
-.todo strong {
-  font: italic 800 1.6rem/1 var(--font-barlow-condensed), sans-serif;
+.todo:hover,
+.todoHot:hover {
+  background: rgba(8, 20, 40, 0.05);
+}
+
+.todoHot {
+  border-left-color: var(--orange);
+}
+
+.todo strong,
+.todoHot strong {
+  font: italic 800 1.7rem/1 var(--font-barlow-condensed), sans-serif;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.todoHot strong {
   color: var(--orange);
 }
 
-.todo span {
-  font: italic 800 1rem var(--font-barlow-condensed), sans-serif;
+.todo > svg:first-child {
+  justify-self: center;
+  width: 22px;
+  height: 22px;
+}
+
+.todo span,
+.todoHot span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font: italic 800 1.02rem var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
 }
 
-.todoDone {
-  margin: 0;
-  padding: 10px 14px;
-  border-left: 4px solid var(--teal);
-  background: rgba(0, 201, 160, 0.1);
-  font-weight: 600;
+.todo small,
+.todoHot small {
+  font: 500 0.82rem var(--font-barlow), sans-serif;
+  text-transform: none;
+  color: rgba(8, 20, 40, 0.6);
 }
 
-.todoLink {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(8, 20, 40, 0.12);
-  color: var(--dark);
-  font-weight: 600;
-}
-
-.todoLink:hover {
-  color: var(--orange);
+.todo > svg:last-child,
+.todoHot > svg:last-child {
+  color: rgba(8, 20, 40, 0.4);
 }
 
 /* Équipes : filtre « à valider » */

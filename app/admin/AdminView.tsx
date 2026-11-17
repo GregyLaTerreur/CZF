@@ -18,6 +18,7 @@ import { divisionFromPoints } from '@/app/components/ds/lol';
 
 import RiotRefreshPanel from './RiotRefreshPanel';
 import { ADMIN_TO_VALIDATE } from './AdminShell';
+import { ChevronIcon, RiotIcon, TrophyIcon } from './AdminIcons';
 import styles from './admin.module.css';
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
@@ -1106,23 +1107,45 @@ export default function AdminView() {
 
               <div className={styles.dashGrid}>
                 <div className={`${ds.card} ${styles.dashCard}`}>
-                  <div className={ds.cardTitle}>À faire</div>
-                  {toValidate > 0 ? (
-                    <button type="button" className={styles.todo} onClick={showPending}>
+                  <div className={styles.dashHead}>
+                    <div className={ds.cardTitle}>À faire</div>
+                  </div>
+                  <div className={styles.todoList}>
+                    <button type="button" className={toValidate > 0 ? styles.todoHot : styles.todo} onClick={showPending}>
                       <strong>{toValidate}</strong>
-                      <span>{toValidate > 1 ? 'équipes à valider' : 'équipe à valider'}</span>
+                      <span>
+                        {toValidate > 1 ? 'Équipes à valider' : 'Équipe à valider'}
+                        <small>{toValidate > 0 ? 'Inscrites, en attente de validation et de division' : 'Tout est à jour'}</small>
+                      </span>
+                      <ChevronIcon />
                     </button>
-                  ) : (
-                    <p className={styles.todoDone}>Aucune équipe à valider.</p>
-                  )}
-                  <Link href="/admin/riot" className={styles.todoLink}>Revoir les BO Riot importés</Link>
-                  <Link href="/admin/results" className={styles.todoLink}>Saisir un résultat ou valider un MVP</Link>
+                    <Link href="/admin/riot" className={styles.todo}>
+                      <RiotIcon />
+                      <span>
+                        BO Riot importés
+                        <small>Vérifier les rosters puis publier</small>
+                      </span>
+                      <ChevronIcon />
+                    </Link>
+                    <Link href="/admin/results" className={styles.todo}>
+                      <TrophyIcon />
+                      <span>
+                        Résultats et MVP
+                        <small>Saisir un BO à la main, valider les MVP proposés</small>
+                      </span>
+                      <ChevronIcon />
+                    </Link>
+                  </div>
                 </div>
 
-                <div className={`${ds.card} ${styles.dashCard}`}>
-                  <div className={ds.cardTitle}>Riot</div>
-                  <p className={styles.dashText}>Met à jour rangs, LP, winrates et points CZF de tous les joueurs.</p>
-                  <RiotRefreshPanel />
+                <div className={`${ds.card} ${styles.dashCard} ${styles.dashDark}`}>
+                  <div className={styles.dashHead}>
+                    <div className={ds.cardTitle}>Données Riot</div>
+                  </div>
+                  <div className={styles.dashBody}>
+                    <p className={styles.dashText}>Met à jour les rangs, LP, winrates et points CZF de tous les joueurs.</p>
+                    <RiotRefreshPanel />
+                  </div>
                 </div>
               </div>
             </div>
