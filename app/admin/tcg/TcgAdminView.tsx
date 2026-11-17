@@ -67,6 +67,8 @@ export default function TcgAdminView() {
   // Saisons à numérotation figée (null : SQL tcg-8 pas encore passé).
   const [numbering, setNumbering] = useState<{ season_id: number; total: number; frozen_at: string }[] | null>([]);
   const [freezing, setFreezing] = useState(false);
+  // Droit tcg.refiger_numeros : le bouton reste cliquable même une fois la saison figée.
+  const [canRefreeze, setCanRefreeze] = useState(false);
   const [players, setPlayers] = useState<LinkPlayer[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
   const [linking, setLinking] = useState(false);
@@ -92,6 +94,7 @@ export default function TcgAdminView() {
       setCards(json.cards);
       setSeasons(json.seasons || []);
       setNumbering(json.numbering ?? null);
+      setCanRefreeze(json.canRefreeze === true);
     } catch (err) {
       setIsAdmin((current) => current ?? false);
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -262,9 +265,15 @@ export default function TcgAdminView() {
   }
 
   // Fige la numérotation d'une saison : une seule fois, le bouton reste ensuite bloqué.
-  async function freeze(season: Season, count: number) {
+  async function freeze(season: Season, count: number, force = false) {
     if (freezing) return;
-    const ok = window.confirm(
+    const ok = force
+      ? window.confirm(
+          `REFIGER les numéros de « ${season.name} » ?\n\n` +
+            `Les numéros de toutes les cartes de la saison sont recalculés (communes, rares, épiques, légendaires) ` +
+            `et le total devient ${count}. Des cartes peuvent changer de numéro.`
+        )
+      : window.confirm(
       `Figer les numéros de « ${season.name} » ?\n\n` +
         `Les ${count} cartes gardent leur numéro (1 à ${count}) et le total reste ${count}. ` +
         `Une carte ajoutée ensuite prendra le numéro suivant (${count + 1}/${count}).\n\n` +
@@ -274,7 +283,7 @@ export default function TcgAdminView() {
     setFreezing(true);
     setError('');
     try {
-      const response = await fetch('/api/admin/tcg/freeze', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ season_id: season.id }) });
+      const response = await fetch('/api/admin/tcg/freeze', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ season_id: season.id, force }) });
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
       setMessage(`Numéros figés : ${json.total} cartes.`);
@@ -550,9 +559,15 @@ export default function TcgAdminView() {
                       : `${count} cartes · numéros encore calculés (communes, rares, épiques, légendaires)`}
                   </span>
                 </div>
-                <button type="button" className={done ? ds.btnOutline : ds.btnPrimary} disabled={Boolean(done) || freezing} onClick={() => freeze(season, count)}>
-                  {done ? 'Numéros figés' : 'Figer les numéros'}
-                </button>
+                {done && canRefreeze ? (
+                  <button type="button" className={ds.btnOutline} disabled={freezing} onClick={() => freeze(season, count, true)}>
+                    Refiger les numéros
+                  </button>
+                ) : (
+                  <button type="button" className={done ? ds.btnOutline : ds.btnPrimary} disabled={Boolean(done) || freezing} onClick={() => freeze(season, count)}>
+                    {done ? 'Numéros figés' : 'Figer les numéros'}
+                  </button>
+                )}
               </div>
             );
           })}
