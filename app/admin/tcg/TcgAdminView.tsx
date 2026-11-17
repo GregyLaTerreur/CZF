@@ -15,6 +15,7 @@ import {
   CARD_TYPE_LABELS,
   ART_DEFAULT,
   EMPTY_CARD,
+  isRealSkin,
   RARITY_LABELS,
   RARITIES,
   STAT_LABELS,
@@ -33,7 +34,7 @@ type LinkPlayer = {
   // Choix du joueur par saison (sinon champion le plus maîtrisé = champions[0]).
   choices: Record<number, { champion: string; skin_num: number; is_default: boolean }>;
 };
-type Skin = { num: number; name: string };
+type Skin = { num: number; name: string; parentSkin?: number };
 
 const fixed = (value: unknown, digits: number) => (Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : '');
 
@@ -143,7 +144,7 @@ export default function TcgAdminView() {
     fetch(`https://ddragon.leagueoflegends.com/cdn/${ddVersion}/data/fr_FR/champion/${form.champion}.json`)
       .then((res) => res.json())
       .then((json) => {
-        const list: Skin[] = (json?.data?.[form.champion]?.skins ?? []).map((sk: Skin) => ({ num: sk.num, name: sk.name === 'default' ? 'Skin de base' : sk.name }));
+        const list: Skin[] = (json?.data?.[form.champion]?.skins ?? []).filter(isRealSkin).map((sk: Skin) => ({ num: sk.num, name: sk.name === 'default' ? 'Skin de base' : sk.name }));
         if (alive) setSkins(list);
       })
       .catch(() => {});

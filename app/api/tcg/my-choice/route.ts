@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireTcgPlayer } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { loadSeasons, resolveSeasonId } from '@/lib/tcg/seasons';
+import { isRealSkin } from '@/lib/tcg/cards';
 import { isSeasonLaunched, isValidChampion, loadChoices, topChampion } from '@/lib/tcg/choices';
 
 export const dynamic = 'force-dynamic';
@@ -18,8 +19,8 @@ async function skinExists(champion: string, skinNum: number): Promise<boolean> {
   try {
     const versions: string[] = await fetch('https://ddragon.leagueoflegends.com/api/versions.json', { next: { revalidate: 3600 } }).then((r) => r.json());
     const json = await fetch(`https://ddragon.leagueoflegends.com/cdn/${versions[0]}/data/fr_FR/champion/${champion}.json`, { next: { revalidate: 3600 } }).then((r) => r.json());
-    const skins: { num: number }[] = json?.data?.[champion]?.skins ?? [];
-    return skins.some((s) => s.num === skinNum);
+    const skins: { num: number; parentSkin?: number }[] = json?.data?.[champion]?.skins ?? [];
+    return skins.some((s) => s.num === skinNum && isRealSkin(s));
   } catch {
     return false;
   }

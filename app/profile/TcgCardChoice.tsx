@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { skinArt } from '@/lib/tcg/cards';
+import { isRealSkin, skinArt } from '@/lib/tcg/cards';
 import ds from '@/app/components/ds/ds.module.css';
 import styles from './tcgChoice.module.css';
 
 type Choice = { champion: string; skin_num: number; is_default: boolean };
 type Champion = { id: string; name: string };
-type Skin = { num: number; name: string };
+type Skin = { num: number; name: string; parentSkin?: number };
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -54,7 +54,7 @@ export default function TcgCardChoice({ ddragonVersion }: { ddragonVersion: stri
     fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/fr_FR/champion/${champion}.json`)
       .then((res) => res.json())
       .then((json) => {
-        const list: Skin[] = (json?.data?.[champion]?.skins ?? []).map((sk: Skin) => ({ num: sk.num, name: sk.name === 'default' ? 'Skin de base' : sk.name }));
+        const list: Skin[] = (json?.data?.[champion]?.skins ?? []).filter(isRealSkin).map((sk: Skin) => ({ num: sk.num, name: sk.name === 'default' ? 'Skin de base' : sk.name }));
         if (alive) setSkins(list);
       })
       .catch(() => {});

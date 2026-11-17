@@ -137,6 +137,9 @@ export function championArt(card: Pick<TcgCard, 'champion' | 'art_url' | 'skin_n
   return skinArt(card.champion, card.skin_num ?? 0);
 }
 
+// Skins Data Dragon sans les chromas (un chroma a un parentSkin et pas d'illustration à lui).
+export const isRealSkin = (skin: { parentSkin?: number | null }) => skin.parentSkin == null;
+
 // Illustration verticale d'un skin (Data Dragon).
 export const skinArt = (champion: string, skinNum = 0) =>
   `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champion}_${skinNum}.jpg`;
