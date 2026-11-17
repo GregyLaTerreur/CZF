@@ -20,8 +20,8 @@ import {
 } from '@/lib/tcg/cards';
 import styles from './playerCard.module.css';
 
-// Arrondi des coins sur les cadres de la graphiste (gabarit 1500×2100).
-const FRAME_RADIUS = 24;
+// Arrondi des coins sur les cadres de la graphiste : ~3 mm sur une carte de 63 mm, comme une vraie carte.
+const FRAME_RADIUS = 70;
 
 const at = (cx: number, cy: number): CSSProperties => ({ left: pctX(cx), top: pctY(cy) });
 
@@ -62,7 +62,7 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
       className={`${styles.card} ${styles[card.rarity]}`}
       style={{
         aspectRatio: `${CARD_SIZE.w} / ${CARD_SIZE.h}`,
-        // Cadre de la graphiste : petit arrondi (24 sur 1500). Cadres provisoires : arrondi d'origine.
+        // Cadre de la graphiste : arrondi d'une vraie carte. Cadres provisoires : arrondi d'origine.
         borderRadius: (() => {
           const r = layout.frame ? FRAME_RADIUS : CARD_RADIUS;
           return `${(r / CARD_SIZE.w) * 100}% / ${(r / CARD_SIZE.h) * 100}%`;
