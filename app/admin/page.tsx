@@ -1,14 +1,11 @@
-import Footer from '../components/Footer';
-import { fontVariables } from '../fonts';
-import ds from '../components/ds/ds.module.css';
+import { Suspense } from 'react';
 import AdminView from './AdminView';
-import styles from './admin.module.css';
 
+// La vue (?vue=) est lue avec useSearchParams : Suspense requis.
 export default function AdminPage() {
   return (
-    <main className={`${ds.page} ${styles.page} ${fontVariables}`}>
+    <Suspense fallback={null}>
       <AdminView />
-      <Footer />
-    </main>
+    </Suspense>
   );
 }

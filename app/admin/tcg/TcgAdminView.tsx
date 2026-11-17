@@ -322,7 +322,6 @@ export default function TcgAdminView() {
           <div className={ds.sectionLabel}>Administration · TCG</div>
           <h1 className={ds.h1}>Gérer le TCG</h1>
         </div>
-        <Link href="/admin" className={`${ds.btnOutline} ${ds.btnSmall}`}>Retour admin</Link>
       </div>
 
       <p className={styles.betaNote}>

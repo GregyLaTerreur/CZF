@@ -106,8 +106,12 @@
 
 .main {
   min-width: 0;
-  /* Marge du haut identique aux autres pages (--space-block). */
-  padding: var(--space-block) 40px var(--space-section);
+  padding-bottom: var(--space-section);
+}
+
+/* Vues de la page Admin : même marge sous le header que les autres pages. */
+.main .view {
+  padding-top: var(--space-block);
 }
 
 .view {
@@ -247,9 +251,6 @@
     white-space: nowrap;
   }
 
-  .main {
-    padding: 24px 16px;
-  }
 
   .dashGrid {
     grid-template-columns: 1fr;

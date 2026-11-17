@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import Switch from '@/app/components/ds/Switch';
@@ -102,7 +101,6 @@ export default function DroitsView() {
           <div className={ds.sectionLabel}>Administration · Superadmin</div>
           <h1 className={ds.h1}>Droits</h1>
         </div>
-        <Link href="/admin" className={`${ds.btnOutline} ${ds.btnSmall}`}>Retour admin</Link>
       </div>
 
       {error && <p className={ds.formError}>{error}</p>}

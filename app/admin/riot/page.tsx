@@ -277,7 +277,7 @@ export default function RiotAdminPage() {
   return (
     <>
 
-      <main className="section">
+      <div className="section">
         <div className="sectionTitle">
           <span />
           <h2>Admin — Résultats Riot</h2>
@@ -844,7 +844,7 @@ export default function RiotAdminPage() {
             }
           }
         `}</style>
-      </main>
+      </div>
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useIsBetaTester, useIsSuperAdmin } from '@/app/components/beta';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
 import { logoSrc } from '@/lib/logo';
@@ -17,7 +17,7 @@ import {
 import { divisionFromPoints } from '@/app/components/ds/lol';
 
 import RiotRefreshPanel from './RiotRefreshPanel';
-import { CardIcon, HomeIcon, KeyIcon, PlayerIcon, RiotIcon, TeamIcon, TrophyIcon } from './AdminIcons';
+import { ADMIN_TO_VALIDATE } from './AdminShell';
 import styles from './admin.module.css';
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
@@ -25,8 +25,6 @@ const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 type AdminView = 'accueil' | 'equipes' | 'joueurs';
 
 export default function AdminView() {
-  const isBetaTester = useIsBetaTester();
-  const isSuperAdmin = useIsSuperAdmin();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -35,8 +33,10 @@ export default function AdminView() {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   const [teamSearch, setTeamSearch] = useState('');
-  // Vue affichée à droite du menu ; #equipes / #joueurs dans l'adresse pour y revenir.
-  const [view, setView] = useState<AdminView>('accueil');
+  // Vue choisie dans le menu admin (layout) : /admin?vue=equipes | joueurs.
+  const router = useRouter();
+  const vue = useSearchParams().get('vue');
+  const view: AdminView = vue === 'equipes' || vue === 'joueurs' ? vue : 'accueil';
   // Sans recherche, liste les équipes pas encore validées.
   const [onlyPending, setOnlyPending] = useState(false);
   const [playerSearch, setPlayerSearch] = useState('');
@@ -92,12 +92,6 @@ export default function AdminView() {
   useEffect(() => {
     loadAdmin();
     loadData();
-  }, []);
-
-  // Ouvre directement la vue demandée dans l'adresse (#equipes, #joueurs).
-  useEffect(() => {
-    const hash = location.hash.slice(1);
-    if (hash === 'equipes' || hash === 'joueurs') setView(hash);
   }, []);
 
   async function loadAdmin() {
@@ -956,6 +950,11 @@ export default function AdminView() {
 
   const toValidate = teams.filter((team) => !team.validated_by_admin).length;
 
+  // Pastille du menu admin à jour après une validation.
+  useEffect(() => {
+    if (!loading) window.dispatchEvent(new CustomEvent(ADMIN_TO_VALIDATE, { detail: toValidate }));
+  }, [toValidate, loading]);
+
   const counts = {
     players:
       players.length,
@@ -1016,74 +1015,18 @@ export default function AdminView() {
     );
   }
 
-  const goTo = (target: AdminView) => {
-    setView(target);
-    try {
-      history.replaceState(null, '', target === 'accueil' ? location.pathname : `#${target}`);
-    } catch {}
-  };
-
   const showPending = () => {
     setTeamSearch('');
     setOnlyPending(true);
-    goTo('equipes');
+    router.push('/admin?vue=equipes');
   };
 
-  const sideClass = (target: AdminView) => (view === target ? styles.sideOn : styles.sideLink);
-
   return (
-    <div className={styles.full}>
-      <div className={styles.layout}>
-        {/* Menu admin pleine hauteur (même principe que la Collection). */}
-        <aside className={styles.side}>
-          <nav className={styles.sideInner} aria-label="Administration">
-            <div className={styles.sideTitle}>Administration</div>
-            <button type="button" className={sideClass('accueil')} onClick={() => goTo('accueil')}>
-              <HomeIcon /> Tableau de bord
-            </button>
-
-            <div className={styles.sideTitle}>Compétition</div>
-            <button type="button" className={sideClass('equipes')} onClick={() => goTo('equipes')}>
-              <TeamIcon /> Équipes
-              {toValidate > 0 && <span className={styles.sideCount}>{toValidate}</span>}
-            </button>
-            <button type="button" className={sideClass('joueurs')} onClick={() => goTo('joueurs')}>
-              <PlayerIcon /> Joueurs
-            </button>
-            <Link href="/admin/results" className={styles.sideLink}>
-              <TrophyIcon /> Résultats
-            </Link>
-            <Link href="/admin/riot" className={styles.sideLink}>
-              <RiotIcon /> BO Riot
-            </Link>
-
-            {/* TCG en bêta : seulement pour les admins bêta-testeurs. */}
-            {isBetaTester && (
-              <>
-                <div className={styles.sideTitle}>TCG</div>
-                <Link href="/admin/tcg" className={styles.sideLink}>
-                  <CardIcon /> Cartes et boosters
-                </Link>
-              </>
-            )}
-
-            {/* Droits d'admin (admin_grants) : seulement pour les superadmins. */}
-            {isSuperAdmin && (
-              <>
-                <div className={styles.sideTitle}>Système</div>
-                <Link href="/admin/droits" className={styles.sideLink}>
-                  <KeyIcon /> Droits
-                </Link>
-              </>
-            )}
-          </nav>
-        </aside>
-
-        <div className={styles.main}>
+    <>
           {message && <p className={ds.formInfo}>{message}</p>}
 
           {view === 'accueil' && (
-            <div className={styles.view}>
+            <div className={`${ds.container} ${styles.view}`}>
               <div>
                 <div className={ds.sectionLabel}>Administration</div>
                 <h1 className={ds.h1}>Tableau de bord</h1>
@@ -1186,7 +1129,7 @@ export default function AdminView() {
           )}
 
           {view === 'equipes' && (
-            <div className={styles.view}>
+            <div className={`${ds.container} ${styles.view}`}>
               <div className={styles.pendingBar}>
                 <button
                   type="button"
@@ -2006,7 +1949,7 @@ export default function AdminView() {
           )}
 
           {view === 'joueurs' && (
-            <div className={styles.view}>
+            <div className={`${ds.container} ${styles.view}`}>
           <div>
             <div
               className={
@@ -2503,8 +2446,6 @@ export default function AdminView() {
           </div>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
