@@ -17,9 +17,12 @@ import {
 import { divisionFromPoints } from '@/app/components/ds/lol';
 
 import RiotRefreshPanel from './RiotRefreshPanel';
+import { CardIcon, HomeIcon, KeyIcon, PlayerIcon, RiotIcon, TeamIcon, TrophyIcon } from './AdminIcons';
 import styles from './admin.module.css';
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+
+type AdminView = 'accueil' | 'equipes' | 'joueurs';
 
 export default function AdminView() {
   const isBetaTester = useIsBetaTester();
@@ -32,6 +35,10 @@ export default function AdminView() {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   const [teamSearch, setTeamSearch] = useState('');
+  // Vue affichée à droite du menu ; #equipes / #joueurs dans l'adresse pour y revenir.
+  const [view, setView] = useState<AdminView>('accueil');
+  // Sans recherche, liste les équipes pas encore validées.
+  const [onlyPending, setOnlyPending] = useState(false);
   const [playerSearch, setPlayerSearch] = useState('');
 
   const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
@@ -85,6 +92,12 @@ export default function AdminView() {
   useEffect(() => {
     loadAdmin();
     loadData();
+  }, []);
+
+  // Ouvre directement la vue demandée dans l'adresse (#equipes, #joueurs).
+  useEffect(() => {
+    const hash = location.hash.slice(1);
+    if (hash === 'equipes' || hash === 'joueurs') setView(hash);
   }, []);
 
   async function loadAdmin() {
@@ -906,7 +919,7 @@ export default function AdminView() {
           .toLowerCase();
 
       if (!query) {
-        return [];
+        return onlyPending ? teams.filter((team) => !team.validated_by_admin) : [];
       }
 
       return teams
@@ -916,7 +929,7 @@ export default function AdminView() {
             .includes(query)
         )
         .slice(0, 10);
-    }, [teams, teamSearch]);
+    }, [teams, teamSearch, onlyPending]);
 
   const searchedPlayers =
     useMemo(() => {
@@ -940,6 +953,8 @@ export default function AdminView() {
       players,
       playerSearch,
     ]);
+
+  const toValidate = teams.filter((team) => !team.validated_by_admin).length;
 
   const counts = {
     players:
@@ -1001,28 +1016,78 @@ export default function AdminView() {
     );
   }
 
-  return (
-    <>
-      <header
-        className={ds.header}
-      >
-        <div
-          className={`${ds.container} ${ds.headerGrid}`}
-        >
-          <div>
-            <div
-              className={
-                ds.sectionLabel
-              }
-            >
-              Administration
-            </div>
+  const goTo = (target: AdminView) => {
+    setView(target);
+    try {
+      history.replaceState(null, '', target === 'accueil' ? location.pathname : `#${target}`);
+    } catch {}
+  };
 
-            <h1
-              className={ds.h1}
-            >
-              Admin CZF
-            </h1>
+  const showPending = () => {
+    setTeamSearch('');
+    setOnlyPending(true);
+    goTo('equipes');
+  };
+
+  const sideClass = (target: AdminView) => (view === target ? styles.sideOn : styles.sideLink);
+
+  return (
+    <div className={styles.full}>
+      <div className={styles.layout}>
+        {/* Menu admin pleine hauteur (même principe que la Collection). */}
+        <aside className={styles.side}>
+          <nav className={styles.sideInner} aria-label="Administration">
+            <div className={styles.sideTitle}>Administration</div>
+            <button type="button" className={sideClass('accueil')} onClick={() => goTo('accueil')}>
+              <HomeIcon /> Tableau de bord
+            </button>
+
+            <div className={styles.sideTitle}>Compétition</div>
+            <button type="button" className={sideClass('equipes')} onClick={() => goTo('equipes')}>
+              <TeamIcon /> Équipes
+              {toValidate > 0 && <span className={styles.sideCount}>{toValidate}</span>}
+            </button>
+            <button type="button" className={sideClass('joueurs')} onClick={() => goTo('joueurs')}>
+              <PlayerIcon /> Joueurs
+            </button>
+            <Link href="/admin/results" className={styles.sideLink}>
+              <TrophyIcon /> Résultats
+            </Link>
+            <Link href="/admin/riot" className={styles.sideLink}>
+              <RiotIcon /> BO Riot
+            </Link>
+
+            {/* TCG en bêta : seulement pour les admins bêta-testeurs. */}
+            {isBetaTester && (
+              <>
+                <div className={styles.sideTitle}>TCG</div>
+                <Link href="/admin/tcg" className={styles.sideLink}>
+                  <CardIcon /> Cartes et boosters
+                </Link>
+              </>
+            )}
+
+            {/* Droits d'admin (admin_grants) : seulement pour les superadmins. */}
+            {isSuperAdmin && (
+              <>
+                <div className={styles.sideTitle}>Système</div>
+                <Link href="/admin/droits" className={styles.sideLink}>
+                  <KeyIcon /> Droits
+                </Link>
+              </>
+            )}
+          </nav>
+        </aside>
+
+        <div className={styles.main}>
+          {message && <p className={ds.formInfo}>{message}</p>}
+
+          {view === 'accueil' && (
+            <div className={styles.view}>
+              <div>
+                <div className={ds.sectionLabel}>Administration</div>
+                <h1 className={ds.h1}>Tableau de bord</h1>
+              </div>
 
             <div
               className={
@@ -1095,92 +1160,45 @@ export default function AdminView() {
                 </span>
               </div>
             </div>
-          </div>
 
-          <div
-            className={`${ds.card} ${ds.sideCard}`}
-          >
-            <div
-              className={
-                ds.cardTitle
-              }
-            >
-              Actions
+              <div className={styles.dashGrid}>
+                <div className={`${ds.card} ${styles.dashCard}`}>
+                  <div className={ds.cardTitle}>À faire</div>
+                  {toValidate > 0 ? (
+                    <button type="button" className={styles.todo} onClick={showPending}>
+                      <strong>{toValidate}</strong>
+                      <span>{toValidate > 1 ? 'équipes à valider' : 'équipe à valider'}</span>
+                    </button>
+                  ) : (
+                    <p className={styles.todoDone}>Aucune équipe à valider.</p>
+                  )}
+                  <Link href="/admin/riot" className={styles.todoLink}>Revoir les BO Riot importés</Link>
+                  <Link href="/admin/results" className={styles.todoLink}>Saisir un résultat ou valider un MVP</Link>
+                </div>
+
+                <div className={`${ds.card} ${styles.dashCard}`}>
+                  <div className={ds.cardTitle}>Riot</div>
+                  <p className={styles.dashText}>Met à jour rangs, LP, winrates et points CZF de tous les joueurs.</p>
+                  <RiotRefreshPanel />
+                </div>
+              </div>
             </div>
+          )}
 
-            <RiotRefreshPanel />
-
-            <div
-              className={
-                styles.actionLinks
-              }
-            >
-              <Link
-                href="/admin/results"
-                className={
-                  ds.btnOutline
-                }
-              >
-                Gérer les résultats
-              </Link>
-
-              <Link
-                href="/admin/riot"
-                className={
-                  ds.btnOutline
-                }
-              >
-                Gérer les BO Riot
-              </Link>
-
-              {/* Droits d'admin (admin_grants) : seulement pour les superadmins. */}
-              {isSuperAdmin && (
-                <Link
-                  href="/admin/droits"
-                  className={
-                    ds.btnOutline
-                  }
+          {view === 'equipes' && (
+            <div className={styles.view}>
+              <div className={styles.pendingBar}>
+                <button
+                  type="button"
+                  className={onlyPending ? styles.pendingOn : styles.pending}
+                  onClick={() => {
+                    setTeamSearch('');
+                    setOnlyPending(!onlyPending);
+                  }}
                 >
-                  Gérer les droits
-                </Link>
-              )}
-
-              {/* TCG en bêta : seulement pour les admins bêta-testeurs. */}
-              {isBetaTester && (
-                <Link
-                  href="/admin/tcg"
-                  className={
-                    ds.btnOutline
-                  }
-                >
-                  Gérer le TCG
-                </Link>
-              )}
-            </div>
-
-            {message && (
-              <p
-                className={
-                  ds.formInfo
-                }
-              >
-                {message}
-              </p>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <section
-        className={ds.section}
-      >
-        <div
-          className={`${ds.container} ${styles.columns}`}
-        >
-          {/* =================================================
-              EQUIPES
-          ================================================= */}
-
+                  À valider ({toValidate})
+                </button>
+              </div>
           <div>
             <div
               className={
@@ -1223,7 +1241,7 @@ export default function AdminView() {
                 styles.list
               }
             >
-              {!teamSearch.trim() && (
+              {!teamSearch.trim() && !onlyPending && (
                 <div
                   className={`${ds.card} ${ds.empty}`}
                 >
@@ -1984,11 +2002,11 @@ export default function AdminView() {
               )}
             </div>
           </div>
+            </div>
+          )}
 
-          {/* =================================================
-              JOUEURS
-          ================================================= */}
-
+          {view === 'joueurs' && (
+            <div className={styles.view}>
           <div>
             <div
               className={
@@ -2483,8 +2501,10 @@ export default function AdminView() {
               )}
             </div>
           </div>
+            </div>
+          )}
         </div>
-      </section>
-    </>
+      </div>
+    </div>
   );
 }

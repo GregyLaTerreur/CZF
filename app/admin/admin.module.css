@@ -16,6 +16,247 @@
 }
 
 /* =========================================================
+   MENU À GAUCHE (même principe que la Collection)
+========================================================= */
+
+/* Le footer a une marge haute (--space-diagonal) : la sidebar doit le toucher. */
+.full {
+  width: 100%;
+  margin-bottom: calc(-1 * var(--space-diagonal));
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: calc(100vh - 120px);
+}
+
+.side {
+  background: var(--dark);
+  border-right: 4px solid var(--orange);
+}
+
+/* Le menu reste visible quand on descend dans la page. */
+.sideInner {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0 28px;
+}
+
+.sideTitle {
+  padding: 16px 18px 6px;
+  font: 700 0.66rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(224, 216, 204, 0.5);
+}
+
+.sideLink,
+.sideOn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 18px;
+  border: none;
+  background: none;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--on-dark);
+  font: italic 800 0.95rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  transform: none;
+  box-shadow: none;
+}
+
+.sideOn {
+  background: #040c18;
+  color: #fff;
+  box-shadow: inset 4px 0 0 var(--orange);
+}
+
+/* globals.css anime tous les <button> : on neutralise. */
+.sideLink:hover,
+.sideLink:active {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.sideOn:hover,
+.sideOn:active {
+  transform: none;
+  filter: none;
+  box-shadow: inset 4px 0 0 var(--orange);
+}
+
+.sideCount {
+  margin-left: auto;
+  padding: 1px 7px;
+  background: var(--orange);
+  color: #fff;
+  font: italic 800 0.78rem var(--font-barlow-condensed), sans-serif;
+}
+
+.main {
+  min-width: 0;
+  /* Marge du haut identique aux autres pages (--space-block). */
+  padding: var(--space-block) 40px var(--space-section);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block);
+  max-width: 1100px;
+}
+
+/* Tableau de bord */
+.dashGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.dashCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dashText {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgba(8, 20, 40, 0.7);
+}
+
+.todo,
+.todo:hover,
+.todo:active {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-left: 4px solid var(--orange);
+  background: var(--dark);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.todo:hover {
+  background: #040c18;
+}
+
+.todo strong {
+  font: italic 800 1.6rem/1 var(--font-barlow-condensed), sans-serif;
+  color: var(--orange);
+}
+
+.todo span {
+  font: italic 800 1rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+}
+
+.todoDone {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--teal);
+  background: rgba(0, 201, 160, 0.1);
+  font-weight: 600;
+}
+
+.todoLink {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.12);
+  color: var(--dark);
+  font-weight: 600;
+}
+
+.todoLink:hover {
+  color: var(--orange);
+}
+
+/* Équipes : filtre « à valider » */
+.pendingBar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pending,
+.pendingOn,
+.pending:hover,
+.pendingOn:hover {
+  padding: 6px 14px;
+  border: 2px solid var(--dark);
+  font: italic 800 0.85rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  cursor: pointer;
+  filter: none;
+}
+
+.pending {
+  background: var(--cream);
+  color: var(--dark);
+}
+
+.pendingOn,
+.pendingOn:hover {
+  background: var(--dark);
+  color: #fff;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .side {
+    border-right: none;
+    border-bottom: 4px solid var(--orange);
+  }
+
+  /* Téléphone : le menu devient une barre qui défile horizontalement. */
+  .sideInner {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0;
+  }
+
+  .sideTitle {
+    display: none;
+  }
+
+  .sideLink,
+  .sideOn {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .main {
+    padding: 24px 16px;
+  }
+
+  .dashGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
    GESTION ÉQUIPES / JOUEURS
 ========================================================= */
 
