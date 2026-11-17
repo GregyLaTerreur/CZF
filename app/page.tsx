@@ -87,7 +87,7 @@ export default function Home() {
 
       {/* DERNIERS RÉSULTATS */}
       {/* Ids préfixés "home-" : globals.css stylise #resultats, #divisions… */}
-      <section id="home-resultats" className={styles.darkSection}>
+      <section id="home-resultats" className={styles.section}>
         <div className={styles.container}>
           <LatestResults />
 
@@ -100,7 +100,7 @@ export default function Home() {
       </section>
 
       {/* DIVISIONS */}
-      <section id="home-divisions" className={styles.section}>
+      <section id="home-divisions" className={styles.darkSection}>
         <div className={styles.container}>
           <div className={styles.sectionHead}>
             <div>
@@ -142,7 +142,7 @@ export default function Home() {
           </div>
 
           <div className={styles.divisionActions}>
-            <Link href="/divisions" className={styles.btnOutline}>
+            <Link href="/divisions" className={`${styles.btnOutline} ${styles.btnCream}`}>
               Voir le système complet
             </Link>
           </div>
@@ -150,7 +150,7 @@ export default function Home() {
       </section>
 
       {/* REJOINDRE */}
-      <section id="home-rejoindre" className={styles.darkSection}>
+      <section id="home-rejoindre" className={styles.section}>
         <div className={styles.container}>
           <div className={styles.sectionHead}>
             <div>

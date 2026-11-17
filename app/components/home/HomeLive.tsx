@@ -221,7 +221,7 @@ export function Standings() {
     : [];
 
   return (
-    <section id="home-classement" className={styles.section}>
+    <section id="home-classement" className={styles.darkSection}>
       <div className={styles.container}>
         <div className={styles.sectionHead}>
           <div>

@@ -397,6 +397,17 @@
   color: rgba(224, 216, 204, 0.7);
 }
 
+/* Cartes claires sur fond sombre : ombre orange (règle des ombres) */
+.darkSection .card,
+.darkSection .statPanel,
+.darkSection .divisionCard {
+  box-shadow: 6px 6px 0 var(--orange);
+}
+
+.darkSection .lastUpdate {
+  color: rgba(224, 216, 204, 0.55);
+}
+
 /* =========================================================
    CLASSEMENT
 ========================================================= */
@@ -647,7 +658,7 @@
 }
 
 /* =========================================================
-   DERNIERS RÉSULTATS (fond dark)
+   DERNIERS RÉSULTATS
 ========================================================= */
 
 .matches {
@@ -823,7 +834,7 @@
 }
 
 /* =========================================================
-   REJOINDRE (fond dark)
+   REJOINDRE
 ========================================================= */
 
 .joinGrid {
