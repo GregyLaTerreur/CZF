@@ -22,6 +22,24 @@ export async function hasGrant(profileId: string, permission: Permission): Promi
   return !error && Boolean(data);
 }
 
+// Superadmin (profiles.is_superadmin, SQL czf-import/admin-2-superadmin.sql) : seul à gérer les droits.
+// Requête à part de is_admin : si la colonne manque, seule la page Droits se ferme.
+export async function isSuperAdmin(profileId: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin.from('profiles').select('is_superadmin').eq('id', profileId).maybeSingle();
+  return !error && data?.is_superadmin === true;
+}
+
+export async function requireSuperAdmin(request: Request) {
+  const auth = await requireAdmin(request);
+  if (auth.error) return auth;
+  if (!(await isSuperAdmin(auth.user.id))) {
+    return { error: NextResponse.json({ success: false, message: 'Réservé aux superadmins.' }, { status: 403 }) };
+  }
+  return auth;
+}
+
+export const isPermission = (value: unknown): value is Permission => typeof value === 'string' && value in PERMISSIONS;
+
 // Admin ET titulaire du droit demandé.
 export async function requireGrant(request: Request, permission: Permission) {
   const auth = await requireAdmin(request);

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useIsBetaTester } from '@/app/components/beta';
+import { useIsBetaTester, useIsSuperAdmin } from '@/app/components/beta';
 
 import { supabase } from '@/lib/supabase';
 import { logoSrc } from '@/lib/logo';
@@ -23,6 +23,7 @@ const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
 export default function AdminView() {
   const isBetaTester = useIsBetaTester();
+  const isSuperAdmin = useIsSuperAdmin();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -1131,6 +1132,18 @@ export default function AdminView() {
               >
                 Gérer les BO Riot
               </Link>
+
+              {/* Droits d'admin (admin_grants) : seulement pour les superadmins. */}
+              {isSuperAdmin && (
+                <Link
+                  href="/admin/droits"
+                  className={
+                    ds.btnOutline
+                  }
+                >
+                  Gérer les droits
+                </Link>
+              )}
 
               {/* TCG en bêta : seulement pour les admins bêta-testeurs. */}
               {isBetaTester && (

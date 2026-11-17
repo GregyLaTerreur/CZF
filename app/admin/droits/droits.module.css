@@ -1,0 +1,90 @@
+.wrap {
+  padding-top: var(--space-section);
+  padding-bottom: var(--space-section);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-block);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+}
+
+.perm {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.permName {
+  font: 700 0.78rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.12em;
+  color: var(--orange);
+}
+
+.holders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.holder {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 14px;
+  background: var(--dark);
+  color: #fff;
+  font: italic 800 0.88rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 var(--orange);
+}
+
+.holder small {
+  font: 600 0.72rem var(--font-barlow), sans-serif;
+  text-transform: none;
+  color: rgba(224, 216, 204, 0.6);
+}
+
+.remove,
+.remove:hover,
+.remove:active {
+  padding: 2px 8px;
+  border: 1px solid rgba(224, 216, 204, 0.4);
+  background: none;
+  color: var(--on-dark);
+  font: 700 0.7rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: none;
+  box-shadow: none;
+}
+
+.remove:hover {
+  border-color: var(--loss);
+  color: #fff;
+}
+
+.add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.empty {
+  color: rgba(8, 20, 40, 0.55);
+  font-size: 0.9rem;
+}

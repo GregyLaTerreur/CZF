@@ -69,3 +69,23 @@ export function useBoosterCount(enabled: boolean): number {
 
   return count;
 }
+
+// Superadmin (profiles.is_superadmin) : seul à voir la page Admin > Droits. Affichage seulement,
+// la route /api/admin/grants vérifie elle-même.
+export function useIsSuperAdmin(): boolean {
+  const [value, setValue] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return;
+      const { data } = await supabase.from('profiles').select('is_superadmin').eq('id', session.user.id).maybeSingle();
+      if (alive) setValue(data?.is_superadmin === true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return value;
+}
