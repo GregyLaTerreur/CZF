@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
+import CardZoom from '@/app/components/tcg/CardZoom';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
 import CardFilters, { ShowMore, useCardFilters } from '@/app/components/tcg/CardFilters';
 import { DIVISIONS } from '@/app/components/home/divisions';
@@ -73,6 +74,8 @@ export default function TcgAdminView() {
   const [freezing, setFreezing] = useState(false);
   // Droit tcg.refiger_numeros : le bouton reste cliquable même une fois la saison figée.
   const [canRefreeze, setCanRefreeze] = useState(false);
+  // Carte de la liste affichée en grand.
+  const [zoom, setZoom] = useState<TcgCard | null>(null);
   // Saisons dont la collection est lancée (choix des joueurs verrouillés). null = SQL tcg-11 absent.
   const [launches, setLaunches] = useState<{ season_id: number; launched_at: string }[] | null>([]);
   const [launching, setLaunching] = useState(false);
@@ -652,6 +655,8 @@ export default function TcgAdminView() {
         </div>
       )}
 
+      {zoom && <CardZoom card={zoom} onClose={() => setZoom(null)} />}
+
       <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Cartes créées · {cards.length}</div>
       {!cards.length && <p className={ds.empty}>Aucune carte pour l’instant.</p>}
       {cards.length > 0 && <CardFilters {...cardFilters} total={cards.length} />}
@@ -659,7 +664,9 @@ export default function TcgAdminView() {
       <div className={styles.list}>
         {cardFilters.visible.map((card) => (
           <div key={card.id} className={styles.item}>
-            <PlayerCard card={card} />
+            <button type="button" className={styles.zoomBtn} onClick={() => setZoom(card)} aria-label={`Voir ${card.name} en grand`}>
+              <PlayerCard card={card} />
+            </button>
             <div className={styles.itemMeta}>{CARD_TYPE_LABELS[card.card_type]} · {RARITY_LABELS[card.rarity]}{seasons.length > 1 ? ` · ${seasons.find((s) => s.id === card.season_id)?.name ?? ''}` : ''}</div>
             <div className={styles.itemActions}>
               <button type="button" className={`${ds.btnOutline} ${ds.btnSmall}`} onClick={() => edit(card)}>Modifier</button>

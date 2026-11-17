@@ -28,7 +28,8 @@ const at = (cx: number, cy: number): CSSProperties => ({ left: pctX(cx), top: pc
 // Onglet en haut à gauche : note + rôle (MVP) ou rôle seul (joueur).
 const TAB = { w: 270, withNote: 330, roleOnly: 200 };
 
-export default function PlayerCard({ card }: { card: TcgCard }) {
+// large : carte affichée en grand (cadre chargé en pleine définition).
+export default function PlayerCard({ card, large = false }: { card: TcgCard; large?: boolean }) {
   const layout = LAYOUTS[card.rarity];
   const fields = TYPE_FIELDS[card.card_type];
   const role = fields.team ? roleInfo(card.role) : null;
@@ -85,7 +86,7 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
         alt=""
         draggable={false}
       />
-      <img className={styles.frame} src={cardFrame(card.rarity)} alt="" />
+      <img className={styles.frame} src={cardFrame(card.rarity, large ? 1500 : 750)} alt="" />
 
       {/* Cadre de la graphiste : rôle (ou note MVP) dans le rond du haut. */}
       {layout.topCircle && (showNote || role) && (

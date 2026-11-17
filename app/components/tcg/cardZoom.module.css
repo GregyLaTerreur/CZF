@@ -1,0 +1,78 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(4, 12, 24, 0.86);
+  backdrop-filter: blur(4px);
+  animation: fade 0.18s ease-out;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* La plus grande carte qui tient à l'écran (rapport 5:7), avec la place de la légende. */
+.card {
+  position: relative;
+  isolation: isolate;
+  width: min(92vw, calc((100vh - 110px) * 5 / 7), 620px);
+  animation: pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.missing {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.meta {
+  font: 700 0.85rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e0d8cc;
+}
+
+.close,
+.close:hover,
+.close:active {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 2px solid #e0d8cc;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.close:hover {
+  border-color: var(--orange, #f05010);
+  color: var(--orange, #f05010);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes pop {
+  from { transform: scale(0.85); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .card {
+    animation: none;
+  }
+}

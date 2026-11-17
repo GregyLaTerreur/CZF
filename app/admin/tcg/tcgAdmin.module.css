@@ -402,3 +402,18 @@ main .wrap {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+/* Carte cliquable : s'ouvre en grand. */
+.zoomBtn,
+.zoomBtn:hover,
+.zoomBtn:active {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}

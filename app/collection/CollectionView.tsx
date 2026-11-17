@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
+import CardZoom from '@/app/components/tcg/CardZoom';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
 import Switch from '@/app/components/ds/Switch';
 import { BOOSTERS_CHANGED } from '@/app/components/beta';
@@ -136,6 +137,8 @@ function Avatar({ entry }: { entry: LeaderboardEntry }) {
 // viewProfileId : collection d'un autre joueur (lecture seule, sans ses boosters). Absent : la mienne.
 export default function CollectionView({ viewProfileId }: { viewProfileId?: string }) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  // Carte affichée en grand (clic sur une carte).
+  const [zoom, setZoom] = useState<{ card: TcgCard; count?: number } | null>(null);
   // Accès aux boosters et aux cartes : connecté avec Discord ET compte Riot lié.
   const [access, setAccess] = useState<'full' | 'riot'>('full');
   // TCG en bêta : page fermée si on n'est pas connecté ou pas bêta-testeur.
@@ -602,12 +605,18 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
               {listItems.length > 0 && !cardFilters.filtered.length && <p className={ds.empty}>Aucune carte avec ces filtres.</p>}
               <div className={styles.grid}>
                 {cardFilters.visible.map(({ card, count }) => (
-                  <div key={card.id} className={`${styles.owned} ${count === 0 ? styles.missing : ''}`}>
+                  <button
+                    key={card.id}
+                    type="button"
+                    className={`${styles.owned} ${count === 0 ? styles.missing : ''}`}
+                    onClick={() => setZoom({ card, count })}
+                    aria-label={`Voir ${card.name} en grand`}
+                  >
                     {/* Effet électrique de la rareté, seulement sur les cartes possédées. */}
                     {count > 0 && <CardElectric rarity={card.rarity} />}
                     <PlayerCard card={card} />
                     {count > 1 && <span className={styles.badge}>x{count}</span>}
-                  </div>
+                  </button>
                 ))}
               </div>
               <ShowMore hasMore={cardFilters.hasMore} showMore={cardFilters.showMore} shown={cardFilters.visible.length} total={cardFilters.filtered.length} />
@@ -615,6 +624,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
           )}
         </div>
       </div>
+
+      {zoom && <CardZoom card={zoom.card} count={zoom.count} onClose={() => setZoom(null)} />}
 
       {drawn && pack && phase !== 'cards' && (
         <div className={styles.overlay} role="dialog" aria-modal="true">
@@ -664,8 +675,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                     key={`${card.id}-${index}`}
                     type="button"
                     className={`${styles.flip} ${isRevealed ? `${styles.flipped} ${styles[`reveal_${card.rarity}`] ?? ''}` : ''}`}
-                    onClick={() => !isRevealed && reveal(index)}
-                    aria-label={isRevealed ? card.name : 'Retourner la carte'}
+                    onClick={() => (isRevealed ? setZoom({ card }) : reveal(index))}
+                    aria-label={isRevealed ? `Voir ${card.name} en grand` : 'Retourner la carte'}
                   >
                     <div className={styles.flipBack}>
                       <img src={boosterImage({ image_url: null }, 300)} alt="" />
