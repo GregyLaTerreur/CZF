@@ -59,7 +59,8 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
       className={`${styles.card} ${styles[card.rarity]}`}
       style={{
         aspectRatio: `${CARD_SIZE.w} / ${CARD_SIZE.h}`,
-        borderRadius: `${(CARD_RADIUS / CARD_SIZE.w) * 100}% / ${(CARD_RADIUS / CARD_SIZE.h) * 100}%`,
+        // Cadre de la graphiste : sa forme telle quelle. Cadres provisoires : arrondi du code.
+        borderRadius: layout.frame ? undefined : `${(CARD_RADIUS / CARD_SIZE.w) * 100}% / ${(CARD_RADIUS / CARD_SIZE.h) * 100}%`,
         ['--accent' as string]: RARITY_ACCENTS[card.rarity],
       }}
       onPointerMove={onMove}

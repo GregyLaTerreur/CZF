@@ -4,7 +4,6 @@
   width: 100%;
   container-type: inline-size;
   overflow: hidden;
-  filter: drop-shadow(8px 8px 0 var(--dark, #081428));
   transition: transform 0.2s ease-out;
   --mx: 50%;
   --my: 50%;
