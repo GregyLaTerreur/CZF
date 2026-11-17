@@ -84,19 +84,30 @@ export type RarityLayout = {
   tag: number | null; // nom d'équipe en petit (absent en légendaire)
   name: number;
   nameSize: number; // en % de la largeur de la carte
-  stats: 'pill' | 'line' | 'hover';
+  stats: 'pill' | 'line' | 'hover' | 'circles';
   pill?: { x: number; y: number; w: number; h: number };
   statsY?: number;
   logos: Logos;
   tabOpacity: number; // l'onglet note/rôle s'efface quand l'artwork prend la carte
+  // Cadre de la graphiste (id Cloudinary dans cards/s1/cadres, sans suffixe _dev : version officielle).
+  frame?: string;
+  // Rond en haut à gauche du cadre : rôle (ou note MVP) à la place de l'onglet CSS.
+  topCircle?: { x: number; y: number; d: number };
+  // Ronds des stats, de gauche à droite, dans l'ordre de STAT_CIRCLE_ORDER.
+  statCircles?: { y: number; items: { x: number; d: number }[] };
 };
+
+// Ordre des stats dans les 5 ronds du bas : le KDA dans le grand rond du centre.
+export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
 
 // Doit rester en phase avec les cadres PNG (générés par ~/www/czf-tcg/gen.mjs).
 export const LAYOUTS: Record<Rarity, RarityLayout> = {
+  // Cadre officiel de la graphiste (1500×2100) : illustration jusqu'à 1280, ronds mesurés sur son fichier.
   commune: {
-    art: 1400, tag: 1455, name: 1555, nameSize: 10, stats: 'pill', tabOpacity: 0.94,
-    pill: { x: 220, y: 1650, w: 1060, h: 210 },
-    logos: { y: 1970, left: 250, right: 1250, size: 170 },
+    frame: 'commune', art: 1280, tag: 1370, name: 1470, nameSize: 9, stats: 'circles', tabOpacity: 0,
+    topCircle: { x: 243, y: 218, d: 262 },
+    statCircles: { y: 1768, items: [{ x: 206, d: 192 }, { x: 460, d: 192 }, { x: 749, d: 262 }, { x: 1038, d: 192 }, { x: 1292, d: 192 }] },
+    logos: { y: 1420, left: 150, right: 1350, size: 140 },
   },
   rare: {
     art: 1700, tag: 1650, name: 1740, nameSize: 9.5, stats: 'pill', tabOpacity: 0.9,
@@ -121,7 +132,8 @@ export const RARITY_ACCENTS: Record<Rarity, string> = {
 };
 
 export function cardFrame(rarity: Rarity, width = 750) {
-  return cdnImage(`cards/s1/cadres/${rarity}${ASSET_SUFFIX}`, `f_auto,q_auto,w_${width}`);
+  const frame = LAYOUTS[rarity].frame ?? `${rarity}${ASSET_SUFFIX}`;
+  return cdnImage(`cards/s1/cadres/${frame}`, `f_auto,q_auto,w_${width}`);
 }
 
 export function divisionIcon(division: DivisionName) {

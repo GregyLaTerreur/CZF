@@ -56,6 +56,46 @@
   opacity: 0.9;
 }
 
+/* Ronds du cadre de la graphiste : contenu centré dans le cercle. */
+.circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.roleBig {
+  width: 52%;
+  aspect-ratio: 1;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+.statCircle {
+  gap: 0.5cqw;
+}
+
+.statCircle b {
+  font: italic 800 4.6cqw/1 var(--font-barlow-condensed), sans-serif;
+  color: #fff;
+}
+
+.statCircle span {
+  font: 700 2.1cqw/1 var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.08em;
+  color: #d4b896;
+}
+
+.statCircleBig b {
+  font-size: 6.4cqw;
+}
+
+.statCircleBig span {
+  font-size: 2.6cqw;
+}
+
 .tag {
   font: 700 3.4cqw/1 var(--font-barlow-condensed), sans-serif;
   letter-spacing: 0.12em;

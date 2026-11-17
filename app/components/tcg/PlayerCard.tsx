@@ -9,6 +9,7 @@ import {
   CARD_SIZE,
   LAYOUTS,
   RARITY_ACCENTS,
+  STAT_CIRCLE_ORDER,
   TYPE_FIELDS,
   championArt,
   cardFrame,
@@ -79,7 +80,17 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
       />
       <img className={styles.frame} src={cardFrame(card.rarity)} alt="" />
 
-      {(showNote || role) && (
+      {/* Cadre de la graphiste : rôle (ou note MVP) dans le rond du haut. */}
+      {layout.topCircle && (showNote || role) && (
+        <div
+          className={`${styles.c} ${styles.circle}`}
+          style={{ ...at(layout.topCircle.x, layout.topCircle.y), width: pctX(layout.topCircle.d) }}
+        >
+          {showNote ? <span className={styles.note}>{card.note}</span> : role && <img className={styles.roleBig} src={role.image} alt={role.label} />}
+        </div>
+      )}
+
+      {!layout.topCircle && (showNote || role) && (
         <div
           className={styles.tab}
           style={{
@@ -107,6 +118,21 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
           {statItems}
         </div>
       )}
+      {stats.length > 0 && layout.stats === 'circles' && layout.statCircles && STAT_CIRCLE_ORDER.map((label, index) => {
+        const slot = layout.statCircles!.items[index];
+        const stat = stats.find((s) => s.label === label);
+        if (!slot || !stat) return null;
+        return (
+          <div
+            key={label}
+            className={`${styles.c} ${styles.circle} ${styles.statCircle} ${index === 2 ? styles.statCircleBig : ''}`}
+            style={{ ...at(slot.x, layout.statCircles!.y), width: pctX(slot.d) }}
+          >
+            <b>{stat.value}</b>
+            <span>{label}</span>
+          </div>
+        );
+      })}
       {statItems.length > 0 && layout.stats === 'line' && (
         <div className={`${styles.c} ${styles.stats} ${styles.statsLine}`} style={at(750, layout.statsY ?? 0)}>{statItems}</div>
       )}
