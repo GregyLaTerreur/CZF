@@ -102,7 +102,8 @@ main .wrap {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  /* Cartes assez grandes pour lire les stats des ronds (texte en cqw, proportionnel à la carte). */
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 32px;
 }
 
