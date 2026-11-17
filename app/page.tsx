@@ -9,7 +9,6 @@ import {
   HeroStats,
   LatestResults,
   Standings,
-  Ticker,
 } from './components/home/HomeLive';
 import { DIVISION_COLORS, type DivisionName } from './components/home/divisions';
 import HomeHero from './components/home/HomeHero';
@@ -82,8 +81,6 @@ export default function Home() {
         </div>
       </header>
       </HomeHero>
-
-      <Ticker />
 
       {/* CLASSEMENT */}
       <Standings />

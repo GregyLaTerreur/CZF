@@ -345,54 +345,6 @@
 }
 
 /* =========================================================
-   TICKER — orange · skewY(-1deg) · ombre dark 7px
-========================================================= */
-
-.ticker {
-  position: relative;
-  z-index: 2;
-  background: var(--orange);
-  padding: 12px 0;
-  overflow: hidden;
-  transform: skewY(-1deg);
-  box-shadow: 0 7px 0 var(--dark);
-}
-
-.tickerTrack {
-  display: flex;
-  width: max-content;
-  animation: tickerScroll 40s linear infinite;
-}
-
-.tickerItem {
-  display: flex;
-  align-items: center;
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-weight: 800;
-  font-style: italic;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--dark);
-  white-space: nowrap;
-}
-
-.tickerSep {
-  margin: 0 22px;
-  color: rgba(8, 20, 40, 0.5);
-  font-size: 0.85rem;
-}
-
-@keyframes tickerScroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tickerTrack { animation: none; }
-}
-
-/* =========================================================
    SECTIONS
 ========================================================= */
 

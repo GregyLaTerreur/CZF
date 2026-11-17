@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from '@/app/home.module.css';
-import BoltIcon from '@/app/components/icons/BoltIcon';
 import { DIVISION_COLORS, DIVISIONS, type DivisionName, displayRank } from './divisions';
 import { formatLastUpdate } from '@/app/components/ds/lol';
 import {
@@ -61,44 +60,6 @@ export function HeroStats() {
           <span>{stat.label}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-/* =========================================================
-   TICKER
-========================================================= */
-
-export function Ticker() {
-  const { data: classement } = useClassement();
-  const { data: historique } = useHistorique(null, LATEST_LIMIT);
-
-  const items = ['Saison 1 en cours', 'Divisions Targon · Ixtal · Yordle'];
-
-  if (classement && historique) {
-    items.push(`${classement.totalTeams} équipes inscrites`, `${historique.total} matchs joués`);
-
-    for (const division of DIVISIONS) {
-      const leader = classement.divisions[division]?.[0];
-      if (leader) items.push(`Leader ${division} : ${leader.name}`);
-    }
-  }
-
-  items.push('Rejoins le Discord CZF');
-
-  // Contenu doublé pour un défilement continu.
-  const loop = [...items, ...items];
-
-  return (
-    <div className={styles.ticker} aria-label={items.join(', ')}>
-      <div className={styles.tickerTrack} aria-hidden="true">
-        {loop.map((item, index) => (
-          <span key={index} className={styles.tickerItem}>
-            {item}
-            <BoltIcon className={styles.tickerSep} />
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
