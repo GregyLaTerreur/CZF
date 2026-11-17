@@ -3,6 +3,7 @@
 import type { CSSProperties, PointerEvent } from 'react';
 import { roleInfo } from '@/app/components/ds/lol';
 import {
+  ART_DEFAULT,
   CARD_BORDER,
   CARD_RADIUS,
   CARD_SIZE,
@@ -63,7 +64,19 @@ export default function PlayerCard({ card }: { card: TcgCard }) {
       onPointerMove={onMove}
       onPointerLeave={(event) => { event.currentTarget.style.transform = ''; }}
     >
-      <img className={styles.art} style={{ height: pctY(layout.art) }} src={championArt(card)} alt="" />
+      {/* Cadrage réglé dans l'admin : point gardé au centre + zoom autour de ce point. */}
+      <img
+        className={styles.art}
+        style={{
+          height: pctY(layout.art),
+          objectPosition: `${card.art_x ?? ART_DEFAULT.x}% ${card.art_y ?? ART_DEFAULT.y}%`,
+          transform: `scale(${card.art_zoom ?? ART_DEFAULT.zoom})`,
+          transformOrigin: `${card.art_x ?? ART_DEFAULT.x}% ${card.art_y ?? ART_DEFAULT.y}%`,
+        }}
+        src={championArt(card)}
+        alt=""
+        draggable={false}
+      />
       <img className={styles.frame} src={cardFrame(card.rarity)} alt="" />
 
       {(showNote || role) && (

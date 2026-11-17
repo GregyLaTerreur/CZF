@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
@@ -13,6 +13,7 @@ import {
   CARD_ROLES,
   CARD_TYPES,
   CARD_TYPE_LABELS,
+  ART_DEFAULT,
   EMPTY_CARD,
   RARITY_LABELS,
   RARITIES,
@@ -233,6 +234,31 @@ export default function TcgAdminView() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur.');
     }
+  }
+
+  // Glisser l'illustration dans l'aperçu : déplacer le point gardé au centre (sens inverse du geste).
+  const artDrag = useRef<{ x: number; y: number; artX: number; artY: number; w: number; h: number } | null>(null);
+
+  function startArtDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const box = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    artDrag.current = { x: event.clientX, y: event.clientY, artX: form.art_x ?? ART_DEFAULT.x, artY: form.art_y ?? ART_DEFAULT.y, w: box.width, h: box.height };
+  }
+
+  function moveArtDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = artDrag.current;
+    if (!drag) return;
+    const zoom = form.art_zoom ?? 1;
+    const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+    setForm((current) => ({
+      ...current,
+      art_x: clamp(drag.artX - ((event.clientX - drag.x) / drag.w) * 150 / zoom),
+      art_y: clamp(drag.artY - ((event.clientY - drag.y) / drag.h) * 150 / zoom),
+    }));
+  }
+
+  function endArtDrag() {
+    artDrag.current = null;
   }
 
   // Fige la numérotation d'une saison : une seule fois, le bouton reste ensuite bloqué.
@@ -468,7 +494,39 @@ export default function TcgAdminView() {
         </div>
 
         <div className={styles.preview}>
-          <PlayerCard card={{ ...form, name: form.name || 'Pseudo' }} />
+          {/* Cadrage de l'illustration : glisser sur la carte pour la recentrer, curseur pour zoomer. */}
+          <div className={styles.artEditor}>
+            <PlayerCard card={{ ...form, name: form.name || 'Pseudo' }} />
+            <div
+              className={styles.artDrag}
+              onPointerDown={startArtDrag}
+              onPointerMove={moveArtDrag}
+              onPointerUp={endArtDrag}
+              onPointerCancel={endArtDrag}
+              title="Glisser pour recentrer l’illustration"
+            />
+          </div>
+          <div className={styles.artTools}>
+            <label className={ds.field}>
+              <span>Zoom · {(form.art_zoom ?? 1).toFixed(2)}x</span>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.05}
+                value={form.art_zoom ?? 1}
+                onChange={(e) => set('art_zoom', Number(e.target.value))}
+              />
+            </label>
+            <p className={styles.hint}>Glisse l’illustration sur la carte pour la recentrer.</p>
+            <button
+              type="button"
+              className={`${ds.btnOutline} ${ds.btnSmall}`}
+              onClick={() => setForm((current) => ({ ...current, art_x: ART_DEFAULT.x, art_y: ART_DEFAULT.y, art_zoom: ART_DEFAULT.zoom }))}
+            >
+              Recentrer
+            </button>
+          </div>
         </div>
       </div>
       )}

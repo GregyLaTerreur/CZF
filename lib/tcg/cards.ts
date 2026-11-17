@@ -54,6 +54,10 @@ export type TcgCard = {
   name: string;
   champion: string; // id Data Dragon, ex. "LeeSin"
   art_url: string | null; // illustration perso (Cloudinary), sinon artwork Riot
+  // Cadrage réglé dans l'admin : point gardé au centre (en %, comme object-position) et zoom (1 à 3).
+  art_x?: number;
+  art_y?: number;
+  art_zoom?: number;
   team_name: string | null;
   team_logo: string | null;
   role: string | null;
@@ -123,6 +127,9 @@ export function divisionIcon(division: DivisionName) {
   return cdnImage(`cards/s1/divisions/${division.toLowerCase()}${ASSET_SUFFIX}`, 'f_auto,q_auto,w_200');
 }
 
+// Cadrage par défaut de l'illustration : centrée horizontalement, un peu vers le haut, sans zoom.
+export const ART_DEFAULT = { x: 50, y: 18, zoom: 1 };
+
 // Artwork Riot (Data Dragon) tant qu'on n'a pas nos propres illustrations.
 export function championArt(card: Pick<TcgCard, 'champion' | 'art_url'>) {
   if (card.art_url) return card.art_url;
@@ -167,9 +174,16 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 
   const fields = TYPE_FIELDS[cardType];
   const playerId = Number(body.player_id);
+  const clamp = (value: unknown, min: number, max: number, fallback: number) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.round(Math.min(max, Math.max(min, n)) * 100) / 100 : fallback;
+  };
   const card: TcgCard = {
     player_id: Number.isInteger(playerId) && playerId > 0 ? playerId : null,
     card_type: cardType, rarity, name, champion, art_url: artUrl,
+    art_x: clamp(body.art_x, 0, 100, ART_DEFAULT.x),
+    art_y: clamp(body.art_y, 0, 100, ART_DEFAULT.y),
+    art_zoom: clamp(body.art_zoom, 1, 3, ART_DEFAULT.zoom),
     team_name: null, team_logo: null, role: null, division: null, note: null, stats: [],
   };
 
@@ -200,7 +214,7 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 }
 
 export const EMPTY_CARD: TcgCard = {
-  season_id: null, player_id: null, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
+  season_id: null, player_id: null, art_x: 50, art_y: 18, art_zoom: 1, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
   team_name: '', team_logo: '', role: 'Mid', division: 'Yordle', note: null,
   stats: STAT_LABELS.map((label) => ({ label, value: '' })),
 };
