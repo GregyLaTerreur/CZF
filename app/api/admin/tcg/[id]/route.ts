@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseCardInput } from '@/lib/tcg/cards';
 import { resolveSeasonId } from '@/lib/tcg/seasons';
+import { shareFraming } from '@/lib/tcg/framing';
 
 const fail = (message: string, status: number) => NextResponse.json({ success: false, message }, { status });
 
@@ -37,7 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (error) return fail(tcgDbMessage(error, 'Impossible d’enregistrer la carte.'), 500);
   if (!data) return fail('Carte introuvable.', 404);
 
-  return NextResponse.json({ success: true, card: data });
+  return NextResponse.json({ success: true, card: data, reframed: await shareFraming(data, auth.user.id) });
 }
 
 // Un admin supprime une carte.

@@ -6,6 +6,7 @@ import { parseCardInput } from '@/lib/tcg/cards';
 import { loadSeasons, resolveSeasonId } from '@/lib/tcg/seasons';
 import { decorateCards } from '@/lib/tcg/liveStats';
 import { hasGrant } from '@/lib/grants';
+import { loadFramings, shareFraming } from '@/lib/tcg/framing';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,18 +17,19 @@ export async function GET(request: Request) {
   const auth = await requireTcgAdmin(request);
   if (auth.error) return auth.error;
 
-  const [{ data, error }, seasons, numbering, canRefreeze, launches] = await Promise.all([
+  const [{ data, error }, seasons, numbering, canRefreeze, launches, framings] = await Promise.all([
     supabaseAdmin.from('czf_tcg_cards').select('*').order('created_at', { ascending: false }),
     loadSeasons(),
     supabaseAdmin.from('czf_tcg_numbering').select('season_id, total, frozen_at'),
     hasGrant(auth.user.id, 'tcg.refiger_numeros'),
     supabaseAdmin.from('czf_tcg_season_launch').select('season_id, launched_at'),
+    loadFramings(),
   ]);
 
   if (error) return fail('Impossible de charger les cartes (la table czf_tcg_cards existe-t-elle ?).', 500);
 
   // Saisons dont la numérotation est figée (table absente tant que le SQL tcg-8 n'est pas passé).
-  return NextResponse.json({ success: true, cards: await decorateCards(data || []), seasons, numbering: numbering.error ? null : numbering.data, canRefreeze, launches: launches.error ? null : launches.data });
+  return NextResponse.json({ success: true, cards: await decorateCards(data || []), seasons, numbering: numbering.error ? null : numbering.data, canRefreeze, launches: launches.error ? null : launches.data, framings });
 }
 
 // Un admin crée une carte à la main.
@@ -50,5 +52,5 @@ export async function POST(request: Request) {
 
   if (error) return fail(tcgDbMessage(error, 'Impossible de créer la carte.'), 500);
 
-  return NextResponse.json({ success: true, card: data });
+  return NextResponse.json({ success: true, card: data, reframed: await shareFraming(data, auth.user.id) });
 }

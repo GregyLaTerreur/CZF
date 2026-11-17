@@ -81,6 +81,8 @@ export default function TcgAdminView() {
   const [launching, setLaunching] = useState(false);
   const [ddVersion, setDdVersion] = useState(DDRAGON_FALLBACK);
   const [skins, setSkins] = useState<Skin[]>([]);
+  // Cadrages déjà réglés, par champion + skin + rareté (partagés entre les cartes).
+  const [framings, setFramings] = useState<{ champion: string; skin_num: number; rarity: string; art_x: number; art_y: number; art_zoom: number }[]>([]);
   const [players, setPlayers] = useState<LinkPlayer[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
   const [linking, setLinking] = useState(false);
@@ -108,6 +110,7 @@ export default function TcgAdminView() {
       setNumbering(json.numbering ?? null);
       setCanRefreeze(json.canRefreeze === true);
       setLaunches(json.launches ?? null);
+      setFramings(json.framings ?? []);
     } catch (err) {
       setIsAdmin((current) => current ?? false);
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -155,6 +158,17 @@ export default function TcgAdminView() {
       alive = false;
     };
   }, [form.champion, ddVersion]);
+
+  // Même perso + skin + rareté qu'une carte déjà cadrée : on reprend son cadrage.
+  const framingKey = `${form.champion}|${form.skin_num ?? 0}|${form.rarity}`;
+  const lastFramingKey = useRef('');
+  useEffect(() => {
+    if (lastFramingKey.current === framingKey || form.art_url) return;
+    lastFramingKey.current = framingKey;
+    const known = framings.find((f) => `${f.champion}|${f.skin_num}|${f.rarity}` === framingKey);
+    if (known) setForm((c) => ({ ...c, art_x: Number(known.art_x), art_y: Number(known.art_y), art_zoom: Number(known.art_zoom) }));
+  }, [framingKey, framings, form.art_url]);
+  const sharedFraming = !form.art_url && framings.some((f) => `${f.champion}|${f.skin_num}|${f.rarity}` === framingKey);
 
   const set = <K extends keyof TcgCard>(key: K, value: TcgCard[K]) => setForm((current) => ({ ...current, [key]: value }));
   const fields = TYPE_FIELDS[form.card_type];
@@ -249,7 +263,8 @@ export default function TcgAdminView() {
       });
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
-      setMessage(editingId ? 'Carte modifiée.' : 'Carte créée.');
+      const shared = json.reframed > 0 ? ` Cadrage appliqué aussi à ${json.reframed} autre${json.reframed > 1 ? 's' : ''} carte${json.reframed > 1 ? 's' : ''} (même perso, skin et rareté).` : '';
+      setMessage(`${editingId ? 'Carte modifiée.' : 'Carte créée.'}${shared}`);
       reset();
       await load();
     } catch (err) {
@@ -602,6 +617,11 @@ export default function TcgAdminView() {
               />
             </label>
             <p className={styles.hint}>Glisse l’illustration sur la carte pour la recentrer.</p>
+            <p className={styles.hint}>
+              {sharedFraming
+                ? 'Cadrage déjà réglé pour ce perso, ce skin et cette rareté : il est repris, et le modifier recadre aussi les autres cartes identiques.'
+                : 'Le cadrage enregistré servira à toutes les cartes de ce perso, ce skin et cette rareté.'}
+            </p>
             <button
               type="button"
               className={`${ds.btnOutline} ${ds.btnSmall}`}
