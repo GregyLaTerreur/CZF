@@ -91,6 +91,8 @@ export type RarityLayout = {
   tabOpacity: number; // l'onglet note/rôle s'efface quand l'artwork prend la carte
   // Cadre de la graphiste (id Cloudinary dans cards/s1/cadres, sans suffixe _dev : version officielle).
   frame?: string;
+  // Grande illustration Riot (1215×717, plus nette) au lieu de l'image verticale (308×560).
+  artSource?: 'splash';
   // Rond en haut à gauche du cadre : rôle (ou note MVP) à la place de l'onglet CSS.
   topCircle?: { x: number; y: number; d: number };
   // Ronds des stats, de gauche à droite, dans l'ordre de STAT_CIRCLE_ORDER.
@@ -104,10 +106,11 @@ export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
 export const LAYOUTS: Record<Rarity, RarityLayout> = {
   // Cadre officiel de la graphiste (1500×2100) : illustration jusqu'à 1280, ronds mesurés sur son fichier.
   commune: {
-    frame: 'commune', art: 1280, tag: 1370, name: 1470, nameSize: 9, stats: 'circles', tabOpacity: 0,
+    frame: 'commune', artSource: 'splash', art: 1280, tag: 1420, name: 1520, nameSize: 9, stats: 'circles', tabOpacity: 0,
     topCircle: { x: 243, y: 218, d: 262 },
     statCircles: { y: 1768, items: [{ x: 206, d: 192 }, { x: 460, d: 192 }, { x: 749, d: 262 }, { x: 1038, d: 192 }, { x: 1292, d: 192 }] },
-    logos: { y: 1420, left: 150, right: 1350, size: 140 },
+    // Logos alignés sur la ligne du pseudo, rapprochés de lui.
+    logos: { y: 1520, left: 250, right: 1250, size: 120 },
   },
   rare: {
     art: 1700, tag: 1650, name: 1740, nameSize: 9.5, stats: 'pill', tabOpacity: 0.9,
@@ -144,10 +147,15 @@ export function divisionIcon(division: DivisionName) {
 export const ART_DEFAULT = { x: 50, y: 18, zoom: 1 };
 
 // Artwork Riot (Data Dragon) tant qu'on n'a pas nos propres illustrations.
-export function championArt(card: Pick<TcgCard, 'champion' | 'art_url' | 'skin_num'>) {
+export function championArt(card: Pick<TcgCard, 'champion' | 'art_url' | 'skin_num' | 'rarity'>) {
   if (card.art_url) return card.art_url;
+  if (LAYOUTS[card.rarity].artSource === 'splash') return splashArt(card.champion, card.skin_num ?? 0);
   return skinArt(card.champion, card.skin_num ?? 0);
 }
+
+// Grande illustration horizontale d'un skin (Data Dragon, 1215×717).
+export const splashArt = (champion: string, skinNum = 0) =>
+  `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${champion}_${skinNum}.jpg`;
 
 // Skins Data Dragon sans les chromas (un chroma a un parentSkin et pas d'illustration à lui).
 export const isRealSkin = (skin: { parentSkin?: number | null }) => skin.parentSkin == null;
