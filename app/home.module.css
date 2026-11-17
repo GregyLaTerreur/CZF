@@ -402,6 +402,8 @@
 .darkSection .statPanel,
 .darkSection .divisionCard {
   box-shadow: 6px 6px 0 var(--orange);
+  /* Sinon elles héritent du texte clair de la section */
+  color: var(--dark);
 }
 
 .darkSection .lastUpdate {
