@@ -30,7 +30,10 @@ type Season = { id: number; name: string; status: string };
 type LinkPlayer = {
   id: number; riot_id: string; role: string | null; team_name: string | null;
   team_logo: string | null; division: string | null; champions: string[];
+  // Choix du joueur par saison (sinon champion le plus maîtrisé = champions[0]).
+  choices: Record<number, { champion: string; skin_num: number; is_default: boolean }>;
 };
+type Skin = { num: number; name: string };
 
 const fixed = (value: unknown, digits: number) => (Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : '');
 
@@ -69,6 +72,11 @@ export default function TcgAdminView() {
   const [freezing, setFreezing] = useState(false);
   // Droit tcg.refiger_numeros : le bouton reste cliquable même une fois la saison figée.
   const [canRefreeze, setCanRefreeze] = useState(false);
+  // Saisons dont la collection est lancée (choix des joueurs verrouillés). null = SQL tcg-11 absent.
+  const [launches, setLaunches] = useState<{ season_id: number; launched_at: string }[] | null>([]);
+  const [launching, setLaunching] = useState(false);
+  const [ddVersion, setDdVersion] = useState(DDRAGON_FALLBACK);
+  const [skins, setSkins] = useState<Skin[]>([]);
   const [players, setPlayers] = useState<LinkPlayer[]>([]);
   const [playerSearch, setPlayerSearch] = useState('');
   const [linking, setLinking] = useState(false);
@@ -95,6 +103,7 @@ export default function TcgAdminView() {
       setSeasons(json.seasons || []);
       setNumbering(json.numbering ?? null);
       setCanRefreeze(json.canRefreeze === true);
+      setLaunches(json.launches ?? null);
     } catch (err) {
       setIsAdmin((current) => current ?? false);
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
@@ -120,11 +129,28 @@ export default function TcgAdminView() {
     (async () => {
       const versions = await fetch('https://ddragon.leagueoflegends.com/api/versions.json').then((res) => res.json()).catch(() => []);
       const version = versions[0] || DDRAGON_FALLBACK;
+      setDdVersion(version);
       const json = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/fr_FR/champion.json`).then((res) => res.json());
       const list = Object.values(json.data as Record<string, Champion>).map(({ id, name }) => ({ id, name }));
       setChampions(list.sort((a, b) => a.name.localeCompare(b.name, 'fr')));
     })().catch(() => setError('Impossible de charger la liste des champions.'));
   }, []);
+
+  // Skins du champion choisi (Data Dragon, noms en français).
+  useEffect(() => {
+    let alive = true;
+    setSkins([]);
+    fetch(`https://ddragon.leagueoflegends.com/cdn/${ddVersion}/data/fr_FR/champion/${form.champion}.json`)
+      .then((res) => res.json())
+      .then((json) => {
+        const list: Skin[] = (json?.data?.[form.champion]?.skins ?? []).map((sk: Skin) => ({ num: sk.num, name: sk.name === 'default' ? 'Skin de base' : sk.name }));
+        if (alive) setSkins(list);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [form.champion, ddVersion]);
 
   const set = <K extends keyof TcgCard>(key: K, value: TcgCard[K]) => setForm((current) => ({ ...current, [key]: value }));
   const fields = TYPE_FIELDS[form.card_type];
@@ -174,13 +200,18 @@ export default function TcgAdminView() {
       team_logo: player.team_logo && isAllowedLogoUrl(player.team_logo) ? player.team_logo : '',
       role: player.role,
       division: (player.division as TcgCard['division']) ?? null,
-      champion: player.champions[0] ?? current.champion,
+      // Choix du joueur pour la saison de la carte, sinon son champion le plus maîtrisé (skin de base).
+      champion: player.choices[current.season_id ?? activeSeason?.id ?? 0]?.champion ?? player.champions[0] ?? current.champion,
+      skin_num: player.choices[current.season_id ?? activeSeason?.id ?? 0]?.skin_num ?? 0,
       stats,
     }));
     setLinking(false);
   }
 
   const linkedPlayer = players.find((p) => p.id === form.player_id);
+  const linkedChoice = linkedPlayer
+    ? linkedPlayer.choices[form.season_id ?? activeSeason?.id ?? 0] ?? (linkedPlayer.champions[0] ? { champion: linkedPlayer.champions[0], skin_num: 0, is_default: true } : null)
+    : null;
   const playerResults = playerSearch.trim().length < 2
     ? []
     : players.filter((p) => `${p.riot_id} ${p.team_name ?? ''}`.toLowerCase().includes(playerSearch.trim().toLowerCase())).slice(0, 8);
@@ -292,6 +323,32 @@ export default function TcgAdminView() {
       setError(err instanceof Error ? err.message : 'Erreur.');
     } finally {
       setFreezing(false);
+    }
+  }
+
+  // Lance la collection d'une saison : numéros figés + choix champion/skin verrouillés, une seule fois.
+  async function launch(season: Season, count: number, frozen: boolean) {
+    if (launching) return;
+    const ok = window.confirm(
+      `Lancer la collection « ${season.name} » ?\n\n` +
+        (frozen ? 'Les numéros sont déjà figés : ils ne bougent pas.\n' : `Les ${count} cartes gardent leur numéro (1 à ${count}) et le total est figé.\n`) +
+        'Les joueurs ne pourront plus changer de champion ni de skin pour cette saison. ' +
+        'Ceux qui n’ont pas choisi gardent leur champion le plus maîtrisé, skin de base.\n\n' +
+        'Ce bouton ne pourra plus être utilisé : le débloquer se fait uniquement en base.'
+    );
+    if (!ok) return;
+    setLaunching(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/tcg/launch', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ season_id: season.id }) });
+      const json = await response.json();
+      if (!json.success) throw new Error(json.message);
+      setMessage(`Collection « ${season.name} » lancée. ${json.defaults} joueur(s) sans choix ont reçu leur champion le plus maîtrisé.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur.');
+    } finally {
+      setLaunching(false);
     }
   }
 
@@ -409,12 +466,26 @@ export default function TcgAdminView() {
             </label>
             <label className={ds.field}>
               <span>Personnage</span>
-              <select className={ds.input} value={form.champion} onChange={(e) => set('champion', e.target.value)}>
+              <select className={ds.input} value={form.champion} onChange={(e) => setForm((c) => ({ ...c, champion: e.target.value, skin_num: 0 }))}>
                 {!champions.length && <option value={form.champion}>{form.champion}</option>}
                 {champions.map((champ) => <option key={champ.id} value={champ.id}>{champ.name}</option>)}
               </select>
             </label>
+            <label className={ds.field}>
+              <span>Skin</span>
+              <select className={ds.input} value={form.skin_num ?? 0} onChange={(e) => set('skin_num', Number(e.target.value))}>
+                {!skins.some((sk) => sk.num === (form.skin_num ?? 0)) && <option value={form.skin_num ?? 0}>Skin n° {form.skin_num ?? 0}</option>}
+                {skins.map((sk) => <option key={sk.num} value={sk.num}>{sk.name}</option>)}
+              </select>
+            </label>
           </div>
+          {linkedChoice && (
+            <p className={styles.hint}>
+              {linkedChoice.is_default
+                ? `${linkedPlayer?.riot_id} n’a pas choisi : champion le plus maîtrisé par défaut.`
+                : `Choix de ${linkedPlayer?.riot_id} pour cette saison : ${champions.find((c) => c.id === linkedChoice.champion)?.name ?? linkedChoice.champion}, skin n° ${linkedChoice.skin_num}.`}
+            </p>
+          )}
 
           <label className={ds.field}>
             <span>Illustration perso (facultatif, URL Cloudinary)</span>
@@ -539,34 +610,41 @@ export default function TcgAdminView() {
       </div>
       )}
 
-      {/* Numérotation : calculée tant qu'on monte la saison, puis figée une fois pour toutes. */}
-      <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Numérotation</div>
-      {numbering === null ? (
-        <p className={styles.hint}>Base pas à jour : lancer czf-import/tcg-8-numero-fige.sql pour pouvoir figer les numéros.</p>
+      {/* Lancement : fige les numéros et verrouille les choix champion/skin des joueurs, une fois par saison. */}
+      <div className={ds.sectionLabel} style={{ marginTop: 48 }}>Lancement des collections</div>
+      {numbering === null || launches === null ? (
+        <p className={styles.hint}>Base pas à jour : lancer czf-import/tcg-8-numero-fige.sql puis tcg-11-choix-skin-lancement.sql.</p>
       ) : (
         <div className={styles.numbering}>
           {seasons.filter((season) => cards.some((card) => card.season_id === season.id)).map((season) => {
             const count = cards.filter((card) => card.season_id === season.id).length;
-            const done = numbering.find((n) => n.season_id === season.id);
+            const frozen = numbering.find((n) => n.season_id === season.id);
+            const launched = launches.find((l) => l.season_id === season.id);
             return (
               <div key={season.id} className={styles.numberingRow}>
                 <div>
                   <b>{season.name}</b>
                   <span>
-                    {done
-                      ? `Figée le ${new Date(done.frozen_at).toLocaleDateString('fr-FR')} · total ${done.total} · ${count} cartes aujourd’hui`
-                      : `${count} cartes · numéros encore calculés (communes, rares, épiques, légendaires)`}
+                    {launched
+                      ? `Lancée le ${new Date(launched.launched_at).toLocaleDateString('fr-FR')} · choix des joueurs verrouillés`
+                      : 'Pas lancée · les joueurs peuvent encore changer de champion et de skin'}
+                  </span>
+                  <span>
+                    {frozen
+                      ? `Numéros figés le ${new Date(frozen.frozen_at).toLocaleDateString('fr-FR')} · total ${frozen.total} · ${count} cartes aujourd’hui`
+                      : `${count} cartes · numéros encore calculés (figés au lancement)`}
                   </span>
                 </div>
-                {done && canRefreeze ? (
-                  <button type="button" className={ds.btnOutline} disabled={freezing} onClick={() => freeze(season, count, true)}>
-                    Refiger les numéros
+                <div className={styles.numberingActions}>
+                  {frozen && canRefreeze && (
+                    <button type="button" className={ds.btnOutline} disabled={freezing} onClick={() => freeze(season, count, true)}>
+                      Refiger les numéros
+                    </button>
+                  )}
+                  <button type="button" className={launched ? ds.btnOutline : ds.btnPrimary} disabled={Boolean(launched) || launching} onClick={() => launch(season, count, Boolean(frozen))}>
+                    {launched ? 'Collection lancée' : `Lancer la collection ${season.name}`}
                   </button>
-                ) : (
-                  <button type="button" className={done ? ds.btnOutline : ds.btnPrimary} disabled={Boolean(done) || freezing} onClick={() => freeze(season, count)}>
-                    {done ? 'Numéros figés' : 'Figer les numéros'}
-                  </button>
-                )}
+                </div>
               </div>
             );
           })}

@@ -357,6 +357,7 @@ main .wrap {
 }
 
 .numberingRow span {
+  display: block;
   font-size: 0.88rem;
   color: rgba(8, 20, 40, 0.65);
 }
@@ -393,4 +394,11 @@ main .wrap {
 .artTools input[type='range'] {
   width: 100%;
   accent-color: var(--orange);
+}
+
+.numberingActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }

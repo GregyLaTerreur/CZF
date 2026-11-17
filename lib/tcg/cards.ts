@@ -58,6 +58,7 @@ export type TcgCard = {
   art_x?: number;
   art_y?: number;
   art_zoom?: number;
+  skin_num?: number; // skin Data Dragon (0 = skin de base)
   team_name: string | null;
   team_logo: string | null;
   role: string | null;
@@ -131,10 +132,14 @@ export function divisionIcon(division: DivisionName) {
 export const ART_DEFAULT = { x: 50, y: 18, zoom: 1 };
 
 // Artwork Riot (Data Dragon) tant qu'on n'a pas nos propres illustrations.
-export function championArt(card: Pick<TcgCard, 'champion' | 'art_url'>) {
+export function championArt(card: Pick<TcgCard, 'champion' | 'art_url' | 'skin_num'>) {
   if (card.art_url) return card.art_url;
-  return `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${card.champion}_0.jpg`;
+  return skinArt(card.champion, card.skin_num ?? 0);
 }
+
+// Illustration verticale d'un skin (Data Dragon).
+export const skinArt = (champion: string, skinNum = 0) =>
+  `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${champion}_${skinNum}.jpg`;
 
 // Position sur le gabarit -> % de la carte.
 export const pctX = (v: number) => `${(v / CARD_SIZE.w) * 100}%`;
@@ -184,6 +189,7 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
     art_x: clamp(body.art_x, 0, 100, ART_DEFAULT.x),
     art_y: clamp(body.art_y, 0, 100, ART_DEFAULT.y),
     art_zoom: clamp(body.art_zoom, 1, 3, ART_DEFAULT.zoom),
+    skin_num: Math.round(clamp(body.skin_num, 0, 999, 0)),
     team_name: null, team_logo: null, role: null, division: null, note: null, stats: [],
   };
 
@@ -214,7 +220,7 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 }
 
 export const EMPTY_CARD: TcgCard = {
-  season_id: null, player_id: null, art_x: 50, art_y: 18, art_zoom: 1, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
+  season_id: null, player_id: null, art_x: 50, art_y: 18, art_zoom: 1, skin_num: 0, card_type: 'joueur', rarity: 'commune', name: '', champion: 'Ahri', art_url: null,
   team_name: '', team_logo: '', role: 'Mid', division: 'Yordle', note: null,
   stats: STAT_LABELS.map((label) => ({ label, value: '' })),
 };

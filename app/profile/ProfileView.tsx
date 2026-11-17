@@ -8,6 +8,7 @@ import ds from '@/app/components/ds/ds.module.css';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
 import { ChampionPool, RolePicker, useDdragonVersion } from '@/app/components/ds/LolUi';
 import TierList from './TierList';
+import TcgCardChoice from './TcgCardChoice';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
   dpmUrl,
@@ -712,6 +713,9 @@ export default function ProfileView({ playerId: viewedPlayerId }: { playerId?: n
                   onClose={closeChampions}
                 />
               )}
+
+              {/* TCG en bêta : choix du champion et du skin de ma carte. */}
+              {isOwn && isBetaTester && <TcgCardChoice ddragonVersion={ddragonVersion} />}
 
               {player.description && (
                 <div className={`${ds.card} ${styles.block} ${styles.description}`}>
