@@ -109,7 +109,7 @@ export default function TcgCardChoice({ ddragonVersion }: { ddragonVersion: stri
             <>
               <p className={styles.note}>
                 Choisis le champion et le skin de ta carte. Tu peux changer jusqu’au lancement de la collection {state.season.name}.
-                {state.choice?.is_default && ' Pour l’instant, on a mis ton champion le plus joué.'}
+                {state.choice?.is_default && champion === state.choice.champion && skinNum === state.choice.skin_num && ' Tant que tu n’as pas choisi, on met le champion où tu as le plus de points de maîtrise, skin de base.'}
               </p>
               <label className={ds.field}>
                 <span>Champion</span>
