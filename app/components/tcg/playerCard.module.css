@@ -75,26 +75,26 @@
 }
 
 .statCircle {
-  gap: 0.5cqw;
+  gap: 0.3cqw;
 }
 
 .statCircle b {
-  font: italic 800 4.6cqw/1 var(--font-barlow-condensed), sans-serif;
+  font: italic 800 6.2cqw/1 var(--font-barlow-condensed), sans-serif;
   color: #fff;
 }
 
 .statCircle span {
-  font: 700 2.1cqw/1 var(--font-barlow-condensed), sans-serif;
+  font: 700 2.9cqw/1 var(--font-barlow-condensed), sans-serif;
   letter-spacing: 0.08em;
   color: #d4b896;
 }
 
 .statCircleBig b {
-  font-size: 6.4cqw;
+  font-size: 8.4cqw;
 }
 
 .statCircleBig span {
-  font-size: 2.6cqw;
+  font-size: 3.4cqw;
 }
 
 .tag {

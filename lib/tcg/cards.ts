@@ -106,7 +106,7 @@ export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
 export const LAYOUTS: Record<Rarity, RarityLayout> = {
   // Cadre officiel de la graphiste (1500×2100) : illustration jusqu'à 1280, ronds mesurés sur son fichier.
   commune: {
-    frame: 'commune', artSource: 'splash', art: 1280, tag: 1420, name: 1520, nameSize: 9, stats: 'circles', tabOpacity: 0,
+    frame: 'commune', artSource: 'splash', art: 1280, tag: 1415, name: 1525, nameSize: 10.5, stats: 'circles', tabOpacity: 0,
     topCircle: { x: 243, y: 218, d: 262 },
     statCircles: { y: 1768, items: [{ x: 206, d: 192 }, { x: 460, d: 192 }, { x: 749, d: 262 }, { x: 1038, d: 192 }, { x: 1292, d: 192 }] },
     // Logos alignés sur la ligne du pseudo, rapprochés de lui.
