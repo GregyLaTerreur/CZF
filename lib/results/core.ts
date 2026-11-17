@@ -401,6 +401,16 @@ export function computeStandings<T extends StandingTeam>(
 
     if (!team1 || !team2) continue;
 
+    // Forfait : 2-0 et 3 points pour l'autre équipe, sans game jouée.
+    if (match.forfeit_team_id != null) {
+      const winner = Number(match.forfeit_team_id) === Number(team1.id) ? team2 : team1;
+      const loser = winner === team1 ? team2 : team1;
+      winner.wins += 2;
+      loser.losses += 2;
+      winner.points += 3;
+      continue;
+    }
+
     const matchGames =
       gamesByMatch.get(Number(match.id)) || [];
 
@@ -496,6 +506,14 @@ export function computeStandings<T extends StandingTeam>(
     const team2 = teamMap.get(Number(match.team2_id));
 
     if (!team1 || !team2 || tieKey(team1) !== tieKey(team2)) continue;
+
+    if (match.forfeit_team_id != null) {
+      const winnerId = Number(match.forfeit_team_id) === Number(team1.id) ? Number(team2.id) : Number(team1.id);
+      const loserId = Number(match.forfeit_team_id);
+      headToHead.set(winnerId, (headToHead.get(winnerId) ?? 0) + 2);
+      headToHead.set(loserId, (headToHead.get(loserId) ?? 0) - 2);
+      continue;
+    }
 
     for (const game of gamesByMatch.get(Number(match.id)) || []) {
       const winnerId = Number(game.winner_team_id);
@@ -628,13 +646,20 @@ export function buildMatchSummary(
 
   const mvpId = match.mvp_player_id ? Number(match.mvp_player_id) : null;
 
-  const score1 = matchGames.filter(
-    (game) => Number(game.winner_team_id) === Number(match.team1_id)
-  ).length;
+  const forfeitTeamId = match.forfeit_team_id != null ? Number(match.forfeit_team_id) : null;
 
-  const score2 = matchGames.filter(
-    (game) => Number(game.winner_team_id) === Number(match.team2_id)
-  ).length;
+  // Forfait : score de victoire du format (2-0, 2-0 en BO3, 3-0 en BO5).
+  const forfeitScore = match.stage === 'pool' ? 2 : Math.floor(Number(match.best_of) / 2) + 1;
+
+  const score1 =
+    forfeitTeamId !== null
+      ? forfeitTeamId === Number(match.team1_id) ? 0 : forfeitScore
+      : matchGames.filter((game) => Number(game.winner_team_id) === Number(match.team1_id)).length;
+
+  const score2 =
+    forfeitTeamId !== null
+      ? forfeitTeamId === Number(match.team2_id) ? 0 : forfeitScore
+      : matchGames.filter((game) => Number(game.winner_team_id) === Number(match.team2_id)).length;
 
   const formatTeam = (team: TeamInfo | undefined, score?: number) =>
     team
@@ -655,6 +680,8 @@ export function buildMatchSummary(
     round: match.round,
     bestOf: Number(match.best_of),
     playedAt: match.played_at,
+
+    forfeitTeamId,
 
     mvpPlayerId: mvpId,
 

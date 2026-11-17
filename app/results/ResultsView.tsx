@@ -766,7 +766,7 @@ function BracketMatch({
                 styles.bracketScore
               }
             >
-              {side.score ?? '-'}
+              {side.forfeit ? 'FF' : side.score ?? '-'}
             </span>
           </div>
         )
@@ -1058,6 +1058,8 @@ function HistoryRow({
     setOpen(!open);
   }
 
+  const forfeitId = match.forfeitTeamId ?? null;
+
   const scoreClass = (
     teamId: number
   ) =>
@@ -1149,7 +1151,7 @@ function HistoryRow({
               team1.id
             )}
           >
-            {team1.score}
+            {forfeitId === team1.id ? 'FF' : team1.score}
           </span>
 
           <i>-</i>
@@ -1159,7 +1161,7 @@ function HistoryRow({
               team2.id
             )}
           >
-            {team2.score}
+            {forfeitId === team2.id ? 'FF' : team2.score}
           </span>
         </span>
 
@@ -1226,6 +1228,12 @@ function HistoryRow({
               </p>
             )}
 
+          {games && forfeitId !== null && (
+            <p className={styles.detailsState}>
+              Forfait de {forfeitId === team1.id ? team1.name : team2.name} : aucune game jouée, le BO ne compte pas dans les stats.
+            </p>
+          )}
+
           {games?.map(
             (game) => (
               <GameDetails
@@ -1237,7 +1245,7 @@ function HistoryRow({
             )
           )}
 
-          {games && (
+          {games && forfeitId === null && (
             <div
               className={
                 styles.mvpLine

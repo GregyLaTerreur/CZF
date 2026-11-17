@@ -31,6 +31,8 @@ export type HistoryMatch = {
   stage: 'pool' | 'playoff';
   bestOf: number;
   playedAt: string;
+  // Équipe forfait (BO sans game), null si le match a été joué.
+  forfeitTeamId?: number | null;
   mvpRiotId: string | null;
   // null quand l'équipe n'est plus validée par un admin.
   team1: MatchSide | null;

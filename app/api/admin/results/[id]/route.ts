@@ -303,6 +303,11 @@ export async function PATCH(
     if (!loaded) return reply({ success: false, error: 'Match introuvable.' }, 404);
 
     const { match, games, stats } = loaded;
+
+    if (match.forfeit_team_id != null) {
+      throw new Error('Un forfait ne se modifie pas : supprime-le puis ressaisis le résultat.');
+    }
+
     const team1Id = Number(match.team1_id);
     const team2Id = Number(match.team2_id);
     const edits = Array.isArray(body.games) ? body.games : [];

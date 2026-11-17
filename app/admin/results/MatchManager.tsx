@@ -13,6 +13,7 @@ type Match = {
   id: number;
   stage: 'pool' | 'playoff';
   playedAt: string;
+  forfeitTeamId: number | null;
   team1: Side;
   team2: Side;
 };
@@ -124,12 +125,13 @@ export default function MatchManager() {
             <li key={match.id} className={styles.row}>
               <span className={styles.meta}>
                 {match.stage === 'pool' ? 'Poule' : 'Playoff'} · {formatDate(match.playedAt)}
+                {match.forfeitTeamId != null && ' · Forfait'}
               </span>
 
               <span className={styles.teams}>
                 {label(match.team1)}
                 <strong>
-                  {match.team1?.score ?? '-'} - {match.team2?.score ?? '-'}
+                  {scoreLabel(match, match.team1)} - {scoreLabel(match, match.team2)}
                 </strong>
                 {label(match.team2)}
               </span>
@@ -150,6 +152,7 @@ export default function MatchManager() {
                 </span>
               ) : (
                 <span className={styles.actions}>
+                  {match.forfeitTeamId == null && (
                   <button
                     type="button"
                     className={`${editingId === match.id ? ds.btnPrimary : ds.btnOutline} ${ds.btnSmall}`}
@@ -160,6 +163,7 @@ export default function MatchManager() {
                   >
                     Modifier
                   </button>
+                  )}
                   <button type="button" className={`${ds.btnDanger} ${ds.btnSmall}`} onClick={() => setConfirmId(match.id)}>
                     Supprimer
                   </button>
@@ -189,4 +193,10 @@ export default function MatchManager() {
 // Une équipe plus validée n'est plus renvoyée par l'historique.
 function label(side: Side) {
   return side?.shortName ?? 'Équipe retirée';
+}
+
+// Forfait : « FF » pour l'équipe forfait à la place de son score.
+function scoreLabel(match: Match, side: Side) {
+  if (match.forfeitTeamId != null && side?.id === match.forfeitTeamId) return 'FF';
+  return side?.score ?? '-';
 }

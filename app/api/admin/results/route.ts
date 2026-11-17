@@ -98,7 +98,9 @@ type MatchInput = {
     | null;
   bestOf?: number;
   playedAt?: string;
-  games: GameInput[];
+  // Équipe qui déclare forfait : BO enregistré sans game ni MVP.
+  forfeitTeamId?: number | null;
+  games: GameInput[];
 };
 /* =========================================================
    SUPABASE ADMIN
@@ -236,8 +238,12 @@ export async function POST(
       round = null,
       bestOf = 1,
       playedAt,
-      games,
-    } = body;
+      forfeitTeamId = null,
+      games,
+    } = body;
+    const isForfeit =
+      forfeitTeamId !== null &&
+      forfeitTeamId !== undefined;
     /* =====================================================
        DIVISION
     ===================================================== */
@@ -346,34 +352,27 @@ export async function POST(
        GAMES
     ===================================================== */
     if (
-      !Array.isArray(
-        games
-      ) ||
-      games.length ===
-        0
-    ) {
+      !isForfeit &&
+      (!Array.isArray(games) || games.length === 0)
+    ) {
       throw new Error(
         'Au moins une game est obligatoire.'
       );
     }
     if (
-      stage ===
-        'pool' &&
-      games.length !==
-        2
-    ) {
+      !isForfeit &&
+      stage === 'pool' &&
+      games.length !== 2
+    ) {
       throw new Error(
         'Un match de poule doit contenir exactement 2 games.'
       );
     }
     if (
-      stage ===
-        'playoff' &&
-      games.length >
-        Number(
-          bestOf
-        )
-    ) {
+      !isForfeit &&
+      stage === 'playoff' &&
+      games.length > Number(bestOf)
+    ) {
       throw new Error(
         'Trop de games pour ce format de playoffs.'
       );
@@ -432,7 +431,50 @@ export async function POST(
       }
     }
     /* =====================================================
-       IDS JOUEURS OFFICIELS
+       FORFAIT : pas de game, pas de MVP, l'autre équipe gagne
+    ===================================================== */
+    if (isForfeit) {
+      const forfeitId = Number(forfeitTeamId);
+      if (forfeitId !== Number(team1Id) && forfeitId !== Number(team2Id)) {
+        throw new Error('L’équipe forfait doit être une des deux équipes.');
+      }
+      const winnerId = forfeitId === Number(team1Id) ? Number(team2Id) : Number(team1Id);
+      const { data: forfeitMatch, error: forfeitError } = await supabaseAdmin
+        .from('czf_matches')
+        .insert({
+          division,
+          team1_id: Number(team1Id),
+          team2_id: Number(team2Id),
+          winner_team_id: winnerId,
+          forfeit_team_id: forfeitId,
+          mvp_player_id: null,
+          stage,
+          bracket: stage === 'playoff' ? bracket : null,
+          round: stage === 'playoff' ? round : null,
+          best_of: stage === 'pool' ? 2 : Number(bestOf),
+          status: 'finished',
+          played_at: playedAt ?? new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+      if (forfeitError || !forfeitMatch) {
+        throw forfeitError ?? new Error('Impossible d’enregistrer le forfait.');
+      }
+      invalidateResults();
+      const forfeitName = teams.find((team) => Number(team.id) === forfeitId)?.name ?? 'Équipe';
+      return NextResponse.json(
+        {
+          success: true,
+          matchId: forfeitMatch.id,
+          forfeitTeamId: forfeitId,
+          winnerTeamId: winnerId,
+          message: `Forfait enregistré : ${forfeitName} déclare forfait.`,
+        },
+        { status: 201 }
+      );
+    }
+    /* =====================================================
+       IDS JOUEURS OFFICIELS
     ===================================================== */
     const allPlayerIds =
       games.flatMap(

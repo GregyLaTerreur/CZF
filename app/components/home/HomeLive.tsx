@@ -341,7 +341,7 @@ export function LatestResults() {
                           winnerId === team.id ? styles.win : lost ? styles.loss : ''
                         }`}
                       >
-                        {team.score}
+                        {match.forfeitTeamId === team.id ? 'FF' : team.score}
                       </b>
                     </div>
                   );

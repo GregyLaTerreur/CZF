@@ -106,6 +106,8 @@ export async function GET(request: NextRequest) {
         team2: { ...team(match.team2_id), score: wins(match.team2_id) },
         // null en poules sur un 1-1.
         winner: team(match.winner_team_id),
+        // Équipe forfait (BO sans game), null si le match a été joué.
+        forfeit: match.forfeit_team_id != null ? team(match.forfeit_team_id) : null,
         games: games.map(buildGame),
       };
     });

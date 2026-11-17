@@ -477,6 +477,9 @@ export default function AdminResultsView() {
       null
     >(null);
 
+  // Équipe qui déclare forfait (null = match joué normalement).
+  const [forfeitTeamId, setForfeitTeamId] = useState<number | null>(null);
+
   const [
     importJson,
     setImportJson,
@@ -2504,6 +2507,49 @@ export default function AdminResultsView() {
   function resetMatch() {
     setGames([]);
     setMatchMvpPlayerId(null);
+    setForfeitTeamId(null);
+  }
+
+  // Forfait : BO enregistré sans game ni MVP, l'autre équipe gagne.
+  async function saveForfeit() {
+    if (!team1Id || !team2Id || !forfeitTeamId) return;
+
+    setSaving(true);
+    setMessage('');
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) throw new Error('Tu dois être connecté.');
+
+      const res = await fetch('/api/admin/results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          division,
+          team1Id,
+          team2Id,
+          forfeitTeamId,
+          winnerTeamId: forfeitTeamId === team1Id ? team2Id : team1Id,
+          mvpPlayerId: null,
+          stage,
+          bracket: stage === 'playoff' ? bracket : null,
+          bestOf: stage === 'pool' ? 2 : bestOf,
+          games: [],
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) throw new Error(data.error || 'Erreur lors de l’enregistrement.');
+
+      setMessage(`${data.message} ID ${data.matchId}`);
+      resetMatch();
+    } catch (error: any) {
+      setMessage(error?.message || 'Erreur inconnue');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -2701,6 +2747,25 @@ export default function AdminResultsView() {
               </label>
 
               <label className={ds.field}>
+                <span>Forfait</span>
+                <select
+                  className={ds.input}
+                  value={forfeitTeamId ?? ''}
+                  onChange={(e) => {
+                    setGames([]);
+                    setMatchMvpPlayerId(null);
+                    setForfeitTeamId(e.target.value ? Number(e.target.value) : null);
+                  }}
+                  disabled={!team1 || !team2}
+                >
+                  <option value="">Aucun</option>
+                  {team1 && <option value={team1.id}>Forfait {team1.name}</option>}
+                  {team2 && <option value={team2.id}>Forfait {team2.name}</option>}
+                </select>
+              </label>
+
+              {forfeitTeamId === null && (
+              <label className={ds.field}>
                 <span>MVP du match</span>
                 <select
                   className={ds.input}
@@ -2718,6 +2783,7 @@ export default function AdminResultsView() {
                   ))}
                 </select>
               </label>
+              )}
             </div>
 
             {stage === 'pool' && (
@@ -2726,10 +2792,23 @@ export default function AdminResultsView() {
               </div>
             )}
 
+            {forfeitTeamId !== null && (
+              <div className={styles.notice}>
+                Forfait : l’autre équipe gagne le BO ({stage === 'pool' ? '2-0, 3 points' : 'elle passe au tour suivant'}).
+                Aucune game ni stat n’est enregistrée.
+              </div>
+            )}
+
             <div className={styles.importActions}>
-              <button type="button" className={ds.btnPrimary} onClick={regenerateGames}>
-                Préparer le match
-              </button>
+              {forfeitTeamId === null ? (
+                <button type="button" className={ds.btnPrimary} onClick={regenerateGames}>
+                  Préparer le match
+                </button>
+              ) : (
+                <button type="button" className={ds.btnPrimary} disabled={saving} onClick={saveForfeit}>
+                  {saving ? 'Enregistrement...' : 'Enregistrer le forfait'}
+                </button>
+              )}
 
               {message && <p className={styles.message}>{message}</p>}
             </div>

@@ -23,6 +23,8 @@ export type BracketSlot = {
   placeholder: string;
   score: number | null;
   won: boolean;
+  // L'équipe a déclaré forfait sur ce match (score affiché « FF »).
+  forfeit?: boolean;
 };
 
 export type MatchFormat = 'BO3' | 'BO5';
@@ -165,6 +167,8 @@ export function buildBracket(
         node.bottom.score = scoreOf(bottom.team.id);
         node.top.won = match.winner!.id === top.team.id;
         node.bottom.won = !node.top.won;
+        node.top.forfeit = match.forfeitTeamId === top.team.id;
+        node.bottom.forfeit = match.forfeitTeamId === bottom.team.id;
         node.winner = node.top.won ? top.team : bottom.team;
         node.loser = node.top.won ? bottom.team : top.team;
       }

@@ -44,6 +44,7 @@ type Match = {
   division: DivisionName;
   stage?: string;
   playedAt?: string | null;
+  forfeitTeamId?: number | null;
   team1: MatchTeam;
   team2: MatchTeam;
   // Vainqueur de chaque game, dans l'ordre joué.
@@ -845,9 +846,13 @@ export default function HeadToHeadView() {
                           <strong>{left.name}</strong>
                           <div>
                             <b>
-                              <span className={scoreClass(left.score, right.score)}>{left.score}</span>
+                              <span className={scoreClass(left.score, right.score)}>
+                                {match.forfeitTeamId === left.id ? 'FF' : left.score}
+                              </span>
                               {' - '}
-                              <span className={scoreClass(right.score, left.score)}>{right.score}</span>
+                              <span className={scoreClass(right.score, left.score)}>
+                                {match.forfeitTeamId === right.id ? 'FF' : right.score}
+                              </span>
                             </b>
                             <small>{formatDate(match.playedAt)}</small>
                           </div>
