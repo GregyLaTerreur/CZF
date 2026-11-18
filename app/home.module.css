@@ -1171,6 +1171,10 @@
     padding: 36px 20px;
   }
 
+  .matchHeroText.matchHeroTextNav {
+    padding-bottom: 80px;
+  }
+
   .matchHeroVs {
     padding: 28px 20px;
     clip-path: none;
