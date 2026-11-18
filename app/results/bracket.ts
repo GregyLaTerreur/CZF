@@ -41,6 +41,8 @@ export type BracketNode = {
   winner: BracketTeam | null;
   loser: BracketTeam | null;
   played: boolean;
+  // Une des deux places n'aura jamais d'équipe (moins de 8 équipes) : l'autre avance sans jouer.
+  bye?: boolean;
 };
 
 export type BracketRoundData = { title: string; matches: BracketNode[] };
@@ -119,17 +121,21 @@ export function buildBracket(
   const used = new Set<number>();
   const roundNames = new Map<number, string>();
   const nodes = new Map<string, BracketNode>();
+  // Matchs dont le gagnant / le perdant n'existera jamais (exempt).
+  const emptyWinner = new Set<string>();
+  const emptyLoser = new Set<string>();
 
   const resolve = (source: Source) => {
     if (source.kind === 'seed') {
       const team = seeds[source.rank - 1];
-      return { team: team ? toBracketTeam(team) : null, seed: source.rank };
+      return { team: team ? toBracketTeam(team) : null, seed: source.rank, empty: !team };
     }
 
     const node = nodes.get(source.match);
     const team = (source.kind === 'winner' ? node?.winner : node?.loser) ?? null;
+    const empty = (source.kind === 'winner' ? emptyWinner : emptyLoser).has(source.match);
 
-    return { team, seed: team ? seedById.get(team.id) ?? null : null };
+    return { team, seed: team ? seedById.get(team.id) ?? null : null, empty };
   };
 
   for (const spec of SPECS) {
@@ -148,7 +154,23 @@ export function buildBracket(
       played: false,
     };
 
-    if (top.team && bottom.team) {
+    if (top.empty || bottom.empty) {
+      const present = top.empty ? bottom : top;
+
+      if (top.empty) node.top.placeholder = 'Exempt';
+      if (bottom.empty) node.bottom.placeholder = 'Exempt';
+
+      if (top.empty && bottom.empty) {
+        emptyWinner.add(spec.id);
+      } else if (present.team) {
+        node.bye = true;
+        node.played = true;
+        node.winner = present.team;
+        (top.empty ? node.bottom : node.top).won = true;
+      }
+
+      emptyLoser.add(spec.id);
+    } else if (top.team && bottom.team) {
       const ids = [top.team.id, bottom.team.id];
       const candidates = playoffs.filter(
         (match) => !used.has(match.id) && ids.includes(match.team1!.id) && ids.includes(match.team2!.id)
