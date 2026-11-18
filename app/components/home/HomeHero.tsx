@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { logoSrc } from "@/lib/logo";
 import {
-  formatMatchDate,
   matchDay,
   sideLabel,
   useUpcomingMatches,
@@ -16,6 +15,16 @@ import styles from "../../home.module.css";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SLIDE_MS = 8000;
+
+// « Aujourd'hui 20h » / « Demain 21h » ; un match déjà commencé la veille garde son jour.
+function heroDate(iso: string) {
+  const day = matchDay(iso);
+  const today = matchDay(new Date().toISOString()).key;
+  const tomorrow = matchDay(new Date(Date.now() + DAY_MS).toISOString()).key;
+  const label = day.key === today ? "Aujourd'hui" : day.key === tomorrow ? "Demain" : day.label;
+
+  return `${label} ${day.time}`;
+}
 
 function HeroLogo({ side }: { side: UpcomingSide }) {
   return (
@@ -76,7 +85,7 @@ export default function HomeHero({ children }: { children: React.ReactNode }) {
           </h2>
 
           <div className={styles.matchHeroDate}>
-            {formatMatchDate(match.scheduledAt)}
+            {heroDate(match.scheduledAt)}
           </div>
 
           <div className={styles.heroActions}>
