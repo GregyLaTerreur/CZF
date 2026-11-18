@@ -991,6 +991,7 @@
 ========================================================= */
 
 .matchHero {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   min-height: 340px;
@@ -1099,7 +1100,65 @@
   color: var(--dark);
 }
 
+.matchHeroNav {
+  position: absolute;
+  left: max(32px, calc((100vw - 1180px) / 2 + 32px));
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.matchHeroNav > button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--cream);
+  color: var(--dark);
+  border: 0;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  box-shadow: 3px 3px 0 var(--orange);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.matchHeroNav > button:hover,
+.matchHeroNav > button:active {
+  box-shadow: 1px 1px 0 var(--orange);
+  transform: skewX(-8deg) translate(2px, 2px);
+}
+
+.matchHeroNav svg {
+  width: 12px;
+  height: 12px;
+}
+
+.matchHeroDots {
+  display: flex;
+  gap: 8px;
+}
+
+.matchHeroDots button {
+  width: 22px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  background: rgba(244, 226, 201, 0.3);
+  cursor: pointer;
+  transform: skewX(-8deg);
+}
+
+.matchHeroDots button.matchHeroDotOn {
+  background: var(--orange);
+}
+
 @media (max-width: 860px) {
+  .matchHeroNav {
+    left: 20px;
+  }
+
   .matchHero {
     grid-template-columns: 1fr;
   }
