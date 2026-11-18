@@ -64,7 +64,7 @@ export default function HomeHero({ children }: { children: React.ReactNode }) {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <div className={styles.matchHeroText}>
+        <div className={`${styles.matchHeroText} ${count > 1 ? styles.matchHeroTextNav : ""}`}>
           <div className={styles.sectionLabel}>
             Playoffs {match.division} · {match.name} · {match.format}
           </div>

@@ -1100,6 +1100,10 @@
   color: var(--dark);
 }
 
+.matchHeroTextNav {
+  padding-bottom: 88px;
+}
+
 .matchHeroNav {
   position: absolute;
   left: max(32px, calc((100vw - 1180px) / 2 + 32px));
