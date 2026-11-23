@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, PointerEvent } from 'react';
+import { Fragment, type CSSProperties, type PointerEvent } from 'react';
 import { roleInfo } from '@/app/components/ds/lol';
 import {
   ART_DEFAULT,
@@ -132,7 +132,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
         if (!slot || !stat) return null;
         // Valeur dans le rond, libellé dessous (tous les libellés sur la même ligne).
         return (
-          <div key={label}>
+          <Fragment key={label}>
             <div
               className={`${styles.c} ${styles.circle} ${styles.statCircle} ${index === 2 ? styles.statCircleBig : ''}`}
               style={{ ...at(slot.x, layout.statCircles!.y), width: pctX(slot.d) }}
@@ -142,7 +142,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
             <span className={`${styles.c} ${styles.statLabel}`} style={at(slot.x, layout.statCircles!.labelY)}>
               {label}
             </span>
-          </div>
+          </Fragment>
         );
       })}
       {statItems.length > 0 && layout.stats === 'line' && (
