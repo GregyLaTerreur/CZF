@@ -96,7 +96,7 @@ export type RarityLayout = {
   // Rond en haut à gauche du cadre : rôle (ou note MVP) à la place de l'onglet CSS.
   topCircle?: { x: number; y: number; d: number };
   // Ronds des stats, de gauche à droite, dans l'ordre de STAT_CIRCLE_ORDER.
-  statCircles?: { y: number; items: { x: number; d: number }[] };
+  statCircles?: { y: number; labelY: number; items: { x: number; d: number }[] };
 };
 
 // Ordre des stats dans les 5 ronds du bas : le KDA dans le grand rond du centre.
@@ -108,7 +108,7 @@ export const LAYOUTS: Record<Rarity, RarityLayout> = {
   commune: {
     frame: 'commune', artSource: 'splash', art: 1280, tag: 1415, name: 1525, nameSize: 10.5, stats: 'circles', tabOpacity: 0,
     topCircle: { x: 243, y: 218, d: 262 },
-    statCircles: { y: 1768, items: [{ x: 206, d: 192 }, { x: 460, d: 192 }, { x: 749, d: 262 }, { x: 1038, d: 192 }, { x: 1292, d: 192 }] },
+    statCircles: { y: 1768, labelY: 1945, items: [{ x: 206, d: 192 }, { x: 460, d: 192 }, { x: 749, d: 262 }, { x: 1038, d: 192 }, { x: 1292, d: 192 }] },
     // Logos alignés sur la ligne du pseudo, rapprochés de lui.
     logos: { y: 1520, left: 250, right: 1250, size: 120 },
   },

@@ -83,19 +83,17 @@
   color: #fff;
 }
 
-.statCircle span {
+.statLabel {
   font: 700 2.9cqw/1 var(--font-barlow-condensed), sans-serif;
   letter-spacing: 0.08em;
   color: #d4b896;
+  white-space: nowrap;
 }
 
 .statCircleBig b {
   font-size: 8.4cqw;
 }
 
-.statCircleBig span {
-  font-size: 3.4cqw;
-}
 
 .tag {
   font: 700 3.4cqw/1 var(--font-barlow-condensed), sans-serif;

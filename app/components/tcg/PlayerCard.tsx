@@ -130,14 +130,18 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
         const slot = layout.statCircles!.items[index];
         const stat = stats.find((s) => s.label === label);
         if (!slot || !stat) return null;
+        // Valeur dans le rond, libellé dessous (tous les libellés sur la même ligne).
         return (
-          <div
-            key={label}
-            className={`${styles.c} ${styles.circle} ${styles.statCircle} ${index === 2 ? styles.statCircleBig : ''}`}
-            style={{ ...at(slot.x, layout.statCircles!.y), width: pctX(slot.d) }}
-          >
-            <b>{stat.value}</b>
-            <span>{label}</span>
+          <div key={label}>
+            <div
+              className={`${styles.c} ${styles.circle} ${styles.statCircle} ${index === 2 ? styles.statCircleBig : ''}`}
+              style={{ ...at(slot.x, layout.statCircles!.y), width: pctX(slot.d) }}
+            >
+              <b>{stat.value}</b>
+            </div>
+            <span className={`${styles.c} ${styles.statLabel}`} style={at(slot.x, layout.statCircles!.labelY)}>
+              {label}
+            </span>
           </div>
         );
       })}
