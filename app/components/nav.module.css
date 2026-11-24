@@ -11,7 +11,7 @@
   font-style: italic;
   text-transform: uppercase;
 
-  background: #081428;
+  background: #F05010;
   border-bottom: 6px solid #F05010;
 }
 
@@ -88,21 +88,22 @@
   position: relative;
   padding: 6px 0;
 
-  color: #E0D8CC;
+  color: #040C18;
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.15s;
 }
 
 .link:hover {
-  color: #F05010;
+  color: #040C18;
+  text-decoration: underline;
 }
 
 .link.active {
-  color: #FFFFFF;
+  color: #040C18;
 }
 
-/* Trait orange incliné sous la page active */
+/* Trait incliné sous la page active */
 .link.active::after {
   content: '';
 
@@ -112,9 +113,9 @@
   bottom: 0;
 
   height: 3px;
-  background: #F05010;
+  background: #040C18;
   transform: skewX(-24deg);
-  box-shadow: 6px 0 0 rgba(240, 80, 16, 0.35);
+  box-shadow: 6px 0 0 rgba(4, 12, 24, 0.35);
 }
 
 /* ---------- Compte ---------- */
