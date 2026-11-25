@@ -95,8 +95,8 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       />
       <img className={styles.frame} src={cardFrame(card.rarity, large ? 1500 : 750, card.card_type)} alt="" />
 
-      {/* Vernis de la rareté (texture de la graphiste), sous les textes. */}
-      {layout.varnish && !typeFrame && (
+      {/* Vernis de la rareté (texture de la graphiste), sous les textes : toutes les cartes de la rareté. */}
+      {layout.varnish && (
         <div
           className={styles.varnish}
           style={{ ['--varnish-mask' as string]: `url(${cardEffect(layout.varnish, large ? 1500 : 750)})` }}
