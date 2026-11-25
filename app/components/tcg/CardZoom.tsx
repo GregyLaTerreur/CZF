@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { createPortal } from 'react-dom';
+import Loader from '@/app/components/ds/Loader';
 import CloseIcon from '@/app/components/icons/CloseIcon';
 import { RARITY_LABELS, type TcgCard } from '@/lib/tcg/cards';
 import PlayerCard from './PlayerCard';
@@ -84,7 +85,7 @@ export default function CardZoom({ card, count, onClose }: { card: TcgCard; coun
           {ownersError ? (
             <p className={styles.ownersEmpty}>Détenteurs indisponibles.</p>
           ) : !owners ? (
-            <p className={styles.ownersEmpty}>Chargement…</p>
+            <Loader label="Chargement des détenteurs" />
           ) : !owners.owners.length ? (
             <p className={styles.ownersEmpty}>Personne ne l’a encore obtenue.</p>
           ) : (

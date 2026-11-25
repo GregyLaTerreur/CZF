@@ -88,6 +88,10 @@
   color: var(--orange, #f05010);
 }
 
+.owners > [role='status'] {
+  padding: 28px 0 16px;
+}
+
 .ownersEmpty {
   margin: 10px 0 0;
   font-size: 0.85rem;
