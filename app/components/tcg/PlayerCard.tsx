@@ -8,6 +8,7 @@ import {
   CARD_RADIUS,
   CARD_SIZE,
   LAYOUTS,
+  NAME_MAX_WIDTH,
   RARITY_ACCENTS,
   DEFAULT_NOTE,
   STAT_CIRCLE_ORDER,
@@ -43,6 +44,8 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
   const typeFrame = Boolean(layout.frameByType?.[card.card_type]);
   const stats = fields.stats ? card.stats.filter((stat) => stat.value) : [];
   const { logos } = layout;
+  // Pseudo long : la taille baisse pour tenir dans la largeur (≈ 0,5 em par lettre en Barlow Condensed italique).
+  const nameSize = Math.min(layout.nameSize, ((NAME_MAX_WIDTH / CARD_SIZE.w) * 100) / (Math.max(card.name.length, 1) * 0.5));
 
   // Lumière et inclinaison qui suivent la souris (sauf commune).
   function onMove(event: PointerEvent<HTMLDivElement>) {
@@ -145,7 +148,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       {fields.team && layout.tag !== null && card.team_name && (
         <div className={`${styles.c} ${styles.tag}`} style={at(750, layout.tag)}>{card.team_name}</div>
       )}
-      <div className={`${styles.c} ${styles.name}`} style={{ ...at(750, layout.name), fontSize: `${layout.nameSize}cqw` }}>
+      <div className={`${styles.c} ${styles.name}`} style={{ ...at(750, layout.name), fontSize: `${nameSize}cqw` }}>
         {card.name}
       </div>
 
@@ -184,10 +187,10 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       )}
 
       {fields.team && card.team_logo && (
-        <img className={`${styles.c} ${styles.logo} ${styles.team}`} style={{ ...at(logos.left, logos.y), width: pctX(logos.size) }} src={card.team_logo} alt={card.team_name || ''} />
+        <img className={`${styles.c} ${styles.logo} ${styles.team}`} style={layout.badges ? { ...at(layout.badges.x, layout.badges.y1), width: pctX(layout.badges.size) } : { ...at(logos.left, logos.y), width: pctX(logos.size) }} src={card.team_logo} alt={card.team_name || ''} />
       )}
       {fields.team && card.division && (
-        <img className={`${styles.c} ${styles.logo}`} style={{ ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
+        <img className={`${styles.c} ${styles.logo}`} style={layout.badges ? { ...at(layout.badges.x, card.team_logo ? layout.badges.y2 : layout.badges.y1), width: pctX(layout.badges.size) } : { ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
       )}
 
       {card.number && card.season_total && (

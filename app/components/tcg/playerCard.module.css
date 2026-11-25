@@ -216,13 +216,14 @@
 }
 
 /* Numéro dans la saison, en haut à droite (« 12/82 »). */
+/* Numéro de la carte en bas à droite. */
 .number {
-  top: 4%;
-  right: 4.5%;
-  padding: 0.6cqw 1.8cqw;
+  bottom: 2.4%;
+  right: 4%;
+  padding: 0.5cqw 1.6cqw;
   background: rgba(8, 20, 40, 0.82);
   color: #fff;
-  font: italic 800 3.6cqw/1 var(--font-barlow-condensed), sans-serif;
+  font: italic 800 3.2cqw/1 var(--font-barlow-condensed), sans-serif;
   letter-spacing: 0.04em;
   transform: skewX(-8deg);
   box-shadow: 0.5cqw 0.5cqw 0 var(--accent);

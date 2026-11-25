@@ -104,6 +104,8 @@ export type RarityLayout = {
   frameByType?: Partial<Record<CardType, string>>;
   // Petit rond du rôle (épique) : le grand rond du haut affiche alors la note.
   roleCircle?: { x: number; y: number; d: number };
+  // Logo d'équipe et division empilés en haut à droite de l'illustration (badges) : le pseudo a toute la largeur.
+  badges?: { x: number; y1: number; y2: number; size: number };
   // Texte sombre (bande claire du cadre).
   ink?: 'dark';
   // Vernis holographique : arc-en-ciel visible seulement dans le dessin du vernis (masque, cards/s1/effets).
@@ -116,12 +118,19 @@ export const DEFAULT_NOTE = 99;
 // Ordre des stats dans les 5 ronds du bas : le KDA dans le grand rond du centre.
 export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
 
+// Badges équipe + division des cadres de la graphiste (haut à droite de l'illustration).
+const BADGES = { x: 1290, y1: 189, y2: 357, size: 150 };
+
+// Largeur max du pseudo (gabarit 1500) : au-delà, il rétrécit.
+export const NAME_MAX_WIDTH = 1350;
+
 // Doit rester en phase avec les cadres PNG (générés par ~/www/czf-tcg/gen.mjs).
 export const LAYOUTS: Record<Rarity, RarityLayout> = {
   // Cadre officiel de la graphiste (1500×2100) : illustration jusqu'à 1280, ronds mesurés sur son fichier.
   commune: {
     frame: 'commune', artSource: 'splash', art: 1280, tag: 1415, name: 1525, nameSize: 10.5, stats: 'circles', tabOpacity: 0,
     topCircle: { x: 243, y: 218, d: 262 },
+    badges: BADGES,
     statCircles: { y: 1768, labelY: 1945, items: [{ x: 206, d: 192 }, { x: 460, d: 192 }, { x: 749, d: 262 }, { x: 1038, d: 192 }, { x: 1292, d: 192 }] },
     // Logos alignés sur la ligne du pseudo, rapprochés de lui.
     logos: { y: 1520, left: 250, right: 1250, size: 120 },
@@ -131,6 +140,7 @@ export const LAYOUTS: Record<Rarity, RarityLayout> = {
   rare: {
     frame: 'rare', artSource: 'splash', art: 1712, tag: 1800, name: 1905, nameSize: 10, stats: 'none', tabOpacity: 0, ink: 'dark',
     topCircle: { x: 243, y: 220, d: 262 },
+    badges: BADGES,
     logos: { y: 1905, left: 250, right: 1250, size: 120 },
   },
   // Cadre épique de la graphiste : illustration pleine carte fondue vers le bas, note dans le grand rond,
@@ -140,6 +150,7 @@ export const LAYOUTS: Record<Rarity, RarityLayout> = {
     tag: 1320, name: 1425, nameSize: 10, stats: 'circles', tabOpacity: 0, varnish: 'vernis_epique_masque',
     topCircle: { x: 243, y: 220, d: 262 },
     roleCircle: { x: 353, y: 343, d: 150 },
+    badges: BADGES,
     statCircles: {
       y: 1770, labelY: 1930,
       items: [
