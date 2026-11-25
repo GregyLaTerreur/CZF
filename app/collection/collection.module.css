@@ -1,3 +1,13 @@
+/* Page en colonne : le footer reste collé en bas même quand le contenu est court (loader, page vide). */
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.page > footer {
+  margin-top: auto;
+}
+
 /* Même marge sous le header que les autres pages (ds.header : --space-block).
    « main .wrap » : passe devant le padding de ds.container, posé sur le même élément. */
 main .wrap {
