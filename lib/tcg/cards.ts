@@ -6,10 +6,10 @@ import { isAllowedLogoUrl } from '@/lib/logo';
 import { DIVISIONS, type DivisionName } from '@/app/components/home/divisions';
 
 export type Rarity = 'commune' | 'rare' | 'epique' | 'legendaire';
-export type CardType = 'joueur' | 'mvp' | 'simple';
+export type CardType = 'joueur' | 'mvp' | 'simple' | 'staff';
 
 export const RARITIES: Rarity[] = ['commune', 'rare', 'epique', 'legendaire'];
-export const CARD_TYPES: CardType[] = ['joueur', 'mvp', 'simple'];
+export const CARD_TYPES: CardType[] = ['joueur', 'mvp', 'simple', 'staff'];
 export const CARD_ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
 export const RARITY_LABELS: Record<Rarity, string> = {
@@ -23,6 +23,7 @@ export const CARD_TYPE_LABELS: Record<CardType, string> = {
   joueur: 'Joueur',
   mvp: 'MVP',
   simple: 'Simple',
+  staff: 'Staff',
 };
 
 // Ce que chaque type affiche : simple = juste le nom et le personnage, la note n'existe qu'en MVP.
@@ -30,6 +31,7 @@ export const TYPE_FIELDS: Record<CardType, { team: boolean; note: boolean; stats
   joueur: { team: true, note: false, stats: true },
   mvp: { team: true, note: true, stats: true },
   simple: { team: false, note: false, stats: false },
+  staff: { team: false, note: false, stats: false },
 };
 
 // Raretés autorisées par type : une carte joueur est toujours commune, une MVP rare ou épique
@@ -38,6 +40,7 @@ export const TYPE_RARITIES: Record<CardType, Rarity[]> = {
   joueur: ['commune'],
   mvp: ['rare', 'epique', 'legendaire'],
   simple: ['commune', 'rare', 'epique', 'legendaire'],
+  staff: ['rare'], // membres du staff CZF (SQL czf-import/tcg-13)
 };
 
 export const STAT_LABELS = ['KDA', 'KP%', 'DPM', 'VIS/M', 'WR%'];
@@ -84,7 +87,7 @@ export type RarityLayout = {
   tag: number | null; // nom d'équipe en petit (absent en légendaire)
   name: number;
   nameSize: number; // en % de la largeur de la carte
-  stats: 'pill' | 'line' | 'hover' | 'circles';
+  stats: 'pill' | 'line' | 'hover' | 'circles' | 'none';
   pill?: { x: number; y: number; w: number; h: number };
   statsY?: number;
   logos: Logos;
@@ -96,8 +99,19 @@ export type RarityLayout = {
   // Rond en haut à gauche du cadre : rôle (ou note MVP) à la place de l'onglet CSS.
   topCircle?: { x: number; y: number; d: number };
   // Ronds des stats, de gauche à droite, dans l'ordre de STAT_CIRCLE_ORDER.
-  statCircles?: { y: number; labelY: number; items: { x: number; d: number }[] };
+  statCircles?: { y: number; labelY: number; items: { x: number; d: number; y?: number; labelY?: number }[] };
+  // Cadre propre à un type (ex. épique « événement » pour les cartes simples).
+  frameByType?: Partial<Record<CardType, string>>;
+  // Petit rond du rôle (épique) : le grand rond du haut affiche alors la note.
+  roleCircle?: { x: number; y: number; d: number };
+  // Texte sombre (bande claire du cadre).
+  ink?: 'dark';
+  // Texture de vernis posée sur la carte (id Cloudinary dans cards/s1/effets).
+  varnish?: string;
 };
+
+// Note affichée tant qu'elle n'est pas remplie en base (cartes épiques).
+export const DEFAULT_NOTE = 99;
 
 // Ordre des stats dans les 5 ronds du bas : le KDA dans le grand rond du centre.
 export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
@@ -112,14 +126,31 @@ export const LAYOUTS: Record<Rarity, RarityLayout> = {
     // Logos alignés sur la ligne du pseudo, rapprochés de lui.
     logos: { y: 1520, left: 250, right: 1250, size: 120 },
   },
+  // Cadre rare de la graphiste : illustration jusqu'à 1710, bande beige en bas (texte sombre), pas de stats.
+  // Rond du haut : « STAFF » pour le type staff, la note pour un joueur.
   rare: {
-    art: 1700, tag: 1650, name: 1740, nameSize: 9.5, stats: 'pill', tabOpacity: 0.9,
-    pill: { x: 220, y: 1830, w: 1060, h: 170 },
-    logos: { y: 1720, left: 190, right: 1310, size: 150 },
+    frame: 'rare', artSource: 'splash', art: 1712, tag: 1800, name: 1905, nameSize: 10, stats: 'none', tabOpacity: 0, ink: 'dark',
+    topCircle: { x: 243, y: 220, d: 262 },
+    logos: { y: 1905, left: 250, right: 1250, size: 120 },
   },
+  // Cadre épique de la graphiste : illustration pleine carte fondue vers le bas, note dans le grand rond,
+  // rôle dans le petit, 5 stats en arc. Les cartes simples prennent le cadre « événement » (sans stats).
   epique: {
-    art: 2100, tag: 1760, name: 1850, nameSize: 9, stats: 'line', statsY: 1975, tabOpacity: 0.6,
-    logos: { y: 1850, left: 180, right: 1320, size: 140 },
+    frame: 'epique', frameByType: { simple: 'epique_evenement' }, artSource: 'splash', art: 2100,
+    tag: 1320, name: 1425, nameSize: 10, stats: 'circles', tabOpacity: 0, varnish: 'vernis_epique',
+    topCircle: { x: 243, y: 220, d: 262 },
+    roleCircle: { x: 353, y: 343, d: 150 },
+    statCircles: {
+      y: 1770, labelY: 1930,
+      items: [
+        { x: 206, d: 192, y: 1770, labelY: 1930 },
+        { x: 460, d: 192, y: 1728, labelY: 1888 },
+        { x: 750, d: 262, y: 1669, labelY: 1862 },
+        { x: 1038, d: 192, y: 1728, labelY: 1888 },
+        { x: 1292, d: 192, y: 1770, labelY: 1930 },
+      ],
+    },
+    logos: { y: 1425, left: 250, right: 1250, size: 120 },
   },
   legendaire: {
     art: 2100, tag: null, name: 1950, nameSize: 8, stats: 'hover', tabOpacity: 0.42,
@@ -134,9 +165,15 @@ export const RARITY_ACCENTS: Record<Rarity, string> = {
   legendaire: '#F2C14E',
 };
 
-export function cardFrame(rarity: Rarity, width = 750) {
-  const frame = LAYOUTS[rarity].frame ?? `${rarity}${ASSET_SUFFIX}`;
+export function cardFrame(rarity: Rarity, width = 750, cardType?: CardType) {
+  const layout = LAYOUTS[rarity];
+  const frame = (cardType && layout.frameByType?.[cardType]) ?? layout.frame ?? `${rarity}${ASSET_SUFFIX}`;
   return cdnImage(`cards/s1/cadres/${frame}`, `f_auto,q_auto,w_${width}`);
+}
+
+// Textures d'effet de la graphiste (vernis…).
+export function cardEffect(name: string, width = 750) {
+  return cdnImage(`cards/s1/effets/${name}`, `f_auto,q_auto,w_${width}`);
 }
 
 export function divisionIcon(division: DivisionName) {
@@ -188,7 +225,9 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
   if (!CARD_TYPES.includes(cardType)) return { error: 'Type de carte invalide.' };
   if (!RARITIES.includes(rarity)) return { error: 'Rareté invalide.' };
   if (!TYPE_RARITIES[cardType].includes(rarity)) {
-    return { error: cardType === 'joueur' ? 'Une carte Joueur est toujours Commune.' : 'Une carte MVP est Rare, Épique ou Légendaire.' };
+    return {
+      error: cardType === 'joueur' ? 'Une carte Joueur est toujours Commune.' : cardType === 'staff' ? 'Une carte Staff est toujours Rare.' : 'Une carte MVP est Rare, Épique ou Légendaire.',
+    };
   }
 
   const name = text(body.name, 40);

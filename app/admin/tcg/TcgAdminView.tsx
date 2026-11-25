@@ -16,6 +16,7 @@ import {
   CARD_TYPE_LABELS,
   ART_DEFAULT,
   EMPTY_CARD,
+  DEFAULT_NOTE,
   isRealSkin,
   RARITY_LABELS,
   RARITIES,
@@ -179,6 +180,8 @@ export default function TcgAdminView() {
       ...current,
       card_type: cardType,
       rarity: TYPE_RARITIES[cardType].includes(current.rarity) ? current.rarity : TYPE_RARITIES[cardType][0],
+      // Note MVP pré-remplie à 99 en attendant la vraie note.
+      note: cardType === 'mvp' && current.note === null ? DEFAULT_NOTE : current.note,
     }));
   }
 

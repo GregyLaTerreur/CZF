@@ -9,11 +9,13 @@ import {
   CARD_SIZE,
   LAYOUTS,
   RARITY_ACCENTS,
+  DEFAULT_NOTE,
   STAT_CIRCLE_ORDER,
   TYPE_FIELDS,
   championArt,
   cardFrame,
   divisionIcon,
+  cardEffect,
   pctX,
   pctY,
   type TcgCard,
@@ -33,7 +35,12 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
   const layout = LAYOUTS[card.rarity];
   const fields = TYPE_FIELDS[card.card_type];
   const role = fields.team ? roleInfo(card.role) : null;
-  const showNote = fields.note && card.note !== null;
+  // Épique (rond de rôle à part) : la note est toujours affichée, 99 tant qu'elle n'est pas remplie.
+  const note = layout.roleCircle && fields.note ? card.note ?? DEFAULT_NOTE : card.note;
+  const showNote = fields.note && note !== null;
+  const isStaff = card.card_type === 'staff';
+  // Cadre propre au type (ex. épique « événement ») : pas de rond de rôle ni de stats.
+  const typeFrame = Boolean(layout.frameByType?.[card.card_type]);
   const stats = fields.stats ? card.stats.filter((stat) => stat.value) : [];
   const { logos } = layout;
 
@@ -60,7 +67,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
 
   return (
     <div
-      className={`${styles.card} ${styles[card.rarity]}`}
+      className={`${styles.card} ${styles[card.rarity]} ${layout.ink === 'dark' ? styles.inkDark : ''}`}
       style={{
         aspectRatio: `${CARD_SIZE.w} / ${CARD_SIZE.h}`,
         // Cadre de la graphiste : arrondi d'une vraie carte. Cadres provisoires : arrondi d'origine.
@@ -86,15 +93,36 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
         alt=""
         draggable={false}
       />
-      <img className={styles.frame} src={cardFrame(card.rarity, large ? 1500 : 750)} alt="" />
+      <img className={styles.frame} src={cardFrame(card.rarity, large ? 1500 : 750, card.card_type)} alt="" />
 
-      {/* Cadre de la graphiste : rôle (ou note MVP) dans le rond du haut. */}
-      {layout.topCircle && (showNote || role) && (
+      {/* Vernis de la rareté (texture de la graphiste), sous les textes. */}
+      {layout.varnish && !typeFrame && (
+        <div className={styles.varnish} style={{ backgroundImage: `url(${cardEffect(layout.varnish, large ? 1500 : 750)})` }} />
+      )}
+
+      {/* Cadre de la graphiste, rond du haut : note, sinon « STAFF » (type staff), sinon rôle. */}
+      {layout.topCircle && !typeFrame && (showNote || isStaff || (role && !layout.roleCircle)) && (
         <div
           className={`${styles.c} ${styles.circle}`}
           style={{ ...at(layout.topCircle.x, layout.topCircle.y), width: pctX(layout.topCircle.d) }}
         >
-          {showNote ? <span className={styles.note}>{card.note}</span> : role && <img className={styles.roleBig} src={role.image} alt={role.label} />}
+          {showNote ? (
+            <span className={styles.note}>{note}</span>
+          ) : isStaff ? (
+            <span className={styles.staff}>Staff</span>
+          ) : (
+            role && <img className={styles.roleBig} src={role.image} alt={role.label} />
+          )}
+        </div>
+      )}
+
+      {/* Épique : rôle dans le petit rond collé au grand. */}
+      {layout.roleCircle && !typeFrame && role && (
+        <div
+          className={`${styles.c} ${styles.circle}`}
+          style={{ ...at(layout.roleCircle.x, layout.roleCircle.y), width: pctX(layout.roleCircle.d) }}
+        >
+          <img className={styles.roleBig} src={role.image} alt={role.label} />
         </div>
       )}
 
@@ -126,7 +154,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
           {statItems}
         </div>
       )}
-      {stats.length > 0 && layout.stats === 'circles' && layout.statCircles && STAT_CIRCLE_ORDER.map((label, index) => {
+      {stats.length > 0 && !typeFrame && layout.stats === 'circles' && layout.statCircles && STAT_CIRCLE_ORDER.map((label, index) => {
         const slot = layout.statCircles!.items[index];
         const stat = stats.find((s) => s.label === label);
         if (!slot || !stat) return null;
@@ -135,11 +163,11 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
           <Fragment key={label}>
             <div
               className={`${styles.c} ${styles.circle} ${styles.statCircle} ${index === 2 ? styles.statCircleBig : ''}`}
-              style={{ ...at(slot.x, layout.statCircles!.y), width: pctX(slot.d) }}
+              style={{ ...at(slot.x, slot.y ?? layout.statCircles!.y), width: pctX(slot.d) }}
             >
               <b>{stat.value}</b>
             </div>
-            <span className={`${styles.c} ${styles.statLabel}`} style={at(slot.x, layout.statCircles!.labelY)}>
+            <span className={`${styles.c} ${styles.statLabel}`} style={at(slot.x, slot.labelY ?? layout.statCircles!.labelY)}>
               {label}
             </span>
           </Fragment>

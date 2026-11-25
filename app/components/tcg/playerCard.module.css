@@ -67,6 +67,42 @@
   border-radius: 50%;
 }
 
+/* « STAFF » dans le rond du haut (cadre rare). */
+.staff {
+  font: italic 800 4.6cqw/1 var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d4b896;
+}
+
+/* Vernis épique : texture en surimpression, plus marquée au survol et qui suit la souris. */
+.varnish {
+  inset: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  mix-blend-mode: overlay;
+  opacity: 0.32;
+  transition: opacity 0.25s;
+}
+
+.card:hover .varnish {
+  opacity: 0.6;
+  background-position: var(--mx) var(--my);
+  background-size: 115%;
+}
+
+/* Bande claire (cadre rare) : textes en sombre. */
+.inkDark .name {
+  color: #081428;
+  text-shadow: none;
+}
+
+.inkDark .tag {
+  color: rgba(8, 20, 40, 0.7);
+  opacity: 1;
+}
+
 .roleBig {
   width: 52%;
   aspect-ratio: 1;

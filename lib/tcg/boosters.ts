@@ -4,7 +4,8 @@
 import { cdnImage } from '@/lib/assets';
 import { RARITIES, type CardType, type Rarity } from '@/lib/tcg/cards';
 
-export type BoosterType = 'tout' | CardType;
+// Pas de booster « staff » : les cartes staff sortent des boosters « Tout ».
+export type BoosterType = 'tout' | Exclude<CardType, 'staff'>;
 
 export const BOOSTER_TYPES: BoosterType[] = ['tout', 'joueur', 'mvp', 'simple'];
 
