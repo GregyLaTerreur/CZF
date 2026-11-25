@@ -119,7 +119,7 @@ export const DEFAULT_NOTE = 99;
 export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
 
 // Badges équipe + division des cadres de la graphiste (haut à droite de l'illustration).
-const BADGES = { x: 1290, y1: 189, y2: 357, size: 150 };
+const BADGES = { x: 1280, y1: 200, y2: 390, size: 180 };
 
 // Largeur max du pseudo (gabarit 1500) : au-delà, il rétrécit.
 export const NAME_MAX_WIDTH = 1350;
