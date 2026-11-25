@@ -8,6 +8,7 @@ import CloseIcon from '@/app/components/icons/CloseIcon';
 import { RARITY_LABELS, type TcgCard } from '@/lib/tcg/cards';
 import PlayerCard from './PlayerCard';
 import CardElectric from './CardElectric';
+import { fontVariables } from '@/app/fonts';
 import styles from './cardZoom.module.css';
 
 type Owner = { profileId: string; name: string; avatar: string | null; count: number };
@@ -63,8 +64,9 @@ export default function CardZoom({ card, count, onClose }: { card: TcgCard; coun
     count === undefined ? null : missing ? 'Pas encore obtenue' : `${count} exemplaire${count > 1 ? 's' : ''}`,
   ].filter(Boolean).join(' · ');
 
+  // Rendu hors de <main> (portail) : on remet les variables de police du site (fontVariables).
   return createPortal(
-    <div className={styles.backdrop} role="dialog" aria-modal="true" aria-label={card.name} onClick={onClose}>
+    <div className={`${styles.backdrop} ${fontVariables}`} role="dialog" aria-modal="true" aria-label={card.name} onClick={onClose}>
       <button type="button" className={styles.close} onClick={onClose} aria-label="Fermer">
         <CloseIcon />
       </button>
