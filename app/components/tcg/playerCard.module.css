@@ -84,7 +84,7 @@
   -webkit-mask: var(--varnish-mask) center / 100% 100% no-repeat;
   mask: var(--varnish-mask) center / 100% 100% no-repeat;
   mix-blend-mode: color-dodge;
-  opacity: 0.6;
+  opacity: 0.3;
 }
 
 /* Bande claire (cadre rare) : textes en sombre. */
