@@ -95,13 +95,13 @@ main .wrap {
   justify-content: center;
   gap: 28px;
   width: 100%;
-  max-width: 820px;
+  max-width: 640px;
 }
 
 .carouselMain {
   position: relative;
   z-index: 2;
-  width: min(340px, 62vw);
+  width: min(240px, 52vw);
   animation: boosterIn 0.25s ease-out;
 }
 
@@ -110,7 +110,7 @@ main .wrap {
   position: absolute;
   top: 50%;
   z-index: 1;
-  width: min(190px, 30vw);
+  width: min(140px, 26vw);
   aspect-ratio: 2 / 3;
   object-fit: contain;
   opacity: 0.35;
@@ -120,12 +120,12 @@ main .wrap {
 
 .carouselLeft {
   left: 50%;
-  transform: translate(calc(-50% - min(250px, 34vw)), -50%) rotate(-6deg);
+  transform: translate(calc(-50% - min(190px, 30vw)), -50%) rotate(-6deg);
 }
 
 .carouselRight {
   left: 50%;
-  transform: translate(calc(-50% + min(250px, 34vw)), -50%) rotate(6deg);
+  transform: translate(calc(-50% + min(190px, 30vw)), -50%) rotate(6deg);
 }
 
 .carouselArrow,
