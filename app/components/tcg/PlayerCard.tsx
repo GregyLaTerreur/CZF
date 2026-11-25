@@ -97,7 +97,10 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
 
       {/* Vernis de la rareté (texture de la graphiste), sous les textes. */}
       {layout.varnish && !typeFrame && (
-        <div className={styles.varnish} style={{ backgroundImage: `url(${cardEffect(layout.varnish, large ? 1500 : 750)})` }} />
+        <div
+          className={styles.varnish}
+          style={{ ['--varnish-mask' as string]: `url(${cardEffect(layout.varnish, large ? 1500 : 750)})` }}
+        />
       )}
 
       {/* Cadre de la graphiste, rond du haut : note, sinon « STAFF » (type staff), sinon rôle. */}

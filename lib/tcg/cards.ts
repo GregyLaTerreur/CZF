@@ -106,7 +106,7 @@ export type RarityLayout = {
   roleCircle?: { x: number; y: number; d: number };
   // Texte sombre (bande claire du cadre).
   ink?: 'dark';
-  // Texture de vernis posée sur la carte (id Cloudinary dans cards/s1/effets).
+  // Vernis holographique : arc-en-ciel visible seulement dans le dessin du vernis (masque, cards/s1/effets).
   varnish?: string;
 };
 
@@ -137,7 +137,7 @@ export const LAYOUTS: Record<Rarity, RarityLayout> = {
   // rôle dans le petit, 5 stats en arc. Les cartes simples prennent le cadre « événement » (sans stats).
   epique: {
     frame: 'epique', frameByType: { simple: 'epique_evenement' }, artSource: 'splash', art: 2100,
-    tag: 1320, name: 1425, nameSize: 10, stats: 'circles', tabOpacity: 0, varnish: 'vernis_epique',
+    tag: 1320, name: 1425, nameSize: 10, stats: 'circles', tabOpacity: 0, varnish: 'vernis_epique_masque',
     topCircle: { x: 243, y: 220, d: 262 },
     roleCircle: { x: 353, y: 343, d: 150 },
     statCircles: {

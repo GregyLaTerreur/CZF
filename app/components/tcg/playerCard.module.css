@@ -79,17 +79,12 @@
 .varnish {
   inset: 0;
   pointer-events: none;
-  background-size: cover;
-  background-position: center;
-  mix-blend-mode: overlay;
-  opacity: 0.32;
-  transition: opacity 0.25s;
-}
-
-.card:hover .varnish {
+  /* Arc-en-ciel qui glisse avec la souris, visible seulement dans les éclairs du vernis. */
+  background: linear-gradient(115deg, #ff5f6d, #ffc371, #47e891, #4fb8ff, #c86bff, #ff5f6d) var(--mx) var(--my) / 300% 300%;
+  -webkit-mask: var(--varnish-mask) center / 100% 100% no-repeat;
+  mask: var(--varnish-mask) center / 100% 100% no-repeat;
+  mix-blend-mode: color-dodge;
   opacity: 0.6;
-  background-position: var(--mx) var(--my);
-  background-size: 115%;
 }
 
 /* Bande claire (cadre rare) : textes en sombre. */
