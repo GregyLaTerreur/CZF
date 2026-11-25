@@ -45,6 +45,11 @@ const PackIcon = () => (
     <path d="M6 3h12l-1 3 1 3-1 3 1 3-1 3 1 3H6l1-3-1-3 1-3-1-3 1-3-1-3Z" />
   </svg>
 );
+const ArrowIcon = ({ dir }: { dir: 'left' | 'right' }) => (
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+    <path d={dir === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
+  </svg>
+);
 const GridIcon = () => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <rect x="3" y="3" width="7" height="9" rx="1" />
@@ -159,6 +164,10 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
   const [section, setSection] = useState<Section>('collection');
+  // Booster affiché en grand dans le carrousel de « Mes boosters ».
+  const [boosterIndex, setBoosterIndex] = useState(0);
+  const swipeX = useRef<number | null>(null);
+  const swiped = useRef(false);
   const sorted = useMemo(() => [...cards].sort(byRarity), [cards]);
   const dupes = useMemo(() => sorted.filter((item) => item.count > 1), [sorted]);
   const allSorted = useMemo(() => [...catalog].sort(byRarity), [catalog]);
@@ -463,25 +472,88 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
           {section === 'boosters' && (
             <>
               {!boosters.length && <p className={ds.empty}>Aucun booster pour l’instant.</p>}
-              <div className={styles.boosters}>
-                {boosters.map(({ booster, quantity }) => (
-                  // Clic direct sur le sachet pour l'ouvrir.
-                  <button
-                    key={booster.id}
-                    type="button"
-                    className={styles.booster}
-                    disabled={opening !== null}
-                    onClick={() => booster.id && open(booster.id)}
-                    aria-label={`Ouvrir un booster ${booster.name}`}
+              {boosters.length > 0 && (() => {
+                // Carrousel : le booster courant en grand, les voisins en retrait ; flèches, clavier ou glisser.
+                const count = boosters.length;
+                const index = ((boosterIndex % count) + count) % count;
+                const current = boosters[index];
+                const go = (step: number) => setBoosterIndex((i) => (((i + step) % count) + count) % count);
+                const neighbor = (step: number) => boosters[(((index + step) % count) + count) % count];
+                return (
+                  <div
+                    className={styles.carousel}
+                    tabIndex={0}
+                    aria-roledescription="carrousel"
+                    aria-label="Mes boosters"
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowLeft') go(-1);
+                      if (e.key === 'ArrowRight') go(1);
+                    }}
+                    onPointerDown={(e) => { swipeX.current = e.clientX; }}
+                    onPointerUp={(e) => {
+                      const dx = swipeX.current === null ? 0 : e.clientX - swipeX.current;
+                      swipeX.current = null;
+                      if (Math.abs(dx) > 50) {
+                        swiped.current = true; // un glisser ne doit pas ouvrir le booster
+                        go(dx < 0 ? 1 : -1);
+                      }
+                    }}
                   >
-                    <div className={styles.boosterPack}>
-                      <img src={boosterImage(booster, 400)} alt="" />
-                      <span className={styles.badge}>x{quantity}</span>
+                    <div className={styles.carouselStage}>
+                      {count > 1 && (
+                        <button type="button" className={`${styles.carouselArrow} ${styles.carouselPrev}`} onClick={() => go(-1)} aria-label="Booster précédent">
+                          <ArrowIcon dir="left" />
+                        </button>
+                      )}
+                      {count > 2 && <img className={`${styles.carouselSide} ${styles.carouselLeft}`} src={boosterImage(neighbor(-1).booster, 300)} alt="" />}
+                      <button
+                        key={current.booster.id}
+                        type="button"
+                        className={`${styles.booster} ${styles.carouselMain}`}
+                        disabled={opening !== null}
+                        onClick={() => {
+                          if (swiped.current) {
+                            swiped.current = false;
+                            return;
+                          }
+                          if (current.booster.id) open(current.booster.id);
+                        }}
+                        aria-label={`Ouvrir un booster ${current.booster.name}`}
+                      >
+                        <div className={styles.boosterPack}>
+                          <img src={boosterImage(current.booster, 600)} alt="" />
+                          <span className={styles.badge}>x{current.quantity}</span>
+                        </div>
+                      </button>
+                      {count > 1 && <img className={`${styles.carouselSide} ${styles.carouselRight}`} src={boosterImage(neighbor(1).booster, 300)} alt="" />}
+                      {count > 1 && (
+                        <button type="button" className={`${styles.carouselArrow} ${styles.carouselNext}`} onClick={() => go(1)} aria-label="Booster suivant">
+                          <ArrowIcon dir="right" />
+                        </button>
+                      )}
                     </div>
-                    <div className={styles.boosterName}>{opening === booster.id ? 'Ouverture…' : booster.name}</div>
-                  </button>
-                ))}
-              </div>
+                    <div className={styles.carouselInfo}>
+                      <div className={styles.carouselName}>{opening === current.booster.id ? 'Ouverture…' : current.booster.name}</div>
+                      <div className={styles.carouselMeta}>
+                        {current.quantity} à ouvrir · {current.booster.cards_per_pack} cartes par booster · clique sur le booster pour l’ouvrir
+                      </div>
+                      {count > 1 && (
+                        <div className={styles.carouselDots}>
+                          {boosters.map((item, i) => (
+                            <button
+                              key={item.booster.id}
+                              type="button"
+                              className={i === index ? styles.dotOn : styles.dot}
+                              onClick={() => setBoosterIndex(i)}
+                              aria-label={`${item.booster.name} (${i + 1} sur ${count})`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </>
           )}
 
