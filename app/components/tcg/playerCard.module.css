@@ -49,6 +49,12 @@
   color: #fff;
 }
 
+/* Note dans le rond du haut (cadres de la graphiste) : remplit le rond. */
+.circle .note {
+  font: italic 800 13cqw/1 var(--font-barlow-condensed), sans-serif;
+  letter-spacing: -0.02em;
+}
+
 /* Icônes de rôle passées en blanc. */
 .role {
   width: 6.4cqw;
