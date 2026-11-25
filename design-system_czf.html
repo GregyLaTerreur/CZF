@@ -97,6 +97,11 @@
   .ds-switch-box::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--dark); }
   .ds-switch.on .ds-switch-box { background: var(--dark); box-shadow: 3px 3px 0 var(--orange); }
   .ds-switch.on .ds-switch-box::after { transform: translateX(22px); background: var(--orange); }
+  .ds-loader { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .ds-loader path { fill: none; stroke: var(--orange); stroke-width: 5; stroke-dasharray: 160; filter: drop-shadow(0 0 6px rgba(240,80,16,.6)); animation: ds-trace 1.4s ease-in-out infinite; }
+  .ds-loader span { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--dark); }
+  .ds-loader.on-dark span { color: #E0D8CC; }
+  @keyframes ds-trace { 0% { stroke-dashoffset: 160; } 55% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -160; } }
   /* ── BADGE ── */
   .hero-badge { display: inline-flex; align-items: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-style: italic; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
   .hero-badge-left { background: var(--dark); color: #fff; padding: 6px 22px 6px 14px; display: flex; align-items: center; gap: 7px; clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%); }
@@ -263,6 +268,22 @@
       </div>
     </div>
     <div class="btn-note" style="margin-top:16px;">Libellé avant la case (Barlow Condensed 700, uppercase, letter-spacing .14em) · case en skewX(-8deg) comme les boutons · composant React : app/components/ds/Switch.tsx</div>
+  </div>
+
+  <!-- LOADER -->
+  <div class="ds-section">
+    <div class="ds-title">Loader</div>
+    <div class="ds-row" style="align-items:center;gap:40px;">
+      <div class="ds-col">
+        <div class="ds-loader"><svg width="48" height="72" viewBox="0 0 60 90"><path d="M36 4 10 50h20l-8 36 28-48H30z"/></svg><span>Chargement</span></div>
+        <div class="ds-label">Fond clair — libellé dark</div>
+      </div>
+      <div class="ds-col" style="background:var(--dark);padding:24px 32px;">
+        <div class="ds-loader on-dark"><svg width="48" height="72" viewBox="0 0 60 90"><path d="M36 4 10 50h20l-8 36 28-48H30z"/></svg><span>Chargement</span></div>
+        <div class="ds-label" style="color:#E0D8CC;">Fond sombre — libellé on-dark</div>
+      </div>
+    </div>
+    <div class="btn-note" style="margin-top:16px;">L’éclair CZF se trace puis s’efface en boucle (1,4 s, trait orange 5 px, halo orange) · libellé Barlow Condensed 700 uppercase · reste dessiné si les animations sont coupées · composant React : app/components/ds/Loader.tsx (tone light / dark, block pour réserver la place dans une page)</div>
   </div>
 
   <!-- BADGE HERO -->

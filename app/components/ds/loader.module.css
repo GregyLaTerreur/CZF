@@ -1,0 +1,54 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Dans une page : occupe la place du contenu à venir, pour que rien ne saute au chargement. */
+.block {
+  min-height: 50vh;
+  padding: 48px 0;
+}
+
+.bolt {
+  width: 48px;
+  height: 72px;
+  overflow: visible;
+}
+
+.bolt path {
+  fill: none;
+  stroke: var(--orange, #f05010);
+  stroke-width: 5;
+  stroke-linejoin: miter;
+  stroke-dasharray: 160;
+  filter: drop-shadow(0 0 6px rgba(240, 80, 16, 0.6));
+  animation: trace 1.4s ease-in-out infinite;
+}
+
+.label {
+  font: 700 0.78rem var(--font-barlow-condensed), 'Arial Narrow', sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dark, #081428);
+}
+
+.dark .label {
+  color: var(--on-dark, #e0d8cc);
+}
+
+@keyframes trace {
+  0% { stroke-dashoffset: 160; }
+  55% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -160; }
+}
+
+/* Sans animation : l'éclair reste dessiné. */
+@media (prefers-reduced-motion: reduce) {
+  .bolt path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

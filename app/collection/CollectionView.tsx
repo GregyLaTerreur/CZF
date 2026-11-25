@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
+import Loader from '@/app/components/ds/Loader';
 import CardZoom from '@/app/components/tcg/CardZoom';
 import PlayerCard from '@/app/components/tcg/PlayerCard';
 import Switch from '@/app/components/ds/Switch';
@@ -142,6 +143,9 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   const [access, setAccess] = useState<'full' | 'riot'>('full');
   // TCG en bêta : page fermée si on n'est pas connecté ou pas bêta-testeur.
   const [gate, setGate] = useState<'login' | 'beta' | null>(null);
+  // Première réponse reçue (collection, classement) : avant, on affiche le loader au lieu d'une page vide.
+  const [loaded, setLoaded] = useState(false);
+  const [boardLoaded, setBoardLoaded] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
   const [owner, setOwner] = useState<string | null>(null); // nom du joueur consulté (null = ma collection)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -218,6 +222,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
       setSeasons(json.seasons || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de chargement.');
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
@@ -231,6 +237,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
     if (!headers) return;
     const json = await fetch('/api/tcg/leaderboard', { cache: 'no-store', headers }).then((res) => res.json()).catch(() => null);
     if (json?.success) setLeaderboard(json.leaderboard);
+    setBoardLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -364,7 +371,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
     );
   }
 
-  if (loggedIn === null) return <div className={`${ds.container} ${styles.wrap}`}><p className={ds.empty}>Chargement…</p></div>;
+  if (loggedIn === null || (loggedIn && !loaded && !gate)) return <Loader label="Chargement de la collection" block />;
 
   const viewingOther = owner !== null;
 
@@ -557,7 +564,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
             </>
           )}
 
-          {section === 'classement' && (() => {
+          {section === 'classement' && !boardLoaded && <Loader label="Chargement du classement" block />}
+          {section === 'classement' && boardLoaded && (() => {
             const pct = (n: number) => (totalCards ? Math.round((n / totalCards) * 100) : 0);
             const mine = leaderboard.find((entry) => entry.profileId === myId);
             const myRank = mine ? leaderboard.indexOf(mine) + 1 : 0;
