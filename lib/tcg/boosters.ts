@@ -29,6 +29,10 @@ export type TcgBooster = {
   rate_legendaire: number;
   image_url: string | null;
   active: boolean;
+  // Nombre minimum garanti de cartes de chaque rareté dans un paquet (SQL czf-import/tcg-14).
+  min_rare?: number;
+  min_epique?: number;
+  min_legendaire?: number;
 };
 
 export const rateKey = (rarity: Rarity) => `rate_${rarity}` as const;
@@ -36,7 +40,7 @@ export const rateKey = (rarity: Rarity) => `rate_${rarity}` as const;
 export const EMPTY_BOOSTER: TcgBooster = {
   season_id: null, name: '', card_type: 'tout', cards_per_pack: 5,
   rate_commune: 70, rate_rare: 20, rate_epique: 8, rate_legendaire: 2,
-  image_url: null, active: true,
+  image_url: null, active: true, min_rare: 0, min_epique: 0, min_legendaire: 0,
 };
 
 // Illustration provisoire (_dev) tant que la graphiste n'a pas fait les sachets.
@@ -68,6 +72,12 @@ export function parseBoosterInput(body: any): { booster: TcgBooster; error?: und
   const total = Object.values(rates).reduce((sum, rate) => sum + rate, 0);
   if (Math.abs(total - 100) > 0.001) return { error: `Le total des chances doit faire 100 % (actuellement ${total} %).` };
 
+  // Minimums garantis : entiers positifs, jamais plus que le nombre de cartes du paquet.
+  const mins = { min_rare: Number(body?.min_rare ?? 0), min_epique: Number(body?.min_epique ?? 0), min_legendaire: Number(body?.min_legendaire ?? 0) };
+  if (Object.values(mins).some((v) => !Number.isInteger(v) || v < 0)) return { error: 'Les minimums doivent être des nombres entiers positifs.' };
+  const minTotal = mins.min_rare + mins.min_epique + mins.min_legendaire;
+  if (minTotal > cardsPerPack) return { error: `Les minimums (${minTotal} cartes) dépassent le nombre de cartes par booster (${cardsPerPack}).` };
+
   const imageUrl = String(body?.image_url ?? '').trim() || null;
   if (imageUrl) {
     try {
@@ -79,7 +89,7 @@ export function parseBoosterInput(body: any): { booster: TcgBooster; error?: und
   }
 
   return {
-    booster: { name, card_type: cardType, cards_per_pack: cardsPerPack, ...rates, image_url: imageUrl, active: body?.active !== false },
+    booster: { name, card_type: cardType, cards_per_pack: cardsPerPack, ...rates, ...mins, image_url: imageUrl, active: body?.active !== false },
   };
 }
 

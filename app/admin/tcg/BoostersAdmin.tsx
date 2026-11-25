@@ -51,7 +51,16 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
 
   const set = <K extends keyof TcgBooster>(key: K, value: TcgBooster[K]) => setForm((current) => ({ ...current, [key]: value }));
   const total = ratesTotal(form);
+  const minTotal = (form.min_rare ?? 0) + (form.min_epique ?? 0) + (form.min_legendaire ?? 0);
   const activeSeason = seasons.find((s) => s.status === 'active') ?? seasons[0];
+  const minsLabel = (b: TcgBooster) => {
+    const parts = [
+      b.min_legendaire ? `${b.min_legendaire} légendaire${b.min_legendaire > 1 ? 's' : ''}` : '',
+      b.min_epique ? `${b.min_epique} épique${b.min_epique > 1 ? 's' : ''}` : '',
+      b.min_rare ? `${b.min_rare} rare${b.min_rare > 1 ? 's' : ''}` : '',
+    ].filter(Boolean);
+    return parts.length ? ` · au moins ${parts.join(', ')}` : '';
+  };
   const seasonName = (id?: number | null) => seasons.find((s) => s.id === id)?.name ?? '';
 
   async function call(url: string, method: string, body?: unknown) {
@@ -78,8 +87,10 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
 
   const save = () =>
     run(async () => {
-      await call(editingId ? `/api/admin/tcg/boosters/${editingId}` : '/api/admin/tcg/boosters', editingId ? 'PATCH' : 'POST', form);
-      const done = editingId ? 'Booster modifié.' : 'Booster créé.';
+      const json = await call(editingId ? `/api/admin/tcg/boosters/${editingId}` : '/api/admin/tcg/boosters', editingId ? 'PATCH' : 'POST', form);
+      // Pas assez de cartes différentes pour remplir le paquet sans doublon : on prévient.
+      const warnings: string[] = json.warnings ?? [];
+      const done = `${editingId ? 'Booster modifié.' : 'Booster créé.'}${warnings.length ? ` Attention : ${warnings.join(' ')}` : ''}`;
       setForm(EMPTY_BOOSTER);
       setEditingId(null);
       return done;
@@ -157,6 +168,26 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
             {Math.abs(total - 100) > 0.001 && <p className={ds.formError}>Le total doit faire 100 %.</p>}
           </div>
 
+          <div className={ds.field}>
+            <span>Minimum garanti par booster · {minTotal} sur {form.cards_per_pack} cartes</span>
+            <div className={styles.rates}>
+              {(['rare', 'epique', 'legendaire'] as const).map((rarity) => (
+                <label key={rarity} className={ds.field}>
+                  <span>{RARITY_LABELS[rarity]} au moins</span>
+                  <NumberField
+                    className={ds.input}
+                    min={0}
+                    max={form.cards_per_pack}
+                    value={form[`min_${rarity}`] ?? 0}
+                    onChange={(v) => set(`min_${rarity}`, v)}
+                  />
+                </label>
+              ))}
+            </div>
+            {minTotal > form.cards_per_pack && <p className={ds.formError}>Les minimums dépassent le nombre de cartes par booster.</p>}
+            <p className={styles.hint}>Jamais deux fois la même carte dans un booster. Les cartes restantes suivent les chances ci-dessus.</p>
+          </div>
+
           <label className={styles.check}>
             <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} />
             Actif (peut être distribué)
@@ -194,7 +225,7 @@ export default function BoostersAdmin({ authHeaders }: { authHeaders: () => Prom
           <div key={booster.id} className={styles.item}>
             <img className={styles.boosterImg} src={boosterImage(booster, 300)} alt="" style={{ opacity: booster.active ? 1 : 0.45 }} />
             <div className={styles.itemMeta}>
-              {booster.name} · {seasonName(booster.season_id)} · {BOOSTER_TYPE_LABELS[booster.card_type]} · {booster.cards_per_pack} cartes{!booster.active && ' · inactif'}
+              {booster.name} · {seasonName(booster.season_id)} · {BOOSTER_TYPE_LABELS[booster.card_type]} · {booster.cards_per_pack} cartes{minsLabel(booster)}{!booster.active && ' · inactif'}
             </div>
             <div className={styles.itemMeta}>
               {RARITIES.map((rarity) => `${RARITY_LABELS[rarity]} ${Number(booster[rateKey(rarity)])} %`).join(' · ')}

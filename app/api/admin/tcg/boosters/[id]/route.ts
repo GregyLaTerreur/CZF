@@ -3,6 +3,7 @@ import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseBoosterInput } from '@/lib/tcg/boosters';
+import { boosterWarnings } from '@/lib/tcg/boosterCheck';
 import { resolveSeasonId } from '@/lib/tcg/seasons';
 
 const fail = (message: string, status: number) => NextResponse.json({ success: false, message }, { status });
@@ -31,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (error) return fail(tcgDbMessage(error, 'Impossible d’enregistrer le booster.'), 500);
   if (!data) return fail('Booster introuvable.', 404);
 
-  return NextResponse.json({ success: true, booster: data });
+  return NextResponse.json({ success: true, booster: data, warnings: await boosterWarnings(seasonId, parsed.booster) });
 }
 
 // Un admin supprime un booster : les exemplaires non ouverts disparaissent, les cartes déjà tirées restent.

@@ -3,6 +3,7 @@ import { requireTcgAdmin } from '@/lib/tcg/access';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { tcgDbMessage } from '@/lib/tcg/dbError';
 import { parseBoosterInput } from '@/lib/tcg/boosters';
+import { boosterWarnings } from '@/lib/tcg/boosterCheck';
 import { loadSeasons, resolveSeasonId } from '@/lib/tcg/seasons';
 
 export const dynamic = 'force-dynamic';
@@ -70,5 +71,5 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAdmin.from('czf_tcg_boosters').insert({ ...parsed.booster, season_id: seasonId }).select('*').single();
   if (error) return fail(tcgDbMessage(error, 'Impossible de créer le booster.'), 500);
 
-  return NextResponse.json({ success: true, booster: data });
+  return NextResponse.json({ success: true, booster: data, warnings: await boosterWarnings(seasonId, parsed.booster) });
 }
