@@ -201,7 +201,7 @@ export default function TcgAdminView() {
           { label: 'KDA', value: fixed(line.kda, 1) },
           { label: 'KP%', value: fixed(line.killParticipation, 0) },
           { label: 'DPM', value: fixed(line.dpm, 0) },
-          { label: 'VIS/M', value: fixed(line.visionPerMin, 1) },
+          { label: 'VIS/M', value: line.visionPerMin == null ? '—' : fixed(line.visionPerMin, 1) },
           { label: 'WR%', value: fixed(line.winrate, 0) },
         ];
       } else {

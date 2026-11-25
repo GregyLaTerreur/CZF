@@ -41,6 +41,13 @@ async function computeStats(playerIds: Set<number>): Promise<Map<string, CardSta
     }
   }
 
+  // Vision à 0 = non saisie : calculée seulement sur les games où elle l'est ; « — » sinon.
+  const visionPerMin = (list: Row[]) => {
+    const withVision = list.filter((row) => row.vision > 0);
+    const mins = withVision.reduce((total, row) => total + row.seconds, 0) / 60;
+    return mins > 0 ? (withVision.reduce((total, row) => total + row.vision, 0) / mins).toFixed(1) : '—';
+  };
+
   const result = new Map<string, CardStat[]>();
   for (const [id, list] of rows) {
     const sum = (pick: (row: Row) => number) => list.reduce((total, row) => total + pick(row), 0);
@@ -52,7 +59,7 @@ async function computeStats(playerIds: Set<number>): Promise<Map<string, CardSta
       { label: 'KDA', value: (round2(sum((row) => (row.kills + row.assists) / Math.max(1, row.deaths)) / games)).toFixed(1) },
       { label: 'KP%', value: String(Math.round(percent(sum((row) => row.kills + row.assists), sum((row) => row.teamKills)))) },
       { label: 'DPM', value: String(Math.round(perMin(sum((row) => row.damage)))) },
-      { label: 'VIS/M', value: perMin(sum((row) => row.vision)).toFixed(1) },
+      { label: 'VIS/M', value: visionPerMin(list) },
       { label: 'WR%', value: String(Math.round(percent(list.filter((row) => row.won).length, games))) },
     ]);
   }

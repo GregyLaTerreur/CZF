@@ -102,6 +102,9 @@ export async function GET(request: NextRequest) {
       const assists = sum((row) => row.assists);
       const damage = sum((row) => row.damage ?? 0);
       const vision = sum((row) => row.visionScore ?? 0);
+      // Vision à 0 = non saisie : moyenne et /min seulement sur les games où elle est renseignée (null sinon).
+      const visionRows = rows.filter((row) => (row.visionScore ?? 0) > 0);
+      const visionMinutes = visionRows.reduce((total, row) => total + row.seconds, 0) / 60;
       const cs = sum((row) => row.cs ?? 0);
       const gold = sum((row) => row.gold ?? 0);
       const wins = rows.filter((row) => row.won).length;
@@ -137,8 +140,8 @@ export async function GET(request: NextRequest) {
         killParticipation: percent(kills + assists, sum((row) => row.teamKills)),
         damage: Math.round(damage / games),
         dpm: perMin(damage),
-        visionScore: round2(vision / games),
-        visionPerMin: perMin(vision),
+        visionScore: visionRows.length ? round2(vision / visionRows.length) : null,
+        visionPerMin: visionMinutes > 0 ? round2(vision / visionMinutes) : null,
         cs: round2(cs / games),
         csPerMin: perMin(cs),
         gold: Math.round(gold / games),

@@ -986,6 +986,8 @@ export function computePlayerStats(
     let gold = 0;
     let damage = 0;
     let visionScore = 0;
+    // Vision à 0 = non saisie (souvent seuls les supports sont renseignés) : comptée seulement sur les games où elle l'est.
+    let visionDuration = 0;
 
     let teamKillsWhilePlayerPlayed = 0;
     let teamGoldWhilePlayerPlayed = 0;
@@ -1009,6 +1011,7 @@ export function computePlayerStats(
       gold += Number(row.gold) || 0;
       damage += Number(row.damage) || 0;
       visionScore += Number(row.vision_score) || 0;
+      if (Number(row.vision_score) > 0) visionDuration += Number(game.duration_seconds) || 0;
       duration += Number(game.duration_seconds) || 0;
 
       const teamGameKey =
@@ -1105,7 +1108,7 @@ export function computePlayerStats(
       damage: Math.round(damage / gamesPlayed),
       dpm: minutes > 0 ? round2(damage / minutes) : 0,
 
-      visionScore: minutes > 0 ? round2(visionScore / minutes) : 0,
+      visionScore: visionDuration > 0 ? round2(visionScore / (visionDuration / 60)) : 0,
 
       killParticipation,
       goldShare,

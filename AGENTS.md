@@ -140,6 +140,7 @@ Statut : **bêta**. Tout le TCG (page `/collection`, lien « Collection » du he
 ## Pièges connus
 
 - `/api/historique` et `/api/results` peuvent renvoyer `team1`/`team2` à `null` quand une équipe n'est plus validée : toujours gérer ce cas.
+- **Vision à 0 = non saisie** : dans beaucoup de matchs (surtout Targon et Yordle), seule la vision des supports a été saisie, les autres joueurs ont 0. Tous les calculs de vision (`computePlayerStats` dans `lib/results/core.ts`, `/api/ext/joueurs` → `visionScore` / `visionPerMin` à `null` sans donnée, stats des cartes TCG → « — ») ne comptent que les games où la vision est > 0.
 - En poules (BO2), `winner` peut être `null` (match nul 1-1).
 - Les compteurs `mvp` de `/api/stats-joueurs` ne comptent que les joueurs encore dans leur roster (vue `czf_current_player_stats`), donc leur total peut être inférieur au nombre de matchs.
 - **Droits d'admin nommés** : table `admin_grants` (profil + nom de droit, ex. `tcg.refiger_numeros` ; SQL `~/www/czf-import/admin-1-grants.sql`), pour tout le site. `is_admin` reste l'accès général à l'admin ; un droit ouvre une action sensible précise. Liste des droits connus et helpers `hasGrant` / `requireGrant` dans `lib/grants.ts` ; chacun ne lit que ses propres droits. Seuls les **superadmins** (`profiles.is_superadmin`, SQL `~/www/czf-import/admin-2-superadmin.sql`, protégé comme `is_admin`, `requireSuperAdmin`) les gèrent, depuis la page **Admin > Droits** (`/admin/droits`, API `/api/admin/grants`).
