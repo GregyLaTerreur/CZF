@@ -60,75 +60,10 @@
   animation: current var(--spd) linear infinite;
 }
 
-/* Le SVG des veines passe au-dessus de la carte et déborde de 30 % autour (même marge que dans CardElectric). */
-.arcs {
-  position: absolute;
-  left: -30%;
-  top: -21.43%;
-  width: 160%;
-  height: 142.86%;
-  z-index: 4;
-  overflow: visible;
-}
-
-/* Veines : quasi invisibles au repos ; elles s'allument au battement et au passage du courant. */
-.veins path {
-  fill: none;
-  stroke: var(--c2);
-  stroke-width: 1.3;
-  stroke-linejoin: bevel;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.06;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 2px var(--c)) drop-shadow(0 0 5px color-mix(in srgb, var(--c) 60%, transparent));
-}
-
-.beat .veins path {
-  animation: beat 0.9s ease-out;
-}
-
-.veins path.lit {
-  animation: lit 1.9s ease-in-out;
-}
-
-/* Lumière qui parcourt une veine (pathLength = 1 : le tiret fait 30 % de la veine). */
-.pulse path {
-  fill: none;
-  stroke: var(--c2);
-  stroke-width: 2.6;
-  stroke-linecap: round;
-  stroke-linejoin: bevel;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 0.3 1;
-  stroke-dashoffset: 1.3;
-  filter: drop-shadow(0 0 4px var(--c)) drop-shadow(0 0 10px var(--c));
-  animation: pulseRun 1.9s ease-in-out forwards;
-}
-
 @keyframes current {
   to {
     --czf-current: 360deg;
   }
-}
-
-@keyframes beat {
-  0% { opacity: 0.06; }
-  30% { opacity: 0.7; }
-  100% { opacity: 0.06; }
-}
-
-@keyframes lit {
-  0% { opacity: 0.06; }
-  15% { opacity: 0.65; }
-  80% { opacity: 0.5; }
-  100% { opacity: 0.06; }
-}
-
-@keyframes pulseRun {
-  0% { stroke-dashoffset: 1.3; opacity: 0; }
-  12% { opacity: 1; }
-  88% { opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
