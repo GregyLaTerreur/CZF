@@ -457,6 +457,8 @@ main .wrap {
 /* Sidebar sombre pleine hauteur, collée à gauche (maquette G1). */
 .full {
   width: 100%;
+  /* Remplit la hauteur : la sidebar descend jusqu'au footer. */
+  flex: 1 0 auto;
   /* Le footer a une marge haute (--space-diagonal) : la sidebar doit le toucher. */
   margin-bottom: calc(-1 * var(--space-diagonal));
 }
