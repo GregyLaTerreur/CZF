@@ -118,6 +118,26 @@ export async function withNumbers<T extends TcgCard>(cards: T[]): Promise<T[]> {
 }
 
 // Stats en direct + numérotation, pour tout ce qui affiche des cartes aux joueurs ou à l'admin.
+// Note des cartes rares et épiques liées à un joueur : celle du joueur pour la saison de la carte
+// (table czf_player_rating, SQL czf-import/joueur-note-1-player-rating.sql). Sans note du joueur, celle de la carte.
+const RATED_RARITIES = ['rare', 'epique'];
+
+export async function withRatings<T extends TcgCard>(cards: T[]): Promise<T[]> {
+  const rated = cards.filter((c) => c.player_id && c.season_id && RATED_RARITIES.includes(c.rarity));
+  if (!rated.length) return cards;
+  const { data, error } = await supabaseAdmin
+    .from('czf_player_rating')
+    .select('season_id, player_id, note')
+    .in('player_id', [...new Set(rated.map((c) => c.player_id as number))]);
+  if (error || !data) return cards;
+  const notes = new Map(data.map((r) => [`${r.season_id}:${r.player_id}`, r.note as number]));
+  return cards.map((card) => {
+    if (!card.player_id || !card.season_id || !RATED_RARITIES.includes(card.rarity)) return card;
+    const note = notes.get(`${card.season_id}:${card.player_id}`);
+    return note === undefined ? card : { ...card, note };
+  });
+}
+
 export async function decorateCards<T extends TcgCard>(cards: T[]): Promise<T[]> {
-  return withNumbers(await withLiveStats(cards));
+  return withNumbers(await withRatings(await withLiveStats(cards)));
 }
