@@ -40,9 +40,21 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
   const fields = TYPE_FIELDS[card.card_type];
   const role = fields.team ? roleInfo(card.role) : null;
   // Épique (rond de rôle à part) : la note est toujours affichée, 99 tant qu'elle n'est pas remplie.
-  // Carte MVP : la note du joueur, « ?? » tant que l'algo ne peut pas le noter.
-  const note: number | string | null = fields.note ? card.note ?? UNKNOWN_NOTE : card.note;
-  const showNote = fields.note && note !== null;
+  // Rares et épiques liées à un joueur (ou MVP) : la note de l'algo dans le rond du haut, « ?? » tant qu'il
+  // ne peut pas le noter. La commune garde le rôle dans ce rond.
+  const linked = Boolean(card.player_id) && fields.team && card.rarity !== 'commune';
+  const note: number | string | null = linked || fields.note ? card.note ?? UNKNOWN_NOTE : null;
+  const showNote = note !== null;
+  // Ronds du bas : notes de l'algo par stat (sur 100) si calculées, sinon les stats brutes.
+  const support = card.role === 'Support';
+  const scoreItems = card.scores
+    ? (
+        [['KP', 'KP'], ['DPM', 'DPM'], ['KDA', 'KDA'], ['GPM', 'GPM'], support ? ['VISION', 'VIS'] : ['CS', 'CS']] as [keyof NonNullable<TcgCard['scores']>, string][]
+      ).map(([key, label]) => {
+        const value = card.scores?.[key];
+        return { label, value: value == null ? '—' : String(Math.round(value)) };
+      })
+    : null;
   const isStaff = card.card_type === 'staff';
   // Cadre propre au type (ex. épique « événement ») : pas de rond de rôle ni de stats.
   const typeFrame = Boolean(layout.frameByType?.[card.card_type]);
@@ -150,7 +162,11 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       )}
 
       {fields.team && layout.tag !== null && card.team_name && (
-        <div className={`${styles.c} ${styles.tag}`} style={at(750, layout.tag)}>{card.team_name}</div>
+        <div className={`${styles.c} ${styles.tag}`} style={at(750, layout.tag)}>
+          {/* La note prend le rond du haut : le rôle passe devant le nom d'équipe (sauf épique, qui a son rond de rôle). */}
+          {showNote && layout.topCircle && !layout.roleCircle && role && <img className={styles.tagRole} src={role.image} alt={role.label} />}
+          {card.team_name}
+        </div>
       )}
       <div className={`${styles.c} ${styles.name}`} style={{ ...at(750, layout.name), fontSize: `${nameSize}cqw` }}>
         {card.name}
@@ -164,9 +180,10 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
           {statItems}
         </div>
       )}
-      {stats.length > 0 && !typeFrame && layout.stats === 'circles' && layout.statCircles && STAT_CIRCLE_ORDER.map((label, index) => {
+      {(scoreItems || stats.length > 0) && !typeFrame && layout.stats === 'circles' && layout.statCircles && STAT_CIRCLE_ORDER.map((statLabel, index) => {
         const slot = layout.statCircles!.items[index];
-        const stat = stats.find((s) => s.label === label);
+        const stat = scoreItems ? scoreItems[index] : stats.find((s) => s.label === statLabel);
+        const label = scoreItems ? scoreItems[index].label : statLabel;
         if (!slot || !stat) return null;
         // Valeur dans le rond, libellé dessous (tous les libellés sur la même ligne).
         return (

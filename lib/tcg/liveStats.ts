@@ -125,24 +125,27 @@ export async function withNumbers<T extends TcgCard>(cards: T[]): Promise<T[]> {
 }
 
 // Stats en direct + numérotation, pour tout ce qui affiche des cartes aux joueurs ou à l'admin.
-// Note des cartes rares et épiques liées à un joueur : celle du joueur pour la saison de la carte
-// (table czf_player_rating, SQL czf-import/joueur-note-1-player-rating.sql). Sans note du joueur, celle de la carte.
-const RATED_RARITIES = ['rare', 'epique'];
+// Cartes liées à un joueur (toutes raretés) : note du joueur pour la saison de la carte et notes de l'algo
+// par stat (table czf_player_rating). Sans ligne pour le joueur, la carte garde sa note et ses stats.
+const RATED_RARITIES = ['commune', 'rare', 'epique', 'legendaire'];
 
 export async function withRatings<T extends TcgCard>(cards: T[]): Promise<T[]> {
   const rated = cards.filter((c) => c.player_id && c.season_id && RATED_RARITIES.includes(c.rarity));
   if (!rated.length) return cards;
   const { data, error } = await supabaseAdmin
     .from('czf_player_rating')
-    .select('season_id, player_id, note')
+    .select('season_id, player_id, note, score_kda, score_gpm, score_dpm, score_cs, score_kp, score_vision')
     .in('player_id', [...new Set(rated.map((c) => c.player_id as number))]);
   if (error || !data) return cards;
-  const notes = new Map(data.map((r) => [`${r.season_id}:${r.player_id}`, r.note as number | null]));
+  const byKey = new Map(data.map((r) => [`${r.season_id}:${r.player_id}`, r]));
+  const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
   return cards.map((card) => {
     if (!card.player_id || !card.season_id || !RATED_RARITIES.includes(card.rarity)) return card;
-    const note = notes.get(`${card.season_id}:${card.player_id}`);
+    const r = byKey.get(`${card.season_id}:${card.player_id}`);
+    if (!r) return card;
     // note vide = joueur pas encore notable par l'algo : la carte affiche « ?? ».
-    return note === undefined ? card : { ...card, note };
+    const scores = { KDA: num(r.score_kda), GPM: num(r.score_gpm), DPM: num(r.score_dpm), CS: num(r.score_cs), KP: num(r.score_kp), VISION: num(r.score_vision) };
+    return { ...card, note: r.note as number | null, scores: Object.values(scores).some((v) => v !== null) ? scores : undefined };
   });
 }
 

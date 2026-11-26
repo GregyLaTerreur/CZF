@@ -62,6 +62,8 @@ export type TcgCard = {
   art_y?: number;
   art_zoom?: number;
   skin_num?: number; // skin Data Dragon (0 = skin de base)
+  // Notes de l'algo (IPI) par stat, sur 100, lues dans czf_player_rating pour une carte liée à un joueur.
+  scores?: Partial<Record<'KDA' | 'GPM' | 'DPM' | 'CS' | 'KP' | 'VISION', number | null>>;
   team_name: string | null;
   team_logo: string | null;
   role: string | null;
