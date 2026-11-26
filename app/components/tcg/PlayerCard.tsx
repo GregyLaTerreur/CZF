@@ -40,10 +40,11 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
   const fields = TYPE_FIELDS[card.card_type];
   const role = fields.team ? roleInfo(card.role) : null;
   // Épique (rond de rôle à part) : la note est toujours affichée, 99 tant qu'elle n'est pas remplie.
-  // Rares et épiques liées à un joueur (ou MVP) : la note de l'algo dans le rond du haut, « ?? » tant qu'il
-  // ne peut pas le noter. La commune garde le rôle dans ce rond.
-  const linked = Boolean(card.player_id) && fields.team && card.rarity !== 'commune';
-  const note: number | string | null = linked || fields.note ? card.note ?? UNKNOWN_NOTE : null;
+  // Épiques (et au-delà) liées à un joueur ou MVP : la note de l'algo dans le rond du haut, « ?? » tant qu'il
+  // ne peut pas le noter. La commune garde le rôle dans ce rond, la rare affiche « MVP » ou « STAFF ».
+  const isRare = card.rarity === 'rare';
+  const linked = Boolean(card.player_id) && fields.team && card.rarity !== 'commune' && !isRare;
+  const note: number | string | null = !isRare && (linked || fields.note) ? card.note ?? UNKNOWN_NOTE : null;
   const showNote = note !== null;
   // Ronds du bas : notes de l'algo par stat (sur 100) si calculées, sinon les stats brutes.
   const support = card.role === 'Support';
@@ -56,6 +57,8 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       })
     : null;
   const isStaff = card.card_type === 'staff';
+  // Texte du rond du haut de la rare : « STAFF » ou « MVP ».
+  const topLabel = isStaff ? 'Staff' : isRare && card.card_type === 'mvp' ? 'MVP' : null;
   // Cadre propre au type (ex. épique « événement ») : pas de rond de rôle ni de stats.
   const typeFrame = Boolean(layout.frameByType?.[card.card_type]);
   const stats = fields.stats ? card.stats.filter((stat) => stat.value) : [];
@@ -122,16 +125,16 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
         />
       )}
 
-      {/* Cadre de la graphiste, rond du haut : note, sinon « STAFF » (type staff), sinon rôle. */}
-      {layout.topCircle && !typeFrame && (showNote || isStaff || (role && !layout.roleCircle)) && (
+      {/* Cadre de la graphiste, rond du haut : note (épique), « MVP » / « STAFF » (rare), sinon rôle (commune). */}
+      {layout.topCircle && !typeFrame && (showNote || topLabel || (role && !layout.roleCircle)) && (
         <div
           className={`${styles.c} ${styles.circle}`}
           style={{ ...at(layout.topCircle.x, layout.topCircle.y), width: pctX(layout.topCircle.d) }}
         >
           {showNote ? (
             <span className={styles.note}>{note}</span>
-          ) : isStaff ? (
-            <span className={styles.staff}>Staff</span>
+          ) : topLabel ? (
+            <span className={styles.staff}>{topLabel}</span>
           ) : (
             role && <img className={styles.roleBig} src={role.image} alt={role.label} />
           )}
@@ -164,7 +167,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       {fields.team && layout.tag !== null && card.team_name && (
         <div className={`${styles.c} ${styles.tag}`} style={at(750, layout.tag)}>
           {/* La note prend le rond du haut : le rôle passe devant le nom d'équipe (sauf épique, qui a son rond de rôle). */}
-          {showNote && layout.topCircle && !layout.roleCircle && role && <img className={styles.tagRole} src={role.image} alt={role.label} />}
+          {(showNote || topLabel) && layout.topCircle && !layout.roleCircle && role && <img className={styles.tagRole} src={role.image} alt={role.label} />}
           {card.team_name}
         </div>
       )}
