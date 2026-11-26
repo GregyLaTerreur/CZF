@@ -12,6 +12,21 @@
   padding: 48px 0;
 }
 
+.inline,
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Chargement d'une page : panneau dark avec l'ombre orange du design system (fond sombre). */
+.panel {
+  padding: 34px 48px 28px;
+  background: var(--dark, #081428);
+  box-shadow: 6px 6px 0 var(--orange, #f05010);
+}
+
 .bolt {
   width: 48px;
   height: 72px;
