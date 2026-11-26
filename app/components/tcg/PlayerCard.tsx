@@ -10,7 +10,7 @@ import {
   LAYOUTS,
   NAME_MAX_WIDTH,
   RARITY_ACCENTS,
-  DEFAULT_NOTE,
+  UNKNOWN_NOTE,
   STAT_CIRCLE_ORDER,
   TYPE_FIELDS,
   championArt,
@@ -40,7 +40,8 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
   const fields = TYPE_FIELDS[card.card_type];
   const role = fields.team ? roleInfo(card.role) : null;
   // Épique (rond de rôle à part) : la note est toujours affichée, 99 tant qu'elle n'est pas remplie.
-  const note = layout.roleCircle && fields.note ? card.note ?? DEFAULT_NOTE : card.note;
+  // Carte MVP : la note du joueur, « ?? » tant que l'algo ne peut pas le noter.
+  const note: number | string | null = fields.note ? card.note ?? UNKNOWN_NOTE : card.note;
   const showNote = fields.note && note !== null;
   const isStaff = card.card_type === 'staff';
   // Cadre propre au type (ex. épique « événement ») : pas de rond de rôle ni de stats.
@@ -143,7 +144,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
             background: `rgba(8, 20, 40, ${layout.tabOpacity})`,
           }}
         >
-          {showNote && <span className={styles.note}>{card.note}</span>}
+          {showNote && <span className={styles.note}>{note}</span>}
           {role && <img className={styles.role} src={role.image} alt={role.label} />}
         </div>
       )}

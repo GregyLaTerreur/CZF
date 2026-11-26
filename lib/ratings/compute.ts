@@ -134,17 +134,15 @@ export async function computeRatings(seasonId: number): Promise<PlayerRating[]> 
 }
 
 // Recalcule et enregistre les notes de la saison (ou d'une seule division).
-// Les joueurs sans note calculable gardent leur note actuelle.
+// Joueur que l'algo ne peut pas noter (participation < 45 %, stat manquante) : note vide (« ?? » sur la carte).
 export async function updateRatings(seasonId: number, division?: string | null): Promise<{ updated: number; skipped: PlayerRating[]; ratings: PlayerRating[] }> {
   const ratings = (await computeRatings(seasonId)).filter((r) => !division || r.division === division);
   const now = new Date().toISOString();
   const score = (r: PlayerRating, stat: IpiStat) => (r.scores?.[stat] == null ? null : round(r.scores[stat]));
-  const rows = ratings
-    .filter((r) => r.note !== null)
-    .map((r) => ({
+  const rows = ratings.map((r) => ({
       season_id: seasonId,
       player_id: r.playerId,
-      note: r.note as number,
+      note: r.note,
       // Détail (SQL czf-import/joueur-note-2-detail-ipi.sql) : IPI brut et note de chaque stat sur 100.
       ipi: r.ipi,
       score_kda: score(r, 'KDA'),
@@ -160,5 +158,5 @@ export async function updateRatings(seasonId: number, division?: string | null):
     const { error } = await supabaseAdmin.from('czf_player_rating').upsert(rows, { onConflict: 'season_id,player_id' });
     if (error) throw new Error('Impossible d’enregistrer les notes (table czf_player_rating ?).');
   }
-  return { updated: rows.length, skipped: ratings.filter((r) => r.note === null), ratings };
+  return { updated: ratings.filter((r) => r.note !== null).length, skipped: ratings.filter((r) => r.note === null), ratings };
 }

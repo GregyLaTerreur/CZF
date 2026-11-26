@@ -13,7 +13,7 @@ type Rating = {
   team: string | null;
   division: string | null;
   role: string | null;
-  note: number;
+  note: number | null; // vide = pas assez de parties pour l'algo (« ?? » sur la carte)
   ipi: number | null;
   score_kda: number | null;
   score_gpm: number | null;
@@ -106,11 +106,11 @@ export default function NotesView() {
   // Seules les notes calculées par l'algo (ipi rempli) comptent dans les statistiques.
   const computed = useMemo(() => ratings.filter((r) => r.ipi !== null), [ratings]);
   const lastUpdate = useMemo(() => computed.reduce<string | null>((max, r) => (r.computed_at && (!max || r.computed_at > max) ? r.computed_at : max), null), [computed]);
-  const notes = computed.map((r) => r.note).sort((a, b) => a - b);
+  const notes = computed.map((r) => r.note).filter((n): n is number => n !== null).sort((a, b) => a - b);
   const median = notes.length ? (notes.length % 2 ? notes[(notes.length - 1) / 2] : (notes[notes.length / 2 - 1] + notes[notes.length / 2]) / 2) : null;
   const byGroup = (key: 'division' | 'role', values: string[]) =>
     values.map((value) => {
-      const group = computed.filter((r) => r[key] === value).map((r) => r.note);
+      const group = computed.filter((r) => r[key] === value && r.note !== null).map((r) => r.note as number);
       return { value, count: group.length, average: avg(group) };
     });
   const bins = Array.from({ length: 10 }, (_, i) => {
@@ -125,7 +125,7 @@ export default function NotesView() {
     return ratings
       .filter((r) => (!division || r.division === division) && (!role || r.role === role))
       .filter((r) => !q || `${r.riot_id ?? ''} ${r.team ?? ''}`.toLowerCase().includes(q))
-      .sort((a, b) => b.note - a.note || (b.ipi ?? -1) - (a.ipi ?? -1));
+      .sort((a, b) => (b.note ?? -1) - (a.note ?? -1) || (b.ipi ?? -1) - (a.ipi ?? -1));
   }, [ratings, division, role, search]);
 
   if (allowed === null) return <Loader label="Chargement des notes" block />;
@@ -271,7 +271,7 @@ export default function NotesView() {
                   <td><b>{pseudo(r.riot_id)}</b></td>
                   <td className={styles.teamCell}>{r.division && <DivisionIcon division={r.division} />}{r.team ?? '—'}</td>
                   <td>{r.role ?? '—'}</td>
-                  <td className={styles.num}><span className={styles.notePill}>{r.note}</span></td>
+                  <td className={styles.num}><span className={r.note === null ? `${styles.notePill} ${styles.noteUnknown}` : styles.notePill} title={r.note === null ? 'Pas assez de parties pour être noté (moins de 45 % des parties de son équipe)' : undefined}>{r.note ?? '??'}</span></td>
                   <td className={styles.num}>{fmt(r.ipi)}</td>
                   {SCORES.map(([key, label]) => <td key={label} className={styles.num}>{r[key] === null ? '—' : Math.round(Number(r[key]))}</td>)}
                 </tr>
@@ -283,7 +283,7 @@ export default function NotesView() {
         {filtered.length > limit && (
           <button type="button" className={ds.btnOutline} onClick={() => setLimit((l) => l + PAGE)}>Voir plus ({filtered.length - limit})</button>
         )}
-        <p className={styles.axis}>Note = note affichée sur les cartes. Colonnes KDA à Vision : note de chaque stat sur 100 (« — » si la stat ne compte pas pour le rôle ou si l’algo n’a pas encore tourné).</p>
+        <p className={styles.axis}>Note = note affichée sur les cartes ; « ?? » = pas assez de parties pour être noté. Colonnes KDA à Vision : note de chaque stat sur 100 (« — » si la stat ne compte pas pour le rôle ou si l’algo n’a pas encore tourné).</p>
       </section>
     </div>
   );

@@ -137,10 +137,11 @@ export async function withRatings<T extends TcgCard>(cards: T[]): Promise<T[]> {
     .select('season_id, player_id, note')
     .in('player_id', [...new Set(rated.map((c) => c.player_id as number))]);
   if (error || !data) return cards;
-  const notes = new Map(data.map((r) => [`${r.season_id}:${r.player_id}`, r.note as number]));
+  const notes = new Map(data.map((r) => [`${r.season_id}:${r.player_id}`, r.note as number | null]));
   return cards.map((card) => {
     if (!card.player_id || !card.season_id || !RATED_RARITIES.includes(card.rarity)) return card;
     const note = notes.get(`${card.season_id}:${card.player_id}`);
+    // note vide = joueur pas encore notable par l'algo : la carte affiche « ?? ».
     return note === undefined ? card : { ...card, note };
   });
 }

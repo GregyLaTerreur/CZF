@@ -112,8 +112,11 @@ export type RarityLayout = {
   varnish?: string;
 };
 
-// Note affichée tant qu'elle n'est pas remplie en base (cartes épiques).
+// Note pré-remplie dans le formulaire admin pour une carte MVP (la carte affiche la note du joueur).
 export const DEFAULT_NOTE = 99;
+
+// Affiché dans le rond tant que l'algo ne peut pas noter le joueur (pas assez de parties).
+export const UNKNOWN_NOTE = '??';
 
 // Ordre des stats dans les 5 ronds du bas : le KDA dans le grand rond du centre.
 export const STAT_CIRCLE_ORDER = ['KP%', 'DPM', 'KDA', 'VIS/M', 'WR%'];
