@@ -149,6 +149,16 @@ export async function withRatings<T extends TcgCard>(cards: T[]): Promise<T[]> {
   });
 }
 
+// Saison en cours : « S<n> » (n = rang de la saison, la première = S1) affiché avec le numéro de la carte.
+export async function withSeasonTag<T extends TcgCard>(cards: T[]): Promise<T[]> {
+  const { data, error } = await supabaseAdmin.from('czf_seasons').select('id, status').order('id', { ascending: true });
+  if (error || !data) return cards;
+  const index = data.findIndex((s) => s.status === 'active');
+  if (index < 0) return cards;
+  const activeId = Number(data[index].id);
+  return cards.map((card) => (Number(card.season_id) === activeId ? { ...card, season_tag: `S${index + 1}` } : card));
+}
+
 export async function decorateCards<T extends TcgCard>(cards: T[]): Promise<T[]> {
-  return withNumbers(await withRatings(await withLiveStats(cards)));
+  return withSeasonTag(await withNumbers(await withRatings(await withLiveStats(cards))));
 }

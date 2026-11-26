@@ -230,6 +230,7 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
 
       {card.number && card.season_total && (
         <div className={styles.number}>
+          {card.season_tag && <em className={styles.seasonTag}>{card.season_tag}</em>}
           {card.number}<span>/{card.season_total}</span>
         </div>
       )}

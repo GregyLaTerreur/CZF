@@ -286,6 +286,14 @@
   box-shadow: 0.5cqw 0.5cqw 0 var(--accent);
 }
 
+.seasonTag {
+  margin-right: 1.2cqw;
+  padding-right: 1.2cqw;
+  border-right: 0.3cqw solid rgba(224, 216, 204, 0.35);
+  font-style: inherit;
+  color: #f05010;
+}
+
 .number span {
   color: rgba(224, 216, 204, 0.6);
 }
