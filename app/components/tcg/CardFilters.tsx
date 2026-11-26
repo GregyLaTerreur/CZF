@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ds from '@/app/components/ds/ds.module.css';
 import { DIVISIONS } from '@/app/components/home/divisions';
+import DivisionIcon from '@/app/components/ds/DivisionIcon';
 import { RARITIES, RARITY_LABELS, type Rarity, type TcgCard } from '@/lib/tcg/cards';
 import styles from './cardFilters.module.css';
 
@@ -71,7 +72,7 @@ export function useCardFilters<T>(items: T[], getCard: (item: T) => TcgCard, sea
 // hideRarity : la rareté est choisie ailleurs (sidebar de la collection).
 type Props = ReturnType<typeof useCardFilters<any>> & { total: number; hideRarity?: boolean; alwaysSeasons?: boolean; hideCount?: boolean };
 
-function Row({ label, all, items, value, onPick }: { label: string; all: string; items: { key: string; label: string }[]; value: string | null; onPick: (v: string | null) => void }) {
+function Row({ label, all, items, value, onPick, icons }: { label: string; all: string; items: { key: string; label: string }[]; value: string | null; onPick: (v: string | null) => void; icons?: boolean }) {
   return (
     <div className={styles.row}>
       <span className={styles.label}>{label}</span>
@@ -79,6 +80,7 @@ function Row({ label, all, items, value, onPick }: { label: string; all: string;
         <button type="button" className={value === null ? ds.tabActive : ds.tab} onClick={() => onPick(null)}>{all}</button>
         {items.map((item) => (
           <button key={item.key} type="button" className={value === item.key ? ds.tabActive : ds.tab} onClick={() => onPick(item.key)}>
+            {icons && <DivisionIcon division={item.key} />}
             {item.label}
           </button>
         ))}
@@ -101,7 +103,7 @@ export default function CardFilters({ filters, options, filtered, total, hideRar
           items={RARITIES.map((r) => ({ key: r, label: RARITY_LABELS[r] }))} />
       )}
       {options.divisions.length > 0 && (
-        <Row label="Division" all="Toutes" value={filters.division} onPick={setDivision}
+        <Row label="Division" all="Toutes" value={filters.division} onPick={setDivision} icons
           items={options.divisions.map((d) => ({ key: d, label: d }))} />
       )}
       {filters.division && options.teams.length > 0 && (

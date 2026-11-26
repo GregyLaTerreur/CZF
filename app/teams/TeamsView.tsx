@@ -11,6 +11,7 @@ import {
   type DivisionName,
 } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
+import DivisionIcon from '@/app/components/ds/DivisionIcon';
 import {
   ROLES,
   TIERS,
@@ -241,7 +242,7 @@ export default function TeamsView({ directory }: { directory: TeamsDirectory | n
                   className={divisionFilter === division ? ds.tabActive : ds.tab}
                   onClick={() => chooseDivision(divisionFilter === division ? null : division)}
                 >
-                  <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
+                  <DivisionIcon division={division} />
                   {division}
                 </button>
               ))}

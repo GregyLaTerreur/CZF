@@ -1584,12 +1584,3 @@
   text-transform: uppercase;
   transform: skewX(-8deg);
 }
-
-/* Icône de division dans les onglets Targon / Ixtal / Yordle (Résultats, Stats). */
-.divisionTabIcon {
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
-  flex-shrink: 0;
-  margin: -4px 0;
-}

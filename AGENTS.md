@@ -130,6 +130,7 @@ Statut : **bêta**. Tout le TCG (page `/collection`, lien « Collection » du he
   - règle des ombres : fond clair → ombre dark, fond sombre → ombre orange ;
   - onglets : inactif = cream + ombre dark, actif = dark + ombre orange ;
   - interrupteur : composant `app/components/ds/Switch.tsx` (styles `ds.switch*`), éteint = case cream + ombre dark, allumé = case dark + ombre orange et curseur orange ; utilisé pour la tier list (« Publique ») et la collection (« Non possédées ») ;
+  - icône de division : composant `app/components/ds/DivisionIcon.tsx` (icônes officielles `czf/cards/s1/divisions/<division>` sur Cloudinary), dans tous les onglets / filtres par division (Joueurs, Équipes, Divisions, Résultats, Stats, cartes TCG) à la place de la pastille de couleur ; l'accueil (bloc « Trois divisions ») garde la pastille et ajoute l'icône ;
   - loader : composant `app/components/ds/Loader.tsx` (éclair qui se trace en boucle + libellé), à utiliser pour tout chargement ; branché sur la Collection ;
   - séparations beige/dark en diagonale (`clip-path`), bandeau orange en `skewY(-1deg)`.
 - Pour une nouvelle page au design system : CSS Module dédié (comme `home.module.css`), sans toucher à `globals.css`.

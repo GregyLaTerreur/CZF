@@ -8,6 +8,7 @@ import {
   type DivisionName,
 } from '@/app/components/home/divisions';
 import ds from '@/app/components/ds/ds.module.css';
+import DivisionIcon from '@/app/components/ds/DivisionIcon';
 import { TIERS, teamDivision } from '@/app/components/ds/lol';
 import styles from './divisions.module.css';
 import { logoSrc } from '@/lib/logo';
@@ -191,7 +192,7 @@ export default function DivisionsView() {
                 className={divisionFilter === division ? ds.tabActive : ds.tab}
                 onClick={() => setDivisionFilter(divisionFilter === division ? null : division)}
               >
-                <span className={ds.dot} style={{ background: DIVISION_COLORS[division] }} />
+                <DivisionIcon division={division} />
                 {division}
               </button>
             ))}

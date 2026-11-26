@@ -14,7 +14,7 @@ import styles from './results.module.css';
 import { formatLastUpdate } from '@/app/components/ds/lol';
 import { getMyDivision, peekMyDivision } from '@/app/components/ds/myDivision';
 import { logoSrc } from '@/lib/logo';
-import { cdnImage } from '@/lib/assets';
+import DivisionIcon from '@/app/components/ds/DivisionIcon';
 
 /* =========================================================
    TYPES (réponse de /api/resultats)
@@ -314,12 +314,7 @@ export function DivisionTabs({
           className={division === item ? ds.tabActive : ds.tab}
           onClick={() => onChange(item)}
         >
-          {/* Icône officielle de la division (la même que sur l'accueil et les cartes TCG). */}
-          <img
-            className={styles.divisionTabIcon}
-            src={cdnImage(`cards/s1/divisions/${item.toLowerCase()}`, 'f_auto,q_auto,w_80')}
-            alt=""
-          />
+          <DivisionIcon division={item} />
           {item}
         </button>
       ))}

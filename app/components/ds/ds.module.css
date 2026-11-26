@@ -239,6 +239,15 @@
   flex-shrink: 0;
 }
 
+/* Icône de division dans les onglets (composant DivisionIcon). */
+.divisionIcon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin: -4px 0;
+}
+
 .tabRoleIcon {
   width: 16px;
   height: 16px;
