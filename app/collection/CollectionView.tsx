@@ -534,6 +534,12 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                           <img src={boosterImage(current.booster, 600)} alt="" />
                           <span className={styles.badge}>x{current.quantity}</span>
                         </div>
+                        {/* Infos au survol, dans une bulle à droite du booster. */}
+                        <span className={styles.boosterTip} role="tooltip">
+                          <strong className={styles.tipMain}><b>{current.quantity}</b> à ouvrir</strong>
+                          <span>{current.booster.cards_per_pack} cartes par booster</span>
+                          <em>Clique pour l’ouvrir</em>
+                        </span>
                       </button>
                       {count > 1 && <img className={`${styles.carouselSide} ${styles.carouselRight}`} src={boosterImage(neighbor(1).booster, 300)} alt="" />}
                       {count > 1 && (
@@ -544,9 +550,6 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                     </div>
                     <div className={styles.carouselInfo}>
                       <div className={styles.carouselName}>{opening === current.booster.id ? 'Ouverture…' : current.booster.name}</div>
-                      <div className={styles.carouselMeta}>
-                        {current.quantity} à ouvrir · {current.booster.cards_per_pack} cartes par booster · clique sur le booster pour l’ouvrir
-                      </div>
                       {current.quantity > 1 && (
                         <button
                           type="button"
