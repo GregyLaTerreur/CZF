@@ -136,9 +136,24 @@ export async function computeRatings(seasonId: number): Promise<PlayerRating[]> 
 // Recalcule et enregistre les notes de la saison. Les joueurs sans note calculable gardent leur note actuelle.
 export async function updateRatings(seasonId: number): Promise<{ updated: number; skipped: PlayerRating[]; ratings: PlayerRating[] }> {
   const ratings = await computeRatings(seasonId);
+  const now = new Date().toISOString();
+  const score = (r: PlayerRating, stat: IpiStat) => (r.scores?.[stat] == null ? null : round(r.scores[stat]));
   const rows = ratings
     .filter((r) => r.note !== null)
-    .map((r) => ({ season_id: seasonId, player_id: r.playerId, note: r.note as number }));
+    .map((r) => ({
+      season_id: seasonId,
+      player_id: r.playerId,
+      note: r.note as number,
+      // Détail (SQL czf-import/joueur-note-2-detail-ipi.sql) : IPI brut et note de chaque stat sur 100.
+      ipi: r.ipi,
+      score_kda: score(r, 'KDA'),
+      score_gpm: score(r, 'GPM'),
+      score_dpm: score(r, 'DPM'),
+      score_cs: score(r, 'CS/min'),
+      score_kp: score(r, 'KP %'),
+      score_vision: score(r, 'Score de vision/min'),
+      computed_at: now,
+    }));
 
   if (rows.length) {
     const { error } = await supabaseAdmin.from('czf_player_rating').upsert(rows, { onConflict: 'season_id,player_id' });
