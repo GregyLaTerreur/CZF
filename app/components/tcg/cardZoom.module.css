@@ -1,7 +1,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 1200; /* au-dessus du header et de l'ouverture de booster */
   display: flex;
   align-items: center;
   justify-content: center;
