@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import styles from './matchManager.module.css';
+import Loader from '@/app/components/ds/Loader';
 
 type Team = { id: number; name: string; tag: string | null };
 
@@ -229,7 +230,7 @@ export default function MatchEditor({
   if (!draft) {
     return (
       <div className={styles.editor}>
-        <p className={error ? styles.message : styles.empty}>{error || 'Chargement du match…'}</p>
+        {error ? <p className={styles.message}>{error}</p> : <Loader label="Chargement du match" />}
         {error && (
           <button type="button" className={`${ds.btnOutline} ${ds.btnSmall}`} onClick={onClose}>
             Fermer

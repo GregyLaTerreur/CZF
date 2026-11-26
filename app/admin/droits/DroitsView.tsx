@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
 import Switch from '@/app/components/ds/Switch';
 import styles from './droits.module.css';
+import Loader from '@/app/components/ds/Loader';
 
 type Permission = { name: string; description: string };
 type Grant = { profile_id: string; permission: string; granted_at: string; note: string | null };
@@ -82,7 +83,7 @@ export default function DroitsView() {
     }
   }
 
-  if (allowed === null) return <div className={`${ds.container} ${styles.wrap}`}><p className={ds.empty}>Chargement…</p></div>;
+  if (allowed === null) return <Loader label="Chargement des droits" block />;
 
   if (!allowed) {
     return (

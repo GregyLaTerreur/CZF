@@ -6,6 +6,7 @@ import { DIVISIONS, DIVISION_COLORS, type DivisionName } from '@/app/components/
 import ds from '@/app/components/ds/ds.module.css';
 import styles from './matchManager.module.css';
 import MatchEditor from './MatchEditor';
+import Loader from '@/app/components/ds/Loader';
 
 type Side = { id: number; shortName: string; name: string; score: number } | null;
 
@@ -116,7 +117,7 @@ export default function MatchManager() {
 
       {message && <p className={styles.message}>{message}</p>}
 
-      {matches === null && <p className={styles.empty}>Chargement…</p>}
+      {matches === null && <Loader label="Chargement des matchs" block />}
       {matches?.length === 0 && <p className={styles.empty}>Aucun match enregistré dans cette division.</p>}
 
       {matches && matches.length > 0 && (

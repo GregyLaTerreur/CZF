@@ -27,6 +27,7 @@ import {
 } from '@/lib/tcg/cards';
 import BoostersAdmin from './BoostersAdmin';
 import styles from './tcgAdmin.module.css';
+import Loader from '@/app/components/ds/Loader';
 
 type Champion = { id: string; name: string };
 type Season = { id: number; name: string; status: string };
@@ -382,7 +383,7 @@ export default function TcgAdminView() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  if (isAdmin === null) return <div className={`${ds.container} ${styles.wrap}`}><p className={ds.empty}>Chargement…</p></div>;
+  if (isAdmin === null) return <Loader label="Chargement du TCG" block />;
 
   if (!isAdmin) {
     return (

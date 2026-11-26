@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { logoSrc } from '@/lib/logo';
+import Loader from '@/app/components/ds/Loader';
 
 type Team = {
   id: number;
@@ -363,9 +364,7 @@ export default function RiotAdminPage() {
           )}
 
           {loading ? (
-            <div className="riotAdminEmpty">
-              Chargement des rencontres Riot...
-            </div>
+            <Loader label="Chargement des rencontres Riot" block />
           ) : visibleFixtures.length === 0 ? (
             <div className="riotAdminEmpty">
               <strong>Aucun BO à afficher.</strong>

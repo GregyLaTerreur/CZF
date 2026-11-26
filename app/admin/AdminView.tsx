@@ -20,6 +20,7 @@ import RiotRefreshPanel from './RiotRefreshPanel';
 import { ADMIN_TO_VALIDATE } from './AdminShell';
 import { ChevronIcon, RiotIcon, TrophyIcon } from './AdminIcons';
 import styles from './admin.module.css';
+import Loader from '@/app/components/ds/Loader';
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
 
@@ -977,8 +978,10 @@ export default function AdminView() {
       ).length,
   };
 
+  // Chargement : le loader du site au lieu d'un texte.
+  if (loading) return <Loader label="Chargement de l’admin" block />;
+
   if (
-    loading ||
     !isAdmin
   ) {
     return (
@@ -1007,9 +1010,7 @@ export default function AdminView() {
           <p
             className={ds.body}
           >
-            {loading
-              ? 'Chargement...'
-              : 'Tu n’as pas les droits admin.'}
+            Tu n’as pas les droits admin.
           </p>
         </div>
       </header>
