@@ -168,6 +168,8 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [error, setError] = useState('');
   const [section, setSection] = useState<Section>('collection');
+  // Nombre de boosters ouverts d'un coup (« Tout ouvrir »).
+  const [openedCount, setOpenedCount] = useState(1);
   // Booster affiché en grand dans le carrousel de « Mes boosters ».
   const [boosterIndex, setBoosterIndex] = useState(0);
   const swipeX = useRef<number | null>(null);
@@ -272,7 +274,7 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
     setRevealed((current) => new Set(current).add(index));
   }
 
-  async function open(boosterId: number) {
+  async function open(boosterId: number, count = 1) {
     if (opening !== null) return;
     setOpening(boosterId);
     setError('');
@@ -280,10 +282,11 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
     try {
       const headers = await authHeaders();
       if (!headers) throw new Error('Reconnecte-toi avec Discord.');
-      const response = await fetch('/api/tcg/open', { method: 'POST', headers, body: JSON.stringify({ booster_id: boosterId }) });
+      const response = await fetch('/api/tcg/open', { method: 'POST', headers, body: JSON.stringify({ booster_id: boosterId, count }) });
       const json = await response.json();
       if (!json.success) throw new Error(json.message);
       setRevealed(new Set());
+      setOpenedCount(json.opened ?? 1);
       // Les plus rares à la fin, pour garder le suspense.
       const sortedDraw = [...json.cards].sort((a: TcgCard, b: TcgCard) => RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity));
       const booster = boosters.find((item) => item.booster.id === boosterId)?.booster;
@@ -544,6 +547,16 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                       <div className={styles.carouselMeta}>
                         {current.quantity} à ouvrir · {current.booster.cards_per_pack} cartes par booster · clique sur le booster pour l’ouvrir
                       </div>
+                      {current.quantity > 1 && (
+                        <button
+                          type="button"
+                          className={ds.btnPrimary}
+                          disabled={opening !== null}
+                          onClick={() => current.booster.id && open(current.booster.id, Math.min(current.quantity, 50))}
+                        >
+                          Tout ouvrir ({Math.min(current.quantity, 50)})
+                        </button>
+                      )}
                       {count > 1 && (
                         <div className={styles.carouselDots}>
                           {boosters.map((item, i) => (
@@ -725,16 +738,24 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
         <div className={styles.overlay} role="dialog" aria-modal="true">
           <div className={styles.overlayInner}>
             <div className={styles.overlayHead}>
-              <div className={styles.overlayTitle}>Booster ouvert</div>
+              <div className={styles.overlayTitle}>{openedCount > 1 ? `${openedCount} boosters ouverts` : 'Booster ouvert'}</div>
               <button type="button" className={styles.mute} onClick={toggleMute} aria-label={muted ? 'Activer le son' : 'Couper le son'}>
                 {muted ? <SoundOffIcon /> : <SoundOnIcon />}
                 {muted ? 'Son coupé' : 'Son'}
               </button>
             </div>
-            <p className={styles.overlayHint}>
-              {revealed.size < drawn.length ? `Clique sur une carte pour la retourner · ${drawn.length - revealed.size} restante${drawn.length - revealed.size > 1 ? 's' : ''}` : 'Toutes tes cartes sont révélées.'}
-            </p>
-            <div className={`${styles.drawn} ${drawn.length > 8 ? styles.drawnMany : ''}`}>
+            {/* Barre collée en haut : on garde les actions sous la main en descendant dans beaucoup de cartes. */}
+            <div className={styles.overlayBar}>
+              <p className={styles.overlayHint}>
+                {revealed.size < drawn.length ? `Clique sur une carte pour la retourner · ${drawn.length - revealed.size} restante${drawn.length - revealed.size > 1 ? 's' : ''}` : `Toutes tes cartes sont révélées · ${drawn.length} carte${drawn.length > 1 ? 's' : ''}.`}
+              </p>
+              {revealed.size < drawn.length ? (
+                <button type="button" className={ds.btnOutline} onClick={revealAll}>Tout révéler</button>
+              ) : (
+                <button type="button" className={ds.btnPrimary} onClick={() => { setDrawn(null); setPack(null); }}>Ajouter à ma collection</button>
+              )}
+            </div>
+            <div className={`${styles.drawn} ${drawn.length > 8 ? styles.drawnMany : ''} ${drawn.length > 30 ? styles.drawnLots : ''}`}>
               {drawn.map((card, index) => {
                 const isRevealed = revealed.has(index);
                 return (
@@ -756,13 +777,6 @@ export default function CollectionView({ viewProfileId }: { viewProfileId?: stri
                   </button>
                 );
               })}
-            </div>
-            <div className={ds.formActions}>
-              {revealed.size < drawn.length ? (
-                <button type="button" className={ds.btnOutline} onClick={revealAll}>Tout révéler</button>
-              ) : (
-                <button type="button" className={ds.btnPrimary} onClick={() => { setDrawn(null); setPack(null); }}>Ajouter à ma collection</button>
-              )}
             </div>
           </div>
         </div>

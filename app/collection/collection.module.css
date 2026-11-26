@@ -363,6 +363,30 @@ main .wrap {
 }
 
 /* Beaucoup de cartes : plus petites pour tenir à l'écran. */
+.overlayBar {
+  position: sticky;
+  top: -24px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(4, 12, 24, 0.96);
+  border-bottom: 2px solid rgba(240, 80, 16, 0.6);
+}
+
+.overlayBar .overlayHint {
+  margin: 0;
+}
+
+/* Beaucoup de boosters ouverts d'un coup : cartes plus petites. */
+.drawnLots .flip {
+  width: min(104px, 22vw);
+}
+
 .drawnMany {
   gap: 14px;
 }
