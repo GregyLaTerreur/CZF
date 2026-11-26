@@ -6,10 +6,8 @@ import {
   useState,
 } from 'react';
 
-import Link from 'next/link';
 import MatchManager from './MatchManager';
 import ds from '@/app/components/ds/ds.module.css';
-import BackIcon from '@/app/components/icons/BackIcon';
 import { DIVISION_COLORS } from '@/app/components/home/divisions';
 import styles from './results.module.css';
 
@@ -2557,11 +2555,6 @@ export default function AdminResultsView() {
       {/* En-tête */}
       <header className={ds.header}>
         <div className={ds.container}>
-          <Link href="/admin" className={`${ds.btnOutline} ${ds.btnSmall} ${styles.back}`}>
-            <BackIcon />
-            Retour à l’admin
-          </Link>
-
           <div className={ds.sectionLabel}>Administration · Résultats</div>
           <h1 className={ds.h1}>Résultats</h1>
           <p className={ds.body}>

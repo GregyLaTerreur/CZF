@@ -2,7 +2,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { logoSrc } from '@/lib/logo';
 import Loader from '@/app/components/ds/Loader';
@@ -298,10 +297,6 @@ export default function RiotAdminPage() {
             </div>
 
             <div className="riotAdminActions">
-              <Link href="/admin" className="riotAdminButton">
-                Retour admin
-              </Link>
-
               <button
                 type="button"
                 className="riotAdminButton"
