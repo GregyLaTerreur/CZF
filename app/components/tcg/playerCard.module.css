@@ -216,6 +216,13 @@
 }
 
 /* Numéro dans la saison, en haut à droite (« 12/82 »). */
+/* Logo d'équipe en bas à gauche (cadres de la graphiste), en face du numéro. */
+.teamCorner {
+  left: 3.2%;
+  bottom: 2%;
+  width: 7.5%;
+}
+
 /* Numéro de la carte en bas à droite. */
 .number {
   bottom: 2.4%;

@@ -187,10 +187,16 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
       )}
 
       {fields.team && card.team_logo && (
-        <img className={`${styles.c} ${styles.logo} ${styles.team}`} style={layout.badges ? { ...at(layout.badges.x, layout.badges.y1), width: pctX(layout.badges.size) } : { ...at(logos.left, logos.y), width: pctX(logos.size) }} src={card.team_logo} alt={card.team_name || ''} />
+        // Cadres de la graphiste : logo d'équipe en bas à gauche (en face du numéro).
+        <img
+          className={`${styles.logo} ${styles.team} ${layout.badges ? styles.teamCorner : styles.c}`}
+          style={layout.badges ? undefined : { ...at(logos.left, logos.y), width: pctX(logos.size) }}
+          src={card.team_logo}
+          alt={card.team_name || ''}
+        />
       )}
       {fields.team && card.division && (
-        <img className={`${styles.c} ${styles.logo}`} style={layout.badges ? { ...at(layout.badges.x, card.team_logo ? layout.badges.y2 : layout.badges.y1), width: pctX(layout.badges.size) } : { ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
+        <img className={`${styles.c} ${styles.logo}`} style={layout.badges ? { ...at(layout.badges.x, layout.badges.y1), width: pctX(layout.badges.size) } : { ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
       )}
 
       {card.number && card.season_total && (
