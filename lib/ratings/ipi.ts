@@ -51,5 +51,5 @@ export function calculateIpi(role: IpiRole, division: string, stats: Partial<Rec
 // Participation minimale pour être noté : 45 % des parties de son équipe.
 export const IPI_MIN_PARTICIPATION = 0.45;
 
-// Note affichée sur les cartes (0 à 99) à partir de l'IPI sur 100.
-export const ipiToNote = (ipi: number) => Math.max(0, Math.min(99, Math.round(ipi)));
+// Note affichée sur les cartes (0 à 100) : l'IPI arrondi.
+export const ipiToNote = (ipi: number) => Math.max(0, Math.min(100, Math.round(ipi)));

@@ -281,7 +281,7 @@ export function parseCardInput(body: any): { card: TcgCard; error?: undefined } 
 
   if (fields.note) {
     const note = Number(body.note);
-    if (!Number.isInteger(note) || note < 0 || note > 99) return { error: 'La note MVP doit être un entier entre 0 et 99.' };
+    if (!Number.isInteger(note) || note < 0 || note > 100) return { error: 'La note MVP doit être un entier entre 0 et 100.' };
     card.note = note;
   }
 

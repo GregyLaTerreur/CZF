@@ -548,12 +548,12 @@ export default function TcgAdminView() {
 
           {fields.note && (
             <label className={ds.field}>
-              <span>Note MVP (0 à 99)</span>
+              <span>Note MVP (0 à 100)</span>
               <input
                 className={ds.input}
                 type="number"
                 min={0}
-                max={99}
+                max={100}
                 value={form.note ?? ''}
                 onChange={(e) => set('note', e.target.value === '' ? null : Number(e.target.value))}
               />
