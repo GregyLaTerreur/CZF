@@ -187,8 +187,9 @@ export function cardEffect(name: string, width = 750) {
   return cdnImage(`cards/s1/effets/${name}`, `f_auto,q_auto,w_${width}`);
 }
 
+// Icônes officielles des divisions (sans _dev), envoyées le 26/11 (originaux : ~/www/czf-tcg/graphiste/divisions-2026-11-26).
 export function divisionIcon(division: DivisionName) {
-  return cdnImage(`cards/s1/divisions/${division.toLowerCase()}${ASSET_SUFFIX}`, 'f_auto,q_auto,w_200');
+  return cdnImage(`cards/s1/divisions/${division.toLowerCase()}`, 'f_auto,q_auto,w_300');
 }
 
 // Cadrage par défaut de l'illustration : centrée horizontalement, un peu vers le haut, sans zoom.
