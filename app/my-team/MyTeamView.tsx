@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import ds from '@/app/components/ds/ds.module.css';
-import { DIVISION_COLORS } from '@/app/components/home/divisions';
+import DivisionIcon from '@/app/components/ds/DivisionIcon';
 import { ChevronIcon, useDdragonVersion } from '@/app/components/ds/LolUi';
 import { ChampionRowsModal } from '@/app/results/shared';
 import {
@@ -618,8 +618,10 @@ export default function MyTeamView({ teamId: viewedTeamId }: { teamId?: number }
                 <strong>
                   {division ? (
                     <>
-                      <span className={ds.teamDot} style={{ background: DIVISION_COLORS[division] }} />
-                      {division}
+                      <span className={styles.divisionWithIcon}>
+                        <DivisionIcon division={division} />
+                        {division}
+                      </span>
                       {!official && <small>estimée</small>}
                     </>
                   ) : (

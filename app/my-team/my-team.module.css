@@ -109,6 +109,16 @@
   line-height: 1.1;
 }
 
+.stats .divisionWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  color: inherit;
+}
+
 .stats strong small {
   width: 100%;
   font-size: 0.66rem;
