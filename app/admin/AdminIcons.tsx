@@ -9,3 +9,4 @@ export const RiotIcon = () => (<svg {...base}><path d="M4 18 6 6l12-2-2 14H4Zm4-
 export const CardIcon = () => (<svg {...base}><path d="M7 3h10v18H7zM10 7h4m-4 10h4" /></svg>);
 export const KeyIcon = () => (<svg {...base}><path d="M8 15a4 4 0 1 1 3-6.5L21 8v3h-2v2h-2v2h-3l-2.5-2.5A4 4 0 0 1 8 15Z" /></svg>);
 export const ChevronIcon = () => (<svg {...base}><path d="m9 6 6 6-6 6" /></svg>);
+export const ChartIcon = () => (<svg {...base}><path d="M4 20V10m6 10V4m6 16v-7m4 7H2" /></svg>);

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useIsAdmin } from '@/app/components/Nav';
 import { useIsBetaTester, useIsSuperAdmin } from '@/app/components/beta';
-import { CardIcon, HomeIcon, KeyIcon, PlayerIcon, RiotIcon, TeamIcon, TrophyIcon } from './AdminIcons';
+import { CardIcon, ChartIcon, HomeIcon, KeyIcon, PlayerIcon, RiotIcon, TeamIcon, TrophyIcon } from './AdminIcons';
 import styles from './admin.module.css';
 
 // Nombre d'équipes à valider, envoyé par la page Admin après chaque chargement.
@@ -78,6 +78,9 @@ function AdminMenu() {
       </Link>
       <Link href="/admin/riot" className={cls(under('/admin/riot'))}>
         <RiotIcon /> BO Riot
+      </Link>
+      <Link href="/admin/notes" className={cls(under('/admin/notes'))}>
+        <ChartIcon /> Notes
       </Link>
 
       {/* TCG en bêta : seulement pour les admins bêta-testeurs. */}

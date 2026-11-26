@@ -133,9 +133,10 @@ export async function computeRatings(seasonId: number): Promise<PlayerRating[]> 
   return ratings.sort((a, b) => (b.ipi ?? -1) - (a.ipi ?? -1));
 }
 
-// Recalcule et enregistre les notes de la saison. Les joueurs sans note calculable gardent leur note actuelle.
-export async function updateRatings(seasonId: number): Promise<{ updated: number; skipped: PlayerRating[]; ratings: PlayerRating[] }> {
-  const ratings = await computeRatings(seasonId);
+// Recalcule et enregistre les notes de la saison (ou d'une seule division).
+// Les joueurs sans note calculable gardent leur note actuelle.
+export async function updateRatings(seasonId: number, division?: string | null): Promise<{ updated: number; skipped: PlayerRating[]; ratings: PlayerRating[] }> {
+  const ratings = (await computeRatings(seasonId)).filter((r) => !division || r.division === division);
   const now = new Date().toISOString();
   const score = (r: PlayerRating, stat: IpiStat) => (r.scores?.[stat] == null ? null : round(r.scores[stat]));
   const rows = ratings

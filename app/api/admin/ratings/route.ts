@@ -33,9 +33,12 @@ export async function POST(request: Request) {
   if (!seasonId) return fail('Aucune saison.', 404);
   if (await isSeasonLaunched(seasonId)) return fail('La collection de cette saison est lancée : les notes sont figées.', 409);
 
+  const division = body.division ? String(body.division) : null;
+  if (division && !['Targon', 'Ixtal', 'Yordle'].includes(division)) return fail('Division inconnue.', 400);
+
   try {
-    const { updated, skipped } = await updateRatings(seasonId);
-    return NextResponse.json({ success: true, season_id: seasonId, updated, skipped: skipped.map((r) => ({ player_id: r.playerId, riot_id: r.riotId, reason: r.reason })) });
+    const { updated, skipped } = await updateRatings(seasonId, division);
+    return NextResponse.json({ success: true, season_id: seasonId, division, updated, skipped: skipped.map((r) => ({ player_id: r.playerId, riot_id: r.riotId, reason: r.reason })) });
   } catch (err) {
     return fail(err instanceof Error ? err.message : 'Calcul impossible.', 500);
   }

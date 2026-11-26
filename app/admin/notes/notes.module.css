@@ -1,0 +1,290 @@
+/* Admin > Notes : tableau de bord des notes des joueurs (IPI). */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-block);
+}
+
+main .wrap {
+  padding-top: var(--space-block);
+  padding-bottom: var(--space-section);
+}
+
+.sub {
+  margin: 8px 0 0;
+  max-width: 75ch;
+  font-size: 0.92rem;
+  color: rgba(8, 20, 40, 0.7);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+}
+
+.actionRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.divBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skipped summary {
+  cursor: pointer;
+  font: 700 0.8rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skipped ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  columns: 2;
+  font-size: 0.88rem;
+}
+
+/* Chiffres clés */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: var(--dark);
+  color: #fff;
+  box-shadow: 5px 5px 0 var(--orange);
+}
+
+.tile span {
+  font: 700 0.72rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-dark);
+}
+
+.tile strong {
+  font: italic 800 2.4rem/1 var(--font-barlow-condensed), sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile .tileDate {
+  font-size: 1.4rem;
+}
+
+.tile small {
+  font-size: 0.8rem;
+  color: rgba(224, 216, 204, 0.6);
+}
+
+/* Graphiques */
+.charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 44px 40px;
+  align-items: center;
+  gap: 12px;
+}
+
+.barLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: italic 800 0.95rem var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+}
+
+.barTrack {
+  height: 12px;
+  background: rgba(8, 20, 40, 0.08);
+}
+
+.bar {
+  display: block;
+  height: 100%;
+  background: var(--orange);
+  border-radius: 0 4px 4px 0;
+}
+
+.barRow b {
+  font: italic 800 1.05rem var(--font-barlow-condensed), sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.barRow small {
+  font-size: 0.78rem;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+.histogram {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 6px;
+  align-items: end;
+  height: 210px;
+  padding-top: 8px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.25);
+}
+
+.hCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+}
+
+.hBar {
+  width: 100%;
+  min-height: 0;
+  background: var(--orange);
+  border-radius: 4px 4px 0 0;
+}
+
+.hCol:hover .hBar {
+  background: var(--dark);
+}
+
+.hCount {
+  margin-bottom: 4px;
+  font: 700 0.8rem var(--font-barlow-condensed), sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--dark);
+}
+
+.hLabel {
+  position: absolute;
+  bottom: -20px;
+  font: 700 0.72rem var(--font-barlow-condensed), sans-serif;
+  color: rgba(8, 20, 40, 0.6);
+}
+
+.axis {
+  margin: 22px 0 0;
+  font-size: 0.8rem;
+  color: rgba(8, 20, 40, 0.55);
+}
+
+/* Tableau */
+.tableBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.search {
+  max-width: 320px;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border: 2px solid var(--dark);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th {
+  padding: 10px 12px;
+  background: var(--dark);
+  color: #fff;
+  text-align: left;
+  font: 700 0.75rem var(--font-barlow-condensed), sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(8, 20, 40, 0.1);
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: var(--cream);
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank {
+  color: rgba(8, 20, 40, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.teamCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notePill {
+  display: inline-block;
+  min-width: 38px;
+  padding: 2px 8px;
+  background: var(--dark);
+  color: #fff;
+  text-align: center;
+  font: italic 800 0.95rem var(--font-barlow-condensed), sans-serif;
+  transform: skewX(-8deg);
+}
+
+@media (max-width: 900px) {
+  .tiles,
+  .charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+}
