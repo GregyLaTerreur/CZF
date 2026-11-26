@@ -216,6 +216,24 @@
 }
 
 /* Numéro dans la saison, en haut à droite (« 12/82 »). */
+/* Fanion de division (cadres de la graphiste) : dark, bande orange en haut, pointe en bas. */
+.pennant {
+  top: 0;
+  right: 6%;
+  width: 15%;
+  padding: 2.4cqw 1.4cqw 4.6cqw;
+  background: #081428;
+  border-top: 1.6cqw solid #f05010;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+}
+
+.pennant img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
 /* Logo d'équipe en bas à gauche (cadres de la graphiste), en face du numéro. */
 .teamCorner {
   left: 3.2%;

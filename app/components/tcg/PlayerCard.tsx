@@ -195,9 +195,14 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
           alt={card.team_name || ''}
         />
       )}
-      {fields.team && card.division && (
-        <img className={`${styles.c} ${styles.logo}`} style={layout.badges ? { ...at(layout.badges.x, layout.badges.y1), width: pctX(layout.badges.size) } : { ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
-      )}
+      {fields.team && card.division && (layout.badges ? (
+        // Cadres de la graphiste : fanion dark à bande orange, accroché en haut à droite.
+        <div className={styles.pennant}>
+          <img src={divisionIcon(card.division)} alt={card.division} />
+        </div>
+      ) : (
+        <img className={`${styles.c} ${styles.logo}`} style={{ ...at(logos.right, logos.y), width: pctX(logos.size) }} src={divisionIcon(card.division)} alt={card.division} />
+      ))}
 
       {card.number && card.season_total && (
         <div className={styles.number}>
