@@ -26,6 +26,9 @@ import styles from './playerCard.module.css';
 // Arrondi des coins sur les cadres de la graphiste : ~3 mm sur une carte de 63 mm, comme une vraie carte.
 const FRAME_RADIUS = 70;
 
+// Couleurs des divisions (design system).
+const DIVISION_COLORS_TCG: Record<string, string> = { Targon: '#8B9FD4', Ixtal: '#00C9A0', Yordle: '#51A677' };
+
 const at = (cx: number, cy: number): CSSProperties => ({ left: pctX(cx), top: pctY(cy) });
 
 // Onglet en haut à gauche : note + rôle (MVP) ou rôle seul (joueur).
@@ -196,8 +199,8 @@ export default function PlayerCard({ card, large = false }: { card: TcgCard; lar
         />
       )}
       {fields.team && card.division && (layout.badges ? (
-        // Cadres de la graphiste : fanion dark à bande orange, accroché en haut à droite.
-        <div className={styles.pennant}>
+        // Cadres de la graphiste : hexagone dark bordé de la couleur de la division, visible au survol.
+        <div className={styles.divHex} style={{ ['--division' as string]: DIVISION_COLORS_TCG[card.division] }}>
           <img src={divisionIcon(card.division)} alt={card.division} />
         </div>
       ) : (

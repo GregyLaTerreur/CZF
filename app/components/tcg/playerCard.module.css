@@ -216,22 +216,39 @@
 }
 
 /* Numéro dans la saison, en haut à droite (« 12/82 »). */
-/* Fanion de division (cadres de la graphiste) : dark, bande orange en haut, pointe en bas. */
-.pennant {
-  top: 0;
-  right: 6%;
-  width: 10.5%;
-  padding: 1.4cqw 1cqw 3.2cqw;
-  background: #081428;
-  border-top: 1.1cqw solid #f05010;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+/* Division (cadres de la graphiste) : hexagone dark bordé de la couleur de la division, qui apparaît au survol. */
+.divHex {
+  left: 85.3%;
+  top: 9.5%;
+  width: 15%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%) scale(0.85);
+  background: var(--division, #d4b896);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
-.pennant img {
-  display: block;
-  width: 100%;
+.divHex::before {
+  content: '';
+  position: absolute;
+  inset: 0.7cqw;
+  background: #081428;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+}
+
+.divHex img {
+  position: relative;
+  width: 70%;
   aspect-ratio: 1;
   object-fit: contain;
+}
+
+.card:hover .divHex {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 /* Logo d'équipe en bas à gauche (cadres de la graphiste), en face du numéro. */
