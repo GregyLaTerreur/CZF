@@ -1,4 +1,4 @@
-import { asset } from '@/lib/assets';
+import { asset, cdnImage } from '@/lib/assets';
 import Link from 'next/link';
 import Footer from './components/Footer';
 import { DISCORD_URL, RULEBOOK_URL } from './components/links';
@@ -116,6 +116,12 @@ export default function Home() {
                 className={styles.divisionCard}
                 style={{ '--division-color': DIVISION_COLORS[division.name] } as React.CSSProperties}
               >
+                {/* Icône officielle de la division (Cloudinary, la même que sur les cartes TCG). */}
+                <img
+                  className={styles.divisionIcon}
+                  src={cdnImage(`cards/s1/divisions/${division.name.toLowerCase()}`, 'f_auto,q_auto,w_200')}
+                  alt=""
+                />
                 <div className={styles.divisionLevel}>{division.level}</div>
                 <div className={styles.divisionName}>
                   {division.name}

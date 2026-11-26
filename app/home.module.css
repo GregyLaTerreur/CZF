@@ -766,11 +766,21 @@
 }
 
 .divisionCard {
+  position: relative;
   background: var(--cream);
   border: 2px solid var(--dark);
   border-radius: 3px;
   box-shadow: 6px 6px 0 var(--dark);
   padding: 24px;
+}
+
+.divisionIcon {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
 }
 
 .divisionName {
