@@ -974,7 +974,7 @@ main .wrap {
 .flash {
   position: fixed;
   inset: 0;
-  z-index: 101;
+  z-index: 1101;
   pointer-events: none;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.85), transparent 60%);
   animation: flash 0.7s ease-out 0.35s forwards;
